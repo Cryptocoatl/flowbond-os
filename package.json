@@ -12,6 +12,9 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
+    "sdk:build": "pnpm --filter @flowbond/sdk build",
+    "sdk:dev": "pnpm --filter @flowbond/sdk dev",
+    "all:typecheck": "pnpm -r typecheck",
     "clean": "turbo clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },
