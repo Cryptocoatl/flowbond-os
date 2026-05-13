@@ -36,3 +36,11 @@ pnpm-debug.log*
 # Database
 *.db
 *.sqlite
+
+# Camera captures (generated at runtime by capture agent)
+apps/flowgarden/public/captures/*.jpg
+apps/flowgarden/public/captures/*.jpeg
+apps/flowgarden/public/captures/*.png
+
+# Capture agent secrets
+services/flowgarden-capture/.env
