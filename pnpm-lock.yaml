@@ -75,6 +75,9 @@ importers:
       '@flowbond/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@flowbond/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@supabase/ssr':
         specifier: ^0.10.3
         version: 0.10.3(@supabase/supabase-js@2.105.4)
@@ -229,6 +232,25 @@ importers:
         version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
       typescript:
         specifier: ^5
+        version: 5.9.3
+
+  packages/ui:
+    dependencies:
+      next:
+        specifier: '>=14.0.0'
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.4
+    devDependencies:
+      '@flowbond/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      typescript:
+        specifier: ^5.7.3
         version: 5.9.3
 
   services/api:

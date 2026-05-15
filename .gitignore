@@ -44,3 +44,7 @@ apps/flowgarden/public/captures/*.png
 
 # Capture agent secrets
 services/flowgarden-capture/.env
+
+# Brand pack zip (ship unpacked tree, not the zip)
+FlowGarden-Brand-Pack.zip
+*-Brand-Pack.zip

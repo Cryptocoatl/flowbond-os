@@ -1,7 +1,10 @@
 import type { Config } from 'tailwindcss'
+import flowbondPreset from '@flowbond/config/tailwind/preset'
 
 const config: Config = {
-  content: ['./src/**/*.{ts,tsx}'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  presets: [flowbondPreset as any],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -18,6 +21,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
       },
     },
   },
