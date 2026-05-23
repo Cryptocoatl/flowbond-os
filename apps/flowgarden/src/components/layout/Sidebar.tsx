@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const NAV = [
   {
@@ -72,6 +73,14 @@ const NAV = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   return (
     <aside className="w-60 bg-white border-r border-stone-100 flex flex-col shrink-0">
@@ -111,11 +120,21 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-stone-100">
-        <div className="px-3 py-2 rounded-lg bg-stone-50 border border-stone-100">
-          <p className="text-xs font-medium text-stone-500">FlowBond Identity</p>
-          <p className="text-xs text-stone-400 mt-0.5">Not connected yet</p>
-        </div>
+      <div className="p-4 border-t border-stone-100 space-y-2">
+        <Link
+          href="/flowgarden/settings"
+          className="block px-3 py-2 rounded-lg bg-stone-50 border border-stone-100 hover:bg-stone-100 transition-colors"
+        >
+          <p className="text-xs font-medium text-stone-600">Garden Settings</p>
+          <p className="text-xs text-stone-400 mt-0.5">Invite code · members</p>
+        </Link>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="w-full text-left px-3 py-2 rounded-lg text-xs text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     </aside>
   )

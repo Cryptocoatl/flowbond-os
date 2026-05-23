@@ -717,6 +717,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          invite_code: string | null
           latitude: number | null
           location_label: string | null
           longitude: number | null
@@ -729,6 +730,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           latitude?: number | null
           location_label?: string | null
           longitude?: number | null
@@ -741,6 +743,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          invite_code?: string | null
           latitude?: number | null
           location_label?: string | null
           longitude?: number | null
