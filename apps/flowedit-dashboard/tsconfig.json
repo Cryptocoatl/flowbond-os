@@ -1,0 +1,17 @@
+{
+  "extends": "@flowbond/config/tsconfig/nextjs",
+  "include": [
+    "next.config.ts",
+    "src",
+    ".next/types/**/*.ts"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "allowJs": true,
+    "incremental": true
+  }
+}

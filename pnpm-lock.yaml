@@ -68,6 +68,49 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  apps/flowedit-dashboard:
+    dependencies:
+      '@flowbond/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@flowbond/flowedit':
+        specifier: workspace:*
+        version: link:../../packages/flowedit
+      next:
+        specifier: ^15.2.1
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@flowbond/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.19.15
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/flowgarden:
     dependencies:
       '@flowbond/core':
@@ -123,11 +166,60 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  apps/ops:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.37.0
+        version: 0.37.0
+      '@supabase/ssr':
+        specifier: ^0.10.3
+        version: 0.10.3(@supabase/supabase-js@2.105.4)
+      '@supabase/supabase-js':
+        specifier: ^2.105.4
+        version: 2.105.4
+      next:
+        specifier: ^15.2.1
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.19.15
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/web:
     dependencies:
       '@flowbond/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@flowbond/flowedit':
+        specifier: workspace:*
+        version: link:../../packages/flowedit
       next:
         specifier: ^15.2.1
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -209,6 +301,34 @@ importers:
         specifier: ^5.7.3
         version: 5.9.3
 
+  packages/flowedit:
+    dependencies:
+      '@flowbond/core':
+        specifier: workspace:*
+        version: link:../core
+      next:
+        specifier: '>=14.0.0'
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: '>=18.0.0'
+        version: 19.2.4
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@flowbond/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/flowgarden-hardware:
     dependencies:
       '@flowbond/core':
@@ -256,6 +376,9 @@ importers:
 
   services/api:
     dependencies:
+      '@flowbond/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@flowbond/core':
         specifier: workspace:*
         version: link:../../packages/core

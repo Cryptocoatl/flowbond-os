@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@flowbond/ai": "workspace:*",
     "@flowbond/core": "workspace:*",
     "@flowbond/db": "workspace:*",
     "hono": "^4.7.0",

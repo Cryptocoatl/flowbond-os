@@ -1,17 +1,17 @@
 {
-  "name": "@flowbond/web",
+  "name": "@flowbond/flowedit-dashboard",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack --port 3003",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flowbond/core": "workspace:*",
     "@flowbond/flowedit": "workspace:*",
+    "@flowbond/core": "workspace:*",
     "next": "^15.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
