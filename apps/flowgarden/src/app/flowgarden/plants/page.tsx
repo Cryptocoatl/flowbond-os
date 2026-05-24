@@ -113,8 +113,8 @@ export default function PlantsPage() {
   })
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 md:p-8 max-w-5xl">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">Plants</h1>
           <p className="text-sm text-stone-400 mt-1">{plants.length} plants across {zones.length} zones</p>

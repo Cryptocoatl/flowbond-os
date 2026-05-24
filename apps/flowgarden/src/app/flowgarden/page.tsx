@@ -59,12 +59,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 md:p-8 max-w-6xl">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between">
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-stone-900">{ctx.garden.name}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-stone-900">{ctx.garden.name}</h1>
             <p className="text-sm text-stone-400 mt-0.5">
               {ctx.garden.location_label
                 ? `${ctx.garden.location_label} · `
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="text-right">
+          <div>
             <p className="text-xs text-stone-400 uppercase tracking-wide mb-1">Invite code</p>
             <p className="font-mono text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1">
               {ctx.garden.invite_code ?? '—'}

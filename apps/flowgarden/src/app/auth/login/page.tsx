@@ -35,8 +35,7 @@ function LoginForm() {
           setError(error.message)
           return
         }
-        router.push(next)
-        router.refresh()
+        window.location.href = next
       } else {
         const { error } = await supabase.auth.signUp({
           email,

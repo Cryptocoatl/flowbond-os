@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { MobileNav } from '@/components/layout/MobileNav'
 import { getGardenContext } from '@/lib/garden-context'
 
 export default async function GardenLayout({ children }: { children: React.ReactNode }) {
@@ -14,11 +15,14 @@ export default async function GardenLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-stone-50">
       <Sidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <div className="flex-1 min-w-0 flex flex-col">
+        <MobileNav gardenName={ctx.garden?.name} />
+        <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
