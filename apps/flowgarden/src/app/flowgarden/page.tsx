@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AgentChat } from '@/components/garden/AgentChat'
+import { InviteCodeCopy } from '@/components/garden/InviteCodeCopy'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,18 +30,21 @@ export default async function DashboardPage() {
   const admin = createAdminClient()
   const gardenId = ctx.garden.id
 
-  const [zonesRes, plantsRes, tasksRes, sensorRes] = await Promise.all([
+  const [zonesRes, plantsRes, tasksRes, sensorRes, xpRes] = await Promise.all([
     admin.from('flowgarden_zones').select('id, name').eq('garden_id', gardenId),
     admin.from('flowgarden_plant_groups').select('id, name, quantity, health_status, status').eq('garden_id', gardenId),
     admin.from('flowgarden_tasks').select('id, title, status, urgency, is_mission, due_at, zone_id').eq('garden_id', gardenId).neq('status', 'completed').order('due_at', { ascending: true }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any).from('flowgarden_sensor_readings').select('id, sensor_type, value, unit, recorded_at, zone_id').eq('garden_id', gardenId).order('recorded_at', { ascending: false }).limit(6),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from('flowgarden_xp_log').select('amount').eq('user_id', ctx.user.id),
   ])
 
   const zones = zonesRes.data ?? []
   const plants = plantsRes.data ?? []
   const tasks = tasksRes.data ?? []
   const readings = sensorRes.data ?? []
+  const totalXp = (xpRes.data ?? []).reduce((sum: number, r: { amount: number }) => sum + r.amount, 0)
 
   const pendingTasks = tasks.slice(0, 5)
   const totalPlantQty = plants.reduce((sum, p) => sum + (p.quantity ?? 1), 0)
@@ -76,12 +80,9 @@ export default async function DashboardPage() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-stone-400 uppercase tracking-wide mb-1">Invite code</p>
-            <p className="font-mono text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1">
-              {ctx.garden.invite_code ?? '—'}
-            </p>
-          </div>
+          {ctx.garden.invite_code && (
+            <InviteCodeCopy code={ctx.garden.invite_code} xp={totalXp} />
+          )}
         </div>
       </div>
 
