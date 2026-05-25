@@ -44,9 +44,18 @@ export const floweditContentOverrides = pgTable('flowedit_content_overrides', {
   publishedAt:     timestamp('published_at'),
 })
 
+export const floweditUsers = pgTable('flowedit_users', {
+  id:           text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  email:        text('email').notNull().unique(),
+  name:         text('name').notNull(),
+  passwordHash: text('password_hash').notNull(),
+  avatarUrl:    text('avatar_url'),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
+})
+
 export const floweditSiteMembers = pgTable('flowedit_site_members', {
   siteId:    text('site_id').notNull().references(() => floweditSites.id, { onDelete: 'cascade' }),
-  userId:    text('user_id').notNull(),
+  userId:    text('user_id').notNull().references(() => floweditUsers.id, { onDelete: 'cascade' }),
   role:      floweditRoleEnum('role').notNull().default('editor'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.siteId, t.userId] })])
@@ -57,3 +66,4 @@ export type FloweditContentOverride = typeof floweditContentOverrides.$inferSele
 export type FloweditOverrideInsert  = typeof floweditContentOverrides.$inferInsert
 export type FloweditChangeRequest   = typeof floweditChangeRequests.$inferSelect
 export type FloweditSiteMember      = typeof floweditSiteMembers.$inferSelect
+export type FloweditUser            = typeof floweditUsers.$inferSelect

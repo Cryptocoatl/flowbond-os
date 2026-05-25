@@ -3,7 +3,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { FlowEditContext }  from './context'
 import { FlowEditClient }   from './client'
 import { FlowEditOverlay }  from './overlay'
-import type { ContentOverride, CreateOverrideInput } from './types'
+import type { ContentOverride, CreateOverrideInput, FlowEditUser } from './types'
+
+const STORAGE_KEY = 'flowedit_token'
 
 interface FlowEditProviderProps {
   siteId:   string
@@ -12,25 +14,57 @@ interface FlowEditProviderProps {
 }
 
 export function FlowEditProvider({ siteId, apiUrl, children }: FlowEditProviderProps) {
-  const [overrides, setOverrides] = useState<Map<string, ContentOverride>>(new Map())
-  const [isEditMode, setEditMode] = useState(false)
+  const [overrides,    setOverrides]    = useState<Map<string, ContentOverride>>(new Map())
+  const [isEditMode,   setEditMode]     = useState(false)
+  const [currentUser,  setCurrentUser]  = useState<FlowEditUser | null>(null)
+  const [showLogin,    setShowLogin]    = useState(false)
 
   const config = useMemo(() => ({ siteId, apiUrl }), [siteId, apiUrl])
   const client = useMemo(() => new FlowEditClient(config), [config])
 
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    if (!stored) return
+    client.setToken(stored)
+    client.getMe()
+      .then(({ user }) => setCurrentUser({ ...user, role: user.role ?? 'admin' }))
+      .catch(() => {
+        localStorage.removeItem(STORAGE_KEY)
+        client.setToken(null)
+      })
+  }, [client])
+
+  // Fetch live content on mount
   useEffect(() => {
     client.getLiveContent().then((items) => {
       setOverrides(buildOverrideMap(items))
-    }).catch(() => {
-      // Non-fatal: site renders with default content if the API is unreachable
-    })
+    }).catch(() => {/* non-fatal */})
+  }, [client])
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { token, user } = await client.login(email, password)
+    client.setToken(token)
+    localStorage.setItem(STORAGE_KEY, token)
+    setCurrentUser(user)
+    setShowLogin(false)
+    setEditMode(true)
+  }, [client])
+
+  const logout = useCallback(() => {
+    client.setToken(null)
+    localStorage.removeItem(STORAGE_KEY)
+    setCurrentUser(null)
+    setEditMode(false)
   }, [client])
 
   const saveOverride = useCallback(async (input: CreateOverrideInput): Promise<ContentOverride> => {
-    const created = await client.createOverride(input)
+    const inputWithUser = currentUser
+      ? { ...input, createdBy: currentUser.id }
+      : input
 
-    // If the site is auto-approve, the API returns it as 'live' immediately.
-    // Either way, optimistically reflect the new override in the local map.
+    const created = await client.createOverride(inputWithUser)
+
     setOverrides((prev) => {
       const next = new Map(prev)
       next.set(`${created.path}:${created.field}`, created)
@@ -38,7 +72,7 @@ export function FlowEditProvider({ siteId, apiUrl, children }: FlowEditProviderP
     })
 
     return created
-  }, [client])
+  }, [client, currentUser])
 
   const value = useMemo(() => ({
     config,
@@ -47,7 +81,12 @@ export function FlowEditProvider({ siteId, apiUrl, children }: FlowEditProviderP
     isEditMode,
     setEditMode,
     saveOverride,
-  }), [config, client, overrides, isEditMode, saveOverride])
+    currentUser,
+    login,
+    logout,
+    showLogin,
+    setShowLogin,
+  }), [config, client, overrides, isEditMode, saveOverride, currentUser, login, logout, showLogin])
 
   return (
     <FlowEditContext.Provider value={value}>

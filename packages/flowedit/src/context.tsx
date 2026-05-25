@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useContext } from 'react'
-import type { ContentOverride, FlowEditConfig, CreateOverrideInput } from './types'
+import type { ContentOverride, FlowEditConfig, CreateOverrideInput, FlowEditUser } from './types'
 import type { FlowEditClient } from './client'
 
 export interface FlowEditContextValue {
@@ -10,6 +10,12 @@ export interface FlowEditContextValue {
   isEditMode:   boolean
   setEditMode:  (value: boolean) => void
   saveOverride: (input: CreateOverrideInput) => Promise<ContentOverride>
+  // auth
+  currentUser:  FlowEditUser | null
+  login:        (email: string, password: string) => Promise<void>
+  logout:       () => void
+  showLogin:    boolean
+  setShowLogin: (v: boolean) => void
 }
 
 export const FlowEditContext = createContext<FlowEditContextValue | null>(null)

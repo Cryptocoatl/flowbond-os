@@ -5,27 +5,55 @@ import type {
   FlowEditConfig,
   CreateOverrideInput,
   UpdateOverrideInput,
+  FlowEditUser,
 } from './types'
 
-interface ApiResponse<T = unknown> {
-  success: boolean
-  data?:   T
-  error?:  { code: string; message: string }
-}
-
 export class FlowEditClient {
+  private token: string | null = null
+
   constructor(private config: FlowEditConfig) {}
+
+  setToken(token: string | null) { this.token = token }
+
+  private headers(extra?: HeadersInit): HeadersInit {
+    const h: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (this.token) h['Authorization'] = `Bearer ${this.token}`
+    return { ...h, ...(extra as Record<string, string>) }
+  }
 
   private async request<T>(path: string, init?: RequestInit): Promise<T> {
     const res  = await fetch(`${this.config.apiUrl}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...init?.headers },
+      headers: this.headers(init?.headers),
     })
-    const json = (await res.json()) as ApiResponse<T>
-    if (!json.success || !res.ok) {
-      throw new Error(json.error?.message ?? `FlowEdit API error: ${res.status}`)
+    const json = await res.json() as Record<string, unknown>
+
+    if (!res.ok) {
+      throw new Error((json.error as string) ?? `FlowEdit API error: ${res.status}`)
     }
-    return json.data as T
+    // Auth endpoints return data directly (not wrapped in {success,data})
+    if ('token' in json || 'user' in json || 'members' in json) return json as T
+    if ('success' in json) return (json.data ?? json) as T
+    return json as T
+  }
+
+  // ── Auth ───────────────────────────────────────────────────────────────────
+
+  async login(email: string, password: string): Promise<{ token: string; user: FlowEditUser }> {
+    return this.request<{ token: string; user: FlowEditUser }>(
+      '/api/v1/flowedit/auth/login',
+      { method: 'POST', body: JSON.stringify({ email, password, siteId: this.config.siteId }) }
+    )
+  }
+
+  async getMe(): Promise<{ user: FlowEditUser }> {
+    return this.request<{ user: FlowEditUser }>('/api/v1/flowedit/auth/me')
+  }
+
+  async getSiteMembers(): Promise<{ members: FlowEditUser[] }> {
+    return this.request<{ members: FlowEditUser[] }>(
+      `/api/v1/flowedit/auth/site/${this.config.siteId}/members`
+    )
   }
 
   // ── Sites ──────────────────────────────────────────────────────────────────
@@ -36,18 +64,15 @@ export class FlowEditClient {
 
   // ── Content overrides ──────────────────────────────────────────────────────
 
-  /** Fetch all live overrides for a site. Used by the SDK on page load. */
   getLiveContent(): Promise<ContentOverride[]> {
     return this.request<ContentOverride[]>(`/api/v1/flowedit/content/${this.config.siteId}/live`)
   }
 
-  /** Fetch all overrides (any status) — used by the dashboard. */
   getAllContent(status?: string): Promise<ContentOverride[]> {
     const qs = status ? `?status=${status}` : ''
     return this.request<ContentOverride[]>(`/api/v1/flowedit/content/${this.config.siteId}${qs}`)
   }
 
-  /** Create a draft content override. */
   createOverride(input: CreateOverrideInput): Promise<ContentOverride> {
     return this.request<ContentOverride>(`/api/v1/flowedit/content/${this.config.siteId}`, {
       method: 'POST',
@@ -55,7 +80,6 @@ export class FlowEditClient {
     })
   }
 
-  /** Approve, reject, or update an existing override. */
   updateOverride(id: string, input: UpdateOverrideInput): Promise<ContentOverride> {
     return this.request<ContentOverride>(`/api/v1/flowedit/content/${this.config.siteId}/overrides/${id}`, {
       method: 'PATCH',

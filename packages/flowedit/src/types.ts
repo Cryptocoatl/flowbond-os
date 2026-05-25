@@ -1,3 +1,11 @@
+export interface FlowEditUser {
+  id:        string
+  email:     string
+  name:      string
+  avatarUrl: string | null
+  role:      EditRole
+}
+
 export type ApprovalMode = 'auto' | 'review' | 'admin_only'
 export type EditStatus   = 'draft' | 'pending' | 'approved' | 'rejected' | 'live'
 export type EditTier     = 'simple' | 'ai' | 'agent'
