@@ -5,16 +5,22 @@ import Anthropic from '@anthropic-ai/sdk'
 
 export const dynamic = 'force-dynamic'
 
+interface HistoryMessage {
+  role: 'user' | 'agent'
+  text: string
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { message, photoPath, gardenId } = body as {
+  const { message, photoPath, gardenId, history = [] } = body as {
     message?: string
     photoPath?: string
     gardenId: string
+    history?: HistoryMessage[]
   }
 
   if (!message?.trim() && !photoPath) {
@@ -27,113 +33,171 @@ export async function POST(request: Request) {
     admin.from('flowgarden_gardens').select('id,name,location_label').eq('id', gardenId).single(),
     admin.from('flowgarden_zones').select('id,name').eq('garden_id', gardenId),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (admin as any).from('flowgarden_plant_groups').select('id,name,species,status,health_status').eq('garden_id', gardenId).limit(15),
+    (admin as any).from('flowgarden_plant_groups')
+      .select('id,name,species,variety,quantity,status,health_status,notes')
+      .eq('garden_id', gardenId)
+      .order('created_at', { ascending: false })
+      .limit(30),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (admin as any).from('flowgarden_tasks').select('id,title,urgency').eq('garden_id', gardenId).neq('status','completed').limit(5),
+    (admin as any).from('flowgarden_tasks')
+      .select('id,title,urgency,status')
+      .eq('garden_id', gardenId)
+      .neq('status', 'completed')
+      .limit(10),
   ])
 
   const garden = gardenRes.data
   const zones = (zonesRes.data ?? []) as { id: string; name: string }[]
-  const plants = (plantsRes.data ?? []) as { id: string; name: string; species?: string; status: string }[]
-  const pending = (tasksRes.data ?? []) as { id: string; title: string }[]
+  const plants = (plantsRes.data ?? []) as {
+    id: string; name: string; species?: string; variety?: string
+    quantity: number; status: string; health_status: string; notes?: string
+  }[]
+  const pendingTasks = (tasksRes.data ?? []) as { id: string; title: string; urgency: string }[]
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   })
 
-  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You help gardeners track, understand, and improve their garden through natural conversation.
+  const plantList = plants.length
+    ? plants.map(p =>
+        `• ${p.name}${p.variety ? ` (${p.variety})` : ''}${p.species ? ` — ${p.species}` : ''} | qty: ${p.quantity} | ${p.status} | health: ${p.health_status}${p.notes ? ` | ${p.notes}` : ''}`
+      ).join('\n')
+    : 'None registered yet'
 
-Current garden state:
-- Garden: ${garden?.name}${garden?.location_label ? ` (${garden.location_label})` : ''}
-- Zones: ${zones.length ? zones.map(z => z.name).join(', ') : 'None set up yet'}
-- Plants: ${plants.length ? plants.map(p => `${p.name}${p.species ? ` (${p.species})` : ''} — ${p.status}`).join(', ') : 'None added yet'}
-- Pending tasks: ${pending.length ? pending.map(t => t.title).join(', ') : 'None'}
-- Today: ${today}
+  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You help gardeners log observations, manage plants, and plan tasks through natural conversation. You have memory of this conversation session.
 
-Rules:
-1. ALWAYS call log_event first — every message must be recorded.
-2. If the user mentions planting something new → also call add_plant.
-3. If the user mentions something that needs doing → also call create_task.
-4. After using tools, give a warm, knowledgeable response (2–3 sentences). Be specific and practical.
-5. If a photo is shared, analyse it and describe what you observe.`
+Today: ${today}
+Garden: ${garden?.name}${garden?.location_label ? ` — ${garden.location_label}` : ''}
+Zones: ${zones.length ? zones.map(z => z.name).join(', ') : 'None set up'}
 
-  // Build message content (text + optional image)
-  const content: Anthropic.MessageParam['content'] = []
+Registered plants:
+${plantList}
+
+Pending tasks: ${pendingTasks.length ? pendingTasks.map(t => `${t.title} (${t.urgency})`).join(', ') : 'None'}
+
+HOW YOU WORK:
+- Everything the user says gets logged via log_event — this is non-negotiable.
+- When user mentions a new plant, call add_plant. It will appear on the garden map and plant list.
+- When user mentions something to do, call create_task.
+- When user says a plant changed state or health, call update_plant_status.
+- You can call multiple tools in one response (e.g. log_event + add_plant).
+- After tool calls, give a brief warm response (1–2 sentences). Reference specifics.
+- If a photo is shared, describe what you observe in detail.
+- You remember this entire conversation — refer back to earlier messages when relevant.`
+
+  // Build current message content (text + optional image)
+  const currentContent: Anthropic.MessageParam['content'] = []
 
   if (photoPath) {
-    const { data: signed } = await admin.storage
-      .from('flowgarden-photos')
-      .createSignedUrl(photoPath, 3600)
+    try {
+      const { data: signed } = await admin.storage
+        .from('flowgarden-photos')
+        .createSignedUrl(photoPath, 3600)
 
-    if (signed?.signedUrl) {
-      try {
+      if (signed?.signedUrl) {
         const res = await fetch(signed.signedUrl)
         const buf = await res.arrayBuffer()
         const b64 = Buffer.from(buf).toString('base64')
         const mime = (res.headers.get('content-type') ?? 'image/jpeg') as
           'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
-        content.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } })
-      } catch {
-        // Photo unavailable — continue without it
+        currentContent.push({ type: 'image', source: { type: 'base64', media_type: mime, data: b64 } })
       }
+    } catch (err) {
+      console.error('[agent] photo fetch failed:', err)
     }
   }
 
-  content.push({ type: 'text', text: message?.trim() || '(photo attached — please analyse)' })
+  currentContent.push({ type: 'text', text: message?.trim() || '(photo attached — please analyse)' })
+
+  // Build full conversation history for Claude
+  const messages: Anthropic.MessageParam[] = []
+  for (const h of history) {
+    messages.push({
+      role: h.role === 'user' ? 'user' : 'assistant',
+      content: h.text,
+    })
+  }
+  messages.push({ role: 'user', content: currentContent })
 
   const tools: Anthropic.Tool[] = [
     {
       name: 'log_event',
-      description: 'Record a garden observation, activity, or photo analysis in the garden log.',
+      description: 'Record any garden observation, activity, or photo analysis in the permanent log.',
       input_schema: {
         type: 'object' as const,
         properties: {
           event_type: {
             type: 'string',
-            enum: ['text_observation','planting','watering','pest_observed','disease_observed',
-                   'pruning','fertilizing','compost_added','harvest','photo_uploaded'],
+            enum: [
+              'text_observation', 'planting', 'watering', 'pest_observed', 'disease_observed',
+              'pruning', 'fertilizing', 'compost_added', 'harvest', 'photo_uploaded',
+              'germination', 'transplant', 'mulch_added', 'question_asked',
+            ],
           },
-          title: { type: 'string', description: 'Short title for this event (max 80 chars)' },
-          structured_summary: { type: 'string', description: 'Clean 1–3 sentence summary of what happened or was observed' },
+          title: { type: 'string', description: 'Short descriptive title (max 80 chars)' },
+          structured_summary: { type: 'string', description: '1–3 sentence summary of what happened or was observed' },
           intent: {
             type: 'string',
-            enum: ['LOG_OBSERVATION','LOG_WATERING','LOG_PLANTING','LOG_PEST_ALERT',
-                   'LOG_DISEASE_ALERT','LOG_PHOTO_ANALYSIS','CREATE_TASK','UNKNOWN_GARDEN_INPUT'],
+            enum: [
+              'LOG_OBSERVATION', 'LOG_WATERING', 'LOG_PLANTING', 'LOG_PEST_ALERT',
+              'LOG_DISEASE_ALERT', 'LOG_PHOTO_ANALYSIS', 'CREATE_TASK',
+              'LOG_TRANSPLANT', 'LOG_GERMINATION', 'UNKNOWN_GARDEN_INPUT',
+            ],
           },
-          urgency: { type: 'string', enum: ['none','low','medium','high','urgent'] },
+          urgency: { type: 'string', enum: ['none', 'low', 'medium', 'high', 'urgent'] },
         },
-        required: ['event_type','title','structured_summary','intent','urgency'],
-      },
-    },
-    {
-      name: 'create_task',
-      description: 'Create an actionable garden task or mission.',
-      input_schema: {
-        type: 'object' as const,
-        properties: {
-          title: { type: 'string', description: 'Clear, actionable task title (max 100 chars)' },
-          description: { type: 'string', description: 'Details: what to do, why, and how' },
-          urgency: { type: 'string', enum: ['none','low','medium','high','urgent'] },
-          due_at: { type: 'string', description: 'ISO 8601 date-time if a deadline applies' },
-        },
-        required: ['title','urgency'],
+        required: ['event_type', 'title', 'structured_summary', 'intent', 'urgency'],
       },
     },
     {
       name: 'add_plant',
-      description: 'Register a new plant or plant group being added to the garden.',
+      description: 'Register a new plant or plant group. This adds it to the garden map and plant list.',
       input_schema: {
         type: 'object' as const,
         properties: {
-          name: { type: 'string', description: 'Common name for this plant or group' },
-          species: { type: 'string' },
-          variety: { type: 'string' },
-          quantity: { type: 'number', default: 1 },
-          status: { type: 'string', enum: ['seed','sprout','seedling','growing','flowering','fruiting','harvested'] },
-          health_status: { type: 'string', enum: ['excellent','good','stressed','critical','unknown'] },
+          name: { type: 'string', description: 'Common name (e.g. Tomato, Basil)' },
+          species: { type: 'string', description: 'Latin species name if known' },
+          variety: { type: 'string', description: 'Cultivar/variety name (e.g. Cherry, Genovese)' },
+          quantity: { type: 'number', description: 'How many plants/seeds', default: 1 },
+          status: {
+            type: 'string',
+            enum: ['seed', 'germinating', 'seedling', 'transplanted', 'established', 'flowering', 'fruiting', 'harvested', 'dormant'],
+          },
+          health_status: { type: 'string', enum: ['excellent', 'good', 'stressed', 'critical', 'unknown'] },
+          notes: { type: 'string', description: 'Any extra details: location, observations, care notes' },
+        },
+        required: ['name', 'quantity', 'status'],
+      },
+    },
+    {
+      name: 'update_plant_status',
+      description: 'Update the status or health of an existing plant. Use when the user reports a change.',
+      input_schema: {
+        type: 'object' as const,
+        properties: {
+          plant_id: { type: 'string', description: 'UUID of the plant group to update' },
+          status: {
+            type: 'string',
+            enum: ['seed', 'germinating', 'seedling', 'transplanted', 'established', 'flowering', 'fruiting', 'harvested', 'dormant', 'dead'],
+          },
+          health_status: { type: 'string', enum: ['excellent', 'good', 'stressed', 'critical', 'unknown'] },
           notes: { type: 'string' },
         },
-        required: ['name','quantity','status'],
+        required: ['plant_id'],
+      },
+    },
+    {
+      name: 'create_task',
+      description: 'Create an actionable garden task or mission for the gardener.',
+      input_schema: {
+        type: 'object' as const,
+        properties: {
+          title: { type: 'string', description: 'Clear, actionable task (max 100 chars)' },
+          description: { type: 'string', description: 'What to do, why, and how' },
+          urgency: { type: 'string', enum: ['none', 'low', 'medium', 'high', 'urgent'] },
+          due_at: { type: 'string', description: 'ISO 8601 datetime if there is a deadline' },
+        },
+        required: ['title', 'urgency'],
       },
     },
   ]
@@ -144,19 +208,18 @@ Rules:
     max_tokens: 1024,
     system: systemPrompt,
     tools,
-    messages: [{ role: 'user', content }],
+    messages,
   })
 
   const mediaUrls = photoPath ? [photoPath] : []
-  const created = { events: [] as string[], tasks: [] as string[], plants: [] as string[] }
+  const created = { events: [] as string[], tasks: [] as string[], plants: [] as string[], updated: [] as string[] }
 
   for (const block of aiResponse.content) {
     if (block.type !== 'tool_use') continue
 
     if (block.name === 'log_event') {
       const inp = block.input as Record<string, string>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (admin as any).from('flowgarden_events').insert({
+      const { data, error } = await (admin as any).from('flowgarden_events').insert({ // eslint-disable-line @typescript-eslint/no-explicit-any
         user_id: user.id,
         garden_id: gardenId,
         event_type: inp.event_type,
@@ -168,29 +231,13 @@ Rules:
         media_urls: mediaUrls,
         occurred_at: new Date().toISOString(),
       }).select('id').single()
-      if (data?.id) created.events.push(data.id)
-    }
-
-    else if (block.name === 'create_task') {
-      const inp = block.input as Record<string, string>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (admin as any).from('flowgarden_tasks').insert({
-        user_id: user.id,
-        garden_id: gardenId,
-        title: inp.title,
-        description: inp.description ?? null,
-        urgency: inp.urgency,
-        status: 'pending',
-        is_mission: true,
-        due_at: inp.due_at ?? null,
-      }).select('id').single()
-      if (data?.id) created.tasks.push(data.id)
+      if (error) console.error('[agent] log_event insert failed:', error.message)
+      else if (data?.id) created.events.push(data.id)
     }
 
     else if (block.name === 'add_plant') {
       const inp = block.input as Record<string, unknown>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (admin as any).from('flowgarden_plant_groups').insert({
+      const { data, error } = await (admin as any).from('flowgarden_plant_groups').insert({ // eslint-disable-line @typescript-eslint/no-explicit-any
         user_id: user.id,
         garden_id: gardenId,
         name: inp.name as string,
@@ -202,12 +249,43 @@ Rules:
         notes: (inp.notes as string) ?? null,
         photo_urls: mediaUrls,
       }).select('id').single()
-      if (data?.id) created.plants.push(data.id)
+      if (error) console.error('[agent] add_plant insert failed:', error.message)
+      else if (data?.id) created.plants.push(data.id)
+    }
+
+    else if (block.name === 'update_plant_status') {
+      const inp = block.input as Record<string, string>
+      const update: Record<string, string> = {}
+      if (inp.status) update.status = inp.status
+      if (inp.health_status) update.health_status = inp.health_status
+      if (inp.notes) update.notes = inp.notes
+      const { error } = await (admin as any).from('flowgarden_plant_groups') // eslint-disable-line @typescript-eslint/no-explicit-any
+        .update(update)
+        .eq('id', inp.plant_id)
+        .eq('garden_id', gardenId)
+      if (error) console.error('[agent] update_plant_status failed:', error.message)
+      else created.updated.push(inp.plant_id)
+    }
+
+    else if (block.name === 'create_task') {
+      const inp = block.input as Record<string, string>
+      const { data, error } = await (admin as any).from('flowgarden_tasks').insert({ // eslint-disable-line @typescript-eslint/no-explicit-any
+        user_id: user.id,
+        garden_id: gardenId,
+        title: inp.title,
+        description: inp.description ?? null,
+        urgency: inp.urgency,
+        status: 'pending',
+        is_mission: true,
+        due_at: inp.due_at ?? null,
+      }).select('id').single()
+      if (error) console.error('[agent] create_task insert failed:', error.message)
+      else if (data?.id) created.tasks.push(data.id)
     }
   }
 
   const reply = aiResponse.content.find(b => b.type === 'text')?.text
-    ?? "Got it — recorded in your garden log."
+    ?? 'Got it — recorded in your garden log.'
 
   return NextResponse.json({ reply, created })
 }

@@ -7,7 +7,7 @@ interface Message {
   role: 'user' | 'agent'
   text: string
   photoUrl?: string
-  created?: { events: number; tasks: number; plants: number }
+  created?: { events: number; tasks: number; plants: number; updated: number }
 }
 
 export function AgentChat({ gardenId }: { gardenId: string }) {
@@ -17,9 +17,9 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [pendingPhoto, setPendingPhoto] = useState<{ file: File; preview: string } | null>(null)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'done' | 'error'>('idle')
   const [isPending, startTransition] = useTransition()
 
-  // Scroll to bottom whenever messages or pending state changes
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isPending])
@@ -29,12 +29,14 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
     if (!file) return
     const preview = URL.createObjectURL(file)
     setPendingPhoto({ file, preview })
+    setUploadStatus('idle')
     e.target.value = ''
   }
 
   function removePendingPhoto() {
     if (pendingPhoto) URL.revokeObjectURL(pendingPhoto.preview)
     setPendingPhoto(null)
+    setUploadStatus('idle')
   }
 
   function handleSend() {
@@ -47,42 +49,73 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
     setInput('')
     setPendingPhoto(null)
 
+    // Snapshot history before adding the new user message
+    const historySnapshot = messages.map(m => ({ role: m.role, text: m.text }))
+
     startTransition(async () => {
-      // Optimistic user message
       setMessages(m => [...m, { role: 'user', text: userText, photoUrl: photoPreview }])
 
       let photoPath: string | undefined
+
       if (photoFile) {
-        const fd = new FormData()
-        fd.append('file', photoFile)
-        const upRes = await fetch('/api/flowgarden/upload', { method: 'POST', body: fd })
-        if (upRes.ok) {
-          const { path } = await upRes.json()
-          photoPath = path
+        setUploadStatus('uploading')
+        try {
+          const fd = new FormData()
+          fd.append('file', photoFile)
+          const upRes = await fetch('/api/flowgarden/upload', { method: 'POST', body: fd })
+          if (upRes.ok) {
+            const { path } = await upRes.json()
+            photoPath = path
+            setUploadStatus('done')
+          } else {
+            const err = await upRes.json().catch(() => ({}))
+            console.error('[upload] failed:', err)
+            setUploadStatus('error')
+          }
+        } catch (err) {
+          console.error('[upload] network error:', err)
+          setUploadStatus('error')
         }
       }
 
-      const agentRes = await fetch('/api/flowgarden/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText, photoPath, gardenId }),
-      })
+      try {
+        const agentRes = await fetch('/api/flowgarden/agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userText,
+            photoPath,
+            gardenId,
+            history: historySnapshot,
+          }),
+        })
 
-      if (agentRes.ok) {
-        const { reply, created } = await agentRes.json()
-        const summary = {
-          events: created.events.length,
-          tasks: created.tasks.length,
-          plants: created.plants.length,
+        if (agentRes.ok) {
+          const { reply, created } = await agentRes.json()
+          const summary = {
+            events: created.events.length,
+            tasks: created.tasks.length,
+            plants: created.plants.length,
+            updated: created.updated?.length ?? 0,
+          }
+          setMessages(m => [...m, { role: 'agent', text: reply, created: summary }])
+          if (summary.tasks > 0 || summary.plants > 0 || summary.updated > 0) router.refresh()
+        } else {
+          const err = await agentRes.json().catch(() => ({}))
+          console.error('[agent] failed:', err)
+          setMessages(m => [...m, {
+            role: 'agent',
+            text: 'Something went wrong talking to your garden intelligence. Try again.',
+          }])
         }
-        setMessages(m => [...m, { role: 'agent', text: reply, created: summary }])
-        // Refresh server data so dashboard stats update
-        if (summary.tasks > 0 || summary.plants > 0) router.refresh()
-      } else {
+      } catch (err) {
+        console.error('[agent] network error:', err)
         setMessages(m => [...m, {
           role: 'agent',
-          text: 'Sorry, something went wrong. Try again.',
+          text: 'Could not reach the garden intelligence. Check your connection.',
         }])
+      } finally {
+        setUploadStatus('idle')
       }
     })
   }
@@ -100,7 +133,7 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center shrink-0">
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-white">
-            <path d="M10 2a6 6 0 100 12A6 6 0 0010 2zm0 1a5 5 0 110 10A5 5 0 0110 3zm-1 5a1 1 0 112 0v2a1 1 0 11-2 0V8zm1-3a1 1 0 100 2 1 1 0 000-2z" />
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
           </svg>
         </div>
         <div>
@@ -135,16 +168,21 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
                     {msg.text}
                   </div>
                 )}
-                {msg.created && (msg.created.tasks > 0 || msg.created.plants > 0) && (
+                {msg.created && (msg.created.tasks > 0 || msg.created.plants > 0 || msg.created.updated > 0 || msg.created.events > 0) && (
                   <div className="flex gap-1.5 flex-wrap">
+                    {msg.created.plants > 0 && (
+                      <span className="text-[10px] bg-green-50 border border-green-200 text-green-700 rounded-full px-2 py-0.5">
+                        +{msg.created.plants} plant{msg.created.plants > 1 ? 's' : ''} added
+                      </span>
+                    )}
+                    {msg.created.updated > 0 && (
+                      <span className="text-[10px] bg-blue-50 border border-blue-200 text-blue-700 rounded-full px-2 py-0.5">
+                        {msg.created.updated} plant{msg.created.updated > 1 ? 's' : ''} updated
+                      </span>
+                    )}
                     {msg.created.tasks > 0 && (
                       <span className="text-[10px] bg-amber-50 border border-amber-200 text-amber-700 rounded-full px-2 py-0.5">
                         +{msg.created.tasks} mission{msg.created.tasks > 1 ? 's' : ''}
-                      </span>
-                    )}
-                    {msg.created.plants > 0 && (
-                      <span className="text-[10px] bg-green-50 border border-green-200 text-green-700 rounded-full px-2 py-0.5">
-                        +{msg.created.plants} plant{msg.created.plants > 1 ? 's' : ''}
                       </span>
                     )}
                     {msg.created.events > 0 && (
@@ -165,7 +203,9 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
                 </svg>
               </div>
               <div className="bg-white border border-stone-100 rounded-2xl rounded-tl-sm px-3 py-2">
-                <span className="text-xs text-stone-400">Thinking…</span>
+                <span className="text-xs text-stone-400">
+                  {uploadStatus === 'uploading' ? 'Uploading photo…' : 'Thinking…'}
+                </span>
               </div>
             </div>
           )}
@@ -184,18 +224,21 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
           >
             ×
           </button>
+          {uploadStatus === 'error' && (
+            <span className="absolute bottom-0 left-0 right-0 bg-red-600/80 text-white text-[9px] text-center rounded-b-lg py-0.5">
+              Upload failed
+            </span>
+          )}
         </div>
       )}
 
       {/* Input row */}
       <div className="flex items-end gap-2">
-        {/* Photo attach */}
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={isPending}
           className="w-10 h-10 rounded-full bg-stone-100 hover:bg-stone-200 active:bg-stone-300 flex items-center justify-center shrink-0 transition-colors disabled:opacity-40 touch-manipulation"
-          title="Attach photo"
           aria-label="Attach photo"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-stone-600">
@@ -210,7 +253,6 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
           className="sr-only"
         />
 
-        {/* Text input */}
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -227,7 +269,6 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
           }}
         />
 
-        {/* Send */}
         <button
           type="button"
           onClick={handleSend}
@@ -243,7 +284,7 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
 
       {messages.length === 0 && (
         <p className="text-[11px] text-stone-400 text-center">
-          Say what you planted, watered, or observed — or attach a photo. Everything gets logged and tasks are created automatically.
+          Tell me what you observe, planted, or need done — or attach a photo. Everything gets logged automatically.
         </p>
       )}
     </div>
