@@ -34,3 +34,26 @@ export async function getChangeRequests(siteId: string, status?: string): Promis
   const json = await res.json()
   return json.data ?? []
 }
+
+export interface SiteMember {
+  userId:    string
+  email:     string
+  name:      string
+  avatarUrl: string | null
+  role:      'viewer' | 'editor' | 'approver' | 'admin'
+}
+
+export async function getSiteMembers(siteId: string): Promise<SiteMember[]> {
+  const res  = await fetch(`${API_URL}/api/v1/flowedit/auth/site/${siteId}/members`, { cache: 'no-store' })
+  const json = await res.json()
+  return json.members ?? []
+}
+
+export interface InviteResult {
+  user:         { id: string; email: string; name: string }
+  site:         { id: string; name: string }
+  role:         string
+  tempPassword: string | null
+  setupToken:   string
+  isNewUser:    boolean
+}

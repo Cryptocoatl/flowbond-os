@@ -41,3 +41,9 @@
     @apply w-full bg-stone-800 border border-stone-600 rounded-lg px-4 py-2.5 text-flow-cream placeholder-stone-500 text-sm focus:outline-none focus:border-emerald-500 transition-colors;
   }
 }
+
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

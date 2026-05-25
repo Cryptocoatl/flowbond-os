@@ -4,6 +4,7 @@ import { z }          from 'zod'
 import { getDb, schema } from '@flowbond/db'
 import { eq, and }    from 'drizzle-orm'
 import type { ApiResponse } from '@flowbond/core'
+import { notifyNewDraft } from '../lib/notify'
 
 export const floweditContentRouter = new Hono()
 
@@ -87,7 +88,11 @@ floweditContentRouter.post('/:siteId', zValidator('json', createOverrideSchema),
 
   // Look up the site's approval mode to decide initial status
   const [site] = await db
-    .select({ approvalMode: schema.floweditSites.approvalMode })
+    .select({
+      approvalMode: schema.floweditSites.approvalMode,
+      name:         schema.floweditSites.name,
+      domain:       schema.floweditSites.domain,
+    })
     .from(schema.floweditSites)
     .where(eq(schema.floweditSites.id, siteId))
 
@@ -112,6 +117,20 @@ floweditContentRouter.post('/:siteId', zValidator('json', createOverrideSchema),
       publishedAt,
     })
     .returning()
+
+  if (initialStatus === 'draft') {
+    notifyNewDraft({
+      siteName:   site.name,
+      siteDomain: site.domain,
+      overrideId: override.id,
+      path:       override.path,
+      field:      override.field,
+      value:      override.value as Record<string, unknown>,
+      changeNote: override.changeNote,
+      createdBy:  override.createdBy,
+      tier:       override.tier,
+    }).catch(() => {/* non-fatal */})
+  }
 
   return c.json<ApiResponse>({ success: true, data: override }, 201)
 })

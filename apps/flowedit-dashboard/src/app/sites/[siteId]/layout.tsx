@@ -10,6 +10,7 @@ interface Props {
 const navItems = [
   { href: 'changes', label: 'Changes' },
   { href: 'content', label: 'All Content' },
+  { href: 'members', label: 'Members' },
 ]
 
 export default async function SiteLayout({ children, params }: Props) {

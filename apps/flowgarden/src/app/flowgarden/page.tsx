@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { AgentChat } from '@/components/garden/AgentChat'
 
 export const dynamic = 'force-dynamic'
 
@@ -194,23 +195,8 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* AI placeholder */}
-      <div className="card border-dashed border-emerald-200 bg-emerald-50/40">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-emerald-700">
-              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-emerald-800">AI Garden Intelligence</p>
-            <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
-              Anthropic API key is connected — ready to enable garden health summaries, watering
-              recommendations, pest risk detection, and mission generation.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* AI Garden Agent */}
+      <AgentChat gardenId={gardenId} />
     </div>
   )
 }
