@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 
   const [zonesRes, plantsRes, tasksRes, sensorRes] = await Promise.all([
     admin.from('flowgarden_zones').select('id, name').eq('garden_id', gardenId),
-    admin.from('flowgarden_plant_groups').select('id, name, health_status, status').eq('garden_id', gardenId),
+    admin.from('flowgarden_plant_groups').select('id, name, quantity, health_status, status').eq('garden_id', gardenId),
     admin.from('flowgarden_tasks').select('id, title, status, urgency, is_mission, due_at, zone_id').eq('garden_id', gardenId).neq('status', 'completed').order('due_at', { ascending: true }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any).from('flowgarden_sensor_readings').select('id, sensor_type, value, unit, recorded_at, zone_id').eq('garden_id', gardenId).order('recorded_at', { ascending: false }).limit(6),
@@ -43,7 +43,10 @@ export default async function DashboardPage() {
   const readings = sensorRes.data ?? []
 
   const pendingTasks = tasks.slice(0, 5)
-  const healthyPlants = plants.filter(p => p.health_status === 'good' || p.health_status === 'excellent').length
+  const totalPlantQty = plants.reduce((sum, p) => sum + (p.quantity ?? 1), 0)
+  const healthyPlantQty = plants
+    .filter(p => p.health_status === 'good' || p.health_status === 'excellent')
+    .reduce((sum, p) => sum + (p.quantity ?? 1), 0)
   const missionsToday = tasks.filter(t => {
     if (!t.is_mission || !t.due_at) return false
     const due = new Date(t.due_at)
@@ -91,9 +94,9 @@ export default async function DashboardPage() {
         </Link>
         <Link href="/flowgarden/plants" className="card hover:shadow-md transition-shadow group">
           <p className="text-xs text-stone-400 uppercase tracking-wide font-medium">Plants</p>
-          <p className="text-3xl font-bold text-stone-900 mt-1">{plants.length}</p>
+          <p className="text-3xl font-bold text-stone-900 mt-1">{totalPlantQty}</p>
           <p className="text-xs text-emerald-600 mt-1 group-hover:underline">
-            {healthyPlants} healthy
+            {healthyPlantQty} healthy
           </p>
         </Link>
         <Link href="/flowgarden/tasks" className="card hover:shadow-md transition-shadow group">

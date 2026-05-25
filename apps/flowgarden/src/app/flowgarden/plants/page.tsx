@@ -1,151 +1,149 @@
-import { store } from '@/lib/mock-data'
-import type { Plant } from '@flowbond/core'
+import { redirect } from 'next/navigation'
+import { getGardenContext } from '@/lib/garden-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
-  seed: { label: 'Seed', color: 'bg-stone-100 text-stone-600', dot: 'bg-stone-400' },
-  sprout: { label: 'Sprout', color: 'bg-lime-100 text-lime-700', dot: 'bg-lime-500' },
-  seedling: { label: 'Seedling', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
-  growing: { label: 'Growing', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-  flowering: { label: 'Flowering', color: 'bg-pink-100 text-pink-700', dot: 'bg-pink-400' },
-  fruiting: { label: 'Fruiting', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
-  harvested: { label: 'Harvested', color: 'bg-teal-100 text-teal-700', dot: 'bg-teal-500' },
-  dead: { label: 'Dead', color: 'bg-red-100 text-red-400', dot: 'bg-red-300' },
+  seed:         { label: 'Seed',         color: 'bg-stone-100 text-stone-600',     dot: 'bg-stone-400' },
+  germinating:  { label: 'Germinating',  color: 'bg-lime-100 text-lime-700',       dot: 'bg-lime-500' },
+  seedling:     { label: 'Seedling',     color: 'bg-green-100 text-green-700',     dot: 'bg-green-500' },
+  transplanted: { label: 'Transplanted', color: 'bg-teal-100 text-teal-700',       dot: 'bg-teal-500' },
+  established:  { label: 'Established',  color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-600' },
+  flowering:    { label: 'Flowering',    color: 'bg-pink-100 text-pink-700',       dot: 'bg-pink-400' },
+  fruiting:     { label: 'Fruiting',     color: 'bg-amber-100 text-amber-700',     dot: 'bg-amber-500' },
+  harvested:    { label: 'Harvested',    color: 'bg-teal-100 text-teal-700',       dot: 'bg-teal-500' },
+  dormant:      { label: 'Dormant',      color: 'bg-stone-100 text-stone-500',     dot: 'bg-stone-300' },
+  dead:         { label: 'Dead',         color: 'bg-red-100 text-red-400',         dot: 'bg-red-300' },
 }
 
-const typeIcons: Record<string, string> = {
-  vegetable: 'V',
-  herb: 'H',
-  flower: 'F',
-  fruit: 'Fr',
-  tree: 'T',
-  companion: 'C',
-  cover_crop: 'CC',
-  other: '?',
+const healthConfig: Record<string, { label: string; color: string }> = {
+  excellent: { label: 'Excellent', color: 'text-emerald-600' },
+  good:      { label: 'Good',      color: 'text-green-600' },
+  stressed:  { label: 'Stressed',  color: 'text-amber-600' },
+  critical:  { label: 'Critical',  color: 'text-red-600' },
+  unknown:   { label: 'Unknown',   color: 'text-stone-400' },
 }
 
-const typeColors: Record<string, string> = {
-  vegetable: 'bg-green-100 text-green-800',
-  herb: 'bg-teal-100 text-teal-800',
-  flower: 'bg-pink-100 text-pink-800',
-  fruit: 'bg-orange-100 text-orange-800',
-  tree: 'bg-amber-100 text-amber-800',
-  companion: 'bg-purple-100 text-purple-800',
-  cover_crop: 'bg-lime-100 text-lime-800',
-  other: 'bg-stone-100 text-stone-600',
+interface PlantGroup {
+  id: string
+  name: string
+  species: string | null
+  variety: string | null
+  quantity: number
+  status: string
+  health_status: string
+  notes: string | null
+  created_at: string
 }
 
-function PlantCard({ plant }: { plant: Plant }) {
-  const zone = store.zones.find(z => z.id === plant.zoneId)
-  const status = statusConfig[plant.status]
-  const daysPlanted = plant.plantedDate
-    ? Math.round((Date.now() - plant.plantedDate.getTime()) / 86400000)
-    : null
-  const daysToHarvest = plant.expectedHarvestDate
-    ? Math.round((plant.expectedHarvestDate.getTime() - Date.now()) / 86400000)
-    : null
+function PlantCard({ plant }: { plant: PlantGroup }) {
+  const status = statusConfig[plant.status] ?? { label: plant.status, color: 'bg-stone-100 text-stone-600', dot: 'bg-stone-400' }
+  const health = healthConfig[plant.health_status] ?? healthConfig.unknown
 
   return (
     <div className="card hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${typeColors[plant.type]}`}>
-            {typeIcons[plant.type]}
-          </div>
-          <div>
-            <h3 className="font-semibold text-stone-900 text-sm">{plant.name}</h3>
-            {plant.variety && <p className="text-xs text-stone-400">{plant.variety}</p>}
-          </div>
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-stone-900 leading-tight">
+            {plant.name}
+            {plant.variety ? <span className="text-stone-400 font-normal"> · {plant.variety}</span> : null}
+          </h3>
+          {plant.species && (
+            <p className="text-xs text-stone-400 italic mt-0.5">{plant.species}</p>
+          )}
         </div>
-        <span className={`badge ${status.color}`}>
+        <span className={`badge shrink-0 ${status.color}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
           {status.label}
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 mb-3">
-        {zone && (
-          <div>
-            <p className="text-xs text-stone-400">Zone</p>
-            <p className="text-xs font-medium text-stone-700">{zone.name}</p>
-          </div>
-        )}
-        {plant.quantity > 1 && (
-          <div>
-            <p className="text-xs text-stone-400">Qty</p>
-            <p className="text-xs font-medium text-stone-700">{plant.quantity} plants</p>
-          </div>
-        )}
-        {daysPlanted !== null && (
-          <div>
-            <p className="text-xs text-stone-400">Age</p>
-            <p className="text-xs font-medium text-stone-700">{daysPlanted}d</p>
-          </div>
-        )}
-        {daysToHarvest !== null && daysToHarvest > 0 && (
-          <div>
-            <p className="text-xs text-stone-400">Harvest in</p>
-            <p className="text-xs font-medium text-amber-700">{daysToHarvest}d</p>
-          </div>
-        )}
+      <div className="flex flex-wrap gap-x-5 gap-y-2 mb-3">
+        <div>
+          <p className="text-[10px] text-stone-400 uppercase tracking-wide">Quantity</p>
+          <p className="text-sm font-semibold text-stone-800">{plant.quantity}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-stone-400 uppercase tracking-wide">Health</p>
+          <p className={`text-sm font-semibold ${health.color}`}>{health.label}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-stone-400 uppercase tracking-wide">Added</p>
+          <p className="text-sm font-medium text-stone-600">
+            {new Date(plant.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </p>
+        </div>
       </div>
 
       {plant.notes && (
-        <p className="text-xs text-stone-500 border-t border-stone-50 pt-2">{plant.notes}</p>
+        <p className="text-xs text-stone-500 border-t border-stone-50 pt-2 leading-relaxed">
+          {plant.notes}
+        </p>
       )}
     </div>
   )
 }
 
-export default function PlantsPage() {
-  const { plants, zones } = store
+export default async function PlantsPage() {
+  const ctx = await getGardenContext()
+  if (!ctx) redirect('/auth/login')
+  if (!ctx.garden) redirect('/onboarding')
 
-  const byType: Record<string, Plant[]> = {}
-  plants.forEach(p => {
-    if (!byType[p.type]) byType[p.type] = []
-    byType[p.type].push(p)
-  })
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: plants } = await (admin as any)
+    .from('flowgarden_plant_groups')
+    .select('id, name, species, variety, quantity, status, health_status, notes, created_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('created_at', { ascending: true })
+
+  const allPlants: PlantGroup[] = plants ?? []
+  const totalQty = allPlants.reduce((s, p) => s + (p.quantity ?? 1), 0)
 
   const statusCounts: Record<string, number> = {}
-  plants.forEach(p => {
-    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1
+  allPlants.forEach(p => {
+    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + (p.quantity ?? 1)
   })
 
   return (
     <div className="p-4 md:p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-6 md:mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900">Plants</h1>
-          <p className="text-sm text-stone-400 mt-1">{plants.length} plants across {zones.length} zones</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">Plants</h1>
+        <p className="text-sm text-stone-400 mt-1">
+          {totalQty} plants · {allPlants.length} group{allPlants.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {allPlants.length === 0 ? (
+        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
+          <p className="text-2xl mb-3">🌱</p>
+          <p className="text-stone-600 font-medium">No plants yet</p>
+          <p className="text-stone-400 text-sm mt-1">
+            Tell the Garden Intelligence what you&apos;ve planted and it will appear here.
+          </p>
         </div>
-        <button className="btn-primary">+ Add Plant</button>
-      </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {Object.entries(statusCounts).map(([status, count]) => {
+              const cfg = statusConfig[status] ?? { label: status, color: 'bg-stone-100 text-stone-600', dot: 'bg-stone-400' }
+              return (
+                <span key={status} className={`badge ${cfg.color} py-1 px-3`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                  {count} {cfg.label}
+                </span>
+              )
+            })}
+          </div>
 
-      {/* Status summary */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {Object.entries(statusCounts).map(([status, count]) => {
-          const cfg = statusConfig[status]
-          return (
-            <span key={status} className={`badge ${cfg.color} py-1 px-3`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-              {count} {cfg.label}
-            </span>
-          )
-        })}
-      </div>
-
-      {/* All plants grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {plants.map(plant => (
-          <PlantCard key={plant.id} plant={plant} />
-        ))}
-      </div>
-
-      <div className="mt-6 card border-dashed border-stone-200 bg-stone-50/50 text-center py-8">
-        <p className="text-stone-400 text-sm">Add a plant to track its growth journey</p>
-        <button className="btn-primary mt-3">+ Add Plant</button>
-      </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allPlants.map(plant => (
+              <PlantCard key={plant.id} plant={plant} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
