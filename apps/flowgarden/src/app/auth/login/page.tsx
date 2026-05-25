@@ -1,55 +1,41 @@
 'use client'
 
 import { Suspense, useState, useTransition } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { FlowGardenLockup } from '@flowbond/ui'
 
 function LoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/flowgarden'
   const urlError = searchParams.get('error')
 
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
+  const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(
-    urlError === 'auth_failed' ? 'Authentication failed. Please try again.' : null
+    urlError === 'auth_failed' ? 'Link expired or invalid. Request a new one.' : null
   )
-  const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const supabase = createClient()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!email.trim()) return
     setError(null)
-    setMessage(null)
 
     startTransition(async () => {
-      if (mode === 'signin') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) {
-          setError(error.message)
-          return
-        }
-        window.location.href = next
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${next}`,
+          shouldCreateUser: true,
+        },
+      })
+      if (error) {
+        setError(error.message)
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { display_name: displayName || email.split('@')[0] },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
-          },
-        })
-        if (error) {
-          setError(error.message)
-          return
-        }
-        setMessage('Check your email to confirm your account, then come back to sign in.')
+        setSent(true)
       }
     })
   }
@@ -61,86 +47,61 @@ function LoginForm() {
       </div>
 
       <div className="bg-stone-900/80 border border-stone-700 rounded-2xl p-8">
-        <h1 className="text-flow-cream text-xl font-semibold text-center mb-1">
-          {mode === 'signin' ? 'Welcome back' : 'Create your account'}
-        </h1>
-        <p className="text-stone-400 text-sm text-center mb-6">
-          {mode === 'signin' ? 'Sign in to your garden' : 'Start growing together'}
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {mode === 'signup' && (
-            <div>
-              <label className="block text-xs text-stone-400 mb-1">Your name</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Sofia"
-                className="input-field"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs text-stone-400 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              className="input-field"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-stone-400 mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              minLength={8}
-              className="input-field"
-            />
-          </div>
-
-          {error && (
-            <p className="text-red-400 text-xs bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">
-              {error}
+        {sent ? (
+          <div className="text-center flex flex-col gap-4">
+            <div className="text-4xl">📬</div>
+            <h1 className="text-flow-cream text-lg font-semibold">Check your email</h1>
+            <p className="text-stone-400 text-sm leading-relaxed">
+              We sent a magic link to <span className="text-flow-cream">{email}</span>.
+              Click it to open your garden — no password needed.
             </p>
-          )}
-
-          {message && (
-            <p className="text-emerald-400 text-xs bg-emerald-950/40 border border-emerald-800/40 rounded-lg px-3 py-2">
-              {message}
+            <button
+              type="button"
+              onClick={() => { setSent(false); setEmail('') }}
+              className="text-stone-500 hover:text-stone-300 text-xs mt-2 transition-colors"
+            >
+              Use a different email
+            </button>
+          </div>
+        ) : (
+          <>
+            <h1 className="text-flow-cream text-xl font-semibold text-center mb-1">
+              Welcome to FlowGarden
+            </h1>
+            <p className="text-stone-400 text-sm text-center mb-6">
+              Enter your email to receive a magic link
             </p>
-          )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors mt-1"
-          >
-            {isPending
-              ? mode === 'signin' ? 'Signing in…' : 'Creating account…'
-              : mode === 'signin' ? 'Sign in' : 'Create account'}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs text-stone-400 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                  className="input-field"
+                />
+              </div>
 
-        <div className="mt-5 text-center">
-          <button
-            type="button"
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setMessage(null) }}
-            className="text-stone-400 hover:text-flow-cream text-xs transition-colors"
-          >
-            {mode === 'signin'
-              ? "Don't have an account? Create one"
-              : 'Already have an account? Sign in'}
-          </button>
-        </div>
+              {error && (
+                <p className="text-red-400 text-xs bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isPending || !email.trim()}
+                className="w-full bg-emerald-700 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold rounded-lg px-4 py-2.5 text-sm transition-colors mt-1"
+              >
+                {isPending ? 'Sending…' : 'Send magic link'}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   )
