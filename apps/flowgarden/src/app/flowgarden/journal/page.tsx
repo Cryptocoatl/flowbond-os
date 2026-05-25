@@ -1,107 +1,133 @@
-import { store } from '@/lib/mock-data'
-import type { JournalEntry } from '@flowbond/core'
+import { redirect } from 'next/navigation'
+import { getGardenContext } from '@/lib/garden-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
-function EntryCard({ entry }: { entry: JournalEntry }) {
-  const zone = store.zones.find(z => z.id === entry.zoneId)
-  const dateStr = entry.entryDate.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+const eventTypeIcons: Record<string, string> = {
+  text_observation:   '📝',
+  planting:           '🌱',
+  watering:           '💧',
+  pest_observed:      '⚠️',
+  disease_observed:   '🔴',
+  pruning:            '✂️',
+  fertilizing:        '🧪',
+  compost_added:      '🍂',
+  mulch_added:        '🪵',
+  harvest:            '🌾',
+  germination:        '🌿',
+  transplant:         '🪴',
+  photo_uploaded:     '📷',
+  voice_note_uploaded:'🎙',
+  question_asked:     '💬',
+  task_completed:     '✅',
+  ai_recommendation:  '🤖',
+  system_summary:     '📊',
+}
+
+const urgencyDot: Record<string, string> = {
+  urgent: 'bg-red-400',
+  high:   'bg-amber-400',
+  medium: 'bg-stone-300',
+  low:    'bg-stone-200',
+  none:   'bg-stone-100',
+}
+
+interface GardenEvent {
+  id: string
+  event_type: string
+  title: string
+  structured_summary: string | null
+  raw_input: string | null
+  urgency: string
+  media_urls: string[] | null
+  occurred_at: string
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days === 1) return 'yesterday'
+  return `${days}d ago`
+}
+
+function EventCard({ event }: { event: GardenEvent }) {
+  const icon = eventTypeIcons[event.event_type] ?? '📝'
+  const dot = urgencyDot[event.urgency] ?? urgencyDot.none
+  const dateStr = new Date(event.occurred_at).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
   })
-  const daysAgo = Math.round((Date.now() - entry.entryDate.getTime()) / 86400000)
 
   return (
     <div className="card">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          {entry.title && (
-            <h3 className="font-semibold text-stone-900">{entry.title}</h3>
+      <div className="flex items-start gap-3">
+        <div className="text-xl shrink-0 mt-0.5">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <p className="text-sm font-semibold text-stone-900 leading-tight">{event.title}</p>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {event.urgency !== 'none' && (
+                <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+              )}
+              <span className="text-[10px] text-stone-400">{timeAgo(event.occurred_at)}</span>
+            </div>
+          </div>
+          {event.structured_summary && (
+            <p className="text-xs text-stone-600 leading-relaxed">{event.structured_summary}</p>
           )}
-          <p className="text-xs text-stone-400 mt-0.5">
-            {dateStr}
-            <span className="ml-2 text-stone-300">
-              {daysAgo === 0 ? 'Today' : daysAgo === 1 ? '1 day ago' : `${daysAgo} days ago`}
+          {event.media_urls && event.media_urls.length > 0 && (
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-stone-400">
+              📎 {event.media_urls.length} photo{event.media_urls.length > 1 ? 's' : ''}
             </span>
-          </p>
+          )}
+          <p className="text-[10px] text-stone-300 mt-1.5">{dateStr}</p>
         </div>
-        {zone && (
-          <span className="badge bg-emerald-50 text-emerald-700">{zone.name}</span>
-        )}
       </div>
-
-      <p className="text-sm text-stone-700 leading-relaxed mt-3">{entry.content}</p>
-
-      {/* Metadata badges */}
-      <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-stone-50">
-        {entry.watered && (
-          <span className="badge bg-blue-50 text-blue-700">💧 Watered</span>
-        )}
-        {entry.compostAdded && (
-          <span className="badge bg-amber-50 text-amber-700">🍂 Compost</span>
-        )}
-        {entry.pestsObserved && (
-          <span className="badge bg-red-50 text-red-600">⚠ Pests</span>
-        )}
-        {entry.weatherCondition && (
-          <span className="badge bg-sky-50 text-sky-700">☁ {entry.weatherCondition}</span>
-        )}
-        {entry.temperatureC && (
-          <span className="badge bg-orange-50 text-orange-700">🌡 {entry.temperatureC}°C</span>
-        )}
-        {entry.tags.map(tag => (
-          <span key={tag} className="badge bg-stone-50 text-stone-500">#{tag}</span>
-        ))}
-      </div>
-
-      {entry.pestNotes && (
-        <div className="mt-3 p-2.5 bg-red-50 rounded-lg border border-red-100">
-          <p className="text-xs text-red-700">{entry.pestNotes}</p>
-        </div>
-      )}
     </div>
   )
 }
 
-export default function JournalPage() {
-  const { journal } = store
+export default async function JournalPage() {
+  const ctx = await getGardenContext()
+  if (!ctx) redirect('/auth/login')
+  if (!ctx.garden) redirect('/onboarding')
 
-  const sorted = [...journal].sort(
-    (a, b) => b.entryDate.getTime() - a.entryDate.getTime(),
-  )
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: events } = await (admin as any)
+    .from('flowgarden_events')
+    .select('id, event_type, title, structured_summary, raw_input, urgency, media_urls, occurred_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('occurred_at', { ascending: false })
+    .limit(100)
+
+  const allEvents: GardenEvent[] = events ?? []
 
   return (
-    <div className="p-8 max-w-3xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900">Garden Journal</h1>
-          <p className="text-sm text-stone-400 mt-1">{journal.length} entries</p>
+    <div className="p-4 md:p-8 max-w-3xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">Garden Journal</h1>
+        <p className="text-sm text-stone-400 mt-1">{allEvents.length} entr{allEvents.length !== 1 ? 'ies' : 'y'}</p>
+      </div>
+
+      {allEvents.length === 0 ? (
+        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
+          <p className="text-2xl mb-3">📖</p>
+          <p className="text-stone-600 font-medium">No journal entries yet</p>
+          <p className="text-stone-400 text-sm mt-1">
+            Everything you tell the Garden Intelligence is automatically logged here.
+          </p>
         </div>
-        <button className="btn-primary">+ New Entry</button>
-      </div>
-
-      {/* AI summary placeholder */}
-      <div className="card border-emerald-100 bg-emerald-50/30 mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wide">AI Weekly Summary</p>
+      ) : (
+        <div className="space-y-3">
+          {allEvents.map(event => <EventCard key={event.id} event={event} />)}
         </div>
-        <p className="text-sm text-stone-600 leading-relaxed">
-          Active garden week. Aphid management on basil, strong tomato flower set, and compost pile 1 running hot at 58°C.
-          Lemon tree fruiting well with minor yellowing to monitor. 5 journal entries recorded this week.
-        </p>
-        <p className="text-xs text-stone-400 mt-2">Generated from journal · Connect AI to update automatically</p>
-      </div>
-
-      <div className="space-y-4">
-        {sorted.map(entry => (
-          <EntryCard key={entry.id} entry={entry} />
-        ))}
-      </div>
-
-      <div className="mt-6 card border-dashed border-stone-200 bg-stone-50/50 text-center py-8">
-        <p className="text-stone-400 text-sm">Document your garden&apos;s story</p>
-        <button className="btn-primary mt-3">+ Write Entry</button>
-      </div>
+      )}
     </div>
   )
 }

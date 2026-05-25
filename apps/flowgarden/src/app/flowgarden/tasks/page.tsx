@@ -1,136 +1,141 @@
-import { store } from '@/lib/mock-data'
-import type { GardenTask } from '@flowbond/core'
+import { redirect } from 'next/navigation'
+import { getGardenContext } from '@/lib/garden-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
-const priorityConfig: Record<string, { color: string; bg: string }> = {
-  urgent: { color: 'text-red-700', bg: 'bg-red-100' },
-  high: { color: 'text-amber-700', bg: 'bg-amber-100' },
-  medium: { color: 'text-stone-600', bg: 'bg-stone-100' },
-  low: { color: 'text-stone-500', bg: 'bg-stone-50' },
+const urgencyConfig: Record<string, { color: string; bg: string; order: number }> = {
+  urgent: { color: 'text-red-700',    bg: 'bg-red-100',    order: 0 },
+  high:   { color: 'text-amber-700',  bg: 'bg-amber-100',  order: 1 },
+  medium: { color: 'text-stone-600',  bg: 'bg-stone-100',  order: 2 },
+  low:    { color: 'text-stone-500',  bg: 'bg-stone-50',   order: 3 },
+  none:   { color: 'text-stone-400',  bg: 'bg-stone-50',   order: 4 },
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Pending', color: 'text-stone-500' },
-  in_progress: { label: 'In Progress', color: 'text-blue-600' },
-  done: { label: 'Done', color: 'text-emerald-600' },
-  skipped: { label: 'Skipped', color: 'text-stone-300' },
+interface Task {
+  id: string
+  title: string
+  description: string | null
+  urgency: string
+  status: string
+  is_mission: boolean
+  due_at: string | null
+  created_at: string
 }
 
-function TaskCard({ task }: { task: GardenTask }) {
-  const zone = store.zones.find(z => z.id === task.zoneId)
-  const plant = store.plants.find(p => p.id === task.plantId)
-  const priority = priorityConfig[task.priority]
-  const status = statusConfig[task.status]
-  const isDone = task.status === 'done' || task.status === 'skipped'
+function TaskCard({ task }: { task: Task }) {
+  const urg = urgencyConfig[task.urgency] ?? urgencyConfig.none
+  const isDone = task.status === 'completed' || task.status === 'dismissed'
+  const isOverdue = task.due_at && new Date(task.due_at) < new Date() && task.status === 'pending'
 
-  const dueStr = task.dueDate
-    ? task.dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const dueStr = task.due_at
+    ? new Date(task.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null
-  const isOverdue = task.dueDate && task.dueDate < new Date() && task.status === 'pending'
 
   return (
-    <div className={`card flex gap-4 ${isDone ? 'opacity-60' : ''}`}>
-      <div className="flex flex-col items-center pt-0.5">
-        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isDone ? 'bg-emerald-500 border-emerald-500' : 'border-stone-300'}`}>
+    <div className={`card flex gap-4 ${isDone ? 'opacity-50' : ''}`}>
+      <div className="flex flex-col items-center pt-0.5 shrink-0">
+        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+          isDone ? 'bg-emerald-500 border-emerald-500' : 'border-stone-300'
+        }`}>
           {isDone && (
-            <svg viewBox="0 0 12 12" fill="white" className="w-2.5 h-2.5">
+            <svg viewBox="0 0 12 12" className="w-2.5 h-2.5">
               <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
         </div>
       </div>
-
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className={`text-sm font-semibold ${isDone ? 'line-through text-stone-400' : 'text-stone-900'}`}>
             {task.title}
           </p>
-          <span className={`badge ${priority.bg} ${priority.color} shrink-0`}>
-            {task.priority}
-          </span>
+          {task.urgency !== 'none' && (
+            <span className={`badge ${urg.bg} ${urg.color} shrink-0 capitalize`}>{task.urgency}</span>
+          )}
         </div>
-
         {task.description && (
           <p className="text-xs text-stone-500 mt-1 leading-relaxed">{task.description}</p>
         )}
-
-        <div className="flex items-center gap-3 mt-2">
-          <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
-          {zone && <span className="text-xs text-stone-400">{zone.name}</span>}
-          {plant && <span className="text-xs text-stone-400">{plant.name}</span>}
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
+          {task.is_mission && (
+            <span className="text-xs text-amber-600 font-medium">⚡ Mission</span>
+          )}
           {dueStr && (
             <span className={`text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-stone-400'}`}>
               {isOverdue ? 'Overdue · ' : 'Due '}{dueStr}
             </span>
           )}
-          {task.rewardPoints > 0 && (
-            <span className="text-xs text-amber-600">+{task.rewardPoints} pts</span>
-          )}
-          {task.proofRequired && (
-            <span className="text-xs text-stone-400">📷 Proof needed</span>
-          )}
+          <span className="text-xs text-stone-400">
+            {new Date(task.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </span>
         </div>
       </div>
     </div>
   )
 }
 
-export default function TasksPage() {
-  const { tasks } = store
+export default async function TasksPage() {
+  const ctx = await getGardenContext()
+  if (!ctx) redirect('/auth/login')
+  if (!ctx.garden) redirect('/onboarding')
 
-  const pending = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress')
-    .sort((a, b) => {
-      const order = { urgent: 0, high: 1, medium: 2, low: 3 }
-      return order[a.priority] - order[b.priority]
-    })
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tasks } = await (admin as any)
+    .from('flowgarden_tasks')
+    .select('id, title, description, urgency, status, is_mission, due_at, created_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('created_at', { ascending: false })
 
-  const done = tasks.filter(t => t.status === 'done' || t.status === 'skipped')
-    .sort((a, b) => (b.completedAt?.getTime() ?? 0) - (a.completedAt?.getTime() ?? 0))
+  const allTasks: Task[] = tasks ?? []
 
-  const totalPoints = done.reduce((sum, t) => sum + t.rewardPoints, 0)
+  const urgencyOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 }
+  const active = allTasks
+    .filter(t => t.status === 'pending' || t.status === 'in_progress')
+    .sort((a, b) => (urgencyOrder[a.urgency] ?? 4) - (urgencyOrder[b.urgency] ?? 4))
+  const done = allTasks.filter(t => t.status === 'completed' || t.status === 'dismissed')
 
   return (
     <div className="p-4 md:p-8 max-w-3xl">
-      <div className="flex items-center justify-between mb-6 md:mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900">Missions</h1>
-          <p className="text-sm text-stone-400 mt-1">
-            {pending.length} active · {done.length} completed · {totalPoints} pts earned
-          </p>
-        </div>
-        <button className="btn-primary">+ New Mission</button>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">Missions</h1>
+        <p className="text-sm text-stone-400 mt-1">
+          {active.length} active{done.length > 0 ? ` · ${done.length} completed` : ''}
+        </p>
       </div>
 
-      {/* Active missions */}
-      {pending.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">
-            Active — {pending.length}
-          </h2>
-          <div className="space-y-3">
-            {pending.map(t => <TaskCard key={t.id} task={t} />)}
-          </div>
+      {allTasks.length === 0 ? (
+        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
+          <p className="text-2xl mb-3">⚡</p>
+          <p className="text-stone-600 font-medium">No missions yet</p>
+          <p className="text-stone-400 text-sm mt-1">
+            Tell the Garden Intelligence what needs doing and missions will appear here.
+          </p>
         </div>
-      )}
-
-      {/* Completed */}
-      {done.length > 0 && (
-        <div>
-          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">
-            Completed — {done.length}
-          </h2>
-          <div className="space-y-3">
-            {done.map(t => <TaskCard key={t.id} task={t} />)}
-          </div>
-        </div>
-      )}
-
-      {tasks.length === 0 && (
-        <div className="card border-dashed border-stone-200 text-center py-12">
-          <p className="text-stone-400">No missions yet. Create your first task.</p>
-          <button className="btn-primary mt-4">+ New Mission</button>
-        </div>
+      ) : (
+        <>
+          {active.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">
+                Active — {active.length}
+              </h2>
+              <div className="space-y-3">
+                {active.map(t => <TaskCard key={t.id} task={t} />)}
+              </div>
+            </div>
+          )}
+          {done.length > 0 && (
+            <div>
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wide mb-3">
+                Completed — {done.length}
+              </h2>
+              <div className="space-y-3">
+                {done.map(t => <TaskCard key={t.id} task={t} />)}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

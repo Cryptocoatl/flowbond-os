@@ -1,147 +1,116 @@
-import { store } from '@/lib/mock-data'
-import Link from 'next/link'
-import type { GardenZone } from '@flowbond/core'
+import { redirect } from 'next/navigation'
+import { getGardenContext } from '@/lib/garden-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
-const sunIcons: Record<string, string> = {
-  full_sun: '☀️ Full Sun',
-  partial_shade: '⛅ Partial Shade',
-  full_shade: '🌑 Full Shade',
+const sunLabels: Record<string, string> = {
+  full_sun:      '☀ Full sun',
+  partial_shade: '⛅ Partial shade',
+  full_shade:    '🌑 Full shade',
 }
 
-const irrigationIcons: Record<string, string> = {
-  drip: 'Drip',
-  sprinkler: 'Sprinkler',
-  hand: 'Hand',
-  none: 'None',
+interface Zone {
+  id: string
+  name: string
+  description: string | null
+  zone_type: string | null
+  sun_exposure: string | null
+  soil_notes: string | null
+  created_at: string | null
 }
 
-function ZoneCard({ zone }: { zone: GardenZone }) {
-  const plants = store.plants.filter(p => p.zoneId === zone.id)
-  const area = zone.widthM && zone.lengthM ? (zone.widthM * zone.lengthM).toFixed(1) : null
-
-  const statusCounts: Record<string, number> = {}
-  plants.forEach(p => {
-    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1
-  })
-
+function ZoneCard({ zone }: { zone: Zone }) {
   return (
     <div className="card hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-semibold text-stone-900">{zone.name}</h3>
-          {zone.locationNotes && (
-            <p className="text-xs text-stone-400 mt-0.5">{zone.locationNotes}</p>
-          )}
-        </div>
-        {area && (
-          <span className="badge bg-stone-100 text-stone-600">{area} m²</span>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-semibold text-stone-900">{zone.name}</h3>
+        {zone.zone_type && (
+          <span className="badge bg-emerald-50 text-emerald-700 shrink-0 capitalize">
+            {zone.zone_type.replace(/_/g, ' ')}
+          </span>
         )}
       </div>
-
       {zone.description && (
-        <p className="text-sm text-stone-600 mb-3">{zone.description}</p>
+        <p className="text-sm text-stone-600 mb-3 leading-relaxed">{zone.description}</p>
       )}
-
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-4">
-        {zone.sunExposure && (
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+        {zone.sun_exposure && (
           <div>
-            <p className="text-xs text-stone-400">Sun</p>
-            <p className="text-xs font-medium text-stone-700">{sunIcons[zone.sunExposure]}</p>
+            <p className="text-[10px] text-stone-400 uppercase tracking-wide">Sun</p>
+            <p className="text-xs font-medium text-stone-700">{sunLabels[zone.sun_exposure] ?? zone.sun_exposure}</p>
           </div>
         )}
-        {zone.irrigationType && (
+        {zone.soil_notes && (
           <div>
-            <p className="text-xs text-stone-400">Irrigation</p>
-            <p className="text-xs font-medium text-stone-700">{irrigationIcons[zone.irrigationType]}</p>
+            <p className="text-[10px] text-stone-400 uppercase tracking-wide">Soil</p>
+            <p className="text-xs font-medium text-stone-700">{zone.soil_notes}</p>
           </div>
         )}
-        {zone.soilType && (
-          <div>
-            <p className="text-xs text-stone-400">Soil</p>
-            <p className="text-xs font-medium text-stone-700 capitalize">{zone.soilType}</p>
-          </div>
-        )}
-        {zone.widthM && zone.lengthM && (
-          <div>
-            <p className="text-xs text-stone-400">Size</p>
-            <p className="text-xs font-medium text-stone-700">{zone.widthM}m × {zone.lengthM}m</p>
-          </div>
-        )}
-      </div>
-
-      {/* Plants summary */}
-      <div className="border-t border-stone-100 pt-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-stone-500">
-            {plants.length} plant{plants.length !== 1 ? 's' : ''}
+        <div>
+          <p className="text-[10px] text-stone-400 uppercase tracking-wide">Added</p>
+          <p className="text-xs font-medium text-stone-600">
+            {zone.created_at ? new Date(zone.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
           </p>
-          <div className="flex gap-1 flex-wrap justify-end">
-            {Object.entries(statusCounts).map(([status, count]) => (
-              <span key={status} className="badge bg-emerald-50 text-emerald-700">
-                {count} {status}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
-
-      {zone.notes && (
-        <div className="mt-3 p-2.5 bg-amber-50 rounded-lg border border-amber-100">
-          <p className="text-xs text-amber-800">{zone.notes}</p>
-        </div>
-      )}
     </div>
   )
 }
 
-export default function MapPage() {
-  const { zones } = store
+export default async function MapPage() {
+  const ctx = await getGardenContext()
+  if (!ctx) redirect('/auth/login')
+  if (!ctx.garden) redirect('/onboarding')
+
+  const admin = createAdminClient()
+  const { data: zones } = await admin
+    .from('flowgarden_zones')
+    .select('id, name, description, zone_type, sun_exposure, soil_notes, created_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('created_at', { ascending: true })
+
+  const allZones: Zone[] = zones ?? []
 
   return (
-    <div className="p-8 max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-stone-900">Garden Map</h1>
-          <p className="text-sm text-stone-400 mt-1">{zones.length} zones · {store.plants.length} plants</p>
-        </div>
-        <button className="btn-primary">
-          + New Zone
-        </button>
+    <div className="p-4 md:p-8 max-w-5xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold text-stone-900">Garden Map</h1>
+        <p className="text-sm text-stone-400 mt-1">{allZones.length} zone{allZones.length !== 1 ? 's' : ''}</p>
       </div>
 
-      {/* Visual area placeholder */}
       <div className="card mb-6 bg-gradient-to-br from-emerald-50 to-stone-50 border-dashed border-stone-300">
-        <div className="text-center py-8">
-          <p className="text-stone-400 text-sm font-medium">Visual garden layout</p>
-          <p className="text-stone-300 text-xs mt-1">
-            Interactive drag-and-drop map coming soon. Connect to hardware for real-time overlays.
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {zones.map(z => (
-              <div key={z.id} className="bg-emerald-100 border border-emerald-200 rounded-lg px-3 py-2 text-center">
-                <p className="text-xs font-medium text-emerald-800">{z.name}</p>
-                {z.widthM && z.lengthM && (
-                  <p className="text-xs text-emerald-600">{z.widthM}×{z.lengthM}m</p>
-                )}
-              </div>
-            ))}
-          </div>
+        <div className="text-center py-6">
+          <p className="text-stone-500 text-sm font-medium">Visual garden layout</p>
+          <p className="text-stone-400 text-xs mt-1">Interactive map coming soon · Hardware sensors will overlay here</p>
+          {allZones.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {allZones.map(z => (
+                <div key={z.id} className="bg-white border border-emerald-200 rounded-lg px-3 py-2 shadow-sm">
+                  <p className="text-xs font-semibold text-emerald-800">{z.name}</p>
+                  {z.zone_type && (
+                    <p className="text-[10px] text-emerald-500 capitalize">{z.zone_type.replace(/_/g, ' ')}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Zone cards */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {zones.map(zone => (
-          <ZoneCard key={zone.id} zone={zone} />
-        ))}
-      </div>
-
-      <div className="mt-6 card border-dashed border-stone-200 bg-stone-50/50 text-center py-8">
-        <p className="text-stone-400 text-sm">No more zones. Ready to add one?</p>
-        <button className="btn-primary mt-3">+ Add Zone</button>
-      </div>
+      {allZones.length === 0 ? (
+        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
+          <p className="text-2xl mb-3">🗺</p>
+          <p className="text-stone-600 font-medium">No zones yet</p>
+          <p className="text-stone-400 text-sm mt-1 max-w-xs mx-auto">
+            Tell the Garden Intelligence about your areas — front bed, pots, greenhouse — and they&apos;ll appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-4">
+          {allZones.map(zone => <ZoneCard key={zone.id} zone={zone} />)}
+        </div>
+      )}
     </div>
   )
 }
