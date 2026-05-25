@@ -64,11 +64,11 @@ export async function POST(request: Request) {
       ).join('\n')
     : 'None registered yet'
 
-  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You help gardeners log observations, manage plants, and plan tasks through natural conversation. You have memory of this conversation session.
+  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You help gardeners log observations, manage plants, zones, and tasks through natural conversation. You have memory of this conversation session.
 
 Today: ${today}
 Garden: ${garden?.name}${garden?.location_label ? ` — ${garden.location_label}` : ''}
-Zones: ${zones.length ? zones.map(z => z.name).join(', ') : 'None set up'}
+Zones: ${zones.length ? zones.map(z => `${z.name} (id: ${z.id})`).join(', ') : 'None set up yet'}
 
 Registered plants:
 ${plantList}
@@ -77,10 +77,11 @@ Pending tasks: ${pendingTasks.length ? pendingTasks.map(t => `${t.title} (${t.ur
 
 HOW YOU WORK:
 - Everything the user says gets logged via log_event — this is non-negotiable.
+- When user asks to add a zone/area/bed, call create_zone immediately. Do not say you can't.
 - When user mentions a new plant, call add_plant. It will appear on the garden map and plant list.
 - When user mentions something to do, call create_task.
 - When user says a plant changed state or health, call update_plant_status.
-- You can call multiple tools in one response (e.g. log_event + add_plant).
+- You can call multiple tools in one response (e.g. log_event + create_zone + create_zone).
 - After tool calls, give a brief warm response (1–2 sentences). Reference specifics.
 - If a photo is shared, describe what you observe in detail.
 - You remember this entire conversation — refer back to earlier messages when relevant.`
@@ -200,6 +201,29 @@ HOW YOU WORK:
         required: ['title', 'urgency'],
       },
     },
+    {
+      name: 'create_zone',
+      description: 'Create a new garden zone or area (e.g. raised bed, nursery, greenhouse, pots). Call this whenever the user mentions adding or setting up a zone.',
+      input_schema: {
+        type: 'object' as const,
+        properties: {
+          name: { type: 'string', description: 'Zone name (e.g. "Raised Bed", "Nursery", "Back Porch Pots")' },
+          description: { type: 'string', description: 'Brief description of the zone' },
+          zone_type: {
+            type: 'string',
+            enum: ['raised_bed', 'grounded_bed', 'container', 'greenhouse', 'nursery', 'lawn', 'compost', 'herb_garden', 'orchard', 'other'],
+            description: 'Type of garden zone',
+          },
+          sun_exposure: {
+            type: 'string',
+            enum: ['full_sun', 'partial_shade', 'full_shade'],
+            description: 'Sun exposure level',
+          },
+          soil_notes: { type: 'string', description: 'Soil type, quality, or mix used' },
+        },
+        required: ['name', 'zone_type'],
+      },
+    },
   ]
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
@@ -281,6 +305,22 @@ HOW YOU WORK:
       }).select('id').single()
       if (error) console.error('[agent] create_task insert failed:', error.message)
       else if (data?.id) created.tasks.push(data.id)
+    }
+
+    else if (block.name === 'create_zone') {
+      const inp = block.input as Record<string, string>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (admin as any).from('flowgarden_zones').insert({
+        garden_id: gardenId,
+        user_id: user.id,
+        name: inp.name,
+        description: inp.description ?? null,
+        zone_type: inp.zone_type ?? null,
+        sun_exposure: inp.sun_exposure ?? null,
+        soil_notes: inp.soil_notes ?? null,
+      }).select('id').single()
+      if (error) console.error('[agent] create_zone insert failed:', error.message)
+      else if (data?.id) created.events.push(data.id)
     }
   }
 
