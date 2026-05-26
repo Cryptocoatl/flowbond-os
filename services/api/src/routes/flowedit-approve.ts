@@ -1,7 +1,7 @@
 import { Hono }           from 'hono'
 import { getDb, schema }  from '@flowbond/db'
-import { eq, and }        from 'drizzle-orm'
-import { verifyActionToken } from '../lib/notify'
+import { eq }             from 'drizzle-orm'
+import { verifyActionToken, notifyDecision } from '../lib/notify'
 import type { ApiResponse }  from '@flowbond/core'
 
 export const floweditApproveRouter = new Hono()
@@ -72,6 +72,23 @@ async function handleAction(token: string, action: 'approve' | 'reject'): Promis
       { status: 404, headers: { 'Content-Type': 'text/html' } },
     )
   }
+
+  // Look up site for notify context
+  const [site] = await db
+    .select({ name: schema.floweditSites.name, domain: schema.floweditSites.domain })
+    .from(schema.floweditSites)
+    .where(eq(schema.floweditSites.id, override.siteId))
+
+  notifyDecision({
+    siteName:   site?.name ?? override.siteId,
+    siteDomain: site?.domain ?? null,
+    overrideId: override.id,
+    path:       override.path,
+    field:      override.field,
+    value:      override.value as Record<string, unknown>,
+    decision:   action === 'approve' ? 'approved' : 'rejected',
+    createdBy:  override.createdBy,
+  }).catch(() => {/* non-fatal */})
 
   if (action === 'approve') {
     return new Response(

@@ -28,21 +28,50 @@ export async function verifyActionToken(token: string): Promise<{
 }
 
 interface DraftNotifyPayload {
+  siteName:       string
+  siteDomain:     string | null
+  overrideId:     string
+  path:           string
+  field:          string
+  value:          Record<string, unknown>
+  changeNote:     string | null
+  createdBy:      string | null
+  createdByEmail: string | null
+  tier:           string
+}
+
+interface DecisionNotifyPayload {
   siteName:   string
   siteDomain: string | null
   overrideId: string
   path:       string
   field:      string
   value:      Record<string, unknown>
-  changeNote: string | null
+  decision:   'approved' | 'rejected'
   createdBy:  string | null
-  tier:       string
+}
+
+async function fireWebhooks(body: Record<string, unknown>): Promise<void> {
+  const secret  = process.env.FLOWEDIT_WEBHOOK_SECRET
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (secret) headers['x-flowedit-secret'] = secret
+
+  const targets: (string | undefined)[] = [
+    process.env.FLOWEDIT_NOTIFY_WEBHOOK,
+    process.env.FLOWDESK_WEBHOOK_URL,
+  ]
+
+  await Promise.allSettled(
+    targets
+      .filter((url): url is string => Boolean(url))
+      .map((url) =>
+        fetch(url, { method: 'POST', headers, body: JSON.stringify(body) })
+          .catch((err) => console.error(`[notify] webhook failed (${url})`, err))
+      )
+  )
 }
 
 export async function notifyNewDraft(payload: DraftNotifyPayload): Promise<void> {
-  const webhookUrl = process.env.FLOWEDIT_NOTIFY_WEBHOOK
-  if (!webhookUrl) return
-
   const [approveToken, rejectToken] = await Promise.all([
     generateActionToken(payload.overrideId, payload.siteName, 'approve'),
     generateActionToken(payload.overrideId, payload.siteName, 'reject'),
@@ -51,24 +80,24 @@ export async function notifyNewDraft(payload: DraftNotifyPayload): Promise<void>
   const approveUrl = `${API_BASE}/api/v1/flowedit/approve/${approveToken}`
   const rejectUrl  = `${API_BASE}/api/v1/flowedit/reject/${rejectToken}`
 
-  const body = {
+  await fireWebhooks({
     event:      'new_draft',
     site:       { name: payload.siteName, domain: payload.siteDomain },
     change:     { path: payload.path, field: payload.field, value: payload.value, note: payload.changeNote },
-    createdBy:  payload.createdBy,
+    createdBy:  payload.createdByEmail ?? payload.createdBy,
     tier:       payload.tier,
     approveUrl,
     rejectUrl,
     dashboardUrl: `${process.env.FLOWEDIT_DASHBOARD_URL ?? 'http://localhost:3003'}/sites`,
-  }
+  })
+}
 
-  try {
-    await fetch(webhookUrl, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
-    })
-  } catch (err) {
-    console.error('[notify] webhook failed', err)
-  }
+export async function notifyDecision(payload: DecisionNotifyPayload): Promise<void> {
+  await fireWebhooks({
+    event:    payload.decision,
+    site:     { name: payload.siteName, domain: payload.siteDomain },
+    change:   { path: payload.path, field: payload.field, value: payload.value, note: null },
+    createdBy: payload.createdBy,
+    tier:     'simple',
+  })
 }

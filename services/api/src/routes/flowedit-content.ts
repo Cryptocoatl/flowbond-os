@@ -120,15 +120,16 @@ floweditContentRouter.post('/:siteId', zValidator('json', createOverrideSchema),
 
   if (initialStatus === 'draft') {
     notifyNewDraft({
-      siteName:   site.name,
-      siteDomain: site.domain,
-      overrideId: override.id,
-      path:       override.path,
-      field:      override.field,
-      value:      override.value as Record<string, unknown>,
-      changeNote: override.changeNote,
-      createdBy:  override.createdBy,
-      tier:       override.tier,
+      siteName:       site.name,
+      siteDomain:     site.domain,
+      overrideId:     override.id,
+      path:           override.path,
+      field:          override.field,
+      value:          override.value as Record<string, unknown>,
+      changeNote:     override.changeNote,
+      createdBy:      override.createdBy,
+      createdByEmail: null,
+      tier:           override.tier,
     }).catch(() => {/* non-fatal */})
   }
 

@@ -5,6 +5,7 @@ import { getDb, schema }      from '@flowbond/db'
 import { parseContentChange } from '@flowbond/ai'
 import { eq, and }            from 'drizzle-orm'
 import type { ApiResponse }   from '@flowbond/core'
+import { notifyNewDraft }     from '../lib/notify'
 
 export const floweditAiRouter = new Hono()
 
@@ -78,12 +79,31 @@ floweditAiRouter.post('/:siteId', zValidator('json', aiEditSchema), async (c) =>
     )
   )
 
+  const flat = created.flat()
+
+  if (initialStatus === 'draft') {
+    for (const override of flat) {
+      notifyNewDraft({
+        siteName:       site.name,
+        siteDomain:     null,
+        overrideId:     override.id,
+        path:           override.path,
+        field:          override.field,
+        value:          override.value as Record<string, unknown>,
+        changeNote:     override.changeNote,
+        createdBy:      override.createdBy,
+        createdByEmail: null,
+        tier:           'ai',
+      }).catch(() => {/* non-fatal */})
+    }
+  }
+
   return c.json<ApiResponse>({
     success: true,
     data: {
-      overrides:   created.flat(),
-      status:      initialStatus,
-      promptUsed:  prompt,
+      overrides:    flat,
+      status:       initialStatus,
+      promptUsed:   prompt,
       changesCount: parsed.changes.length,
     },
   }, 201)
