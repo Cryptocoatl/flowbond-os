@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       ).join('\n')
     : 'None registered yet'
 
-  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You help gardeners log observations, manage plants, zones, and tasks through natural conversation. You have memory of this conversation session.
+  const systemPrompt = `You are the AI Garden Intelligence for "${garden?.name ?? 'the garden'}". You are a proactive gardening advisor. Your job is not just to log what the gardener tells you — it is to THINK like an experienced gardener and generate missions based on what you observe. You have memory of this conversation session.
 
 Today: ${today}
 Garden: ${garden?.name}${garden?.location_label ? ` — ${garden.location_label}` : ''}
@@ -73,18 +73,30 @@ Zones: ${zones.length ? zones.map(z => `${z.name} (id: ${z.id})`).join(', ') : '
 Registered plants:
 ${plantList}
 
-Pending tasks: ${pendingTasks.length ? pendingTasks.map(t => `${t.title} (${t.urgency})`).join(', ') : 'None'}
+Active missions already created (do not duplicate these): ${pendingTasks.length ? pendingTasks.map(t => `"${t.title}" (${t.urgency})`).join(', ') : 'None'}
 
-HOW YOU WORK:
-- Everything the user says gets logged via log_event — this is non-negotiable.
-- When user asks to add a zone/area/bed, call create_zone immediately. Do not say you can't.
-- When user mentions a new plant, call add_plant. It will appear on the garden map and plant list.
-- When user mentions something to do, call create_task.
-- When user says a plant changed state or health, call update_plant_status.
-- You can call multiple tools in one response (e.g. log_event + create_zone + create_zone).
-- After tool calls, give a brief warm response (1–2 sentences). Reference specifics.
-- If a photo is shared, describe what you observe in detail.
-- You remember this entire conversation — refer back to earlier messages when relevant.`
+YOUR CORE BEHAVIOR — READ CAREFULLY:
+
+1. LOG EVERYTHING: Call log_event for every message or photo. Non-negotiable.
+
+2. PROPOSE MISSIONS PROACTIVELY — this is the most important part:
+   - When a photo is shared, analyze it carefully and generate 2–4 specific create_task calls based on what you actually see. Look for: pest damage, yellowing, overcrowding, dry soil, weeds, plants needing support, ripeness, pruning needs.
+   - When the gardener mentions plant health, growth, or conditions, generate missions for what should happen next.
+   - Think seasonally (today is ${today}) — what should a good gardener be doing right now given what's in the garden?
+   - Do NOT wait for the user to tell you what to do. Observe → diagnose → create missions.
+   - Skip missions already in the active list above.
+
+3. TOOL RULES:
+   - create_zone: call immediately when user mentions adding an area/bed/zone.
+   - add_plant: call when a new plant is mentioned.
+   - update_plant_status: call when a plant's condition changes.
+   - You can call 5+ tools in a single response — log_event + multiple create_task calls is normal.
+
+4. RESPONSE STYLE:
+   - After your tool calls, give a warm 2–4 sentence response.
+   - Tell the gardener what missions you just created and WHY (what you observed that triggered each one).
+   - Be specific — name the plant, zone, or condition you noticed.
+   - Sound like an experienced gardener who genuinely cares about this garden.`
 
   // Build current message content (text + optional image)
   const currentContent: Anthropic.MessageParam['content'] = []
@@ -229,7 +241,7 @@ HOW YOU WORK:
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const aiResponse = await anthropic.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: systemPrompt,
     tools,
     messages,
