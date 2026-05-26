@@ -30,14 +30,17 @@ export default async function DashboardPage() {
   const admin = createAdminClient()
   const gardenId = ctx.garden.id
 
-  const [zonesRes, plantsRes, tasksRes, sensorRes, xpRes] = await Promise.all([
+  const [zonesRes, plantsRes, tasksRes, sensorRes, xpRes, leaderboardRes] = await Promise.all([
     admin.from('flowgarden_zones').select('id, name').eq('garden_id', gardenId),
     admin.from('flowgarden_plant_groups').select('id, name, quantity, health_status, status').eq('garden_id', gardenId),
     admin.from('flowgarden_tasks').select('id, title, status, urgency, is_mission, due_at, zone_id').eq('garden_id', gardenId).neq('status', 'completed').order('due_at', { ascending: true }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any).from('flowgarden_sensor_readings').select('id, sensor_type, value, unit, recorded_at, zone_id').eq('garden_id', gardenId).order('recorded_at', { ascending: false }).limit(6),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (admin as any).from('flowgarden_xp_log').select('amount').eq('user_id', ctx.user.id),
+    (admin as any).from('flowgarden_xp_log').select('amount').eq('user_id', ctx.user.id).eq('garden_id', gardenId),
+    // Leaderboard: all XP in this garden
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from('flowgarden_xp_log').select('user_id, amount').eq('garden_id', gardenId),
   ])
 
   const zones = zonesRes.data ?? []
@@ -45,6 +48,20 @@ export default async function DashboardPage() {
   const tasks = tasksRes.data ?? []
   const readings = sensorRes.data ?? []
   const totalXp = (xpRes.data ?? []).reduce((sum: number, r: { amount: number }) => sum + r.amount, 0)
+
+  // Aggregate leaderboard
+  const xpByUser = new Map<string, number>()
+  for (const row of (leaderboardRes.data ?? []) as { user_id: string; amount: number }[]) {
+    xpByUser.set(row.user_id, (xpByUser.get(row.user_id) ?? 0) + row.amount)
+  }
+  const leaderboard = [...xpByUser.entries()]
+    .map(([user_id, xp]) => ({
+      user_id,
+      xp,
+      name: ctx.members.find(m => m.user_id === user_id)?.display_name ?? 'Member',
+    }))
+    .sort((a, b) => b.xp - a.xp)
+    .slice(0, 5)
 
   const pendingTasks = tasks.slice(0, 5)
   const totalPlantQty = plants.reduce((sum, p) => sum + (p.quantity ?? 1), 0)
@@ -198,6 +215,33 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Leaderboard */}
+      {leaderboard.length > 0 && (
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-stone-900">Leaderboard</h2>
+            <Link href="/flowgarden/tasks" className="text-xs text-emerald-600 hover:underline">
+              All missions →
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {leaderboard.map((entry, i) => {
+              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
+              const isMe = entry.user_id === ctx.user.id
+              return (
+                <div key={entry.user_id} className={`flex items-center gap-3 py-2 px-3 rounded-xl ${isMe ? 'bg-emerald-50 border border-emerald-100' : ''}`}>
+                  <span className="text-sm w-6 text-center">{medal}</span>
+                  <p className={`text-sm flex-1 font-medium ${isMe ? 'text-emerald-800' : 'text-stone-700'}`}>
+                    {entry.name}{isMe ? ' (you)' : ''}
+                  </p>
+                  <span className="text-xs font-bold text-amber-600">{entry.xp} XP</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* AI Garden Agent */}
       <AgentChat gardenId={gardenId} />

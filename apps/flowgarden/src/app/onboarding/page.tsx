@@ -2,7 +2,12 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import OnboardingClient from './OnboardingClient'
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>
+}) {
+  const { code } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -34,6 +39,7 @@ export default async function OnboardingPage() {
     <OnboardingClient
       email={user.email ?? ''}
       existingDisplayName={profile?.display_name ?? null}
+      inviteCode={code ?? null}
     />
   )
 }

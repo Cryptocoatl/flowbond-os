@@ -7,13 +7,14 @@ import { FlowGardenLockup } from '@flowbond/ui'
 interface Props {
   email: string
   existingDisplayName: string | null
+  inviteCode: string | null
 }
 
 type Tab = 'create' | 'join'
 
-export default function OnboardingClient({ email, existingDisplayName }: Props) {
+export default function OnboardingClient({ email, existingDisplayName, inviteCode: initialCode }: Props) {
   const router = useRouter()
-  const [tab, setTab] = useState<Tab>('create')
+  const [tab, setTab] = useState<Tab>(initialCode ? 'join' : 'create')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +27,7 @@ export default function OnboardingClient({ email, existingDisplayName }: Props) 
   const [displayName, setDisplayName] = useState(defaultName)
 
   // Join garden form state
-  const [inviteCode, setInviteCode] = useState('')
+  const [inviteCode, setInviteCode] = useState(initialCode ?? '')
   const [joinDisplayName, setJoinDisplayName] = useState(defaultName)
 
   function handleCreate(e: React.FormEvent) {

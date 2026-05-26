@@ -313,6 +313,7 @@ YOUR CORE BEHAVIOR — READ CAREFULLY:
         urgency: inp.urgency,
         status: 'pending',
         is_mission: true,
+        xp_reward: 5,
         due_at: inp.due_at ?? null,
       }).select('id').single()
       if (error) console.error('[agent] create_task insert failed:', error.message)
