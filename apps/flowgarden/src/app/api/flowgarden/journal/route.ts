@@ -1,63 +1,57 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
-import { store } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getGardenContext } from '@/lib/garden-context'
 
 export const dynamic = 'force-dynamic'
 
-const createEntrySchema = z.object({
-  zoneId: z.string().optional(),
-  title: z.string().optional(),
-  content: z.string().min(1),
-  entryDate: z.string().datetime().optional(),
-  weatherCondition: z.string().optional(),
-  temperatureC: z.number().optional(),
-  humidityPct: z.number().min(0).max(100).optional(),
-  watered: z.boolean().optional(),
-  compostAdded: z.boolean().optional(),
-  pestsObserved: z.boolean().optional(),
-  pestNotes: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-})
-
 export async function GET() {
-  const sorted = [...store.journal].sort(
-    (a, b) => b.entryDate.getTime() - a.entryDate.getTime(),
-  )
-  return NextResponse.json({ success: true, data: sorted })
+  const ctx = await getGardenContext()
+  if (!ctx?.garden) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (admin as any)
+    .from('flowgarden_events')
+    .select('id, event_type, title, structured_summary, raw_input, urgency, media_urls, occurred_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('occurred_at', { ascending: false })
+    .limit(100)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json()
-    const parsed = createEntrySchema.safeParse(body)
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.message } },
-        { status: 400 },
-      )
-    }
+  const ctx = await getGardenContext()
+  if (!ctx?.garden) return NextResponse.json({ error: 'No garden' }, { status: 400 })
 
-    const { entryDate, ...rest } = parsed.data
-    const entry = {
-      ...rest,
-      id: crypto.randomUUID(),
-      entryDate: entryDate ? new Date(entryDate) : new Date(),
-      watered: rest.watered ?? false,
-      compostAdded: rest.compostAdded ?? false,
-      pestsObserved: rest.pestsObserved ?? false,
-      photoUrls: [],
-      tags: rest.tags ?? [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+  const body = await request.json()
+  const { event_type, title, structured_summary, urgency, zone_id, occurred_at } = body
 
-    store.journal.push(entry)
-    return NextResponse.json({ success: true, data: entry }, { status: 201 })
-  } catch {
-    return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Invalid request' } },
-      { status: 500 },
-    )
-  }
+  if (!title?.trim()) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (admin as any)
+    .from('flowgarden_events')
+    .insert({
+      garden_id: ctx.garden.id,
+      user_id: user.id,
+      event_type: event_type || 'text_observation',
+      title: title.trim(),
+      structured_summary: structured_summary?.trim() || null,
+      urgency: urgency || 'none',
+      zone_id: zone_id || null,
+      occurred_at: occurred_at || new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data }, { status: 201 })
 }

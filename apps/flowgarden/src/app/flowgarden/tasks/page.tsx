@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MissionCard, type MissionCardProps } from '@/components/garden/MissionCard'
+import { CreateTaskButton } from '@/components/garden/CreateTaskButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,12 +30,17 @@ export default async function TasksPage() {
   if (!ctx.garden) redirect('/onboarding')
 
   const admin = createAdminClient()
+  const [tasksRes, zonesRes] = await Promise.all([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any)
+      .from('flowgarden_tasks')
+      .select('id, title, description, urgency, status, is_mission, due_at, created_at, claimed_by_user_id, claimed_at, completed_by_user_id, completed_at, completion_photo_url, completion_notes, xp_reward')
+      .eq('garden_id', ctx.garden.id)
+      .order('created_at', { ascending: false }),
+    admin.from('flowgarden_zones').select('id, name').eq('garden_id', ctx.garden.id).order('name'),
+  ])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: tasks } = await (admin as any)
-    .from('flowgarden_tasks')
-    .select('id, title, description, urgency, status, is_mission, due_at, created_at, claimed_by_user_id, claimed_at, completed_by_user_id, completed_at, completion_photo_url, completion_notes, xp_reward')
-    .eq('garden_id', ctx.garden.id)
-    .order('created_at', { ascending: false })
+  const tasks = (tasksRes as any).data
 
   const allTasks: Task[] = tasks ?? []
 
@@ -60,20 +66,26 @@ export default async function TasksPage() {
   return (
     <div className="p-4 md:p-8 max-w-3xl">
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl font-bold text-stone-900">Missions</h1>
-        <p className="text-sm text-stone-400 mt-1">
-          {active.length} active{done.length > 0 ? ` · ${done.length} completed` : ''}
-          {' · '}5 XP per mission
-        </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-stone-900">Missions</h1>
+            <p className="text-sm text-stone-400 mt-1">
+              {active.length} active{done.length > 0 ? ` · ${done.length} completed` : ''}
+              {' · '}5 XP per mission
+            </p>
+          </div>
+          <CreateTaskButton zones={zonesRes.data ?? []} />
+        </div>
       </div>
 
       {allTasks.length === 0 ? (
         <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
           <p className="text-2xl mb-3">⚡</p>
           <p className="text-stone-600 font-medium">No missions yet</p>
-          <p className="text-stone-400 text-sm mt-1">
-            Share a photo with the Garden Intelligence and it will generate missions based on what it observes.
+          <p className="text-stone-400 text-sm mt-1 mb-4">
+            Create a mission manually or share a photo with the Garden Intelligence.
           </p>
+          <CreateTaskButton zones={zonesRes.data ?? []} />
         </div>
       ) : (
         <>

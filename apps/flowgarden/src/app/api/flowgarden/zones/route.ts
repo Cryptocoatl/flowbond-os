@@ -1,52 +1,54 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
-import { store } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getGardenContext } from '@/lib/garden-context'
 
 export const dynamic = 'force-dynamic'
 
-const createZoneSchema = z.object({
-  name: z.string().min(1).max(128),
-  slug: z.string().min(1).max(64).regex(/^[a-z0-9-]+$/),
-  description: z.string().optional(),
-  locationNotes: z.string().optional(),
-  widthM: z.number().positive().optional(),
-  lengthM: z.number().positive().optional(),
-  sunExposure: z.enum(['full_sun', 'partial_shade', 'full_shade']).optional(),
-  soilType: z.enum(['loam', 'clay', 'sandy', 'hugelkultur', 'compost', 'mixed']).optional(),
-  irrigationType: z.enum(['drip', 'sprinkler', 'hand', 'none']).optional(),
-  notes: z.string().optional(),
-})
-
 export async function GET() {
-  return NextResponse.json({ success: true, data: store.zones })
+  const ctx = await getGardenContext()
+  if (!ctx?.garden) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('flowgarden_zones')
+    .select('id, name, description, zone_type, sun_exposure, soil_notes, created_at')
+    .eq('garden_id', ctx.garden.id)
+    .order('created_at', { ascending: true })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json()
-    const parsed = createZoneSchema.safeParse(body)
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.message } },
-        { status: 400 },
-      )
-    }
+  const ctx = await getGardenContext()
+  if (!ctx?.garden) return NextResponse.json({ error: 'No garden' }, { status: 400 })
 
-    const zone = {
-      ...parsed.data,
-      id: crypto.randomUUID(),
-      photoUrls: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+  const body = await request.json()
+  const { name, description, zone_type, sun_exposure, soil_notes } = body
 
-    store.zones.push(zone)
-    return NextResponse.json({ success: true, data: zone }, { status: 201 })
-  } catch {
-    return NextResponse.json(
-      { success: false, error: { code: 'SERVER_ERROR', message: 'Invalid request' } },
-      { status: 500 },
-    )
-  }
+  if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (admin as any)
+    .from('flowgarden_zones')
+    .insert({
+      garden_id: ctx.garden.id,
+      user_id: user.id,
+      name: name.trim(),
+      description: description?.trim() || null,
+      zone_type: zone_type || null,
+      sun_exposure: sun_exposure || null,
+      soil_notes: soil_notes?.trim() || null,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data }, { status: 201 })
 }

@@ -33,6 +33,14 @@
     @apply btn text-stone-600 hover:bg-stone-100 hover:text-stone-900;
   }
 
+  .btn-secondary {
+    @apply btn bg-stone-100 text-stone-700 hover:bg-stone-200;
+  }
+
+  .input-field-light {
+    @apply w-full bg-white border border-stone-200 rounded-lg px-3 py-2 text-stone-900 placeholder-stone-400 text-sm focus:outline-none focus:border-emerald-500 transition-colors;
+  }
+
   .sensor-value {
     @apply text-2xl font-bold tabular-nums;
   }
