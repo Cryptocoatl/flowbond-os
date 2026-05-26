@@ -2,7 +2,25 @@
 
 import { useState } from 'react'
 
-export function InviteCodeCopy({ code, xp }: { code: string; xp: number }) {
+interface Props {
+  code: string
+  label: string
+  xp: number
+  subtitle?: string
+  // defaults to /onboarding with param "code" (garden invite)
+  // override to /auth/login with param "ref" for personal invite
+  linkPath?: string
+  linkParam?: string
+}
+
+export function InviteCodeCopy({
+  code,
+  label,
+  xp,
+  subtitle,
+  linkPath = '/onboarding',
+  linkParam = 'code',
+}: Props) {
   const [copied, setCopied] = useState(false)
   const [copyMode, setCopyMode] = useState<'code' | 'link'>('code')
 
@@ -15,7 +33,7 @@ export function InviteCodeCopy({ code, xp }: { code: string; xp: number }) {
   }
 
   function copyLink() {
-    const url = `${window.location.origin}/onboarding?code=${code}`
+    const url = `${window.location.origin}${linkPath}?${linkParam}=${code}`
     navigator.clipboard.writeText(url).then(() => {
       setCopyMode('link')
       setCopied(true)
@@ -25,7 +43,7 @@ export function InviteCodeCopy({ code, xp }: { code: string; xp: number }) {
 
   return (
     <div className="text-right">
-      <p className="text-xs text-stone-400 uppercase tracking-wide mb-1">Invite code</p>
+      <p className="text-xs text-stone-400 uppercase tracking-wide mb-1">{label}</p>
       <div className="flex items-center gap-2 justify-end">
         <button
           onClick={copyCode}
@@ -39,12 +57,11 @@ export function InviteCodeCopy({ code, xp }: { code: string; xp: number }) {
           className="text-xs text-stone-400 hover:text-emerald-700 border border-stone-200 hover:border-emerald-200 rounded-lg px-2.5 py-1 transition-all touch-manipulation"
           title="Copy invite link"
         >
-          {copied && copyMode === 'link' ? '✓ Link copied!' : '🔗 Invite link'}
+          {copied && copyMode === 'link' ? '✓ Link copied!' : '🔗 Link'}
         </button>
       </div>
-      {xp > 0 && (
-        <p className="text-[10px] text-amber-600 mt-1">+{xp} XP earned from referrals</p>
-      )}
+      {subtitle && <p className="text-[10px] text-amber-600 mt-1">{subtitle}</p>}
+      {xp > 0 && <p className="text-[10px] text-amber-600 mt-1">+{xp} XP earned from referrals</p>}
     </div>
   )
 }

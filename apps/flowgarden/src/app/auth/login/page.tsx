@@ -8,6 +8,7 @@ import { FlowGardenLockup } from '@flowbond/ui'
 function LoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/flowgarden'
+  const ref = searchParams.get('ref') ?? ''
   const urlError = searchParams.get('error')
 
   const [email, setEmail] = useState('')
@@ -28,7 +29,7 @@ function LoginForm() {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${ref ? `&ref=${encodeURIComponent(ref)}` : ''}`,
           shouldCreateUser: true,
         },
       })

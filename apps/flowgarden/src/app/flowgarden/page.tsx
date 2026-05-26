@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   const admin = createAdminClient()
   const gardenId = ctx.garden.id
 
-  const [zonesRes, plantsRes, tasksRes, sensorRes, xpRes, leaderboardRes] = await Promise.all([
+  const [zonesRes, plantsRes, tasksRes, sensorRes, xpRes, leaderboardRes, profileRes] = await Promise.all([
     admin.from('flowgarden_zones').select('id, name').eq('garden_id', gardenId),
     admin.from('flowgarden_plant_groups').select('id, name, quantity, health_status, status').eq('garden_id', gardenId),
     admin.from('flowgarden_tasks').select('id, title, status, urgency, is_mission, due_at, zone_id').eq('garden_id', gardenId).neq('status', 'completed').order('due_at', { ascending: true }),
@@ -41,6 +41,9 @@ export default async function DashboardPage() {
     // Leaderboard: all XP in this garden
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any).from('flowgarden_xp_log').select('user_id, amount').eq('garden_id', gardenId),
+    // Personal invite code
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from('flowgarden_profiles').select('personal_invite_code, xp_total').eq('user_id', ctx.user.id).maybeSingle(),
   ])
 
   const zones = zonesRes.data ?? []
@@ -62,6 +65,8 @@ export default async function DashboardPage() {
     }))
     .sort((a, b) => b.xp - a.xp)
     .slice(0, 5)
+
+  const personalInviteCode = (profileRes.data as { personal_invite_code: string | null } | null)?.personal_invite_code ?? null
 
   const pendingTasks = tasks.slice(0, 5)
   const totalPlantQty = plants.reduce((sum, p) => sum + (p.quantity ?? 1), 0)
@@ -97,9 +102,25 @@ export default async function DashboardPage() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          {ctx.garden.invite_code && (
-            <InviteCodeCopy code={ctx.garden.invite_code} xp={totalXp} />
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {ctx.garden.invite_code && (
+              <InviteCodeCopy
+                code={ctx.garden.invite_code}
+                label="Garden invite"
+                xp={totalXp}
+              />
+            )}
+            {personalInviteCode && (
+              <InviteCodeCopy
+                code={personalInviteCode}
+                label="Your FlowGarden invite"
+                linkPath="/auth/login"
+                linkParam="ref"
+                xp={0}
+                subtitle="+5 XP per signup · +10 XP when they grow"
+              />
+            )}
+          </div>
         </div>
       </div>
 
