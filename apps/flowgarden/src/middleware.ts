@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
   // Require auth for everything else
   if (!user) {
     const url = new URL('/auth/login', request.url)
-    url.searchParams.set('next', pathname)
+    url.searchParams.set('next', pathname + request.nextUrl.search)
     return NextResponse.redirect(url)
   }
 
