@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Suspense, useState, useTransition } from 'react'
+import { Suspense, useState, useTransition, type MouseEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -181,8 +181,8 @@ function LoginForm() {
               onClick={() => { setSent(false); setEmail('') }}
               className="text-xs transition-colors"
               style={{ color: 'rgba(239,232,216,0.35)', letterSpacing: '0.08em' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(239,232,216,0.7)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(239,232,216,0.35)')}
+              onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.color = 'rgba(239,232,216,0.7)')}
+              onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.color = 'rgba(239,232,216,0.35)')}
             >
               ← Use a different email
             </button>
@@ -288,8 +288,8 @@ function LoginForm() {
                     color: '#EFE8D8',
                     letterSpacing: '0.04em',
                   }}
-                  onMouseEnter={e => { if (!isPending && email.trim()) e.currentTarget.style.backgroundColor = '#256B41' }}
-                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#1A5C35')}
+                  onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isPending && email.trim()) e.currentTarget.style.backgroundColor = '#256B41' }}
+                  onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.backgroundColor = '#1A5C35')}
                 >
                   {isPending ? 'Sending…' : 'Send magic link'}
                 </button>

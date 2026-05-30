@@ -1,5 +1,6 @@
 'use client'
 
+import { type MouseEvent } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -122,13 +123,13 @@ export function Sidebar() {
                 backgroundColor: isActive ? 'var(--fg-sidebar-active-bg)' : 'transparent',
                 color: isActive ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)',
               }}
-              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
                 if (!isActive) {
                   e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.05)'
                   e.currentTarget.style.color = 'var(--fg-sidebar-text-active)'
                 }
               }}
-              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+              onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
                 if (!isActive) {
                   e.currentTarget.style.backgroundColor = 'transparent'
                   e.currentTarget.style.color = 'var(--fg-sidebar-text)'
@@ -154,11 +155,11 @@ export function Sidebar() {
           href="/flowgarden/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
           style={{ color: 'var(--fg-sidebar-text)' }}
-          onMouseEnter={e => {
+          onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
             e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.05)'
             e.currentTarget.style.color = 'var(--fg-sidebar-text-active)'
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
             e.currentTarget.style.backgroundColor = 'transparent'
             e.currentTarget.style.color = 'var(--fg-sidebar-text)'
           }}
@@ -175,8 +176,8 @@ export function Sidebar() {
             onClick={handleSignOut}
             className="text-xs transition-colors"
             style={{ color: 'var(--fg-sidebar-text)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-sidebar-text)')}
+            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.color = '#f87171')}
+            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.color = 'var(--fg-sidebar-text)')}
           >
             Sign out
           </button>
