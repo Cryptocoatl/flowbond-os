@@ -1,8 +1,10 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const NAV = [
   {
@@ -28,8 +30,7 @@ const NAV = [
     label: 'Plants',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-        <path fillRule="evenodd" d="M5.5 16.5a.5.5 0 01-.5-.5V9.207l-1.146 1.147a.5.5 0 01-.708-.708l2-2a.5.5 0 01.708 0l2 2a.5.5 0 01-.708.708L6 9.207V16a.5.5 0 01-.5.5zm4-8a.5.5 0 01.5.5v6.5h1.5a.5.5 0 010 1H9.5a.5.5 0 01-.5-.5V9a.5.5 0 01.5-.5z" clipRule="evenodd" />
-        <path d="M14 2a4 4 0 014 4c0 2.5-2 5-4 6.5C12 11 10 8.5 10 6a4 4 0 014-4z" />
+        <path d="M14 2a4 4 0 014 4c0 2.5-2 5-4 6.5C12 11 10 8.5 10 6a4 4 0 014-4zM6 9a4 4 0 014 4c0 2.5-2 5-4 6.5C4 18 2 15.5 2 13a4 4 0 014-4z" />
       </svg>
     ),
   },
@@ -60,15 +61,6 @@ const NAV = [
       </svg>
     ),
   },
-  {
-    href: '/flowgarden/settings',
-    label: 'Settings',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-      </svg>
-    ),
-  },
 ]
 
 export function Sidebar() {
@@ -83,20 +75,40 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex w-60 bg-white border-r border-stone-100 flex-col shrink-0">
-      <div className="p-5 border-b border-stone-100">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-700 flex items-center justify-center text-white text-sm font-bold">
-            FG
+    <aside
+      className="hidden md:flex w-60 flex-col shrink-0"
+      style={{ backgroundColor: 'var(--fg-sidebar-bg)', borderRight: '1px solid var(--fg-sidebar-border)' }}
+    >
+      {/* Logo lockup */}
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--fg-sidebar-border)' }}>
+        <Link href="/flowgarden" className="flex items-center gap-3 group">
+          <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
+            <Image
+              src="/logos/mark/flowgarden-mark-gold-1024.png"
+              alt="FlowGarden"
+              fill
+              className="object-contain transition-opacity group-hover:opacity-90"
+            />
           </div>
           <div>
-            <p className="font-semibold text-sm text-stone-900">FlowGarden</p>
-            <p className="text-xs text-stone-400">Regenerative OS</p>
+            <p
+              className="text-xs font-bold tracking-widest uppercase"
+              style={{ color: 'var(--fg-sidebar-text-active)', letterSpacing: '0.14em' }}
+            >
+              FlowGarden
+            </p>
+            <p
+              className="text-[9px] tracking-widest uppercase"
+              style={{ color: '#C9A961', opacity: 0.65, letterSpacing: '0.12em' }}
+            >
+              Grow · Flow · Thrive
+            </p>
           </div>
-        </div>
+        </Link>
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5">
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(item => {
           const isActive = item.href === '/flowgarden'
             ? pathname === '/flowgarden'
@@ -105,36 +117,71 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-emerald-50 text-emerald-800'
-                  : 'text-stone-500 hover:bg-stone-50 hover:text-stone-900'
-              }`}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
+              style={{
+                backgroundColor: isActive ? 'var(--fg-sidebar-active-bg)' : 'transparent',
+                color: isActive ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)',
+              }}
+              onMouseEnter={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.05)'
+                  e.currentTarget.style.color = 'var(--fg-sidebar-text-active)'
+                }
+              }}
+              onMouseLeave={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = 'var(--fg-sidebar-text)'
+                }
+              }}
             >
-              <span className={isActive ? 'text-emerald-700' : 'text-stone-400'}>
-                {item.icon}
-              </span>
-              {item.label}
+              {item.icon}
+              <span className="flex-1">{item.label}</span>
+              {isActive && (
+                <span
+                  className="w-1 h-3.5 rounded-full shrink-0"
+                  style={{ backgroundColor: 'var(--fg-sidebar-active-text)' }}
+                />
+              )}
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-stone-100 space-y-2">
+      {/* Footer */}
+      <div className="p-4 space-y-1" style={{ borderTop: '1px solid var(--fg-sidebar-border)' }}>
         <Link
           href="/flowgarden/settings"
-          className="block px-3 py-2 rounded-lg bg-stone-50 border border-stone-100 hover:bg-stone-100 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+          style={{ color: 'var(--fg-sidebar-text)' }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.05)'
+            e.currentTarget.style.color = 'var(--fg-sidebar-text-active)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.color = 'var(--fg-sidebar-text)'
+          }}
         >
-          <p className="text-xs font-medium text-stone-600">Garden Settings</p>
-          <p className="text-xs text-stone-400 mt-0.5">Invite code · members</p>
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
+            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          </svg>
+          Settings
         </Link>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          className="w-full text-left px-3 py-2 rounded-lg text-xs text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-        >
-          Sign out
-        </button>
+
+        <div className="flex items-center justify-between px-3 py-1">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="text-xs transition-colors"
+            style={{ color: 'var(--fg-sidebar-text)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-sidebar-text)')}
+          >
+            Sign out
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   )
