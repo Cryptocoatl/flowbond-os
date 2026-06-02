@@ -6,6 +6,7 @@ import { synastry, REL_CONTEXTS } from '../../lib/astro/aspects';
 import { panorama } from '../../lib/astro/interpret';
 import { browserClient } from '../../lib/supabase';
 import ReadingPanel from './ReadingPanel';
+import Tour from './Tour';
 
 type Mode = 'explore' | 'combine';
 
@@ -39,6 +40,7 @@ export default function Constellation({
   const [active, setActive] = useState<string | null>(null);
   const [mapName, setMapName] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
+  const [tour, setTour] = useState(false);
 
   const nodes: Node[] = useMemo(() => {
     const n = profiles.length || 1;
@@ -121,6 +123,12 @@ export default function Constellation({
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setTour(true)}
+            className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]"
+          >
+            Tour
+          </button>
           {myFbid && (
             <Link
               href="/dashboard"
@@ -335,6 +343,7 @@ export default function Constellation({
           )}
         </div>
       </div>
+      <Tour open={tour} onClose={() => setTour(false)} />
     </div>
   );
 }
