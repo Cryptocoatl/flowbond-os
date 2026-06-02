@@ -6,6 +6,10 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { GardenSwitcher } from '@/components/garden/GardenSwitcher'
+import { startTour } from '@/components/garden/TourGuide'
+
+interface GardenOption { id: string; name: string; role: string }
 
 const NAV = [
   {
@@ -23,6 +27,15 @@ const NAV = [
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
         <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    href: '/flowgarden/world',
+    label: 'Garden World',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z" clipRule="evenodd" />
       </svg>
     ),
   },
@@ -64,7 +77,15 @@ const NAV = [
   },
 ]
 
-export function Sidebar() {
+export function Sidebar({
+  gardens,
+  activeId,
+  activeName,
+}: {
+  gardens: GardenOption[]
+  activeId: string
+  activeName: string
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -108,6 +129,11 @@ export function Sidebar() {
         </Link>
       </div>
 
+      {/* Garden switcher */}
+      <div className="px-3 pt-3">
+        <GardenSwitcher gardens={gardens} activeId={activeId} activeName={activeName} />
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(item => {
@@ -118,6 +144,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={`nav-${item.href.split('/').pop() || 'dashboard'}`}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
               style={{
                 backgroundColor: isActive ? 'var(--fg-sidebar-active-bg)' : 'transparent',

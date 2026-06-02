@@ -33,7 +33,14 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/debug') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon')
+    pathname.startsWith('/favicon') ||
+    // PWA: service worker, offline shell, icons + manifest must be reachable
+    // without auth or the app can't be installed.
+    pathname === '/sw.js' ||
+    pathname === '/offline' ||
+    pathname === '/manifest.webmanifest' ||
+    pathname.startsWith('/icons') ||
+    pathname.startsWith('/logos')
   ) {
     return supabaseResponse
   }

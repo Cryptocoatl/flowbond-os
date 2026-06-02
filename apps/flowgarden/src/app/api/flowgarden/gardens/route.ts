@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { geocode } from '@/lib/geocode'
+import { ACTIVE_GARDEN_COOKIE } from '@/lib/garden-context'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const REFERRAL_GARDEN_XP = 10
@@ -67,15 +69,28 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient()
 
+  // Geocode the optional location so the garden can appear on the community
+  // map. Coordinates are stored but stay hidden until the owner raises their
+  // map visibility above the default 'private'.
+  const label = location_label?.trim() || null
+  const geo = label ? await geocode(label) : null
+
   // Create the garden
-  const { data: garden, error: gardenError } = await admin
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: garden, error: gardenError } = await (admin as any)
     .from('flowgarden_gardens')
     .insert({
       user_id: user.id,
       name: name.trim(),
       description: description?.trim() || null,
-      location_label: location_label?.trim() || null,
+      location_label: label,
       climate_zone: climate_zone?.trim() || null,
+      latitude: geo?.latitude ?? null,
+      longitude: geo?.longitude ?? null,
+      city_label: geo?.city_label ?? null,
+      country: geo?.country ?? null,
+      // Default privacy is fully private — owner opts in on the map later.
+      map_visibility: 'private',
     })
     .select()
     .single()
@@ -107,5 +122,11 @@ export async function POST(request: Request) {
   // Award 10 XP to whoever referred this user (best-effort, on first garden only)
   void awardReferralGardenXp(admin, user.id)
 
-  return NextResponse.json({ garden }, { status: 201 })
+  // Make the new garden the active one.
+  const res = NextResponse.json({ garden }, { status: 201 })
+  res.cookies.set(ACTIVE_GARDEN_COOKIE, garden.id, {
+    httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax',
+    path: '/', maxAge: 60 * 60 * 24 * 365,
+  })
+  return res
 }
