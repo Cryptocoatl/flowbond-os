@@ -121,6 +121,14 @@ export default function Constellation({
               </button>
             ))}
           </div>
+          {myFbid && (
+            <Link
+              href="/dashboard"
+              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]"
+            >
+              Dashboard
+            </Link>
+          )}
           {myFbid ? (
             <Link
               href="/profile/new"
