@@ -48,3 +48,9 @@ services/flowgarden-capture/.env
 # Brand pack zip (ship unpacked tree, not the zip)
 FlowGarden-Brand-Pack.zip
 *-Brand-Pack.zip
+
+# FlowBond Life v2 reference prototypes (inputs, not source)
+/flowbond.html
+/deck.html
+/steph_portrait.jpg
+/CLAUDE_CODE_BRIEF.md

@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm --filter @flowbond/deck build",
+  "installCommand": "cd ../.. && pnpm install",
+  "outputDirectory": ".next"
+}

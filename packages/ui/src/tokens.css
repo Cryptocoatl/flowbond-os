@@ -1,0 +1,32 @@
+/* FlowBond design tokens — extracted verbatim from the flowbond.html prototype :root.
+   Color logic: violet = Intelligence/AI · gold = Value/Blockchain · jade = Life/RVBL.
+   Dark base only — never light / purple-on-white. */
+:root {
+  --void: #070410;
+  --void-2: #0d0719;
+  --void-3: #130a24;
+  --violet: #a855f7;
+  --violet-bright: #c084fc;
+  --violet-deep: #4c1d95;
+  --gold: #f0c66b;
+  --gold-bright: #ffd98a;
+  --gold-deep: #b9892f;
+  --jade: #6ef0b8;
+  --jade-deep: #1f7a55;
+  --bone: #f3ecff;
+  --muted: #a394c2;
+  --muted-2: #6f6190;
+  --hair: rgba(168, 85, 247, 0.16);
+  --hair-gold: rgba(240, 198, 107, 0.18);
+  /* Font families are bound to the next/font CSS variables injected by the app.
+     Fallbacks keep the cascade intact if the variables are ever missing. */
+  --serif: var(--font-fraunces), Georgia, serif;
+  --mono: var(--font-space-mono), ui-monospace, monospace;
+  --sans: var(--font-hanken), system-ui, sans-serif;
+  --script: var(--font-caveat), cursive;
+  --gut: clamp(20px, 5vw, 90px);
+}
+
+/* Generative-seal rotation keyframes (used by <OctagonSeal/>). */
+@keyframes fb-spinA { to { transform: rotate(360deg); } }
+@keyframes fb-spinB { to { transform: rotate(-360deg); } }
