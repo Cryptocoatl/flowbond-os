@@ -293,8 +293,8 @@ export default function Constellation({
                     <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>
                   )}
 
-                  {/* Claude narrative for a pair (with its own context switch) */}
-                  {selectedProfiles.length === 2 && (
+                  {/* Claude narrative for a pair or a collective (with context switch) */}
+                  {selectedProfiles.length >= 2 && (
                     <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />
                   )}
 
