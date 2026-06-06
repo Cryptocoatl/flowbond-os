@@ -33,22 +33,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(back.toString())
   }
 
-  // Mint a single-use, short-lived token for THIS user (no email sent).
-  const admin = createAdminClient()
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: user.email,
-  })
-  if (error || !data?.properties?.hashed_token) {
-    console.error('[fbid/handoff] generateLink failed', error?.message)
-    return NextResponse.redirect(`${url.origin}/?error=handoff_failed`)
+  // Seamless SSO: mint a single-use token (no email) and hand it to the app.
+  // If the service role isn't configured (or minting fails), DON'T error — fall
+  // back to a normal magic-link login for that app so the card is always clickable.
+  const appLogin = new URL('/', url.origin)
+  if (app) appLogin.searchParams.set('app', app)
+  appLogin.searchParams.set('redirect', redirect!)
+
+  try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('service_role_unset')
+    const admin = createAdminClient()
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: user.email,
+    })
+    if (error || !data?.properties?.hashed_token) {
+      throw new Error(error?.message ?? 'no_token')
+    }
+    const target = new URL(redirect!)
+    target.searchParams.set('token_hash', data.properties.hashed_token)
+    target.searchParams.set('type', 'magiclink')
+    if (app) target.searchParams.set('app', app)
+    return NextResponse.redirect(target.toString())
+  } catch (e) {
+    console.error('[fbid/handoff] falling back to app login:', (e as Error).message)
+    return NextResponse.redirect(appLogin.toString())
   }
-
-  // Append the token to the (already-validated) app callback and send the user home.
-  const target = new URL(redirect!)
-  target.searchParams.set('token_hash', data.properties.hashed_token)
-  target.searchParams.set('type', 'magiclink')
-  if (app) target.searchParams.set('app', app)
-
-  return NextResponse.redirect(target.toString())
 }

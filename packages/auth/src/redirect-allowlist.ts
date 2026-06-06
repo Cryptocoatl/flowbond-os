@@ -18,8 +18,10 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://deck.flowbond.life', path: '/auth/callback' },
   { origin: 'https://xelva.live', path: '/auth/callback' },
   { origin: 'https://dev.flowbond.life', path: '/auth/callback' }, // ops
+  { origin: 'https://fbid.flowbond.life', path: '/auth/callback' }, // hub's own login (dashboard)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
+  { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
   { origin: 'http://localhost:3002', path: '/auth/callback' },     // flowgarden
   { origin: 'http://localhost:3000', path: '/api/auth/callback' }, // flowbond-life
   { origin: 'http://localhost:3003', path: '/auth/callback' },     // ops

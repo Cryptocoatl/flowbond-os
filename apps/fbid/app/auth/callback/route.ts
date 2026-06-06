@@ -1,48 +1,64 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { isAllowedRedirect } from '@flowbond/auth'
 import { createClient } from '@/lib/supabase/server'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * The hub's OWN callback — where OAuth and password-recovery flows land (on
- * fbid's domain). It establishes the hub session, then either sends the user to
- * set a password, or hands off to the originating app via /api/handoff.
+ * The hub's OWN callback. Establishes a session ON fbid's domain, then:
+ *   • HUB LOGIN (no external `app`/`redirect`) → land on the FBID dashboard ("/").
+ *   • APP HANDOFF (OAuth/recovery that left a session here) → /api/handoff to the app.
  *
- *   GET /auth/callback?code=...&app=<slug>&redirect=<app callback>[&next=/auth/set-password]
+ * Accepts both landing shapes:
+ *   ?token_hash=…&type=…   (magic link via the /auth/confirm forwarder)
+ *   ?code=…                (OAuth / PKCE)
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
+  const tokenHash = url.searchParams.get('token_hash')
+  const type = (url.searchParams.get('type') as EmailOtpType | null) ?? 'magiclink'
   const redirect = url.searchParams.get('redirect')
   const app = url.searchParams.get('app') ?? ''
   const next = url.searchParams.get('next')
 
-  if (!code) {
-    return NextResponse.redirect(`${url.origin}/?error=missing_code`)
-  }
-  if (!isAllowedRedirect(redirect)) {
-    return NextResponse.redirect(`${url.origin}/?error=bad_redirect`)
-  }
-
   const supabase = await createClient()
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error) {
-    console.error('[fbid/callback] exchangeCodeForSession', error.message)
+
+  let failed = false
+  if (tokenHash) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+    failed = !!error
+    if (error) console.error('[fbid/callback] verifyOtp', error.message)
+  } else if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    failed = !!error
+    if (error) console.error('[fbid/callback] exchangeCodeForSession', error.message)
+  } else {
+    failed = true
+    console.error('[fbid/callback] missing code and token_hash')
+  }
+  if (failed) {
     return NextResponse.redirect(`${url.origin}/?error=auth_failed`)
   }
 
-  // Recovery flow → let the user set a password first, still on the hub.
-  if (next === '/auth/set-password') {
+  // Password recovery → set a password first, still on the hub. (back-compat)
+  if (next === '/auth/set-password' && isAllowedRedirect(redirect)) {
     const sp = new URL('/auth/set-password', url.origin)
     if (app) sp.searchParams.set('app', app)
     sp.searchParams.set('redirect', redirect!)
     return NextResponse.redirect(sp.toString())
   }
 
-  // Otherwise hand the session off to the originating app.
-  const handoff = new URL('/api/handoff', url.origin)
-  if (app) handoff.searchParams.set('app', app)
-  handoff.searchParams.set('redirect', redirect!)
-  return NextResponse.redirect(handoff.toString())
+  // An external app is waiting → hand the session off to it. (OAuth-at-hub flow)
+  if (app && app !== 'fbid' && isAllowedRedirect(redirect)) {
+    const handoff = new URL('/api/handoff', url.origin)
+    handoff.searchParams.set('app', app)
+    handoff.searchParams.set('redirect', redirect!)
+    return NextResponse.redirect(handoff.toString())
+  }
+
+  // HUB LOGIN → the FBID dashboard. `next` must be a local path (open-redirect guard).
+  const dest = next && next.startsWith('/') ? next : '/'
+  return NextResponse.redirect(`${url.origin}${dest}`)
 }
