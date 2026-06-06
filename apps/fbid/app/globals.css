@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --fb-bg: #07070f;
+  --fb-panel: rgba(255, 255, 255, 0.03);
+  --fb-border: rgba(255, 255, 255, 0.10);
+  --fb-text: #ffffff;
+  --fb-muted: #9698a8;
+  --fb-accent: #7c3aed;
+}
+
+html,
+body {
+  background:
+    radial-gradient(900px 600px at 70% -10%, rgba(124, 58, 237, 0.16), transparent 60%),
+    radial-gradient(800px 500px at 10% 110%, rgba(56, 189, 248, 0.08), transparent 60%),
+    var(--fb-bg);
+  color: var(--fb-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
