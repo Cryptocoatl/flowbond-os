@@ -45,7 +45,8 @@ export default function NewProfile() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed');
-      router.push('/');
+      const next = new URLSearchParams(window.location.search).get('next') || '/';
+      router.push(next);
     } catch (e: any) {
       setErr(e.message);
     } finally {

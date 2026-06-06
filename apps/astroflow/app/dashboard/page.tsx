@@ -20,11 +20,12 @@ export default async function Dashboard() {
   }
 
   const sb = await serverClient();
-  const [maps, requests, allowances, friends, me] = await Promise.all([
+  const [maps, requests, allowances, friends, crews, me] = await Promise.all([
     sb.rpc('my_flow_maps'),
     sb.rpc('my_incoming_requests'),
     sb.rpc('my_allowances'),
     sb.rpc('my_friends'),
+    sb.rpc('my_crews'),
     sb.from('profiles').select('handle, display_name, visibility').eq('fbid', fbid).maybeSingle(),
   ]);
 
@@ -35,6 +36,7 @@ export default async function Dashboard() {
       requests={requests.data ?? []}
       allowances={allowances.data ?? []}
       friends={friends.data ?? []}
+      crews={crews.data ?? []}
     />
   );
 }
