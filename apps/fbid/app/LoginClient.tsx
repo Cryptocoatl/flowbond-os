@@ -16,6 +16,7 @@ const APP_LABELS: Record<string, string> = {
   xelva: 'Xelva',
   deck: 'FlowBond Deck',
   ops: 'FlowBond Ops',
+  flowme: 'FlowMe',
 }
 
 export default function LoginClient() {
@@ -58,15 +59,23 @@ export default function LoginClient() {
     setStatus('loading')
     setMessage('')
     const supabase = createClient()
-    // Pass a clean (query-less) callback as emailRedirectTo so the forwarder link
-    // in the email is unambiguous. The email links to the hub's /auth/confirm
-    // forwarder, which hands the token_hash to this app's callback (works
-    // cross-domain, no PKCE verifier).
+    // The magic link always lands on the HUB's own callback (the only
+    // emailRedirectTo guaranteed to pass Supabase's allowlist — app callbacks
+    // on new domains get silently rewritten). In app mode we thread the app +
+    // its callback through as query params (probe-verified to survive the
+    // allowlist); the hub callback then hands the session off to the app via
+    // /api/handoff. Side benefit: every login also establishes the hub
+    // session, so "remember this device" SSO works from the very first login.
     let cleanRedirect = redirect
     try { const u = new URL(redirect); cleanRedirect = u.origin + u.pathname } catch {}
+    const hubCb = new URL('/auth/callback', FBID_ORIGIN)
+    if (!hubMode) {
+      hubCb.searchParams.set('app', app)
+      hubCb.searchParams.set('redirect', cleanRedirect)
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: email.toLowerCase().trim(),
-      options: { emailRedirectTo: cleanRedirect, shouldCreateUser: true },
+      options: { emailRedirectTo: hubCb.toString(), shouldCreateUser: true },
     })
     setStatus(error ? 'error' : 'sent')
     if (error) setMessage(error.message)

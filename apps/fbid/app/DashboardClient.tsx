@@ -11,6 +11,7 @@ const APPS: { slug: string; label: string; desc: string; callback: string; glyph
   { slug: 'flowgarden', label: 'FlowGarden', desc: 'Garden intelligence', callback: 'https://flowgarden.life/auth/callback', glyph: '🌱' },
   { slug: 'danz', label: 'DANZ.NOW', desc: 'Dance & connection', callback: 'https://danz-now.vercel.app/auth/callback', glyph: '💃' },
   { slug: 'flowbond', label: 'FlowBond', desc: 'Your identity home', callback: 'https://flowbond.life/api/auth/callback', glyph: '🔮' },
+  { slug: 'flowme', label: 'FlowMe', desc: 'Your living profile', callback: 'https://flowme.one/auth/callback', glyph: '🎭' },
 ]
 // Apps not yet on FBID → plain links (open their own login).
 const EXTERNAL: { label: string; desc: string; href: string; glyph: string }[] = [
