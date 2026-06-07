@@ -18,7 +18,7 @@ const LENSES = [
 const STEPS = [
   { n: '01', t: 'Add your chart', d: 'Your birth moment, computed to the degree — Sun, Moon, Rising, every house and aspect. We auto-resolve your place and timezone.' },
   { n: '02', t: 'See your constellation', d: 'Everyone you can see becomes a star. Tap any one to read who they truly are.' },
-  { n: '03', t: 'Combine & read the currents', d: 'Weave people together, switch the lens, and let a grounded, Claude-powered reading name what flows and what to tend.' },
+  { n: '03', t: 'Combine & read the currents', d: 'Weave people together, switch the lens, and let FlowMe — the intelligence of the flow — name what flows and what to tend.' },
 ];
 
 export default function Landing() {

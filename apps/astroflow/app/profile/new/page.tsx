@@ -1,8 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Visibility } from '../../../lib/astro/types';
 import PlaceAutocomplete from '../../components/PlaceAutocomplete';
+import { browserClient } from '../../../lib/supabase';
 
 const TIERS: { v: Visibility; label: string; help: string }[] = [
   { v: 'private', label: 'Only me', help: 'Fully private. No one else can see your chart.' },
@@ -20,7 +21,36 @@ export default function NewProfile() {
   const [visibility, setVisibility] = useState<Visibility>('private');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [claimCode, setClaimCode] = useState('');
   const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Personalized guest invite (?claim=<code>): the inviter already entered
+  // this person's birth data, so the form arrives prefilled — one look,
+  // tweak if needed, and the chart is theirs.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('claim');
+    if (!code) return;
+    setClaimCode(code);
+    fetch(`/api/guest?code=${encodeURIComponent(code)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => {
+        if (!g || g.claimed) return;
+        setForm((f) => ({
+          ...f,
+          displayName: g.display_name ?? f.displayName,
+          date: g.birth_date ?? f.date,
+          time: g.birth_time ? String(g.birth_time).slice(0, 5) : '',
+          unknownTime: !g.birth_time,
+          place: g.birth_place ?? f.place,
+          tz: g.birth_tz ?? f.tz,
+          lat: g.birth_lat != null ? String(g.birth_lat) : f.lat,
+          lng: g.birth_lng != null ? String(g.birth_lng) : f.lng,
+          avatarColor: g.avatar_color ?? f.avatarColor,
+        }));
+        setVisibility('specific'); // they're joining a weave — shares need to take effect
+      })
+      .catch(() => {});
+  }, []);
 
   async function submit() {
     setErr(''); setBusy(true);
@@ -45,6 +75,14 @@ export default function NewProfile() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed');
+      if (claimCode) {
+        // Take the seat: swap the guest entry for this fresh profile in every
+        // collective chart that holds them, then land on the dashboard.
+        const { error } = await browserClient().rpc('claim_guest', { code: claimCode });
+        if (error) throw new Error(error.message);
+        router.push('/dashboard');
+        return;
+      }
       const next = new URLSearchParams(window.location.search).get('next') || '/';
       router.push(next);
     } catch (e: any) {
