@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import BondInvite from './BondInvite';
 
 interface Me {
   handle: string;
@@ -374,17 +375,26 @@ export default function DashboardClient({
         )}
       </Section>
 
-      {/* Friends */}
-      {friends.length > 0 && (
-        <Section title="Friends">
-          {friends.map((f) => (
+      {/* Friends — and the astrobond link that makes new ones */}
+      <Section title="Friends">
+        <div className="mb-3">
+          <BondInvite />
+          <p className="text-[10px] text-[#5b5e72] mt-1.5">
+            Your personal astrobond link: they log in once with their FBID, create their chart, and you
+            see each other&apos;s skies — in dashboards, constellations, and every universe you weave together.
+          </p>
+        </div>
+        {friends.length === 0 ? (
+          <Empty>No bonds yet — send your link and watch your sky fill up.</Empty>
+        ) : (
+          friends.map((f) => (
             <Row key={f.handle}>
               <span>{f.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{f.handle}</span></span>
               <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">{f.status}</span>
             </Row>
-          ))}
-        </Section>
-      )}
+          ))
+        )}
+      </Section>
     </div>
   );
 }

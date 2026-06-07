@@ -3,25 +3,26 @@ import { computeChart } from '../../../lib/astro/chart';
 import { serverClient } from '../../../lib/supabase-server';
 import type { BirthData } from '../../../lib/astro/types';
 
-// Guests: people in a collective chart without a FlowBond profile. The map
-// owner supplies their birth data; we compute the chart server-side (same
-// validated engine as profiles) and hand back a personalized claim link.
+// Guests: people without a FlowBond profile yet. The inviter supplies their
+// birth data; we compute the chart server-side (same validated engine as
+// profiles) and hand back a personalized claim link. With a mapId the guest
+// joins that collective chart; without one it's a SOLO guest — a one-time
+// chart holding an activation link that, when claimed, bonds you both.
 export async function POST(req: NextRequest) {
   try {
     const { mapId, displayName, birth, avatarColor } = (await req.json()) as {
-      mapId: string;
+      mapId?: string;
       displayName: string;
       birth: BirthData;
       avatarColor?: string;
     };
-    if (!mapId || !displayName?.trim() || !birth?.date || !birth?.tz)
-      return NextResponse.json({ error: 'Need a map, a name and birth data.' }, { status: 400 });
+    if (!displayName?.trim() || !birth?.date || !birth?.tz)
+      return NextResponse.json({ error: 'Need a name and birth data.' }, { status: 400 });
 
     const chart = computeChart(birth);
 
     const sb = await serverClient();
-    const { data, error } = await sb.rpc('add_guest', {
-      map_id: mapId,
+    const args = {
       guest_name: displayName.trim(),
       bdate: birth.date,
       btime: birth.time ?? null,
@@ -31,7 +32,10 @@ export async function POST(req: NextRequest) {
       bplace: birth.place,
       chart_json: chart,
       color: avatarColor ?? '#8fb8e0',
-    });
+    };
+    const { data, error } = mapId
+      ? await sb.rpc('add_guest', { map_id: mapId, ...args })
+      : await sb.rpc('create_solo_guest', args);
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     return NextResponse.json({ ok: true, guestId: row.guest_id, claimCode: row.claim_code });

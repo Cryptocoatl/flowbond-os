@@ -6,6 +6,7 @@ import { synastry, REL_CONTEXTS } from '../../lib/astro/aspects';
 import { panorama } from '../../lib/astro/interpret';
 import { browserClient } from '../../lib/supabase';
 import ReadingPanel from './ReadingPanel';
+import BondInvite from './BondInvite';
 import Tour from './Tour';
 
 type Mode = 'explore' | 'combine';
@@ -288,6 +289,16 @@ export default function Constellation({
               <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">
                 Combine · {context}
               </h2>
+              {/* Missing someone? One link bonds your skies and they appear here. */}
+              {myFbid && (
+                <div className="mb-4 pb-4 border-b border-white/5">
+                  <BondInvite compact />
+                  <p className="text-[10px] text-[#5b5e72] mt-1.5">
+                    Send your astrobond link — they create their FBID + chart, you see each other
+                    everywhere, and you can weave them into any universe.
+                  </p>
+                </div>
+              )}
               {selectedProfiles.length < 2 ? (
                 <p className="text-[#9698a8] text-sm">Select two or more stars to weave a flow map.</p>
               ) : (
