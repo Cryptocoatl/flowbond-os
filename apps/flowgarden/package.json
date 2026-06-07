@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.37.0",
+    "@flowbond/auth": "workspace:*",
     "@flowbond/core": "workspace:*",
     "@flowbond/db": "workspace:*",
     "@flowbond/ui": "workspace:*",

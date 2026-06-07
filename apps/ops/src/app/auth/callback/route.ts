@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { type NextRequest } from 'next/server'
+import { handleAuthCallback } from '@flowbond/auth/server'
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl
-  const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+export const dynamic = 'force-dynamic'
 
-  if (code) {
-    const sb = await createClient()
-    await sb.auth.exchangeCodeForSession(code)
-  }
-
-  return NextResponse.redirect(new URL(next, req.url))
+// Receives the session back from the FBID hub (handles ?code= and ?token_hash=),
+// then registers the connection via activate_app('ops').
+export async function GET(request: NextRequest) {
+  return handleAuthCallback({
+    request,
+    slug: 'ops',
+    defaultNext: '/dashboard',
+    loginPath: '/login',
+  })
 }
