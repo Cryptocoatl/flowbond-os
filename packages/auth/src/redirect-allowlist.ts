@@ -19,6 +19,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://xelva.live', path: '/auth/callback' },
   { origin: 'https://dev.flowbond.life', path: '/auth/callback' }, // ops
   { origin: 'https://fbid.flowbond.life', path: '/auth/callback' }, // hub's own login (dashboard)
+  { origin: 'https://v3.flowme.one', path: '/auth/callback' },      // flow3
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
@@ -26,6 +27,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3000', path: '/api/auth/callback' }, // flowbond-life
   { origin: 'http://localhost:3003', path: '/auth/callback' },     // ops
   { origin: 'http://localhost:3030', path: '/auth/callback' },     // danz
+  { origin: 'http://localhost:3013', path: '/auth/callback' },     // flow3
 ])
 
 /** True only if `raw` exactly matches an allowed (origin, pathname) pair. */

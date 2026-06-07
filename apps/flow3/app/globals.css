@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #030014;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ---- cosmic primitives ---- */
+
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover {
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+}
+.glass-hover:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 40px -8px rgba(139, 92, 246, 0.45);
+  transform: translateY(-2px);
+}
+
+.text-cosmic {
+  background: linear-gradient(110deg, #e879f9, #8b5cf6, #22d3ee, #34d399, #e879f9);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+.btn-cosmic {
+  position: relative;
+  background: linear-gradient(110deg, #8b5cf6, #22d3ee);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  box-shadow: 0 0 28px -6px rgba(139, 92, 246, 0.6);
+}
+.btn-cosmic:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 48px -4px rgba(34, 211, 238, 0.7);
+  filter: brightness(1.1);
+}
+.btn-cosmic:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+/* status pulse for dreaming creations */
+@keyframes dreaming {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.dreaming {
+  animation: dreaming 1.8s ease-in-out infinite;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.5);
+}
