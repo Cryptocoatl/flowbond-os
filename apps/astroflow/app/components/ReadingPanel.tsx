@@ -7,6 +7,7 @@ const CONTEXTS: RelContext[] = ['friendship', 'romance', 'coliving', 'business']
 // Single-person readings can switch tradition; `traditions` is only passed
 // when the viewer has a deep/open-heart share (or owns the chart).
 const SYSTEMS = [
+  { key: 'unified', label: '✦ Unify' },
   { key: 'western', label: 'Western' },
   { key: 'vedic', label: 'Vedic' },
   { key: 'mayan', label: 'Mayan' },
@@ -31,17 +32,19 @@ export default function ReadingPanel({
 }) {
   const [context, setContext] = useState<RelContext>('friendship');
   const [system, setSystem] = useState<SystemKey>('western');
+  const [question, setQuestion] = useState('');
   const [reading, setReading] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  async function run(ctx: RelContext, sys: SystemKey = system) {
+  async function run(ctx: RelContext, sys: SystemKey = system, q: string = '') {
     setBusy(true); setErr(''); setContext(ctx); setSystem(sys);
     try {
+      const base = mapId ? { mapId } : { handles };
       const res = await fetch('/api/reading', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(mapId ? { mapId, context: ctx, system: sys } : { handles, context: ctx, system: sys }),
+        body: JSON.stringify({ ...base, context: ctx, system: sys, question: q || undefined }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed');
@@ -116,8 +119,32 @@ export default function ReadingPanel({
               {reading}
             </p>
           )}
+
+          {/* Ask the stars — reflect a real decision through the chart(s) */}
+          <div className="mt-4 pt-3 border-t border-white/5 flex gap-2">
+            <input
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && question.trim() && !busy) run(context, system, question); }}
+              maxLength={300}
+              placeholder="Ask the stars — a decision, a tension, a dream…"
+              className="flex-1 bg-[#0a0b14] border border-[#242a3b] rounded-lg px-3 py-2 text-sm text-[#ece9e0] placeholder-[#454962] focus:border-[#9a8fe0]/50 outline-none"
+            />
+            <button
+              onClick={() => run(context, system, question)}
+              disabled={busy || !question.trim()}
+              className="text-sm bg-[#e3c07a]/90 text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-40 hover:bg-[#e3c07a] transition"
+            >
+              ✦ Ask
+            </button>
+          </div>
+          <p className="text-[10px] text-[#5b5e72] mt-1.5">
+            FlowMe reflects your question through the symbols — a mirror for star-aligned decisions, never a verdict.
+          </p>
+
           <p className="text-[9px] text-[#3f4358] mt-4 tracking-wide">
-            Channeled live, never stored — your chart speaks in symbols, your identity stays in the flow.
+            Channeled live, never stored — your chart speaks in symbols, your identity stays in the flow ·{' '}
+            <a href="/cosmos" className="text-[#5b5e72] underline decoration-dotted hover:text-[#b6abec]">study the symbols ✦</a>
           </p>
         </div>
       </div>

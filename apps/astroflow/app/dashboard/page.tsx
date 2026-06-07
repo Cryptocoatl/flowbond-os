@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { serverClient } from '../../lib/supabase-server';
-import { myFbid } from '../../lib/astro/access';
+import { myFbid, visibleProfiles } from '../../lib/astro/access';
 import DashboardClient from '../components/DashboardClient';
+import BubbleField, { type Bubble } from '../components/BubbleField';
 
-// Your AstroFlow control room: collective charts (flow maps), who you allow to
-// see your chart, incoming access requests, and friends. All RLS-backed.
+// Your AstroFlow control room: the living bubble constellation of everyone in
+// your flow, collective charts (flow maps), who you allow to see your chart,
+// incoming access requests, and friends. All RLS-backed.
 export default async function Dashboard() {
   const fbid = await myFbid();
   if (!fbid) {
@@ -20,7 +22,7 @@ export default async function Dashboard() {
   }
 
   const sb = await serverClient();
-  const [maps, requests, allowances, friends, crews, audience, me] = await Promise.all([
+  const [maps, requests, allowances, friends, crews, audience, me, people] = await Promise.all([
     sb.rpc('my_flow_maps'),
     sb.rpc('my_incoming_requests'),
     sb.rpc('my_allowances'),
@@ -28,17 +30,36 @@ export default async function Dashboard() {
     sb.rpc('my_crews'),
     sb.rpc('my_audience'),
     sb.from('profiles').select('handle, display_name, visibility').eq('fbid', fbid).maybeSingle(),
+    visibleProfiles(),
   ]);
 
+  // Everyone whose star you can see, you first — your active bubble map.
+  const bubbles: Bubble[] = people
+    .map((p) => ({
+      handle: p.handle,
+      name: p.displayName,
+      color: p.avatarColor,
+      sun: p.chart.bodies.Sun.sign,
+      moon: p.chart.bodies.Moon.sign,
+      rising: p.chart.asc?.sign ?? null,
+      isMe: p.fbid === fbid,
+    }))
+    .sort((a, b) => Number(b.isMe) - Number(a.isMe));
+
   return (
-    <DashboardClient
-      me={me.data ?? null}
-      maps={maps.data ?? []}
-      requests={requests.data ?? []}
-      allowances={allowances.data ?? []}
-      friends={friends.data ?? []}
-      crews={crews.data ?? []}
-      audience={audience.data ?? []}
-    />
+    <>
+      <div className="max-w-2xl mx-auto px-6 pt-6">
+        <BubbleField people={bubbles} />
+      </div>
+      <DashboardClient
+        me={me.data ?? null}
+        maps={maps.data ?? []}
+        requests={requests.data ?? []}
+        allowances={allowances.data ?? []}
+        friends={friends.data ?? []}
+        crews={crews.data ?? []}
+        audience={audience.data ?? []}
+      />
+    </>
   );
 }

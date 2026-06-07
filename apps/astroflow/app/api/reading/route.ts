@@ -11,8 +11,8 @@ import type { RelContext, EcosystemPlace, AstroProfile } from '../../../lib/astr
 
 // Which symbolic system(s) to read through. 'comparison' reads the SAME person
 // through two systems side by side (western vs vedic, gene keys vs the chart).
-export type ReadingSystem = 'western' | 'vedic' | 'mayan' | 'genekeys' | 'comparison';
-const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comparison'];
+export type ReadingSystem = 'western' | 'vedic' | 'mayan' | 'genekeys' | 'comparison' | 'unified';
+const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comparison', 'unified'];
 
 // Model is env-configurable; see https://docs.claude.com/en/docs/about-claude/models
 const MODEL = process.env.ASTROFLOW_READING_MODEL || 'claude-sonnet-4-6';
@@ -89,6 +89,18 @@ location strongly amplifies that planet's energy for them — guidance for where
 launch, or gather. For a group, the best shared place is where the most members are positively
 activated.
 
+WHEN THE PERSON BRINGS A QUESTION
+Sometimes the facts include a QUESTION the person is holding — a decision, a tension, a dream.
+Reflect it through the chart symbols: show which of their currents the question touches, what each
+side of the choice asks of them, and where their chart suggests ease or friction. You are a mirror,
+not an oracle of answers — NEVER tell them what to decide, never predict outcomes. Help them see
+their own question more clearly, and close with ONE reflective question that helps the decision
+align with their stars.
+
+UNIFIED readings: when asked to unify, weave ALL the lenses in the facts into one clear, plain-language
+resume of a few short paragraphs — what every tradition agrees on said once and strongly, then what each
+adds. No jargon walls; a person new to astrology should understand every sentence.
+
 PRIVACY & TRUST (FlowBond privacy layer)
 You receive ONLY symbolic data: first names and deterministically-computed chart symbols. You are
 never given — and must never ask for, infer, or speculate about — surnames, birth dates, birth
@@ -120,8 +132,10 @@ async function channelFlowMe(facts: unknown, ask: string, maxTokens = 800) {
     body: JSON.stringify({
       model: MODEL,
       max_tokens: maxTokens,
-      // System sent as a cached block — the framework above is reused across calls.
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      // System sent as a cached block — FlowMe's generic knowledge is loaded
+      // once per hour, then reused near-free: the collective framework lives
+      // in cache, only the tiny per-reading facts cost fresh tokens.
+      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral', ttl: '1h' } }],
       messages: [{ role: 'user', content: `${ask}\n\nFACTS:\n${JSON.stringify(facts, null, 2)}` }],
     }),
   });
@@ -143,12 +157,14 @@ const bigThree = (p: AstroProfile) => ({
 
 export async function POST(req: NextRequest) {
   try {
-    const { handles, mapId, context = 'friendship', system = 'western' } = (await req.json()) as {
+    const { handles, mapId, context = 'friendship', system = 'western', question } = (await req.json()) as {
       handles?: string[];
       mapId?: string; // collective chart: read everyone woven in (members + guests)
       context?: RelContext;
       system?: ReadingSystem;
+      question?: string; // ask the stars: reflect a specific decision through the chart(s)
     };
+    const q = typeof question === 'string' ? question.trim().slice(0, 300) : '';
     if (!mapId && (!Array.isArray(handles) || handles.length === 0)) {
       return NextResponse.json({ error: 'handles or mapId required' }, { status: 400 });
     }
@@ -319,7 +335,7 @@ export async function POST(req: NextRequest) {
         ask = `Write a Gene Keys reading for ${firstName(p)} along the Activation Sequence: Life's Work, Evolution, Radiance, Purpose. For each sphere, name the shadow as the contracted pattern they will recognize, the gift as what unlocks, and the siddhi as the far star. Weave the profile lines into HOW they walk this path. Close with the single shadow→gift shift that would move everything else.`;
         maxTokens = 1000;
       } else {
-        // comparison: same person through all the lenses, side by side
+        // comparison & unified: same person through all the lenses
         const v = vedicChart(p.chart);
         facts = {
           name: firstName(p),
@@ -329,7 +345,10 @@ export async function POST(req: NextRequest) {
           mayan: mayanSummary(p.chart.jd, p.birth.date),
           geneKeys: geneKeysSummary(geneKeys(p.chart)),
         };
-        ask = `Write a comparison reading for ${firstName(p)} across the four lenses they carry: western tropical (personality weather), Vedic sidereal (karmic ground), the Mayan counts (the face of their day), and Gene Keys (evolutionary arc). Name where the systems AGREE — that convergence is the loudest truth in the chart — and what each lens uniquely reveals that the others cannot see. Do not rank the systems.`;
+        ask =
+          system === 'unified'
+            ? `Write a UNIFIED reading for ${firstName(p)}: weave the western chart, Vedic sidereal, the Mayan counts and Gene Keys into one clear resume of a few short paragraphs. Lead with what every lens agrees on about who they are — said once, strongly, in plain language — then what each tradition uniquely adds, and close with the single clearest thing this whole sky is asking of them right now.`
+            : `Write a comparison reading for ${firstName(p)} across the four lenses they carry: western tropical (personality weather), Vedic sidereal (karmic ground), the Mayan counts (the face of their day), and Gene Keys (evolutionary arc). Name where the systems AGREE — that convergence is the loudest truth in the chart — and what each lens uniquely reveals that the others cannot see. Do not rank the systems.`;
         maxTokens = 1200;
       }
     } else if (profiles.length === 2) {
@@ -391,6 +410,15 @@ export async function POST(req: NextRequest) {
         context === 'business' ? 'project/partnership' : context === 'coliving' ? 'shared living space' : 'group'
       }.`;
       maxTokens = 1100;
+    }
+
+    // Ask the stars: the question rides inside the FACTS (data, not directive)
+    // and the reading becomes a mirror for the decision — reflective, never
+    // prescriptive, per the cached framework's question rules.
+    if (q) {
+      facts = { ...(facts as Record<string, unknown>), QUESTION: q };
+      ask += ' They are holding the QUESTION included in the facts — let the whole reading revolve around it, reflecting it through the symbols per your question rules.';
+      maxTokens = Math.max(maxTokens, 1000);
     }
 
     const reading = await channelFlowMe(facts, ask, maxTokens);
