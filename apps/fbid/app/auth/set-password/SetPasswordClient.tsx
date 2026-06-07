@@ -25,13 +25,15 @@ export default function SetPasswordClient() {
     if (error) {
       setStatus('error'); setMessage(error.message); return
     }
-    // Hand the (now password-enabled) session back to the app.
-    if (isAllowedRedirect(redirect)) {
+    // An app is waiting → hand the (now password-enabled) session back to it.
+    // Otherwise this was a hub-mode recovery or a dashboard "set password" →
+    // land on the FBID dashboard.
+    if (redirect && isAllowedRedirect(redirect)) {
       window.location.assign(
-        `/api/handoff?app=${encodeURIComponent(app)}&redirect=${encodeURIComponent(redirect!)}`,
+        `/api/handoff?app=${encodeURIComponent(app)}&redirect=${encodeURIComponent(redirect)}`,
       )
     } else {
-      setStatus('error'); setMessage('Password saved, but the return link was invalid.')
+      window.location.assign('/')
     }
   }
 

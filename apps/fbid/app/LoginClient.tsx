@@ -5,7 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { isAllowedRedirect } from '@flowbond/auth'
 import { createClient } from '@/lib/supabase/client'
 
-type Status = 'idle' | 'loading' | 'sent' | 'error'
+type Status = 'idle' | 'loading' | 'sent' | 'recovery-sent' | 'error'
+type Method = 'magic' | 'password'
 
 const APP_LABELS: Record<string, string> = {
   astroflow: 'AstroFlow',
@@ -34,6 +35,8 @@ export default function LoginClient() {
   const appLabel = hubMode ? 'FlowBond' : (APP_LABELS[app] ?? (app || 'FlowBond'))
 
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [method, setMethod] = useState<Method>('magic')
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState('')
 
@@ -69,7 +72,53 @@ export default function LoginClient() {
     if (error) setMessage(error.message)
   }
 
-  if (status === 'sent') {
+  async function signInWithPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('loading')
+    setMessage('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
+    })
+    if (error) {
+      setStatus('error')
+      // Don't parrot raw API errors; one friendly line covers wrong password,
+      // no password set yet, AND non-existent account (no enumeration).
+      setMessage('That didn’t match. Try again, or use a magic link — it always works.')
+      return
+    }
+    // Session now lives on the hub domain ("remember this device" = it persists).
+    // Hub visit → dashboard. App visit → seamless token handoff to the app.
+    if (hubMode) {
+      window.location.assign('/')
+    } else {
+      window.location.assign(
+        `/api/handoff?app=${encodeURIComponent(app)}&redirect=${encodeURIComponent(redirect)}`,
+      )
+    }
+  }
+
+  async function forgotPassword() {
+    const addr = email.toLowerCase().trim()
+    if (!addr) {
+      setStatus('error')
+      setMessage('Enter your email first, then tap “Forgot password”.')
+      return
+    }
+    setStatus('loading')
+    setMessage('')
+    const supabase = createClient()
+    // Recovery returns to the HUB's own callback (?code, same-domain PKCE), which
+    // routes to /auth/set-password. Probe-verified against the live allowlist.
+    const { error } = await supabase.auth.resetPasswordForEmail(addr, {
+      redirectTo: `${FBID_ORIGIN}/auth/callback?next=/auth/set-password`,
+    })
+    setStatus(error ? 'error' : 'recovery-sent')
+    if (error) setMessage(error.message)
+  }
+
+  if (status === 'sent' || status === 'recovery-sent') {
     return (
       <Card>
         <div className="text-center space-y-3 py-3">
@@ -78,25 +127,43 @@ export default function LoginClient() {
           </div>
           <p className="font-semibold text-white">Check your inbox</p>
           <p className="text-[var(--fb-muted)] text-sm leading-relaxed">
-            We sent a magic link to <span className="text-white">{email}</span>.
-            <br />
-            Open it to continue into {appLabel}.
+            {status === 'sent' ? (
+              <>
+                We sent a magic link to <span className="text-white">{email}</span>.
+                <br />
+                Open it to continue into {appLabel}.
+              </>
+            ) : (
+              <>
+                We sent a password-reset link to <span className="text-white">{email}</span>.
+                <br />
+                Open it to choose a new password.
+              </>
+            )}
           </p>
         </div>
       </Card>
     )
   }
 
+  const inputCls =
+    'w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 transition text-sm disabled:opacity-50'
+
   return (
     <Card>
       <div className="space-y-1">
         <h1 className="text-lg font-bold text-white">Enter FlowBond</h1>
         <p className="text-[var(--fb-muted)] text-sm">
-          One identity for {appLabel}. No password needed — we&apos;ll email you a secure link.
+          {method === 'magic'
+            ? <>One identity for {appLabel}. No password needed — we&apos;ll email you a secure link.</>
+            : <>One identity for {appLabel}. Sign in with your FlowBond password.</>}
         </p>
       </div>
 
-      <form onSubmit={sendMagicLink} className="space-y-3">
+      <form
+        onSubmit={method === 'magic' ? sendMagicLink : signInWithPassword}
+        className="space-y-3"
+      >
         <input
           type="email"
           required
@@ -104,21 +171,73 @@ export default function LoginClient() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={status === 'loading'}
-          className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 transition text-sm disabled:opacity-50"
+          className={inputCls}
         />
+
+        {method === 'password' && (
+          <input
+            type="password"
+            required
+            placeholder="Your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={status === 'loading'}
+            autoFocus
+            className={inputCls}
+          />
+        )}
+
         <button
           type="submit"
           disabled={status === 'loading'}
           className="w-full px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-sm font-semibold transition-all disabled:opacity-50"
         >
-          {status === 'loading' ? 'Sending…' : 'Send magic link'}
+          {status === 'loading'
+            ? 'One moment…'
+            : method === 'magic'
+              ? 'Send magic link'
+              : 'Sign in'}
         </button>
+
         {status === 'error' && (
           <p className="text-red-400 text-xs text-center">{message || 'Something went wrong. Try again.'}</p>
         )}
       </form>
 
+      <div className="flex items-center justify-center gap-4 text-xs">
+        {method === 'magic' ? (
+          <button
+            type="button"
+            onClick={() => { setMethod('password'); setStatus('idle'); setMessage('') }}
+            className="text-[var(--fb-muted)] hover:text-white transition"
+          >
+            I have a password
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => { setMethod('magic'); setStatus('idle'); setMessage('') }}
+              className="text-[var(--fb-muted)] hover:text-white transition"
+            >
+              Use magic link instead
+            </button>
+            <span className="text-zinc-700">·</span>
+            <button
+              type="button"
+              onClick={forgotPassword}
+              disabled={status === 'loading'}
+              className="text-[var(--fb-muted)] hover:text-white transition disabled:opacity-50"
+            >
+              Forgot password?
+            </button>
+          </>
+        )}
+      </div>
+
       <p className="text-zinc-600 text-[11px] text-center leading-relaxed">
+        You&apos;ll stay signed in on this device.
+        <br />
         Your data is yours — sovereign by design.
       </p>
     </Card>

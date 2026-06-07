@@ -74,5 +74,30 @@ BEGIN
     AND tablename='flowbond_identities' AND policyname='fbid_identity_self_select'),
     'self-only SELECT policy missing on flowbond_identities';
 
+  -- 14. No SECURITY DEFINER views remain in public (advisor ERROR class).
+  SELECT count(*) INTO v FROM pg_views pv
+    JOIN pg_class c ON c.relname=pv.viewname
+    JOIN pg_namespace n ON n.oid=c.relnamespace AND n.nspname='public'
+    WHERE pv.schemaname='public'
+      AND NOT coalesce(
+        (SELECT 'security_invoker=true' = ANY(c.reloptions)
+           OR 'security_invoker=on' = ANY(c.reloptions)), false);
+  ASSERT v=0, v||' SECURITY DEFINER views still in public';
+
+  -- 15. Server-only RPCs are not client-callable (least privilege).
+  ASSERT NOT has_function_privilege('anon','public.claim_auth_nonce(text)','EXECUTE'), 'anon can call claim_auth_nonce';
+  ASSERT NOT has_function_privilege('authenticated','public.claim_auth_nonce(text)','EXECUTE'), 'authenticated can call claim_auth_nonce';
+  ASSERT NOT has_function_privilege('anon','public.bind_wallet(text)','EXECUTE'), 'anon can call bind_wallet';
+  ASSERT NOT has_function_privilege('authenticated','public.bind_wallet(text)','EXECUTE'), 'authenticated can call bind_wallet';
+  ASSERT NOT has_function_privilege('anon','public.fbid_viewer_closeness(uuid,uuid)','EXECUTE'), 'anon can probe relationship tiers';
+  ASSERT NOT has_function_privilege('authenticated','public.fbid_viewer_closeness(uuid,uuid)','EXECUTE'), 'authenticated can probe relationship tiers';
+  ASSERT NOT has_function_privilege('anon','public.handle_new_auth_user()','EXECUTE'), 'anon can call handle_new_auth_user';
+
+  -- 16. Leaderboard respects the privacy model: only public identities appear.
+  SELECT count(*) INTO v FROM public.referral_leaderboard_rows() lr
+    JOIN public.flowbond_identities i ON i.id=lr.id
+    WHERE i.default_visibility <> 'public';
+  ASSERT v=0, v||' non-public identities exposed via referral_leaderboard';
+
   RAISE NOTICE 'ALL FBID INVARIANTS + SECURITY GUARANTEES HOLD';
 END $$;

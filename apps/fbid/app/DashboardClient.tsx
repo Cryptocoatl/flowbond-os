@@ -91,6 +91,34 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
         </div>
       </div>
 
+      {/* Security — grows little by little (password today, 2FA/passkeys next) */}
+      <div className="space-y-3">
+        <p className="text-[var(--fb-muted)] text-xs uppercase tracking-wider px-1">Security</p>
+        <div className="bg-white/[0.03] border border-white/10 rounded-2xl divide-y divide-white/[0.06]">
+          <a
+            href="/auth/set-password"
+            className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition rounded-t-2xl"
+          >
+            <div>
+              <p className="text-white text-sm font-semibold">Password</p>
+              <p className="text-[var(--fb-muted)] text-[11px]">
+                Set or change the password that works across every FlowBond app.
+              </p>
+            </div>
+            <span className="text-violet-400 text-xs">Manage →</span>
+          </a>
+          <div className="flex items-center justify-between p-4 rounded-b-2xl">
+            <div>
+              <p className="text-white text-sm font-semibold">This device</p>
+              <p className="text-[var(--fb-muted)] text-[11px]">
+                You stay signed in here — sign out below if this device is shared.
+              </p>
+            </div>
+            <span className="text-emerald-400 text-xs">Remembered ✓</span>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between pt-2">
         <p className="text-zinc-600 text-[11px]">One identity, every world. Sovereign by design.</p>
         <button

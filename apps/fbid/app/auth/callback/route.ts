@@ -42,11 +42,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${url.origin}/?error=auth_failed`)
   }
 
-  // Password recovery → set a password first, still on the hub. (back-compat)
-  if (next === '/auth/set-password' && isAllowedRedirect(redirect)) {
+  // Password recovery → set a password first, still on the hub. Triggered by the
+  // explicit ?next=/auth/set-password (PKCE ?code recovery) OR a token_hash of
+  // type=recovery via the forwarder. Works with or without a waiting app.
+  if (next === '/auth/set-password' || (tokenHash && type === 'recovery')) {
     const sp = new URL('/auth/set-password', url.origin)
     if (app) sp.searchParams.set('app', app)
-    sp.searchParams.set('redirect', redirect!)
+    if (isAllowedRedirect(redirect)) sp.searchParams.set('redirect', redirect!)
     return NextResponse.redirect(sp.toString())
   }
 
