@@ -57,3 +57,4 @@ FlowGarden-Brand-Pack.zip
 
 .vercel
 supabase/.temp/
+apps/*/supabase/.temp/
