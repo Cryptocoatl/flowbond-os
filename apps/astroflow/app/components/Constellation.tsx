@@ -36,17 +36,30 @@ export interface GhostNode {
   claim_code: string;
 }
 
+export interface SavedMap {
+  id: string;
+  name: string;
+  context: string;
+  member_count: number;
+}
+
 export default function Constellation({
   profiles,
   myFbid,
   hasProfile,
   guests = [],
+  friendFbids = [],
+  savedMaps = [],
 }: {
   profiles: AstroProfile[];
   myFbid: string | null;
   hasProfile: boolean;
   guests?: GhostNode[];
+  friendFbids?: string[];
+  savedMaps?: SavedMap[];
 }) {
+  const friendSet = useMemo(() => new Set(friendFbids), [friendFbids]);
+  const [addFriend, setAddFriend] = useState(false);
   const [mode, setMode] = useState<Mode>('explore');
   const [context, setContext] = useState<RelContext>('friendship');
   const [selected, setSelected] = useState<string[]>([]);
@@ -155,6 +168,14 @@ export default function Constellation({
               </button>
             ))}
           </div>
+          {myFbid && hasProfile && (
+            <button
+              onClick={() => setAddFriend((v) => !v)}
+              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold"
+            >
+              + Add friend
+            </button>
+          )}
           <button
             onClick={() => setTour(true)}
             className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]"
@@ -198,6 +219,45 @@ export default function Constellation({
           )}
         </div>
       </header>
+
+      {/* Add a friend — your bond link brings them into your circle */}
+      {addFriend && (
+        <div className="mb-4 rounded-xl border border-[#9a8fe0]/30 bg-[#11131f] p-4" style={{ animation: 'af-rise 0.4s ease-out' }}>
+          <p className="text-sm text-[#cfc8e8] mb-2">
+            Send your astrobond link — when they accept, their star joins your circle here, and you can read
+            and weave each other into any constellation.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <BondInvite />
+            <span className="text-[11px] text-[#5b5e72]">
+              or chart someone from their birth data on{' '}
+              <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Your saved constellations — jump back into any living collective */}
+      {savedMaps.length > 0 && (
+        <div className="mb-4">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">Your saved constellations</div>
+          <div className="flex flex-wrap gap-2">
+            {savedMaps.map((m) => (
+              <Link
+                key={m.id}
+                href={`/map/${m.id}`}
+                className="group flex items-center gap-2 rounded-full border border-[#242a3b] bg-[#11131f] px-3 py-1.5 hover:border-[#9a8fe0]/50 transition"
+              >
+                <span className="text-[#e3c07a] text-xs">❖</span>
+                <span className="text-sm text-[#ece9e0]">{m.name}</span>
+                <span className="text-[10px] uppercase tracking-wider text-[#5b5e72] group-hover:text-[#9698a8]">
+                  {m.context} · {m.member_count}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Relationship lens — re-weights every connection for the chosen context */}
       <div className="flex items-center gap-2 mb-4">
@@ -272,10 +332,16 @@ export default function Constellation({
               {nodes.map((n) => {
                 const isSel = selected.includes(n.fbid);
                 const isActive = active === n.fbid;
+                const isFriend = friendSet.has(n.fbid);
+                const isMe = n.fbid === myFbid;
                 const r = isSel || isActive ? 13 : 9;
                 return (
                   <g key={n.fbid} onClick={() => { setActiveGhost(null); onNodeClick(n.fbid); }} style={{ cursor: 'pointer' }}>
                     <circle cx={n.x} cy={n.y} r={r + 6} fill={n.avatarColor} opacity={isSel || isActive ? 0.28 : 0.12} />
+                    {/* gold ring marks your circle — friends + you */}
+                    {(isFriend || isMe) && !isSel && (
+                      <circle cx={n.x} cy={n.y} r={r + 3.5} fill="none" stroke="#e3c07a" strokeWidth={1.5} strokeOpacity={0.85} />
+                    )}
                     <circle cx={n.x} cy={n.y} r={r} fill={n.avatarColor} stroke={isSel ? '#e3c07a' : 'transparent'} strokeWidth={2.5} />
                     <text
                       x={n.x}
