@@ -3,13 +3,15 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 export interface Bubble {
-  handle: string;
+  handle: string;          // real profiles; '' for ghosts
   name: string;
   color: string;
   sun: string;
   moon: string;
   rising: string | null;
   isMe?: boolean;
+  ghost?: boolean;         // a connection you made who hasn't activated their FBID yet
+  claimCode?: string;      // ghost activation link code
 }
 
 // deterministic pseudo-random (stable layout per person, no Math.random → SSR-safe)
@@ -18,15 +20,19 @@ const rng = (i: number, salt: number) => {
   return x - Math.floor(x);
 };
 
-// The living bubble constellation: everyone in your flow, drifting and
-// glowing. Tap a star to open their chart; weave them in the constellation.
+// The living bubble constellation: everyone in your flow drifts and glows.
+// Real stars open their chart; ghost stars are people you've charted who
+// haven't activated their FBID yet — tap one to send their activation link
+// and watch their avatar light up for real.
 export default function BubbleField({ people }: { people: Bubble[] }) {
   const [hover, setHover] = useState<string | null>(null);
+  const [copied, setCopied] = useState('');
 
   const bubbles = useMemo(
     () =>
       people.map((p, i) => ({
         ...p,
+        id: p.ghost ? `g:${p.claimCode}` : p.handle,
         left: 6 + rng(i, 1) * 84,            // %
         top: 12 + rng(i, 2) * 64,             // %
         size: p.isMe ? 58 : 40 + rng(i, 3) * 18,
@@ -35,6 +41,12 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
       })),
     [people],
   );
+
+  function inviteGhost(code: string) {
+    navigator.clipboard.writeText(`${window.location.origin}/claim/${code}`);
+    setCopied(code);
+    setTimeout(() => setCopied(''), 2000);
+  }
 
   if (people.length === 0)
     return (
@@ -67,45 +79,68 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
         />
       ))}
 
-      {bubbles.map((b) => (
-        <Link
-          key={b.handle}
-          href={`/chart/${b.handle}`}
-          onMouseEnter={() => setHover(b.handle)}
-          onMouseLeave={() => setHover(null)}
-          className="absolute flex flex-col items-center group"
-          style={{
+      {bubbles.map((b) => {
+        const star = (
+          <>
+            <span
+              className="rounded-full flex items-center justify-center font-serif text-[#0a0b12] transition-transform group-hover:scale-110"
+              style={{
+                width: b.size,
+                height: b.size,
+                background: b.ghost
+                  ? `radial-gradient(circle at 32% 30%, #ffffff44, ${b.color}55)`
+                  : `radial-gradient(circle at 32% 30%, #ffffffcc, ${b.color})`,
+                boxShadow: b.ghost
+                  ? `0 0 10px ${b.color}55`
+                  : `0 0 ${b.isMe ? 26 : 16}px ${b.color}aa${b.isMe ? `, 0 0 50px ${b.color}44` : ''}`,
+                border: b.ghost ? `1px dashed ${b.color}aa` : undefined,
+                color: b.ghost ? '#ffffffcc' : '#0a0b12',
+                fontSize: b.size * 0.42,
+                opacity: b.ghost ? 0.85 : 1,
+              }}
+            >
+              {b.name.charAt(0)}
+            </span>
+            <span
+              className={`mt-1.5 text-[10px] whitespace-nowrap px-2 py-0.5 rounded-full bg-[#0a0b14]/85 border border-white/10 transition-opacity ${hover === b.id ? 'opacity-100' : 'opacity-0'}`}
+            >
+              <b className="text-[#ece9e0]">{b.name}</b>{' '}
+              {b.ghost ? (
+                <span className="text-[#8fb8e0]">{copied === b.claimCode ? 'link copied ✓' : 'tap to invite ✦'}</span>
+              ) : (
+                <span className="text-[#9698a8]">
+                  {b.sun} ☉ · {b.moon} ☾{b.rising ? ` · ${b.rising} ↑` : ''}
+                </span>
+              )}
+            </span>
+            {hover !== b.id && (
+              <span className="mt-1 text-[9px] text-[#5b5e72] group-hover:opacity-0">
+                {b.isMe ? 'you' : b.ghost ? '✦ invite' : b.name.split(' ')[0]}
+              </span>
+            )}
+          </>
+        );
+        const common = {
+          onMouseEnter: () => setHover(b.id),
+          onMouseLeave: () => setHover(null),
+          className: 'absolute flex flex-col items-center group',
+          style: {
             left: `${b.left}%`,
             top: `${b.top}%`,
             animation: `af-drift ${b.dur}s ease-in-out ${b.delay}s infinite`,
-            zIndex: hover === b.handle ? 30 : 10,
-          }}
-        >
-          <span
-            className="rounded-full flex items-center justify-center font-serif text-[#0a0b12] transition-transform group-hover:scale-110"
-            style={{
-              width: b.size,
-              height: b.size,
-              background: `radial-gradient(circle at 32% 30%, #ffffffcc, ${b.color})`,
-              boxShadow: `0 0 ${b.isMe ? 26 : 16}px ${b.color}aa${b.isMe ? `, 0 0 50px ${b.color}44` : ''}`,
-              fontSize: b.size * 0.42,
-            }}
-          >
-            {b.name.charAt(0)}
-          </span>
-          <span
-            className={`mt-1.5 text-[10px] whitespace-nowrap px-2 py-0.5 rounded-full bg-[#0a0b14]/85 border border-white/10 transition-opacity ${hover === b.handle ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <b className="text-[#ece9e0]">{b.name}</b>{' '}
-            <span className="text-[#9698a8]">
-              {b.sun} ☉ · {b.moon} ☾{b.rising ? ` · ${b.rising} ↑` : ''}
-            </span>
-          </span>
-          {!hover && (
-            <span className="mt-1 text-[9px] text-[#5b5e72] group-hover:opacity-0">{b.isMe ? 'you' : b.name.split(' ')[0]}</span>
-          )}
-        </Link>
-      ))}
+            zIndex: hover === b.id ? 30 : 10,
+          } as React.CSSProperties,
+        };
+        return b.ghost ? (
+          <button key={b.id} {...common} onClick={() => inviteGhost(b.claimCode!)}>
+            {star}
+          </button>
+        ) : (
+          <Link key={b.id} href={`/chart/${b.handle}`} {...common}>
+            {star}
+          </Link>
+        );
+      })}
 
       <Link
         href="/"

@@ -26,22 +26,53 @@ function harmonyColor(score: number) {
   return '#6b6e86';
 }
 
+export interface GhostNode {
+  id: string;
+  display_name: string;
+  avatar_color: string;
+  sun: string | null;
+  moon: string | null;
+  rising: string | null;
+  claim_code: string;
+}
+
 export default function Constellation({
   profiles,
   myFbid,
   hasProfile,
+  guests = [],
 }: {
   profiles: AstroProfile[];
   myFbid: string | null;
   hasProfile: boolean;
+  guests?: GhostNode[];
 }) {
   const [mode, setMode] = useState<Mode>('explore');
   const [context, setContext] = useState<RelContext>('friendship');
   const [selected, setSelected] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
+  const [activeGhost, setActiveGhost] = useState<string | null>(null);
+  const [copied, setCopied] = useState('');
   const [mapName, setMapName] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
   const [tour, setTour] = useState(false);
+
+  // ghost avatars orbit an inner ring — charted, waiting to activate their FBID
+  const ghostNodes = useMemo(() => {
+    const n = guests.length || 1;
+    return guests.map((g, i) => {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n;
+      return { ...g, x: C + R * 0.6 * Math.cos(a), y: C + R * 0.6 * Math.sin(a) };
+    });
+  }, [guests]);
+
+  function inviteGhost(code: string) {
+    navigator.clipboard.writeText(`${window.location.origin}/claim/${code}`);
+    setCopied(code);
+    setTimeout(() => setCopied(''), 2000);
+  }
+
+  const activeGhostNode = guests.find((g) => g.id === activeGhost) ?? null;
 
   const nodes: Node[] = useMemo(() => {
     const n = profiles.length || 1;
@@ -225,12 +256,25 @@ export default function Constellation({
                   {context.toUpperCase()} FLOW
                 </text>
               )}
+              {/* ghost avatars — charted connections awaiting FBID activation */}
+              {ghostNodes.map((g) => {
+                const on = activeGhost === g.id;
+                return (
+                  <g key={g.id} onClick={() => { setActive(null); setActiveGhost((x) => (x === g.id ? null : g.id)); }} style={{ cursor: 'pointer' }}>
+                    <circle cx={g.x} cy={g.y} r={on ? 12 : 8} fill={g.avatar_color} opacity={on ? 0.35 : 0.16}
+                      stroke={g.avatar_color} strokeWidth={1} strokeDasharray="2 2" strokeOpacity={0.7} />
+                    <text x={g.x} y={g.y > C ? g.y + 20 : g.y - 13} textAnchor="middle" className="fill-[#8fb8e0]" style={{ fontSize: 10 }}>
+                      {g.display_name} ✦
+                    </text>
+                  </g>
+                );
+              })}
               {nodes.map((n) => {
                 const isSel = selected.includes(n.fbid);
                 const isActive = active === n.fbid;
                 const r = isSel || isActive ? 13 : 9;
                 return (
-                  <g key={n.fbid} onClick={() => onNodeClick(n.fbid)} style={{ cursor: 'pointer' }}>
+                  <g key={n.fbid} onClick={() => { setActiveGhost(null); onNodeClick(n.fbid); }} style={{ cursor: 'pointer' }}>
                     <circle cx={n.x} cy={n.y} r={r + 6} fill={n.avatarColor} opacity={isSel || isActive ? 0.28 : 0.12} />
                     <circle cx={n.x} cy={n.y} r={r} fill={n.avatarColor} stroke={isSel ? '#e3c07a' : 'transparent'} strokeWidth={2.5} />
                     <text
@@ -278,9 +322,31 @@ export default function Constellation({
               <ReadingPanel handles={[activeProfile.handle]} />
             </div>
           )}
-          {mode === 'explore' && !activeProfile && (
+          {mode === 'explore' && activeGhostNode && (
+            <div className="border border-dashed border-[#3a4158] rounded-xl p-5 bg-[#11131f]">
+              <div className="flex items-center gap-3">
+                <span className="w-4 h-4 rounded-full border border-dashed" style={{ borderColor: activeGhostNode.avatar_color, background: `${activeGhostNode.avatar_color}33` }} />
+                <h2 className="text-2xl font-serif text-[#ece9e0]">{activeGhostNode.display_name}</h2>
+              </div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-[#8fb8e0] mt-1">ghost star · awaiting FBID</p>
+              <p className="font-serif text-lg mt-3 text-[#cfc8e8]">
+                {activeGhostNode.sun} Sun · {activeGhostNode.moon} Moon{activeGhostNode.rising ? ` · ${activeGhostNode.rising} Rising` : ''}
+              </p>
+              <p className="text-sm text-[#9698a8] mt-3 leading-relaxed">
+                You charted them, but their star is still light passing through. Invite them to activate their
+                FBID — they take this avatar space for real, and you&apos;re bonded into full flow.
+              </p>
+              <button
+                onClick={() => inviteGhost(activeGhostNode.claim_code)}
+                className="inline-block mt-4 text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-2 hover:brightness-110 transition"
+              >
+                {copied === activeGhostNode.claim_code ? 'Activation link copied ✓' : '✦ Copy their activation link'}
+              </button>
+            </div>
+          )}
+          {mode === 'explore' && !activeProfile && !activeGhostNode && (
             <div className="border border-dashed border-[#242a3b] rounded-xl p-8 text-center text-[#9698a8]">
-              Tap a star to read their chart.
+              Tap a star to read their chart{guests.length > 0 ? ', or a ghost star ✦ to invite them in' : ''}.
             </div>
           )}
 

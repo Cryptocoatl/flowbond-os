@@ -22,7 +22,7 @@ export default async function Dashboard() {
   }
 
   const sb = await serverClient();
-  const [maps, requests, allowances, friends, crews, audience, me, people] = await Promise.all([
+  const [maps, requests, allowances, friends, crews, audience, me, people, guests] = await Promise.all([
     sb.rpc('my_flow_maps'),
     sb.rpc('my_incoming_requests'),
     sb.rpc('my_allowances'),
@@ -31,20 +31,34 @@ export default async function Dashboard() {
     sb.rpc('my_audience'),
     sb.from('profiles').select('handle, display_name, visibility').eq('fbid', fbid).maybeSingle(),
     visibleProfiles(),
+    sb.rpc('my_guests'),
   ]);
 
-  // Everyone whose star you can see, you first — your active bubble map.
-  const bubbles: Bubble[] = people
-    .map((p) => ({
-      handle: p.handle,
-      name: p.displayName,
-      color: p.avatarColor,
-      sun: p.chart.bodies.Sun.sign,
-      moon: p.chart.bodies.Moon.sign,
-      rising: p.chart.asc?.sign ?? null,
-      isMe: p.fbid === fbid,
-    }))
-    .sort((a, b) => Number(b.isMe) - Number(a.isMe));
+  // Real stars (you first) + ghost stars: people you've charted who haven't
+  // activated their FBID yet — tap to invite them to light up their avatar.
+  const bubbles: Bubble[] = [
+    ...people
+      .map((p) => ({
+        handle: p.handle,
+        name: p.displayName,
+        color: p.avatarColor,
+        sun: p.chart.bodies.Sun.sign,
+        moon: p.chart.bodies.Moon.sign,
+        rising: p.chart.asc?.sign ?? null,
+        isMe: p.fbid === fbid,
+      }))
+      .sort((a, b) => Number(b.isMe) - Number(a.isMe)),
+    ...((guests.data ?? []) as any[]).map((g) => ({
+      handle: '',
+      name: g.display_name,
+      color: g.avatar_color,
+      sun: g.sun ?? '',
+      moon: g.moon ?? '',
+      rising: g.rising ?? null,
+      ghost: true as const,
+      claimCode: g.claim_code,
+    })),
+  ];
 
   return (
     <>
