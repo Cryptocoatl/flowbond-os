@@ -16,9 +16,11 @@ type Check = { name: string; ok: boolean; detail: string }
 // Live FBID surfaces that must stay healthy. okCodes = acceptable HTTP statuses
 // (a healthy auth callback redirects; a homepage is 200; 404/5xx/connect-fail = bad).
 const HTTP_CHECKS: { name: string; url: string; ok: number[] }[] = [
-  { name: 'hub', url: 'https://fbid.flowbond.life/', ok: [200] },
-  { name: 'astroflow', url: 'https://astro.flowbond.life/', ok: [200] },
-  { name: 'danz', url: 'https://danz-now.vercel.app/', ok: [200] },
+  // Homepages may legitimately redirect (apex→www, locale, auth) — accept 2xx/3xx,
+  // treat only 404/5xx/connect-fail as broken.
+  { name: 'hub', url: 'https://fbid.flowbond.life/', ok: [200, 307, 308] },
+  { name: 'astroflow', url: 'https://astro.flowbond.life/', ok: [200, 307, 308] },
+  { name: 'danz', url: 'https://danz-now.vercel.app/', ok: [200, 307, 308] },
   { name: 'flowdesk', url: 'https://flowdesk.flowbond.life/', ok: [200, 307, 308] },
   { name: 'flowgarden-callback', url: 'https://www.flowgarden.life/auth/callback', ok: [200, 302, 307, 308] },
   { name: 'flowme-callback', url: 'https://flowme.one/auth/callback', ok: [200, 302, 307, 308] },
