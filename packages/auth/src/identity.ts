@@ -42,7 +42,25 @@ export interface FbidIdentity {
  */
 export type FbidProfile = (Record<string, unknown> & { viewer_closeness: number }) | null
 
-/** The current user's own FBID identity record (handle, profile, settings). */
+/**
+ * The current user's canonical FBID id (the `flowbond_identities.id`), resolved
+ * server-side via `current_fbid()` — which maps this session's login to its owning
+ * FBID through `fbid_logins`, falling back to the legacy 1:1 `auth_user_id` link.
+ *
+ * Prefer this over `auth.uid()` anywhere you need "who is this" as a stable id: it
+ * stays correct when a person has multiple logins/emails attached to one FBID.
+ * Returns null if unauthenticated. */
+export async function currentFbid(supabase: SupabaseClient): Promise<string | null> {
+  const { data, error } = await supabase.rpc('current_fbid')
+  if (error) throw error
+  return (data as string) ?? null
+}
+
+/**
+ * The current user's own FBID identity record (handle, profile, settings).
+ * Resolved through RLS: the caller may read the row matched by `current_fbid()`
+ * (multi-login aware) OR the legacy `auth_user_id` link — both resolve to the same
+ * single row, so this stays a safe `.maybeSingle()`. */
 export async function getMyIdentity(supabase: SupabaseClient): Promise<FbidIdentity | null> {
   const { data, error } = await supabase
     .from('flowbond_identities')
@@ -50,6 +68,53 @@ export async function getMyIdentity(supabase: SupabaseClient): Promise<FbidIdent
     .maybeSingle()
   if (error) throw error
   return (data as FbidIdentity) ?? null
+}
+
+/** A permanent entry in an FBID's connected-accounts ledger. Unlinking flips
+ *  `status` to 'unlinked' but the row stays — the history is forever. */
+export interface FbidConnectedAccount {
+  id: string
+  link_type: 'email' | 'wallet' | 'login' | 'external' | 'merged_account'
+  value_ref: string | null
+  provider: string
+  label: string | null
+  is_primary: boolean
+  status: 'active' | 'unlinked'
+  commitment: string
+  linked_at: string
+  unlinked_at: string | null
+  [key: string]: unknown
+}
+
+/**
+ * The current user's connected accounts (emails/wallets/logins linked to their
+ * FBID), active first then history. This is the user-facing "what's linked to me"
+ * list — every entry is permanently recorded on the FBID. */
+export async function getConnectedAccounts(supabase: SupabaseClient): Promise<FbidConnectedAccount[]> {
+  const { data, error } = await supabase.rpc('fbid_connected_accounts')
+  if (error) throw error
+  return (data as FbidConnectedAccount[]) ?? []
+}
+
+/**
+ * Complete a verified email link by redeeming the one-time token from the email.
+ * Must be called while signed in as the SAME FBID that requested it (the DB enforces
+ * this). Returns the linked email. Throws `invalid_or_expired_token` / `linked_elsewhere`
+ * / `not_authenticated`. Tokens are single-use and expire in 15 minutes. */
+export async function confirmEmailLink(supabase: SupabaseClient, token: string): Promise<{ status: string; email: string }> {
+  const { data, error } = await supabase.rpc('confirm_email_link', { p_token: token })
+  if (error) throw error
+  return data as { status: string; email: string }
+}
+
+/**
+ * Unlink a connected account by its ledger id. Own links only; lockout-protected —
+ * throws `cannot_unlink_primary` / `cannot_unlink_last_credential` / `link_not_found`.
+ * The ledger row is kept (status → 'unlinked'); only the operational link is removed. */
+export async function unlinkAccount(supabase: SupabaseClient, linkId: string): Promise<{ status: string; id: string }> {
+  const { data, error } = await supabase.rpc('unlink_account', { p_link_id: linkId })
+  if (error) throw error
+  return data as { status: string; id: string }
 }
 
 /** Look up another user's profile by handle, privacy-filtered for the caller. */

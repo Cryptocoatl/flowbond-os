@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { claimHandle, handleAvailable, type FbidIdentity } from '@flowbond/auth/identity'
 import { useT } from '@flowbond/i18n'
 import { createClient } from '@/lib/supabase/client'
+import ConnectedAccounts from './ConnectedAccounts'
 
 // FBID-integrated apps → seamless SSO via the hub handoff (one-time token, no re-login).
 const APPS: { slug: string; label: string; desc: string; callback: string; glyph: string }[] = [
@@ -112,6 +113,9 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
           ))}
         </div>
       </div>
+
+      {/* Connected accounts — user-driven linking, permanently recorded on the FBID */}
+      <ConnectedAccounts />
 
       {/* Security — grows little by little (password today, 2FA/passkeys next) */}
       <div className="space-y-3">
