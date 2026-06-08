@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { computeChart } from '../../../../lib/astro/chart';
+import { getOrBuildFacts } from '../../../../lib/astro/memory';
 import { serverClient } from '../../../../lib/supabase-server';
 import type { BirthData, Visibility } from '../../../../lib/astro/types';
 
@@ -69,6 +70,11 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     });
     if (error) throw error;
+
+    // Precompute & cache this profile's reading facts in their private FBID
+    // memory now, so every reading and system page loads instantly later
+    // without re-deriving the chart. Best-effort — never block profile save.
+    try { await getOrBuildFacts(fbid as string, chart, body.birth.date); } catch { /* best-effort */ }
 
     return NextResponse.json({ ok: true, chart });
   } catch (e: any) {

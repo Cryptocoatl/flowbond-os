@@ -94,6 +94,34 @@ export async function loadMemory(fbid: string): Promise<MemoryEntry[]> {
   }
 }
 
+// ── constellation (collective) cache ────────────────────────────────────────
+// A viewer's own permitted view of a woven constellation's reading context,
+// reused across usecases. RLS (viewer_fbid = current_fbid) keeps each row
+// private to its owner; the stored facts only ever contain what that viewer was
+// already allowed to compute.
+
+/** Return the viewer's cached constellation facts if the membership hash matches. */
+export async function getConstellationCache(mapId: string, membersHash: string): Promise<unknown | null> {
+  try {
+    const sb = await serverClient();
+    const { data } = await sb.from('constellation_cache').select('facts, members_hash').eq('map_id', mapId).maybeSingle();
+    return data && data.members_hash === membersHash ? data.facts : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Store the viewer's constellation facts (owner-only via RLS; best-effort). */
+export async function setConstellationCache(viewerFbid: string, mapId: string, facts: unknown, membersHash: string): Promise<void> {
+  try {
+    const sb = await serverClient();
+    await sb.from('constellation_cache').upsert(
+      { map_id: mapId, viewer_fbid: viewerFbid, facts, members_hash: membersHash, at: new Date().toISOString() },
+      { onConflict: 'map_id,viewer_fbid' },
+    );
+  } catch { /* best-effort */ }
+}
+
 /** Append one private note (owner-only; capped, newest kept). */
 export async function appendMemory(fbid: string, kind: string, note: string): Promise<void> {
   try {

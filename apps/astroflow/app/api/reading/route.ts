@@ -4,7 +4,7 @@ import { synastry } from '../../../lib/astro/aspects';
 import { panorama, interpretAspect } from '../../../lib/astro/interpret';
 import { rankPlaces, LINE_MEANING } from '../../../lib/astro/astrocartography';
 import { serverClient } from '../../../lib/supabase-server';
-import { getOrBuildFacts, buildFacts, appendMemory, type ChartFacts } from '../../../lib/astro/memory';
+import { getOrBuildFacts, buildFacts, appendMemory, getConstellationCache, setConstellationCache, type ChartFacts } from '../../../lib/astro/memory';
 import type { RelContext, EcosystemPlace, AstroProfile } from '../../../lib/astro/types';
 
 // Which symbolic system(s) to read through. 'comparison' reads the SAME person
@@ -287,11 +287,22 @@ export async function POST(req: NextRequest) {
             .map((a) => `${a.planet}-${a.kind} (${LINE_MEANING[a.kind]}, ${a.orbDeg}°)`),
         }));
 
-    let facts: unknown;
-    let ask: string;
+    let facts: unknown = null;
+    let ask = '';
     let maxTokens = 800;
 
-    if (profiles.length === 1) {
+    // Reuse a viewer's cached constellation context when nothing's changed
+    // (same members + context, no fresh question) instead of rebuilding it.
+    const mapHash = mapId ? [context, system, ...profiles.map((p) => `${p.fbid}:${p.chart.jd}`)].sort().join('|') : '';
+    let cachedHit = false;
+    if (mapId && !q) {
+      const hit = (await getConstellationCache(mapId, mapHash)) as { facts: unknown; ask: string; maxTokens: number } | null;
+      if (hit) { facts = hit.facts; ask = hit.ask; maxTokens = hit.maxTokens ?? 800; cachedHit = true; }
+    }
+
+    if (cachedHit) {
+      // facts/ask/maxTokens restored from the viewer's cache — skip rebuild
+    } else if (profiles.length === 1) {
       const p = profiles[0];
       // Cached fact derivation: for your OWN chart this loads precomputed facts
       // from your private FBID memory (computing + storing once); for someone
@@ -412,6 +423,9 @@ export async function POST(req: NextRequest) {
       }.`;
       maxTokens = 1100;
     }
+
+    // Persist this viewer's freshly-built constellation context for reuse.
+    if (mapId && !q && !cachedHit && me) await setConstellationCache(me, mapId, { facts, ask, maxTokens }, mapHash);
 
     // Ask the stars: the question rides inside the FACTS (data, not directive)
     // and the reading becomes a mirror for the decision — reflective, never
