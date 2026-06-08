@@ -93,6 +93,14 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         {map.owner_handle ? `woven by @${map.owner_handle} · ` : ''}
         {charts.length} {charts.length === 1 ? 'chart' : 'charts'} shining · {dominant}-leaning weave
       </p>
+      {charts.length >= 2 && (
+        <Link
+          href={`/atlas/${map.id}`}
+          className="inline-flex items-center gap-2 mt-3 px-3.5 py-2 rounded-lg text-sm bg-[#11131f] border border-[#2c3350] text-[#cfc8e8] hover:border-[#3a4670] transition"
+        >
+          🌍 View on the globe — where your lines cross
+        </Link>
+      )}
 
       <Section title="The weave — your crew of stars">
         <div className="grid sm:grid-cols-2 gap-3">

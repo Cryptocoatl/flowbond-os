@@ -13,6 +13,7 @@ export default function Nav() {
         <div className="flex items-center gap-4 text-xs uppercase tracking-[0.14em] ml-auto">
           <Link href="/" className="hover:text-[#cfc8e8] transition">Constellation</Link>
           <Link href="/dashboard" className="hover:text-[#cfc8e8] transition">Dashboard</Link>
+          <Link href="/atlas" className="hover:text-[#cfc8e8] transition">Atlas</Link>
           <Link href="/instant" className="hover:text-[#cfc8e8] transition hidden sm:inline">Instant</Link>
           <Link href="/cosmos" className="hover:text-[#e3c07a] transition">Cosmos ✦</Link>
         </div>

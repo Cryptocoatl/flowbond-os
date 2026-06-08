@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import Nav from './components/Nav';
+import FlowMeDock from './components/FlowMeDock';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
@@ -18,6 +19,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#0b0a1a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,        // prevent double-tap zoom fighting the map's pinch
+  userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <Nav />
         {children}
+        <FlowMeDock />
       </body>
     </html>
   );

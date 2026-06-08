@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { atLeast, getProfileByHandle, logChartRead, myFbid, myLevelOn } from '../../../lib/astro/access';
-import { natalAspects, synastry } from '../../../lib/astro/aspects';
-import { personLines, panorama, interpretAspect } from '../../../lib/astro/interpret';
+import { synastry } from '../../../lib/astro/aspects';
+import { panorama, interpretAspect } from '../../../lib/astro/interpret';
 import { rankPlaces, LINE_MEANING } from '../../../lib/astro/astrocartography';
-import { vedicChart, vedicSummary, vimshottariDasha } from '../../../lib/astro/vedic';
-import { mayanSummary } from '../../../lib/astro/mayan';
-import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
 import { serverClient } from '../../../lib/supabase-server';
+import { getOrBuildFacts, buildFacts, appendMemory, type ChartFacts } from '../../../lib/astro/memory';
 import type { RelContext, EcosystemPlace, AstroProfile } from '../../../lib/astro/types';
 
 // Which symbolic system(s) to read through. 'comparison' reads the SAME person
@@ -295,15 +293,20 @@ export async function POST(req: NextRequest) {
 
     if (profiles.length === 1) {
       const p = profiles[0];
+      // Cached fact derivation: for your OWN chart this loads precomputed facts
+      // from your private FBID memory (computing + storing once); for someone
+      // else's chart it derives fresh without persisting. Either way the heavy
+      // work happens at most once per chart, not on every reading.
+      const bundle: ChartFacts =
+        p.fbid === me && me ? await getOrBuildFacts(me, p.chart, p.birth.date) : buildFacts(p.chart, p.birth.date);
+
       const western = {
         name: firstName(p),
         bigThree: bigThree(p),
-        placements: personLines(p.chart).map((x) => x.line),
-        natalAspects: natalAspects(p.chart)
-          .slice(0, 9)
-          .map((a) => `${a.p1} ${a.glyph} ${a.p2} (${a.orb}°, ${a.harmony > 0 ? 'flowing' : 'forging'})`),
-        elements: p.chart.elements,
-        modalities: p.chart.modalities,
+        placements: bundle.placements,
+        natalAspects: bundle.aspects,
+        elements: bundle.elements,
+        modalities: bundle.modalities,
         ecosystemActivations: acgFor(p),
       };
 
@@ -311,11 +314,10 @@ export async function POST(req: NextRequest) {
         facts = western;
         ask = `Write a "self" reading for ${firstName(p)}. Open with who they are at core (the big three), weave in the most defining placements and aspects (the gifts and the growth edges), note their elemental balance, and close with where in the FlowBond ecosystem their chart is most activated and what that suggests for retreat, building, or gathering.`;
       } else if (system === 'vedic') {
-        const v = vedicChart(p.chart);
         facts = {
           name: firstName(p),
-          vedic: vedicSummary(v),
-          vimshottari: vimshottariDasha(p.chart),
+          vedic: bundle.vedic,
+          vimshottari: bundle.vimshottari,
           westernBigThree: western.bigThree,
         };
         ask = `Write a Vedic (sidereal) reading for ${firstName(p)}. Ground it in the Moon's nakshatra and its lord, the Lagna, and the rashi placements; describe the karmic texture they carry and what chapter the Vimshottari dasha says they are living now. Mention the western big three only to orient, never to contradict.`;
@@ -323,27 +325,26 @@ export async function POST(req: NextRequest) {
       } else if (system === 'mayan') {
         facts = {
           name: firstName(p),
-          mayan: mayanSummary(p.chart.jd, p.birth.date),
+          mayan: bundle.mayan,
         };
         ask = `Write a Mayan reading for ${firstName(p)} covering BOTH counts: the Traditional (GMT) day sign + tone as their ancestral face of the day, and the Dreamspell kin with its oracle (guide, analog, antipode, occult) as their galactic working team. Keep the two counts clearly distinct, then close with what carrying both says about how they move through time.`;
         maxTokens = 900;
       } else if (system === 'genekeys') {
         facts = {
           name: firstName(p),
-          geneKeys: geneKeysSummary(geneKeys(p.chart)),
+          geneKeys: bundle.geneKeys,
         };
         ask = `Write a Gene Keys reading for ${firstName(p)} along the Activation Sequence: Life's Work, Evolution, Radiance, Purpose. For each sphere, name the shadow as the contracted pattern they will recognize, the gift as what unlocks, and the siddhi as the far star. Weave the profile lines into HOW they walk this path. Close with the single shadow→gift shift that would move everything else.`;
         maxTokens = 1000;
       } else {
         // comparison & unified: same person through all the lenses
-        const v = vedicChart(p.chart);
         facts = {
           name: firstName(p),
           western: { bigThree: western.bigThree, defining: western.natalAspects.slice(0, 5) },
-          vedic: vedicSummary(v),
-          vimshottari: vimshottariDasha(p.chart),
-          mayan: mayanSummary(p.chart.jd, p.birth.date),
-          geneKeys: geneKeysSummary(geneKeys(p.chart)),
+          vedic: bundle.vedic,
+          vimshottari: bundle.vimshottari,
+          mayan: bundle.mayan,
+          geneKeys: bundle.geneKeys,
         };
         ask =
           system === 'unified'
@@ -422,6 +423,11 @@ export async function POST(req: NextRequest) {
     }
 
     const reading = await channelFlowMe(facts, ask, maxTokens);
+    // Grow the user's private memory (owner-only, best-effort) so readings stay
+    // consistent over time. Only for your OWN self-reading; never for others.
+    if (profiles.length === 1 && me && profiles[0].fbid === me) {
+      await appendMemory(me, `reading:${system}`, q ? `Reflected the question: ${q}` : `Read their ${system} chart.`);
+    }
     return NextResponse.json({ reading, model: MODEL });
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? 'reading failed' }, { status: 500 });
