@@ -5,6 +5,19 @@ import type { EmailOtpType } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
+// Canonical callback per app slug. Lets the magic-link email carry ONLY the
+// slug (a clean, single query param that survives Supabase's template/encoding
+// untouched) instead of a full app-callback URL nested inside emailRedirectTo.
+// The hub resolves the destination here, server-side.
+const APP_CALLBACKS: Record<string, string> = {
+  flowme: 'https://flowme.one/auth/callback',
+  astroflow: 'https://astro.flowbond.life/auth/callback',
+  flowgarden: 'https://flowgarden.life/auth/callback',
+  danz: 'https://danz-now.vercel.app/auth/callback',
+  flowbond: 'https://flowbond.life/api/auth/callback',
+  ops: 'https://dev.flowbond.life/auth/callback',
+}
+
 /**
  * The hub's OWN callback. Establishes a session ON fbid's domain, then:
  *   • HUB LOGIN (no external `app`/`redirect`) → land on the FBID dashboard ("/").
@@ -19,8 +32,10 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get('code')
   const tokenHash = url.searchParams.get('token_hash')
   const type = (url.searchParams.get('type') as EmailOtpType | null) ?? 'magiclink'
-  const redirect = url.searchParams.get('redirect')
   const app = url.searchParams.get('app') ?? ''
+  // Prefer an explicit redirect, else resolve the app's canonical callback from
+  // the slug. This is what lets app-mode magic links carry only `?app=<slug>`.
+  const redirect = url.searchParams.get('redirect') ?? (app ? APP_CALLBACKS[app] ?? null : null)
   const next = url.searchParams.get('next')
 
   const supabase = await createClient()

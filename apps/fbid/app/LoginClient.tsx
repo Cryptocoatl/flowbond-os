@@ -66,13 +66,11 @@ export default function LoginClient() {
     // allowlist); the hub callback then hands the session off to the app via
     // /api/handoff. Side benefit: every login also establishes the hub
     // session, so "remember this device" SSO works from the very first login.
-    let cleanRedirect = redirect
-    try { const u = new URL(redirect); cleanRedirect = u.origin + u.pathname } catch {}
+    // Carry ONLY the app slug — a clean single param the hub resolves to the
+    // app's canonical callback server-side. No URL nested inside emailRedirectTo,
+    // so nothing for Supabase's email template to mangle.
     const hubCb = new URL('/auth/callback', FBID_ORIGIN)
-    if (!hubMode) {
-      hubCb.searchParams.set('app', app)
-      hubCb.searchParams.set('redirect', cleanRedirect)
-    }
+    if (!hubMode) hubCb.searchParams.set('app', app)
     const { error } = await supabase.auth.signInWithOtp({
       email: email.toLowerCase().trim(),
       options: { emailRedirectTo: hubCb.toString(), shouldCreateUser: true },
