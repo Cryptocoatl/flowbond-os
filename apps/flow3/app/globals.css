@@ -11,85 +11,193 @@ html {
 }
 
 body {
-  background: #030014;
-  color: #fff;
+  background: #0a0b0d;
+  color: #e7e9ec;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ---- cosmic primitives ---- */
-
-.glass {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+/* ---------- editor surfaces ---------- */
+.panel {
+  background: #101317;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.panel-raise {
+  background: linear-gradient(180deg, #161a1f 0%, #101317 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
-
-.glass-hover {
-  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
-}
-.glass-hover:hover {
-  border-color: rgba(139, 92, 246, 0.5);
-  box-shadow: 0 0 40px -8px rgba(139, 92, 246, 0.45);
-  transform: translateY(-2px);
+.hairline {
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
-.text-cosmic {
-  background: linear-gradient(110deg, #e879f9, #8b5cf6, #22d3ee, #34d399, #e879f9);
-  background-size: 200% auto;
+/* ---------- cinematic film frame ---------- */
+.filmframe {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  isolation: isolate;
+}
+/* the moving graded scene */
+.filmframe .scene {
+  position: absolute;
+  inset: -10%;
+  background-size: cover;
+  background-position: center;
+}
+/* teal-shadow / amber-highlight cinematic grade overlay */
+.filmframe .grade {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: soft-light;
+  background: linear-gradient(125deg, rgba(45, 212, 191, 0.55) 0%, rgba(0, 0, 0, 0) 45%, rgba(245, 158, 11, 0.5) 100%);
+  pointer-events: none;
+}
+/* vignette + lift */
+.filmframe .vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
+  pointer-events: none;
+}
+/* letterbox bars */
+.filmframe .bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7%;
+  background: #000;
+  z-index: 3;
+}
+.filmframe .bar-t {
+  top: 0;
+}
+.filmframe .bar-b {
+  bottom: 0;
+}
+/* moving scanline sheen */
+.filmframe .scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
+}
+/* film grain */
+.grain-layer {
+  position: absolute;
+  inset: -50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.06;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ---------- type ---------- */
+.display {
+  letter-spacing: -0.035em;
+  font-weight: 680;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ---------- accents ---------- */
+.text-grade {
+  background: linear-gradient(100deg, #5eead4, #2dd4bf 40%, #f59e0b);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer 6s linear infinite;
 }
 
-.btn-cosmic {
-  position: relative;
-  background: linear-gradient(110deg, #8b5cf6, #22d3ee);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
-  box-shadow: 0 0 28px -6px rgba(139, 92, 246, 0.6);
+.btn-render {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  color: #1a1205;
+  font-weight: 650;
+  transition: filter 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 22px -8px rgba(245, 158, 11, 0.7);
 }
-.btn-cosmic:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 0 48px -4px rgba(34, 211, 238, 0.7);
-  filter: brightness(1.1);
+.btn-render:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px -8px rgba(245, 158, 11, 0.85);
 }
-.btn-cosmic:disabled {
+.btn-render:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-.aurora-blob {
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(45, 212, 191, 0.4);
+}
+
+.ring-teal {
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.5), 0 0 24px -6px rgba(45, 212, 191, 0.5);
+}
+
+/* ---------- transport ---------- */
+.transport-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: #cfd3d8;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.transport-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* ---------- timeline ---------- */
+.tl-clip {
+  position: relative;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.tl-clip:hover {
+  border-color: rgba(45, 212, 191, 0.7);
+  transform: translateY(-1px);
+}
+.tl-ruler-tick {
   position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  pointer-events: none;
-  will-change: transform;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.06);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 50%;
-  }
-  100% {
-    background-position: -200% 50%;
-  }
+/* scrollbars */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
 }
-
-/* status pulse for dreaming creations */
-@keyframes dreaming {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
 }
-.dreaming {
-  animation: dreaming 1.8s ease-in-out infinite;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-
 ::selection {
-  background: rgba(139, 92, 246, 0.5);
+  background: rgba(45, 212, 191, 0.4);
 }
+
+@keyframes dreaming {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+.dreaming { animation: dreaming 1.6s ease-in-out infinite; }

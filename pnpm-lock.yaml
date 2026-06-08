@@ -244,6 +244,9 @@ importers:
 
   apps/flow3:
     dependencies:
+      '@flowbond/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@flowbond/auth':
         specifier: workspace:*
         version: link:../../packages/auth

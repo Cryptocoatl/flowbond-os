@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/auth'],
+  transpilePackages: ['@flowbond/auth', '@flowbond/ai'],
   turbopack: {
     root: path.resolve(__dirname, '../..'),
   },

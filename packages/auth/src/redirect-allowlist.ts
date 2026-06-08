@@ -19,7 +19,8 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://xelva.live', path: '/auth/callback' },
   { origin: 'https://dev.flowbond.life', path: '/auth/callback' }, // ops
   { origin: 'https://fbid.flowbond.life', path: '/auth/callback' }, // hub's own login (dashboard)
-  { origin: 'https://v3.flowme.one', path: '/auth/callback' },      // flow3
+  { origin: 'https://v3.flowme.one', path: '/auth/callback' },      // flowstudio (legacy)
+  { origin: 'https://flowstudio.flowme.one', path: '/auth/callback' }, // flowstudio
   { origin: 'https://flowme.one', path: '/auth/callback' },         // flowme profiles
   { origin: 'https://www.flowme.one', path: '/auth/callback' },
   // ---- local development ----
