@@ -22,7 +22,8 @@ export async function POST(req: NextRequest) {
   if (fe || !fbid) return NextResponse.json({ status: 'no_fbid' }, { status: 400 })
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ status: 'email_unconfigured' })
+    // distinct from email delivery failure — this is the admin/service key, not Resend
+    return NextResponse.json({ status: 'not_configured' })
   }
 
   // Mint the challenge server-side; the plaintext token stays on the server.

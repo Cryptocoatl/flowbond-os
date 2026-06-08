@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { claimHandle, handleAvailable, type FbidIdentity } from '@flowbond/auth/identity'
 import { useT } from '@flowbond/i18n'
@@ -167,15 +167,24 @@ function ClaimHandle() {
   const [status, setStatus] = useState<'idle' | 'checking' | 'ok' | 'taken' | 'saving' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
-  async function check(v: string) {
+  const seq = useRef(0)
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+  // Debounced + sequence-guarded: one RPC per ~280ms pause, and only the latest
+  // keystroke's response is applied (no out-of-order stale "available/taken").
+  function check(v: string) {
     setValue(v)
     setMessage('')
+    if (timer.current) clearTimeout(timer.current)
     if (!/^[a-z0-9_]{3,30}$/.test(v)) { setStatus('idle'); return }
     setStatus('checking')
-    try {
-      const free = await handleAvailable(createClient(), v)
-      setStatus(free ? 'ok' : 'taken')
-    } catch { setStatus('idle') }
+    const my = ++seq.current
+    timer.current = setTimeout(async () => {
+      try {
+        const free = await handleAvailable(createClient(), v)
+        if (my === seq.current) setStatus(free ? 'ok' : 'taken')
+      } catch { if (my === seq.current) setStatus('idle') }
+    }, 280)
   }
 
   async function save() {

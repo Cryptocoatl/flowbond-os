@@ -15,11 +15,13 @@ function statusNote(s: string): string {
   switch (s) {
     case 'sent': return 'Check that inbox — we sent a confirmation link (expires in 15 min).'
     case 'already_linked': return 'That email is already linked to your FBID.'
-    case 'requires_merge': return 'That email is its own FlowBond account. Linking it means merging — we’ll guide you through that with your confirmation.'
+    case 'requires_merge': return 'That email is its own FlowBond account — linking it means merging the two, which isn’t available yet.'
     case 'linked_elsewhere': return 'That email is already linked to a different FBID.'
     case 'rate_limited': return 'Too many requests — try again in a little while.'
     case 'invalid_email': return 'That doesn’t look like a valid email.'
+    case 'not_configured': return 'Account linking isn’t fully configured yet — let an admin know.'
     case 'email_unconfigured': return 'Email delivery isn’t configured yet — ask an admin to set RESEND_API_KEY.'
+    case 'load_failed': return 'Couldn’t load your connected accounts — reopen this tab to retry.'
     case 'cannot_unlink_primary': return 'You can’t unlink your primary email.'
     case 'cannot_unlink_last_credential': return 'You can’t unlink your last sign-in credential.'
     default: return 'Something went wrong. Try again.'
@@ -33,9 +35,17 @@ export default function ConnectedAccounts() {
   const [note, setNote] = useState('')
 
   async function load() {
-    try { setItems(await getConnectedAccounts(createClient())) } catch { /* ignore */ }
+    try { setItems(await getConnectedAccounts(createClient())) }
+    catch { setNote(statusNote('load_failed')) }
   }
-  useEffect(() => { void load() }, [])
+  // Load on mount, and refetch when the tab regains focus — so a link confirmed
+  // in another tab appears here without a hard refresh.
+  useEffect(() => {
+    void load()
+    const refetch = () => void load()
+    window.addEventListener('focus', refetch)
+    return () => window.removeEventListener('focus', refetch)
+  }, [])
 
   async function add(e: React.FormEvent) {
     e.preventDefault()
@@ -51,15 +61,16 @@ export default function ConnectedAccounts() {
       if (d.status === 'sent') setEmail('')
     } catch {
       setNote('Something went wrong. Try again.')
+    } finally {
+      setBusy(false)
     }
-    setBusy(false)
   }
 
   async function remove(id: string) {
     setBusy(true); setNote('')
     try { await unlinkAccount(createClient(), id); await load() }
     catch (err) { setNote(statusNote((err as { message?: string })?.message ?? 'error')) }
-    setBusy(false)
+    finally { setBusy(false) }
   }
 
   const active = items.filter((i) => i.status === 'active')
