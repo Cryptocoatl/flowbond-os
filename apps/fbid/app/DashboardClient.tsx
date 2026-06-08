@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { claimHandle, handleAvailable, type FbidIdentity } from '@flowbond/auth/identity'
+import { useT } from '@flowbond/i18n'
 import { createClient } from '@/lib/supabase/client'
 
 // FBID-integrated apps → seamless SSO via the hub handoff (one-time token, no re-login).
@@ -33,6 +34,7 @@ function avatarGradient(seed: string) {
 
 export default function DashboardClient({ identity }: { identity: FbidIdentity }) {
   const router = useRouter()
+  const t = useT()
   const initial = (identity.display_name || identity.handle || 'F').trim().charAt(0).toUpperCase()
   const shortId = (identity.id || '').slice(0, 8)
 
@@ -60,6 +62,25 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
       </div>
 
       {identity.handle_is_draft && <ClaimHandle />}
+
+      {/* Narrative — what this is */}
+      <div className="text-center space-y-1 px-2">
+        <p className="text-white text-sm font-semibold">{t('dash.welcome.title')}</p>
+        <p className="text-[var(--fb-muted)] text-[13px] leading-relaxed">{t('dash.welcome.body')}</p>
+      </div>
+
+      {/* Create your living profile — the front door to FlowMe */}
+      <a
+        href="https://flowme.one/new"
+        className="group flex items-center gap-4 bg-gradient-to-br from-violet-600/15 to-emerald-500/10 border border-violet-500/30 rounded-2xl p-5 hover:border-violet-400/60 transition"
+      >
+        <span className="text-3xl">🎭</span>
+        <div className="flex-1">
+          <p className="text-white text-sm font-semibold">{t('dash.create.title')}</p>
+          <p className="text-[var(--fb-muted)] text-[12px] leading-tight">{t('dash.create.desc')}</p>
+        </div>
+        <span className="text-violet-300 text-sm font-semibold whitespace-nowrap">{t('dash.create.cta')}</span>
+      </a>
 
       {/* App launcher — your brain OS */}
       <div className="space-y-3">

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@flowbond/auth": "workspace:*",
+    "@flowbond/i18n": "workspace:*",
     "@reown/appkit": "^1.8.20",
     "@reown/appkit-adapter-solana": "^1.8.20",
     "@reown/appkit-adapter-wagmi": "^1.8.20",
