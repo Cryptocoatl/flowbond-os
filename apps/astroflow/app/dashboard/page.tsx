@@ -3,6 +3,8 @@ import { serverClient } from '../../lib/supabase-server';
 import { myFbid, visibleProfiles } from '../../lib/astro/access';
 import DashboardClient from '../components/DashboardClient';
 import BubbleField, { type Bubble } from '../components/BubbleField';
+import FlowMeGuide from '../components/FlowMeGuide';
+import ChartedSouls, { type Soul, type OwnedMap } from '../components/ChartedSouls';
 
 // Your AstroFlow control room: the living bubble constellation of everyone in
 // your flow, collective charts (flow maps), who you allow to see your chart,
@@ -60,9 +62,23 @@ export default async function Dashboard() {
     })),
   ];
 
+  const souls = ((guests.data ?? []) as any[]).map((g): Soul => ({
+    id: g.id, display_name: g.display_name, avatar_color: g.avatar_color,
+    sun: g.sun, moon: g.moon, rising: g.rising, claim_code: g.claim_code,
+  }));
+  const mapRows = (maps.data ?? []) as any[];
+  const ownedMaps: OwnedMap[] = mapRows.filter((m) => m.is_owner).map((m) => ({ id: m.id, name: m.name }));
+  const guide = {
+    hasProfile: !!me.data,
+    friends: ((friends.data ?? []) as any[]).length,
+    souls: souls.length,
+    constellations: mapRows.length,
+  };
+
   return (
     <>
       <div className="max-w-2xl mx-auto px-6 pt-6">
+        <FlowMeGuide state={guide} me={fbid} />
         <BubbleField people={bubbles} />
       </div>
       <DashboardClient
@@ -73,6 +89,8 @@ export default async function Dashboard() {
         friends={friends.data ?? []}
         crews={crews.data ?? []}
         audience={audience.data ?? []}
+        souls={souls}
+        ownedMaps={ownedMaps}
       />
     </>
   );

@@ -156,13 +156,16 @@ export default function InstantChart() {
                 </p>
               </>
             ) : (
-              <div className="flex gap-2 items-center">
-                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()}
-                  className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-xs text-[#9698a8] font-mono" />
-                <button onClick={copyLink} className="text-xs bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-3 py-2">
-                  {copied ? 'Copied ✓' : 'Copy'}
-                </button>
-              </div>
+              <>
+                <p className="text-xs text-[#7bd0c6] mb-2">✓ Saved to your charted souls — manage them anytime on your <a href="/dashboard" className="underline">dashboard</a>.</p>
+                <div className="flex gap-2 items-center">
+                  <input readOnly value={link} onFocus={(e) => e.currentTarget.select()}
+                    className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-xs text-[#9698a8] font-mono" />
+                  <button onClick={copyLink} className="text-xs bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-3 py-2">
+                    {copied ? 'Copied ✓' : 'Copy'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

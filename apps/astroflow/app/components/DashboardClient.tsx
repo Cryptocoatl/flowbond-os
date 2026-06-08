@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
 import BondInvite from './BondInvite';
+import ChartedSouls, { type Soul, type OwnedMap } from './ChartedSouls';
 
 interface Me {
   handle: string;
@@ -68,6 +69,8 @@ export default function DashboardClient({
   friends,
   crews,
   audience,
+  souls,
+  ownedMaps,
 }: {
   me: Me | null;
   maps: FlowMap[];
@@ -76,6 +79,8 @@ export default function DashboardClient({
   friends: Friend[];
   crews: Crew[];
   audience: AudienceRow[];
+  souls: Soul[];
+  ownedMaps: OwnedMap[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -374,6 +379,9 @@ export default function DashboardClient({
           ))
         )}
       </Section>
+
+      {/* Souls you've charted — keep them, send links, weave them in */}
+      <ChartedSouls souls={souls} myMaps={ownedMaps} />
 
       {/* Friends — and the astrobond link that makes new ones */}
       <Section title="Friends">
