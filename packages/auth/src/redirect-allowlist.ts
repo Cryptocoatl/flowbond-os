@@ -23,6 +23,8 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://flowstudio.flowme.one', path: '/auth/callback' }, // flowstudio
   { origin: 'https://flowme.one', path: '/auth/callback' },         // flowme profiles
   { origin: 'https://www.flowme.one', path: '/auth/callback' },
+  { origin: 'https://claudia-flowbond.vercel.app', path: '/auth/callback' }, // claudia (La Guardiana)
+  { origin: 'https://claudia-sable.vercel.app', path: '/auth/callback' },    // claudia (prod alias)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
