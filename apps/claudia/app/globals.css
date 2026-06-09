@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --moon: #f4f1ea;
+  --flow: #2fb6a8;
+  --dawn: #ff8a6b;
+  --gold: #ffd27a;
+  --night: #0e1a2b;
+  --night-deep: #070f1a;
+}
+
+html,
+body {
+  min-height: 100vh;
+  color: var(--moon);
+  background:
+    radial-gradient(120% 120% at 50% -10%, #16263d 0%, var(--night) 45%, var(--night-deep) 100%);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── ClaudIA motion — everything moves like water, never snaps ───────── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+@keyframes drift {
+  0% { transform: translateY(0) rotate(0); }
+  100% { transform: translateY(-14px) rotate(360deg); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes glowcard {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 138, 107, 0); }
+  50% { box-shadow: 0 0 22px 2px rgba(255, 138, 107, 0.35); }
+}
+
+.msg { animation: rise 0.5s ease both; }
+.orb { animation: breathe 8s ease-in-out infinite; }
+.spark { animation: drift 9s linear infinite; }
+.dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+.due { animation: glowcard 3s ease-in-out infinite; }
+
+.scroll::-webkit-scrollbar { width: 6px; }
+.scroll::-webkit-scrollbar-thumb { background: rgba(47, 182, 168, 0.4); border-radius: 99px; }
+::placeholder { color: rgba(244, 241, 234, 0.4); }
+textarea:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb, .spark, .dot, .due, .msg { animation: none !important; }
+}
