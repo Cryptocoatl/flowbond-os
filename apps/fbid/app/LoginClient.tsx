@@ -35,6 +35,11 @@ export default function LoginClient() {
   const validRedirect = useMemo(() => isAllowedRedirect(redirect), [redirect])
   const appLabel = hubMode ? 'FlowBond' : (APP_LABELS[app] ?? (app || 'FlowBond'))
 
+  // A callback that couldn't establish a session sends the user back here with
+  // ?error=… (e.g. an expired link). Surface it instead of silently showing a
+  // bare form, and steer them to the magic link — which always works.
+  const errorParam = params.get('error')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [method, setMethod] = useState<Method>('magic')
@@ -116,13 +121,31 @@ export default function LoginClient() {
     setStatus('loading')
     setMessage('')
     const supabase = createClient()
-    // Recovery returns to the HUB's own callback (?code, same-domain PKCE), which
-    // routes to /auth/set-password. Probe-verified against the live allowlist.
-    const { error } = await supabase.auth.resetPasswordForEmail(addr, {
-      redirectTo: `${FBID_ORIGIN}/auth/callback?next=/auth/set-password`,
+    // CROSS-DEVICE RECOVERY. We deliberately do NOT use resetPasswordForEmail:
+    // that uses PKCE (?code), which needs the code_verifier cookie from the exact
+    // browser that requested the reset. On a phone the email opens in the mail
+    // app's in-app browser (a different cookie jar) → exchangeCodeForSession fails
+    // → the user is bounced back to this screen. Instead recovery rides the SAME
+    // stateless token_hash path as the magic link (verifyOtp, no code_verifier),
+    // so it works on ANY device/browser. We land on the hub callback with
+    // ?next=/auth/set-password, which establishes a session and routes to the
+    // set-password screen. Carry only the app slug — the callback resolves it to
+    // the app's canonical callback for the post-reset handoff.
+    const hubCb = new URL('/auth/callback', FBID_ORIGIN)
+    hubCb.searchParams.set('next', '/auth/set-password')
+    if (!hubMode) hubCb.searchParams.set('app', app)
+    const { error } = await supabase.auth.signInWithOtp({
+      email: addr,
+      // shouldCreateUser:false → recovery is for existing accounts; a non-account
+      // surfaces the same friendly line below (no enumeration leak).
+      options: { emailRedirectTo: hubCb.toString(), shouldCreateUser: false },
     })
-    setStatus(error ? 'error' : 'recovery-sent')
-    if (error) setMessage(error.message)
+    if (error) {
+      setStatus('error')
+      setMessage('Couldn’t send that link. Double-check the email, or use a magic link to sign in.')
+      return
+    }
+    setStatus('recovery-sent')
   }
 
   if (status === 'sent' || status === 'recovery-sent') {
@@ -166,6 +189,13 @@ export default function LoginClient() {
             : <>One identity for {appLabel}. Sign in with your FlowBond password.</>}
         </p>
       </div>
+
+      {errorParam && status === 'idle' && (
+        <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-amber-200 text-xs leading-relaxed">
+          That link didn’t work — it may have expired or already been used. Enter your email and
+          tap <span className="font-semibold">Send magic link</span>; it always works.
+        </div>
+      )}
 
       <form
         onSubmit={method === 'magic' ? sendMagicLink : signInWithPassword}
