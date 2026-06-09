@@ -10,6 +10,7 @@ import { NUDGE_COPY } from './NudgeBanner';
 import { ClaudiaVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
 import { parseReply } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
+import { hubRedirect } from '@flowbond/auth';
 
 type Phase = 'loading' | 'signin' | 'enroll' | 'unlock' | 'ready';
 
@@ -191,9 +192,14 @@ export function ClaudiaApp() {
         {phase === 'signin' && (
           <Gate title="Entra al imperio">
             <p style={gateText}>ClaudIA te reconoce por tu FBID — una identidad, todos los mundos.</p>
-            <a href={process.env.NEXT_PUBLIC_FBID_URL || 'https://fbid.flowbond.life'} style={primaryBtn}>
+            <button
+              onClick={() => {
+                window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`);
+              }}
+              style={primaryBtn}
+            >
               Iniciar sesión con FlowBond
-            </a>
+            </button>
           </Gate>
         )}
 
