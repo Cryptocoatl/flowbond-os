@@ -76,6 +76,9 @@ importers:
       '@flowbond/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@flowbond/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@supabase/ssr':
         specifier: ^0.10.3
         version: 0.10.3(@supabase/supabase-js@2.105.4)

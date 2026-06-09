@@ -5,3 +5,6 @@ export { FlowGardenLockup } from './FlowGardenLockup'
 export { OctagonSeal } from './OctagonSeal'
 export { LivingField } from './LivingField'
 export { MagneticCursor } from './MagneticCursor'
+
+// FlowMe — the ecosystem back-link chip
+export { FlowMeChip } from './FlowMeChip'
