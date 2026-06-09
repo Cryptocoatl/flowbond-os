@@ -117,6 +117,33 @@ export async function unlinkAccount(supabase: SupabaseClient, linkId: string): P
   return data as { status: string; id: string }
 }
 
+/** A dry-run of what merging a duplicate account would move into your FBID. */
+export interface MergePreview {
+  dry_run: boolean
+  loser_email: string
+  loser_handle: string | null
+  total_rows: number
+  by_column: Record<string, number>
+  [key: string]: unknown
+}
+
+/** Preview the merge for a confirmation token (winner session only). Shows exactly
+ *  what would move before anything happens. Throws `invalid_or_expired_token` /
+ *  `not_authenticated` (e.g. if opened while signed in as the wrong account). */
+export async function mergePreview(supabase: SupabaseClient, token: string): Promise<MergePreview> {
+  const { data, error } = await supabase.rpc('merge_preview_for_token', { p_token: token })
+  if (error) throw error
+  return data as MergePreview
+}
+
+/** Execute the merge for a confirmation token (single-use; winner session only).
+ *  Re-points the other account's data onto your FBID and retires its login. */
+export async function confirmMerge(supabase: SupabaseClient, token: string): Promise<{ merged: boolean; loser_email: string; total_rows: number }> {
+  const { data, error } = await supabase.rpc('confirm_merge', { p_token: token })
+  if (error) throw error
+  return data as { merged: boolean; loser_email: string; total_rows: number }
+}
+
 /** Look up another user's profile by handle, privacy-filtered for the caller. */
 export async function getProfile(supabase: SupabaseClient, handle: string): Promise<FbidProfile> {
   const { data, error } = await supabase.rpc('get_profile', { p_handle: handle })

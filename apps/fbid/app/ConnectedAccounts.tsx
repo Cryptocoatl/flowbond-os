@@ -15,9 +15,12 @@ function statusNote(s: string): string {
   switch (s) {
     case 'sent': return 'Check that inbox — we sent a confirmation link (expires in 15 min).'
     case 'already_linked': return 'That email is already linked to your FBID.'
-    case 'requires_merge': return 'That email is its own FlowBond account — linking it means merging the two, which isn’t available yet.'
     case 'linked_elsewhere': return 'That email is already linked to a different FBID.'
     case 'rate_limited': return 'Too many requests — try again in a little while.'
+    case 'merge_sent': return 'Merge confirmation sent — open it from that inbox while signed in here.'
+    case 'not_an_account': return 'That email isn’t a FlowBond account — add it as a new email instead.'
+    case 'same_account': return 'That’s already your account.'
+    case 'no_loser_identity': return 'That account can’t be merged right now.'
     case 'invalid_email': return 'That doesn’t look like a valid email.'
     case 'not_configured': return 'Account linking isn’t fully configured yet — let an admin know.'
     case 'email_unconfigured': return 'Email delivery isn’t configured yet — ask an admin to set RESEND_API_KEY.'
@@ -33,6 +36,7 @@ export default function ConnectedAccounts() {
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
+  const [mergeEmail, setMergeEmail] = useState('') // set when an added email is its own account
 
   async function load() {
     try { setItems(await getConnectedAccounts(createClient())) }
@@ -57,8 +61,26 @@ export default function ConnectedAccounts() {
         body: JSON.stringify({ email: email.trim() }),
       })
       const d = await r.json().catch(() => ({ status: 'error' }))
+      if (d.status === 'requires_merge') { setMergeEmail(email.trim()); setNote('') }
+      else { setNote(statusNote(d.status)); if (d.status === 'sent') setEmail('') }
+    } catch {
+      setNote('Something went wrong. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function requestMerge() {
+    setBusy(true); setNote('')
+    try {
+      const r = await fetch('/api/accounts/request-merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: mergeEmail }),
+      })
+      const d = await r.json().catch(() => ({ status: 'error' }))
       setNote(statusNote(d.status))
-      if (d.status === 'sent') setEmail('')
+      if (d.status === 'merge_sent') { setMergeEmail(''); setEmail('') }
     } catch {
       setNote('Something went wrong. Try again.')
     } finally {
@@ -124,6 +146,32 @@ export default function ConnectedAccounts() {
           </button>
         </form>
       </div>
+
+      {mergeEmail && (
+        <div className="bg-amber-500/[0.06] border border-amber-500/20 rounded-2xl p-4 space-y-2">
+          <p className="text-white text-sm font-semibold">That’s your other FlowBond account</p>
+          <p className="text-[var(--fb-muted)] text-xs">
+            Merge <span className="text-white">{mergeEmail}</span> into this one? Its data moves here and that login is
+            retired. We’ll email a confirmation to it — you’ll see exactly what moves before anything happens.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={requestMerge}
+              disabled={busy}
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition disabled:opacity-50"
+            >
+              {busy ? '…' : 'Send merge confirmation'}
+            </button>
+            <button
+              onClick={() => { setMergeEmail(''); setNote('') }}
+              disabled={busy}
+              className="px-4 py-2 rounded-xl text-[var(--fb-muted)] hover:text-white text-xs transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {note && <p className="text-[var(--fb-muted)] text-[11px] px-1">{note}</p>}
 
