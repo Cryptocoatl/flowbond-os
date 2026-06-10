@@ -144,6 +144,53 @@ export async function confirmMerge(supabase: SupabaseClient, token: string): Pro
   return data as { merged: boolean; loser_email: string; total_rows: number }
 }
 
+/** A read-only preview of exactly what closing this account would erase. Changes nothing. */
+export interface EraseFbidPreview {
+  dry_run: true
+  /** the caller's FBID id */
+  fbid: string
+  /** their handle, or null if never claimed */
+  handle: string | null
+  /** the phrase the user must type to confirm (their handle, or FB short id) */
+  confirm_phrase: string
+  /** how many logins (emails/wallets) will be closed */
+  login_count: number
+  /** total rows that will be deleted across every FlowBond world */
+  total_rows: number
+  /** the breakdown, keyed `table.column` → row count */
+  by_column: Record<string, number>
+}
+
+/**
+ * Dry-run the irreversible account closure. Reads only — deletes nothing — and
+ * returns the full blast radius (`total_rows`, `by_column`, `login_count`) plus the
+ * `confirm_phrase` the user must type. Use this to populate the "are you sure" screen
+ * with honest numbers before anyone confirms. Throws `not_authenticated`.
+ */
+export async function eraseFbidPreview(supabase: SupabaseClient): Promise<EraseFbidPreview> {
+  const { data, error } = await supabase.rpc('erase_my_fbid', { p_confirm: null, p_execute: false })
+  if (error) throw error
+  return data as EraseFbidPreview
+}
+
+/**
+ * PERMANENTLY erase the current user's FBID and everything it owns across every
+ * FlowBond world. Irreversible. Leaves only a no-PII tombstone (a one-way commitment
+ * that an account once existed and was closed). After this resolves, sign the user out
+ * — every login is dead. `confirm` MUST equal the `confirm_phrase` from
+ * `eraseFbidPreview()`. Resolved entirely server-side from the caller's session, so it
+ * can only ever erase the caller — never anyone else. Throws `confirm_mismatch`,
+ * `not_authenticated`, or `has_dependent_identities`.
+ */
+export async function eraseMyFbid(
+  supabase: SupabaseClient,
+  confirm: string,
+): Promise<{ erased: boolean; tombstone_id: string; rows_erased: number; logins_closed: number }> {
+  const { data, error } = await supabase.rpc('erase_my_fbid', { p_confirm: confirm, p_execute: true })
+  if (error) throw error
+  return data as { erased: boolean; tombstone_id: string; rows_erased: number; logins_closed: number }
+}
+
 /** Look up another user's profile by handle, privacy-filtered for the caller. */
 export async function getProfile(supabase: SupabaseClient, handle: string): Promise<FbidProfile> {
   const { data, error } = await supabase.rpc('get_profile', { p_handle: handle })

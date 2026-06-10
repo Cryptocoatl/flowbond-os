@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { claimHandle, handleAvailable, type FbidIdentity } from '@flowbond/auth/identity'
 import { useT } from '@flowbond/i18n'
+import { AccountClosure } from '@flowbond/ui'
 import { createClient } from '@/lib/supabase/client'
 import { avatarGradient, handoffHref } from '@/lib/identity-visuals'
 import ConnectedAccounts from './ConnectedAccounts'
@@ -103,15 +104,17 @@ export default function DashboardClient({
       </p>
 
       {/* Connected accounts — user-driven linking, permanently recorded on the FBID */}
-      <ConnectedAccounts />
+      <div id="connected-accounts" className="scroll-mt-6">
+        <ConnectedAccounts />
+      </div>
 
       {/* Security — grows little by little (password today, 2FA/passkeys next) */}
       <div className="space-y-3">
         <p className="text-[var(--fb-muted)] text-xs uppercase tracking-wider px-1">Security</p>
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl divide-y divide-white/[0.06]">
           <a
-            href={hasPassword ? '/auth/set-password?mode=change' : '/auth/set-password'}
-            className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition rounded-t-2xl"
+            href="/auth/set-password"
+            className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition rounded-2xl"
           >
             <div>
               <p className="text-white text-sm font-semibold">Password</p>
@@ -123,30 +126,18 @@ export default function DashboardClient({
             </div>
             <span className="text-violet-400 text-xs">{hasPassword ? 'Manage →' : 'Set →'}</span>
           </a>
-          <div className="flex items-center justify-between p-4 rounded-b-2xl">
-            <div>
-              <p className="text-white text-sm font-semibold">This device</p>
-              <p className="text-[var(--fb-muted)] text-[11px]">
-                You stay signed in here — sign out below if this device is shared.
-              </p>
-            </div>
-            <span className="text-emerald-400 text-xs">Remembered ✓</span>
-          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <p className="text-zinc-600 text-[11px]">One identity, every world. Sovereign by design.</p>
-        <button
-          onClick={async () => {
-            await createClient().auth.signOut()
-            router.refresh()
-          }}
-          className="text-[var(--fb-muted)] hover:text-white text-xs transition"
-        >
-          Sign out
-        </button>
-      </div>
+      {/* Account — clear Log out + irreversible erase-everything flow (3 gates) */}
+      <AccountClosure
+        supabase={createClient()}
+        onLinkAccounts={() => document.getElementById('connected-accounts')?.scrollIntoView({ behavior: 'smooth' })}
+        onLoggedOut={() => router.refresh()}
+        onErased={() => router.replace('/')}
+      />
+
+      <p className="text-zinc-600 text-[11px] text-center pt-2">One identity, every world. Sovereign by design.</p>
     </div>
   )
 }
