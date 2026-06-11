@@ -56,3 +56,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .af-rise, [class*='af-'] { animation: none !important; }
 }
+
+/* ── Native-app touches ───────────────────────────────────────── */
+/* Hide scrollbars on horizontal chip rows (lens / saved maps) */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Momentum scrolling + no overscroll bounce fighting the bottom sheet */
+html, body { overscroll-behavior-y: none; }
+.no-scrollbar, [class*='overflow-'] { -webkit-overflow-scrolling: touch; }
+
+/* Tap feedback: kill the grey iOS tap highlight (we animate scale instead) */
+* { -webkit-tap-highlight-color: transparent; }
