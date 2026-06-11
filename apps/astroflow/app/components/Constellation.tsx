@@ -19,6 +19,10 @@ interface Node extends AstroProfile {
 const SIZE = 620;
 const C = SIZE / 2;
 const R = 232;
+// Invisible touch target around each star — the real fix for "can't tap": in a
+// 620 viewBox scaled to a ~360px phone, r=34 ≈ a 40px tap zone (Apple minimum).
+const HIT = 34;
+const GHOST_HIT = 28;
 
 function harmonyColor(score: number) {
   if (score >= 56) return '#7bd0c6';
@@ -60,6 +64,7 @@ export default function Constellation({
 }) {
   const friendSet = useMemo(() => new Set(friendFbids), [friendFbids]);
   const [addFriend, setAddFriend] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('explore');
   const [context, setContext] = useState<RelContext>('friendship');
   const [selected, setSelected] = useState<string[]>([]);
@@ -106,6 +111,14 @@ export default function Constellation({
     }
   }
 
+  function switchMode(m: Mode) {
+    setMode(m);
+    setActive(null);
+    setActiveGhost(null);
+    setSelected([]);
+    setSaveMsg('');
+  }
+
   // Pairwise scores between selected nodes (combine mode) drive edge colour + a
   // live, deterministic compatibility read — computed client-side by the engine.
   const edges = useMemo(() => {
@@ -141,88 +154,184 @@ export default function Constellation({
 
   const activeProfile = active ? byFbid[active] : null;
 
+  // On mobile the side panel becomes a bottom sheet that slides up only when
+  // there's something to act on; on desktop (sm+) it's always the right column.
+  const sheetOpen = mode === 'combine' || !!activeProfile || !!activeGhostNode;
+  function closeSheet() {
+    setActive(null);
+    setActiveGhost(null);
+    if (mode === 'combine') switchMode('explore');
+  }
+
+  // ── The detail / combine panel (one instance, repositioned responsively) ──
+  const panel = (
+    <div className="p-5 sm:p-5">
+      {mode === 'explore' && activeProfile && (
+        <div className="border border-[#242a3b] rounded-2xl p-5 bg-[#11131f]">
+          <div className="flex items-center gap-3">
+            <span className="w-4 h-4 rounded-full" style={{ background: activeProfile.avatarColor }} />
+            <h2 className="text-2xl font-serif text-[#ece9e0]">{activeProfile.displayName}</h2>
+          </div>
+          <p className="text-xs font-mono text-[#5b5e72] mt-1">
+            @{activeProfile.handle} · {activeProfile.visibility}
+          </p>
+          <p className="font-serif text-lg mt-3 text-[#ece9e0]">
+            {activeProfile.chart.bodies.Sun.sign} Sun · {activeProfile.chart.bodies.Moon.sign} Moon
+            {activeProfile.chart.asc ? ` · ${activeProfile.chart.asc.sign} Rising` : ''}
+          </p>
+          <Link
+            href={`/chart/${activeProfile.handle}`}
+            className="inline-block mt-4 text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-xl px-4 py-2.5 active:scale-95 transition"
+          >
+            Open full chart →
+          </Link>
+          <ReadingPanel handles={[activeProfile.handle]} />
+        </div>
+      )}
+      {mode === 'explore' && activeGhostNode && (
+        <div className="border border-dashed border-[#3a4158] rounded-2xl p-5 bg-[#11131f]">
+          <div className="flex items-center gap-3">
+            <span className="w-4 h-4 rounded-full border border-dashed" style={{ borderColor: activeGhostNode.avatar_color, background: `${activeGhostNode.avatar_color}33` }} />
+            <h2 className="text-2xl font-serif text-[#ece9e0]">{activeGhostNode.display_name}</h2>
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#8fb8e0] mt-1">ghost star · awaiting FBID</p>
+          <p className="font-serif text-lg mt-3 text-[#cfc8e8]">
+            {activeGhostNode.sun} Sun · {activeGhostNode.moon} Moon{activeGhostNode.rising ? ` · ${activeGhostNode.rising} Rising` : ''}
+          </p>
+          <p className="text-sm text-[#9698a8] mt-3 leading-relaxed">
+            You charted them, but their star is still light passing through. Invite them to activate their
+            FBID — they take this avatar space for real, and you&apos;re bonded into full flow.
+          </p>
+          <button
+            onClick={() => inviteGhost(activeGhostNode.claim_code)}
+            className="inline-block mt-4 text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-4 py-2.5 active:scale-95 transition"
+          >
+            {copied === activeGhostNode.claim_code ? 'Activation link copied ✓' : '✦ Copy their activation link'}
+          </button>
+        </div>
+      )}
+      {mode === 'explore' && !activeProfile && !activeGhostNode && (
+        <div className="hidden sm:block border border-dashed border-[#242a3b] rounded-2xl p-8 text-center text-[#9698a8]">
+          Tap a star to read their chart{guests.length > 0 ? ', or a ghost star ✦ to invite them in' : ''}.
+        </div>
+      )}
+
+      {mode === 'combine' && (
+        <div className="border border-[#242a3b] rounded-2xl p-5 bg-[#11131f]">
+          <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">Combine · {context}</h2>
+          {myFbid && (
+            <div className="mb-4 pb-4 border-b border-white/5">
+              <BondInvite compact />
+              <p className="text-[10px] text-[#5b5e72] mt-1.5">
+                Send your astrobond link — they create their FBID + chart, you see each other
+                everywhere, and you can weave them into any universe.
+              </p>
+            </div>
+          )}
+          {selectedProfiles.length < 2 ? (
+            <p className="text-[#9698a8] text-sm">Tap two or more stars above to weave a flow map.</p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedProfiles.map((p) => (
+                  <span key={p.fbid} className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${p.avatarColor}22`, color: '#cfc8e8' }}>
+                    {p.displayName}
+                  </span>
+                ))}
+              </div>
+              {avgScore !== null && (
+                <p className="font-serif text-[#ece9e0]">
+                  {selectedProfiles.length === 2 ? 'Compatibility' : 'Group flow'}:{' '}
+                  <b style={{ color: harmonyColor(avgScore) }}>{avgScore}</b> / 100
+                </p>
+              )}
+              {pairPanorama && <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>}
+              {selectedProfiles.length >= 2 && <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />}
+              <div className="mt-5 pt-4 border-t border-white/5">
+                <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">Save as collective flow map</label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={mapName}
+                    onChange={(e) => setMapName(e.target.value)}
+                    placeholder="e.g. Tulum retreat crew"
+                    className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-xl px-3 py-2.5 text-sm text-[#ece9e0]"
+                  />
+                  <button
+                    onClick={saveFlowMap}
+                    disabled={!mapName.trim() || !myFbid}
+                    className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-4 disabled:opacity-50 active:scale-95 transition"
+                  >
+                    Save
+                  </button>
+                </div>
+                {!myFbid && <p className="text-[10px] text-[#d9883c] mt-1">Sign in to save flow maps.</p>}
+                {saveMsg && <p className="text-xs text-[#7fd1a8] mt-2">{saveMsg}</p>}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-2">
-        <div>
-          <h1 className="text-4xl font-serif text-[#ece9e0]">AstroFlow</h1>
-          <p className="text-[#9698a8] text-sm">
+    <div className="relative mx-auto max-w-5xl px-4 pt-3 pb-44 sm:pb-8">
+      {/* ── Top bar: clean on mobile, full actions on desktop ── */}
+      <header className="flex items-center justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-4xl font-serif text-[#ece9e0] leading-tight">AstroFlow</h1>
+          <p className="hidden sm:block text-[#9698a8] text-sm">
             Your stars, woven with your people. Degree-accurate · privacy-first.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-full border border-[#242a3b] overflow-hidden">
-            {(['explore', 'combine'] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => {
-                  setMode(m);
-                  setActive(null);
-                  setSelected([]);
-                }}
-                className={`px-4 py-1.5 text-xs uppercase tracking-wider ${
-                  mode === m ? 'bg-[#e3c07a] text-[#0a0b12]' : 'text-[#9698a8]'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+
+        {/* desktop actions */}
+        <div className="hidden sm:flex items-center gap-3">
           {myFbid && hasProfile && (
-            <button
-              onClick={() => setAddFriend((v) => !v)}
-              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold"
-            >
-              + Add friend
-            </button>
+            <button onClick={() => setAddFriend((v) => !v)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">+ Add friend</button>
           )}
-          <button
-            onClick={() => setTour(true)}
-            className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]"
-          >
-            Tour
-          </button>
-          {myFbid && (
-            <Link
-              href="/dashboard"
-              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]"
-            >
-              Dashboard
-            </Link>
-          )}
+          <button onClick={() => setTour(true)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">Tour</button>
+          {myFbid && <Link href="/dashboard" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">Dashboard</Link>}
           {myFbid ? (
-            <Link
-              href="/profile/new"
-              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec]"
-            >
-              {hasProfile ? 'Edit your chart' : '+ Add your profile'}
+            <Link href="/profile/new" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec]">{hasProfile ? 'Edit your chart' : '+ Add your profile'}</Link>
+          ) : (
+            <Link href="/auth/login" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">Log in</Link>
+          )}
+          {myFbid && (
+            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="text-xs text-[#5b5e72] hover:text-[#9698a8]" title="Sign out">sign out</button>
+          )}
+        </div>
+
+        {/* mobile: primary CTA + overflow menu */}
+        <div className="flex sm:hidden items-center gap-2 shrink-0">
+          {myFbid ? (
+            <Link href="/profile/new" className="text-[11px] font-semibold px-3 py-2 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] active:scale-95 transition">
+              {hasProfile ? 'Edit' : '+ Chart'}
             </Link>
           ) : (
-            <Link
-              href="/auth/login"
-              className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold"
-            >
-              Log in
-            </Link>
+            <Link href="/auth/login" className="text-[11px] font-semibold px-3 py-2 rounded-full bg-[#e3c07a] text-[#0a0b12] active:scale-95 transition">Log in</Link>
           )}
-          {myFbid && (
-            <button
-              onClick={async () => {
-                await browserClient().auth.signOut();
-                window.location.assign('/');
-              }}
-              className="text-xs text-[#5b5e72] hover:text-[#9698a8]"
-              title="Sign out"
-            >
-              sign out
-            </button>
-          )}
+          <button onClick={() => setMenuOpen((v) => !v)} aria-label="More" className="w-9 h-9 grid place-items-center rounded-full border border-[#242a3b] text-[#cfc8e8] text-lg active:scale-90 transition">⋯</button>
         </div>
       </header>
 
+      {/* mobile overflow menu */}
+      {menuOpen && (
+        <div className="sm:hidden mb-3 rounded-2xl border border-[#242a3b] bg-[#11131f] overflow-hidden af-rise">
+          {myFbid && hasProfile && (
+            <button onClick={() => { setAddFriend((v) => !v); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">+ Add friend</button>
+          )}
+          {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">Dashboard</Link>}
+          <button onClick={() => { setTour(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">Take the tour</button>
+          {myFbid && (
+            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="w-full text-left px-4 py-3 text-sm text-[#9698a8] active:bg-white/5">Sign out</button>
+          )}
+        </div>
+      )}
+
       {/* Add a friend — your bond link brings them into your circle */}
       {addFriend && (
-        <div className="mb-4 rounded-xl border border-[#9a8fe0]/30 bg-[#11131f] p-4" style={{ animation: 'af-rise 0.4s ease-out' }}>
+        <div className="mb-4 rounded-2xl border border-[#9a8fe0]/30 bg-[#11131f] p-4 af-rise">
           <p className="text-sm text-[#cfc8e8] mb-2">
             Send your astrobond link — when they accept, their star joins your circle here, and you can read
             and weave each other into any constellation.
@@ -230,46 +339,55 @@ export default function Constellation({
           <div className="flex flex-wrap items-center gap-3">
             <BondInvite />
             <span className="text-[11px] text-[#5b5e72]">
-              or chart someone from their birth data on{' '}
-              <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
+              or chart someone from their birth data on <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
             </span>
           </div>
         </div>
       )}
 
-      {/* Your saved constellations — jump back into any living collective */}
+      {/* Saved constellations — horizontal scroll on mobile */}
       {savedMaps.length > 0 && (
         <div className="mb-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">Your saved constellations</div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap no-scrollbar">
             {savedMaps.map((m) => (
-              <Link
-                key={m.id}
-                href={`/map/${m.id}`}
-                className="group flex items-center gap-2 rounded-full border border-[#242a3b] bg-[#11131f] px-3 py-1.5 hover:border-[#9a8fe0]/50 transition"
-              >
+              <Link key={m.id} href={`/map/${m.id}`} className="group flex items-center gap-2 rounded-full border border-[#242a3b] bg-[#11131f] px-3 py-2 hover:border-[#9a8fe0]/50 transition shrink-0">
                 <span className="text-[#e3c07a] text-xs">❖</span>
-                <span className="text-sm text-[#ece9e0]">{m.name}</span>
-                <span className="text-[10px] uppercase tracking-wider text-[#5b5e72] group-hover:text-[#9698a8]">
-                  {m.context} · {m.member_count}
-                </span>
+                <span className="text-sm text-[#ece9e0] whitespace-nowrap">{m.name}</span>
+                <span className="text-[10px] uppercase tracking-wider text-[#5b5e72] group-hover:text-[#9698a8] whitespace-nowrap">{m.context} · {m.member_count}</span>
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      {/* Relationship lens — re-weights every connection for the chosen context */}
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">Lens</span>
+      {/* ── Mode switch — big, unmissable segmented control ── */}
+      <div className="flex p-1 rounded-2xl bg-[#11131f] border border-[#242a3b] mb-3">
+        {(['explore', 'combine'] as Mode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => switchMode(m)}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold tracking-wide transition active:scale-[0.98] ${
+              mode === m ? 'bg-[#e3c07a] text-[#0a0b12] shadow' : 'text-[#9698a8]'
+            }`}
+          >
+            {m === 'explore' ? '✶ Explore' : '✦ Combine'}
+            {m === 'combine' && selected.length > 0 && (
+              <span className={`ml-2 inline-grid place-items-center min-w-5 h-5 px-1 rounded-full text-[11px] ${mode === m ? 'bg-[#0a0b12]/20 text-[#0a0b12]' : 'bg-[#9a8fe0]/30 text-[#cfc8e8]'}`}>{selected.length}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Relationship lens — horizontal scroll on mobile */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] shrink-0">Lens</span>
         {REL_CONTEXTS.map((c) => (
           <button
             key={c}
             onClick={() => setContext(c)}
-            className={`text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border ${
-              context === c
-                ? 'bg-[#9a8fe0]/20 border-[#9a8fe0]/50 text-[#cfc8e8]'
-                : 'border-[#242a3b] text-[#9698a8]'
+            className={`text-[11px] uppercase tracking-wide px-3 py-1.5 rounded-full border shrink-0 transition active:scale-95 ${
+              context === c ? 'bg-[#9a8fe0]/20 border-[#9a8fe0]/50 text-[#cfc8e8]' : 'border-[#242a3b] text-[#9698a8]'
             }`}
           >
             {c}
@@ -277,55 +395,36 @@ export default function Constellation({
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="sm:grid sm:grid-cols-2 sm:gap-6">
         {/* The constellation */}
         <div>
           {profiles.length === 0 ? (
             <div className="aspect-square rounded-2xl border border-dashed border-[#242a3b] flex flex-col items-center justify-center text-center p-8">
               <p className="text-[#9698a8] mb-4">No charts you can see yet.</p>
-              <Link
-                href="/profile/new"
-                className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-5 py-2.5"
-              >
-                + Add your profile
-              </Link>
+              <Link href="/profile/new" className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-5 py-3 active:scale-95 transition">+ Add your profile</Link>
             </div>
           ) : (
-            <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full">
+            <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[560px] mx-auto block select-none" style={{ touchAction: 'manipulation' }}>
               {/* edges (combine mode) */}
               {edges.map((e, i) => (
-                <line
-                  key={i}
-                  x1={e.a.x}
-                  y1={e.a.y}
-                  x2={e.b.x}
-                  y2={e.b.y}
-                  stroke={harmonyColor(e.score)}
-                  strokeWidth={1 + Math.abs(e.score - 50) / 20}
-                  strokeOpacity={0.7}
-                />
+                <line key={i} x1={e.a.x} y1={e.a.y} x2={e.b.x} y2={e.b.y} stroke={harmonyColor(e.score)} strokeWidth={1.5 + Math.abs(e.score - 50) / 18} strokeOpacity={0.75} />
               ))}
               <circle cx={C} cy={C} r={R} fill="none" stroke="rgba(154,143,224,0.10)" />
               {avgScore !== null && (
-                <text x={C} y={C} textAnchor="middle" dominantBaseline="middle" className="fill-[#ece9e0]" style={{ fontSize: 34, fontFamily: 'var(--font-display), serif' }}>
-                  {avgScore}
-                </text>
+                <text x={C} y={C} textAnchor="middle" dominantBaseline="middle" className="fill-[#ece9e0]" style={{ fontSize: 38, fontFamily: 'var(--font-display), serif' }}>{avgScore}</text>
               )}
               {avgScore !== null && (
-                <text x={C} y={C + 26} textAnchor="middle" className="fill-[#5b5e72]" style={{ fontSize: 11, letterSpacing: 2 }}>
-                  {context.toUpperCase()} FLOW
-                </text>
+                <text x={C} y={C + 28} textAnchor="middle" className="fill-[#5b5e72]" style={{ fontSize: 12, letterSpacing: 2 }}>{context.toUpperCase()} FLOW</text>
               )}
               {/* ghost avatars — charted connections awaiting FBID activation */}
               {ghostNodes.map((g) => {
                 const on = activeGhost === g.id;
                 return (
                   <g key={g.id} onClick={() => { setActive(null); setActiveGhost((x) => (x === g.id ? null : g.id)); }} style={{ cursor: 'pointer' }}>
-                    <circle cx={g.x} cy={g.y} r={on ? 12 : 8} fill={g.avatar_color} opacity={on ? 0.35 : 0.16}
-                      stroke={g.avatar_color} strokeWidth={1} strokeDasharray="2 2" strokeOpacity={0.7} />
-                    <text x={g.x} y={g.y > C ? g.y + 20 : g.y - 13} textAnchor="middle" className="fill-[#8fb8e0]" style={{ fontSize: 10 }}>
-                      {g.display_name} ✦
-                    </text>
+                    {/* big invisible hit target */}
+                    <circle cx={g.x} cy={g.y} r={GHOST_HIT} fill="transparent" />
+                    <circle cx={g.x} cy={g.y} r={on ? 13 : 9} fill={g.avatar_color} opacity={on ? 0.4 : 0.18} stroke={g.avatar_color} strokeWidth={1.2} strokeDasharray="2 2" strokeOpacity={0.7} />
+                    <text x={g.x} y={g.y > C ? g.y + 22 : g.y - 14} textAnchor="middle" className="fill-[#8fb8e0]" style={{ fontSize: 11 }}>{g.display_name} ✦</text>
                   </g>
                 );
               })}
@@ -334,158 +433,48 @@ export default function Constellation({
                 const isActive = active === n.fbid;
                 const isFriend = friendSet.has(n.fbid);
                 const isMe = n.fbid === myFbid;
-                const r = isSel || isActive ? 13 : 9;
+                const r = isSel || isActive ? 15 : 11;
                 return (
                   <g key={n.fbid} onClick={() => { setActiveGhost(null); onNodeClick(n.fbid); }} style={{ cursor: 'pointer' }}>
-                    <circle cx={n.x} cy={n.y} r={r + 6} fill={n.avatarColor} opacity={isSel || isActive ? 0.28 : 0.12} />
-                    {/* gold ring marks your circle — friends + you */}
+                    {/* big invisible hit target — reliable tapping on mobile */}
+                    <circle cx={n.x} cy={n.y} r={HIT} fill="transparent" />
+                    <circle cx={n.x} cy={n.y} r={r + 7} fill={n.avatarColor} opacity={isSel || isActive ? 0.3 : 0.13} />
                     {(isFriend || isMe) && !isSel && (
-                      <circle cx={n.x} cy={n.y} r={r + 3.5} fill="none" stroke="#e3c07a" strokeWidth={1.5} strokeOpacity={0.85} />
+                      <circle cx={n.x} cy={n.y} r={r + 4} fill="none" stroke="#e3c07a" strokeWidth={1.6} strokeOpacity={0.85} />
                     )}
-                    <circle cx={n.x} cy={n.y} r={r} fill={n.avatarColor} stroke={isSel ? '#e3c07a' : 'transparent'} strokeWidth={2.5} />
-                    <text
-                      x={n.x}
-                      y={n.y > C ? n.y + 24 : n.y - 16}
-                      textAnchor="middle"
-                      className="fill-[#cfc8e8]"
-                      style={{ fontSize: 12 }}
-                    >
-                      {n.displayName}
-                    </text>
+                    <circle cx={n.x} cy={n.y} r={r} fill={n.avatarColor} stroke={isSel ? '#e3c07a' : 'transparent'} strokeWidth={3} />
+                    <text x={n.x} y={n.y > C ? n.y + 26 : n.y - 17} textAnchor="middle" className="fill-[#cfc8e8]" style={{ fontSize: 13 }}>{n.displayName}</text>
                   </g>
                 );
               })}
             </svg>
           )}
-          <p className="text-[10px] text-[#5b5e72] text-center mt-1">
-            {mode === 'explore'
-              ? 'Tap a star to read their chart.'
-              : 'Tap stars to weave them — lines show how each connection flows under this lens.'}
+          <p className="text-[11px] text-[#5b5e72] text-center mt-2">
+            {mode === 'explore' ? 'Tap a star to read their chart.' : 'Tap stars to weave them — lines show how each connection flows under this lens.'}
           </p>
         </div>
 
-        {/* Side panel */}
-        <div>
-          {mode === 'explore' && activeProfile && (
-            <div className="border border-[#242a3b] rounded-xl p-5 bg-[#11131f]">
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full" style={{ background: activeProfile.avatarColor }} />
-                <h2 className="text-2xl font-serif text-[#ece9e0]">{activeProfile.displayName}</h2>
-              </div>
-              <p className="text-xs font-mono text-[#5b5e72] mt-1">
-                @{activeProfile.handle} · {activeProfile.visibility}
-              </p>
-              <p className="font-serif text-lg mt-3 text-[#ece9e0]">
-                {activeProfile.chart.bodies.Sun.sign} Sun · {activeProfile.chart.bodies.Moon.sign} Moon
-                {activeProfile.chart.asc ? ` · ${activeProfile.chart.asc.sign} Rising` : ''}
-              </p>
-              <Link
-                href={`/chart/${activeProfile.handle}`}
-                className="inline-block mt-4 text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2"
-              >
-                Open full chart →
-              </Link>
-              <ReadingPanel handles={[activeProfile.handle]} />
-            </div>
-          )}
-          {mode === 'explore' && activeGhostNode && (
-            <div className="border border-dashed border-[#3a4158] rounded-xl p-5 bg-[#11131f]">
-              <div className="flex items-center gap-3">
-                <span className="w-4 h-4 rounded-full border border-dashed" style={{ borderColor: activeGhostNode.avatar_color, background: `${activeGhostNode.avatar_color}33` }} />
-                <h2 className="text-2xl font-serif text-[#ece9e0]">{activeGhostNode.display_name}</h2>
-              </div>
-              <p className="text-[10px] uppercase tracking-[0.16em] text-[#8fb8e0] mt-1">ghost star · awaiting FBID</p>
-              <p className="font-serif text-lg mt-3 text-[#cfc8e8]">
-                {activeGhostNode.sun} Sun · {activeGhostNode.moon} Moon{activeGhostNode.rising ? ` · ${activeGhostNode.rising} Rising` : ''}
-              </p>
-              <p className="text-sm text-[#9698a8] mt-3 leading-relaxed">
-                You charted them, but their star is still light passing through. Invite them to activate their
-                FBID — they take this avatar space for real, and you&apos;re bonded into full flow.
-              </p>
-              <button
-                onClick={() => inviteGhost(activeGhostNode.claim_code)}
-                className="inline-block mt-4 text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-2 hover:brightness-110 transition"
-              >
-                {copied === activeGhostNode.claim_code ? 'Activation link copied ✓' : '✦ Copy their activation link'}
-              </button>
-            </div>
-          )}
-          {mode === 'explore' && !activeProfile && !activeGhostNode && (
-            <div className="border border-dashed border-[#242a3b] rounded-xl p-8 text-center text-[#9698a8]">
-              Tap a star to read their chart{guests.length > 0 ? ', or a ghost star ✦ to invite them in' : ''}.
-            </div>
-          )}
-
-          {mode === 'combine' && (
-            <div className="border border-[#242a3b] rounded-xl p-5 bg-[#11131f]">
-              <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">
-                Combine · {context}
-              </h2>
-              {/* Missing someone? One link bonds your skies and they appear here. */}
-              {myFbid && (
-                <div className="mb-4 pb-4 border-b border-white/5">
-                  <BondInvite compact />
-                  <p className="text-[10px] text-[#5b5e72] mt-1.5">
-                    Send your astrobond link — they create their FBID + chart, you see each other
-                    everywhere, and you can weave them into any universe.
-                  </p>
-                </div>
-              )}
-              {selectedProfiles.length < 2 ? (
-                <p className="text-[#9698a8] text-sm">Select two or more stars to weave a flow map.</p>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {selectedProfiles.map((p) => (
-                      <span key={p.fbid} className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${p.avatarColor}22`, color: '#cfc8e8' }}>
-                        {p.displayName}
-                      </span>
-                    ))}
-                  </div>
-                  {avgScore !== null && (
-                    <p className="font-serif text-[#ece9e0]">
-                      {selectedProfiles.length === 2 ? 'Compatibility' : 'Group flow'}:{' '}
-                      <b style={{ color: harmonyColor(avgScore) }}>{avgScore}</b> / 100
-                    </p>
-                  )}
-                  {pairPanorama && (
-                    <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>
-                  )}
-
-                  {/* FlowMe narrative for a pair or a collective (with context switch) */}
-                  {selectedProfiles.length >= 2 && (
-                    <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />
-                  )}
-
-                  {/* Save collective flow map */}
-                  <div className="mt-5 pt-4 border-t border-white/5">
-                    <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">
-                      Save as collective flow map
-                    </label>
-                    <div className="flex gap-2 mt-2">
-                      <input
-                        value={mapName}
-                        onChange={(e) => setMapName(e.target.value)}
-                        placeholder="e.g. Tulum retreat crew"
-                        className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-sm text-[#ece9e0]"
-                      />
-                      <button
-                        onClick={saveFlowMap}
-                        disabled={!mapName.trim() || !myFbid}
-                        className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-50"
-                      >
-                        Save
-                      </button>
-                    </div>
-                    {!myFbid && <p className="text-[10px] text-[#d9883c] mt-1">Sign in to save flow maps.</p>}
-                    {saveMsg && <p className="text-xs text-[#7fd1a8] mt-2">{saveMsg}</p>}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Panel: desktop right column / mobile bottom sheet */}
+        <aside
+          className={
+            'z-40 transition-transform duration-300 ease-out ' +
+            // mobile sheet
+            'fixed inset-x-0 bottom-0 max-h-[74vh] overflow-y-auto rounded-t-3xl border-t border-[#242a3b] bg-[#0c0e1a]/95 backdrop-blur-md shadow-[0_-10px_40px_rgba(0,0,0,0.5)] ' +
+            (sheetOpen ? 'translate-y-0' : 'translate-y-full') + ' ' +
+            // desktop column
+            'sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:backdrop-blur-0 sm:shadow-none sm:translate-y-0'
+          }
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {/* grab handle + close (mobile only) */}
+          <div className="sm:hidden sticky top-0 z-10 flex items-center justify-between px-4 pt-2.5 pb-1.5 bg-[#0c0e1a]/95 backdrop-blur-md">
+            <span className="mx-auto h-1.5 w-10 rounded-full bg-[#3a4158]" />
+            <button onClick={closeSheet} aria-label="Close" className="absolute right-3 top-2 w-8 h-8 grid place-items-center rounded-full text-[#9698a8] active:scale-90">✕</button>
+          </div>
+          {panel}
+        </aside>
       </div>
+
       <Tour open={tour} onClose={() => setTour(false)} />
     </div>
   );

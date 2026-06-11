@@ -23,6 +23,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,        // prevent double-tap zoom fighting the map's pinch
   userScalable: false,
+  viewportFit: 'cover',   // draw under the notch / home indicator (native feel)
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
