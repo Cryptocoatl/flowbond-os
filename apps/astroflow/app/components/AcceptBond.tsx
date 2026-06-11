@@ -16,6 +16,7 @@ export default function AcceptBond({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
+  const [requested, setRequested] = useState<string | null>(null);
   const next = `/bond/${code}`;
 
   if (!signedIn)
@@ -45,10 +46,29 @@ export default function AcceptBond({
     setErr('');
     start(async () => {
       const { data, error } = await browserClient().rpc('accept_bond', { code });
-      if (error) setErr(error.message);
-      else router.push(`/chart/${data?.handle ?? ''}`);
+      if (error) { setErr(error.message); return; }
+      // This pair erased a bond before — reconnection is by consent, not by
+      // reopening a link. accept_bond quietly filed a request for them to approve.
+      if (data?.status === 'request_sent') {
+        setRequested(data?.display_name || data?.handle || 'them');
+        return;
+      }
+      router.push(`/chart/${data?.handle ?? ''}`);
     });
   }
+
+  if (requested)
+    return (
+      <div className="max-w-sm">
+        <p className="text-sm text-[#ece9e0]">
+          You and {requested} had erased your bond, so it doesn&apos;t just snap back. ✦
+        </p>
+        <p className="text-sm text-[#9698a8] mt-2">
+          We sent a gentle request to reconnect — once they say yes, your skies bond again.
+          No pressure, only consent.
+        </p>
+      </div>
+    );
 
   return (
     <div>
