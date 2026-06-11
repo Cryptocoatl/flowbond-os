@@ -90,6 +90,7 @@ export default function DashboardClient({
   const [crewName, setCrewName] = useState('');
   const [copied, setCopied] = useState('');
   const [msg, setMsg] = useState('');
+  const [confirmErase, setConfirmErase] = useState('');
   const sb = browserClient();
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://astro.flowbond.life';
@@ -134,6 +135,13 @@ export default function DashboardClient({
     );
   const revoke = (h: string) =>
     act(async () => await sb.rpc('revoke_access', { target_handle: h }), `Revoked @${h}`);
+  // Erase a bond — mutual + sticky: they leave your flow both ways, and can only
+  // come back by requesting access (which you approve). Not the same as 'revoke'.
+  const eraseBond = (h: string) =>
+    act(
+      async () => await sb.rpc('erase_bond', { peer_handle: h }),
+      `Bond with @${h} erased. You're both out of each other's flow — they'd need to request to reconnect.`,
+    );
 
   const pendingReqs = requests.filter((r) => r.status === 'pending');
 
@@ -398,10 +406,38 @@ export default function DashboardClient({
           friends.map((f) => (
             <Row key={f.handle}>
               <span>{f.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{f.handle}</span></span>
-              <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">{f.status}</span>
+              {confirmErase === f.handle ? (
+                <span className="flex gap-2 items-center text-[10px]">
+                  <span className="text-[#d9663c]">erase this bond? it&apos;s mutual</span>
+                  <button
+                    onClick={() => { setConfirmErase(''); eraseBond(f.handle); }}
+                    disabled={pending}
+                    className="uppercase tracking-wide bg-[#d9663c]/20 border border-[#d9663c]/50 text-[#e98b63] rounded-full px-2.5 py-0.5"
+                  >
+                    erase
+                  </button>
+                  <button onClick={() => setConfirmErase('')} className="text-[#5b5e72]">keep</button>
+                </span>
+              ) : (
+                <span className="flex gap-3 items-center">
+                  <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">{f.status}</span>
+                  <button
+                    onClick={() => setConfirmErase(f.handle)}
+                    disabled={pending}
+                    className="text-[10px] text-[#d9663c]/60 hover:text-[#d9663c]"
+                  >
+                    erase bond
+                  </button>
+                </span>
+              )}
             </Row>
           ))
         )}
+        <p className="text-[10px] text-[#5b5e72] mt-2">
+          Erasing a bond is mutual and clean: you both leave each other&apos;s dashboards and
+          constellations, shared skies close, and reconnecting takes a fresh request you approve.
+          No drama, no surveillance — just free flow.
+        </p>
       </Section>
     </div>
   );
