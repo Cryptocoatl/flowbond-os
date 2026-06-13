@@ -26,11 +26,7 @@ export default function BondInvite({ compact }: { compact?: boolean }) {
     <button
       onClick={copy}
       disabled={state === 'busy'}
-      className={
-        compact
-          ? 'text-xs bg-[#9a8fe0]/20 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-lg px-3 py-1.5 hover:bg-[#9a8fe0]/30 transition'
-          : 'text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-2 hover:brightness-110 transition'
-      }
+      className={compact ? 'af-btn af-btn-ghost af-btn-sm' : 'af-btn af-btn-gold'}
     >
       {state === 'copied' ? 'Bond link copied ✓' : state === 'error' ? 'Create your chart first' : state === 'busy' ? '…' : '✦ Invite a friend — copy your bond link'}
     </button>
