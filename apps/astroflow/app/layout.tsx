@@ -13,8 +13,18 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'AstroFlow',
-  description: 'Where your stars meet your people — a FlowBond constellation.',
+  title: 'AstralFlow',
+  description: 'Navigate the Invisible — degree-accurate astrology rendered as a living map of how you relate. A FlowBond constellation.',
+  manifest: '/assets/site.webmanifest',
+  icons: {
+    icon: '/assets/favicon.svg',
+    apple: '/assets/icons/apple-touch-180.png',
+  },
+  openGraph: {
+    title: 'AstralFlow',
+    description: 'Navigate the Invisible — the currents between us, made visible.',
+    images: ['/assets/icons/apple-touch-512.png'],
+  },
 };
 
 export const viewport: Viewport = {

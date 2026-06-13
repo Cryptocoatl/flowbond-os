@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'AstroFlow/1.0 (https://flowbond.life; birth-chart geocoding)',
+        'User-Agent': 'AstralFlow/1.0 (https://flowbond.life; birth-chart geocoding)',
         'Accept-Language': 'en',
       },
       next: { revalidate: 86400 },

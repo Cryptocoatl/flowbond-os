@@ -1,5 +1,5 @@
 /**
- * AstroFlow ephemeris — pure-TS astronomy, no external deps.
+ * AstralFlow ephemeris — pure-TS astronomy, no external deps.
  * Ported 1:1 from the Python engine validated against a known birth chart
  * (Sun, Moon, Ascendant, MC, Node and all planets reproduced to the degree).
  *

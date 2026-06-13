@@ -21,7 +21,7 @@ export const PLANET_GLYPH: Record<string, string> = {
   Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
 };
 // Temperament drives crossing "quality" — astrology's classic benefic / malefic
-// split (luminaries read as warm), softened to harmonious / intense for AstroFlow.
+// split (luminaries read as warm), softened to harmonious / intense for AstralFlow.
 const BENEFIC = new Set(['Sun', 'Moon', 'Venus', 'Jupiter']);
 const INTENSE = new Set(['Mars', 'Saturn', 'Pluto']);
 

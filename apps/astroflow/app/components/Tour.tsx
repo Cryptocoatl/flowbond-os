@@ -5,7 +5,7 @@ const STEPS: { glyph: string; title: string; body: string }[] = [
   {
     glyph: '✶',
     title: 'Your chart is a map of currents',
-    body: 'The moment you were born, the sky held a precise arrangement. AstroFlow recomputes it to the degree — Sun, Moon, Rising, every planet, house and aspect — no guessing, no generic horoscopes.',
+    body: 'The moment you were born, the sky held a precise arrangement. AstralFlow recomputes it to the degree — Sun, Moon, Rising, every planet, house and aspect — no guessing, no generic horoscopes.',
   },
   {
     glyph: '☉',
@@ -20,7 +20,7 @@ const STEPS: { glyph: string; title: string; body: string }[] = [
   {
     glyph: '⚭',
     title: 'Combine — and switch the lens',
-    body: 'Weave two or more people together. The same connection reads differently through each lens: friendship, romance, co-living, or business. AstroFlow weights every aspect for the bond you actually care about.',
+    body: 'Weave two or more people together. The same connection reads differently through each lens: friendship, romance, co-living, or business. AstralFlow weights every aspect for the bond you actually care about.',
   },
   {
     glyph: '⊕',
@@ -81,7 +81,7 @@ export default function Tour({ open, onClose }: { open: boolean; onClose: () => 
                 href="/auth/login"
                 className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-1.5"
               >
-                Enter AstroFlow
+                Enter AstralFlow
               </a>
             ) : (
               <button

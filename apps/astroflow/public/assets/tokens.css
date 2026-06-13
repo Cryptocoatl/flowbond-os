@@ -1,0 +1,77 @@
+/* ============================================================
+   AstralFlow — Design Tokens
+   Single source of truth. Import once at the app root.
+   ============================================================ */
+
+:root {
+  /* ---- Core palette ---- */
+  --af-cosmic-midnight: #050816;  /* primary background */
+  --af-deep-cosmos:      #081434;  /* raised surfaces, gradients */
+  --af-aurora-cyan:      #7FE9F6;  /* primary accent, data, glow */
+  --af-astral-violet:    #8F7CFF;  /* secondary accent, CTAs */
+  --af-lunar-white:      #F7F8FA;  /* primary text on dark */
+  --af-solar-gold:       #E7C27A;  /* premium tier only, sparing */
+  --af-periwinkle:       #9FB6FF;  /* gradient mid, soft accents */
+
+  /* ---- Functional ---- */
+  --af-bg:            var(--af-cosmic-midnight);
+  --af-surface:       rgba(255,255,255,0.03);
+  --af-surface-2:     rgba(255,255,255,0.055);
+  --af-border:        rgba(255,255,255,0.10);
+  --af-border-strong: rgba(255,255,255,0.18);
+  --af-text:          var(--af-lunar-white);
+  --af-text-muted:    rgba(247,248,250,0.62);
+  --af-text-faint:    rgba(247,248,250,0.40);
+
+  /* ---- Signature gradients ---- */
+  --af-gradient: linear-gradient(100deg, var(--af-aurora-cyan) 0%, var(--af-periwinkle) 50%, var(--af-astral-violet) 100%);
+  --af-gradient-text: linear-gradient(100deg, #BFF3FB 0%, #C3CCFF 55%, #B6A8FF 100%);
+  --af-gradient-surface: linear-gradient(160deg, #0B142E 0%, #070E27 60%, #050816 100%);
+  --af-glow-violet: radial-gradient(closest-side, rgba(143,124,255,0.45), rgba(143,124,255,0));
+  --af-glow-cyan:   radial-gradient(closest-side, rgba(127,233,246,0.40), rgba(127,233,246,0));
+
+  /* ---- Typography ---- */
+  /* Display = Canela (licensed via Commercial Type). Fraunces is the
+     open-source fallback so dev/staging render correctly before license. */
+  --af-font-display: "Canela", "Fraunces", ui-serif, Georgia, serif;
+  --af-font-body:    "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --af-text-xs:   0.75rem;   /* 12 — captions, labels */
+  --af-text-sm:   0.875rem;  /* 14 — secondary UI */
+  --af-text-base: 1rem;      /* 16 — body */
+  --af-text-lg:   1.25rem;   /* 20 — lead */
+  --af-text-xl:   1.75rem;   /* 28 — section titles (display) */
+  --af-text-2xl:  2.5rem;    /* 40 — page titles (display) */
+  --af-text-3xl:  4rem;      /* 64 — hero (display) */
+
+  --af-tracking-eyebrow: 0.28em; /* uppercase eyebrows */
+  --af-leading-tight: 1.05;
+  --af-leading-body:  1.6;
+
+  /* ---- Space scale (8pt) ---- */
+  --af-space-1: 4px;  --af-space-2: 8px;  --af-space-3: 12px;
+  --af-space-4: 16px; --af-space-5: 24px; --af-space-6: 32px;
+  --af-space-7: 48px; --af-space-8: 64px; --af-space-9: 96px;
+
+  /* ---- Radii ---- */
+  --af-radius-sm: 8px;
+  --af-radius:    14px;
+  --af-radius-lg: 20px;
+  --af-radius-xl: 28px;
+  --af-radius-pill: 999px;
+  --af-radius-icon: 22.5%; /* iOS-style app tile */
+
+  /* ---- Elevation ---- */
+  --af-shadow-card: 0 16px 48px rgba(0,0,0,0.45);
+  --af-shadow-glow: 0 0 40px rgba(143,124,255,0.35);
+
+  /* ---- Motion ---- */
+  --af-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --af-dur-fast: 160ms;
+  --af-dur: 280ms;
+  --af-dur-slow: 600ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --af-dur-fast: 0ms; --af-dur: 0ms; --af-dur-slow: 0ms; }
+}

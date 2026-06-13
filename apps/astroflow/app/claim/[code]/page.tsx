@@ -11,7 +11,7 @@ const EL_COLOR: Record<string, string> = {
 
 // Personalized summons: this person is ALREADY shining in a live collective
 // chart — their planets are in the weave. Claiming gives them the seat for
-// real: an AstroFlow chart of their own (prefilled from this birth data),
+// real: an AstralFlow chart of their own (prefilled from this birth data),
 // membership in every weave that holds them, and their crew revealed.
 export default async function ClaimPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
@@ -32,7 +32,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
       <Center>
         <h1 className="text-2xl font-serif mb-2">Invite not found</h1>
         <p className="text-[#9698a8] mb-5">This invite link is invalid or expired.</p>
-        <Link href="/" className="text-[#b6abec] underline">Go to AstroFlow</Link>
+        <Link href="/" className="text-[#b6abec] underline">Go to AstralFlow</Link>
       </Center>
     );
 

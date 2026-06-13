@@ -3,7 +3,7 @@ import { serverClient } from '../lib/supabase-server';
 import Constellation, { type GhostNode, type SavedMap } from './components/Constellation';
 import Landing from './components/Landing';
 
-// AstroFlow home. Logged-out visitors get the landing experience; signed-in
+// AstralFlow home. Logged-out visitors get the landing experience; signed-in
 // FlowBond identities land directly in their constellation (RLS-filtered):
 // their circle (friends gold-ringed), ghost stars awaiting activation, and
 // their saved constellations to jump back into collectively.

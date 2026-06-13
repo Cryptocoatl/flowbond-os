@@ -68,3 +68,25 @@ html, body { overscroll-behavior-y: none; }
 
 /* Tap feedback: kill the grey iOS tap highlight (we animate scale instead) */
 * { -webkit-tap-highlight-color: transparent; }
+
+/* ── AstralFlow logomark animation (used by <Logo animated />) ───── */
+/* Disabled automatically by the prefers-reduced-motion rule above ([class*='af-']). */
+@keyframes af-logo-spark { 0%, 100% { opacity: 1; } 50% { opacity: 0.72; } }
+.af-logo-orbit { animation: af-orbit 28s linear infinite; transform-box: view-box; transform-origin: 60px 60px; }
+.af-logo-star  { animation: af-logo-spark 4.5s ease-in-out infinite; }
+
+/* ── AstralFlow brand palette (ADDITIVE) ─────────────────────────
+   New brand tokens from the identity pack, added alongside — NOT replacing —
+   the existing tuned --af-bg / --af-text / --af-accent the live UI already uses.
+   Adopt deeper (e.g. cosmic-midnight #050816 background) in a later, deliberate
+   pass; nothing here changes the current look. */
+:root {
+  --af-aurora-cyan:   #7FE9F6;
+  --af-astral-violet: #8F7CFF;
+  --af-periwinkle:    #9FB6FF;
+  --af-lunar-white:   #F7F8FA;
+  --af-solar-gold:    #E7C27A;
+  --af-cosmic-midnight: #050816; /* the brand's intended deep bg — not yet applied */
+  --af-gradient: linear-gradient(100deg, #7FE9F6 0%, #9FB6FF 50%, #8F7CFF 100%);
+  --af-gradient-text: linear-gradient(100deg, #BFF3FB 0%, #C3CCFF 55%, #B6A8FF 100%);
+}
