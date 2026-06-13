@@ -16,14 +16,21 @@ function rowToProfile(r: any): AstroProfile {
   };
 }
 
-/** All profiles the caller is permitted to see (RLS-filtered). */
+/**
+ * Your CIRCLE — the only people your constellation should ever show: yourself,
+ * people you've accepted a bond with, and people who granted you access. Never
+ * strangers. (A blanket `select *` leaked every 'public' profile into everyone's
+ * sky; `my_circle()` scopes it server-side via current_fbid().)
+ */
 export async function visibleProfiles(): Promise<AstroProfile[]> {
   const sb = await serverClient();
-  const { data, error } = await sb.from('profiles').select('*').order('display_name');
+  const { data, error } = await sb.rpc('my_circle');
   // The home/constellation is public-facing; never hard-fail on a read error
   // (e.g. an unauthenticated visitor) — just show an empty sky.
   if (error) return [];
-  return (data ?? []).map(rowToProfile);
+  return ((data ?? []) as any[])
+    .sort((a, b) => (a.display_name ?? '').localeCompare(b.display_name ?? ''))
+    .map(rowToProfile);
 }
 
 export type ProfileLookup =
