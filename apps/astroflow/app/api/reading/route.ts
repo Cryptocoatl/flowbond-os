@@ -20,6 +20,10 @@ const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comp
 const MODEL = process.env.ASTROFLOW_READING_MODEL || 'claude-opus-4-8';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
+// Opus writes deeper but slower — a full unified/collective reading can run
+// 25–40s. Give the function room so readings never time out (Pro allows ≤300s).
+export const maxDuration = 60;
+
 // ── The interpretive framework ───────────────────────────────────────────────
 // This is large on purpose: it is the "loaded with every detail" knowledge base
 // AND it crosses Anthropic's prompt-cache minimum, so it is billed once per
