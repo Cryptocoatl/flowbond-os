@@ -7,6 +7,7 @@ import { panorama } from '../../lib/astro/interpret';
 import { browserClient } from '../../lib/supabase';
 import ReadingPanel from './ReadingPanel';
 import BondInvite from './BondInvite';
+import FindFriends from './FindFriends';
 import Tour from './Tour';
 
 type Mode = 'explore' | 'combine';
@@ -329,18 +330,18 @@ export default function Constellation({
         </div>
       )}
 
-      {/* Add a friend — your bond link brings them into your circle */}
+      {/* Add a friend — find them by handle, or share your bond link */}
       {addFriend && (
-        <div className="mb-4 rounded-2xl border border-[#9a8fe0]/30 bg-[#11131f] p-4 af-rise">
-          <p className="text-sm text-[#cfc8e8] mb-2">
-            Send your astrobond link — when they accept, their star joins your circle here, and you can read
-            and weave each other into any constellation.
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <BondInvite />
-            <span className="text-[11px] text-[#5b5e72]">
-              or chart someone from their birth data on <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
-            </span>
+        <div className="mb-4 rounded-2xl border border-[#9a8fe0]/30 bg-[#11131f] p-4 af-rise space-y-4">
+          <FindFriends />
+          <div className="pt-3 border-t border-white/5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">Or share your bond link</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <BondInvite />
+              <span className="text-[11px] text-[#5b5e72]">
+                or chart someone from their birth data on <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
+              </span>
+            </div>
           </div>
         </div>
       )}

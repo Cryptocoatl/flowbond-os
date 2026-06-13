@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
 import BondInvite from './BondInvite';
+import FindFriends from './FindFriends';
 import ChartedSouls, { type Soul, type OwnedMap } from './ChartedSouls';
 
 interface Me {
@@ -376,11 +377,7 @@ export default function DashboardClient({
           pendingReqs.map((r) => (
             <Row key={r.handle}>
               <span>{r.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{r.handle}</span> wants access</span>
-              <button
-                onClick={() => grant(r.handle)}
-                disabled={pending}
-                className="text-xs bg-[#9a8fe0]/20 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-full px-3 py-1"
-              >
+              <button onClick={() => grant(r.handle)} disabled={pending} className="af-btn af-btn-primary af-btn-sm">
                 Allow
               </button>
             </Row>
@@ -391,9 +388,12 @@ export default function DashboardClient({
       {/* Souls you've charted — keep them, send links, weave them in */}
       <ChartedSouls souls={souls} myMaps={ownedMaps} />
 
-      {/* Friends — and the astrobond link that makes new ones */}
+      {/* Friends — find people by handle, accept requests, weave bonds */}
       <Section title="Friends">
-        <div className="mb-3">
+        <div className="mb-4">
+          <FindFriends />
+        </div>
+        <div className="mb-3 pt-3 border-t border-white/5">
           <BondInvite />
           <p className="text-[10px] text-[#5b5e72] mt-1.5">
             Your personal astrobond link: they log in once with their FBID, create their chart, and you

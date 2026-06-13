@@ -90,3 +90,40 @@ html, body { overscroll-behavior-y: none; }
   --af-gradient: linear-gradient(100deg, #7FE9F6 0%, #9FB6FF 50%, #8F7CFF 100%);
   --af-gradient-text: linear-gradient(100deg, #BFF3FB 0%, #C3CCFF 55%, #B6A8FF 100%);
 }
+
+/* ── Native-app button system (solid, confident — FlowGarden-style) ─────────
+   Use these instead of thin outlined pills for real actions, so AstralFlow
+   feels like a native app. .af-btn-primary = the main action, gold = special,
+   ghost = secondary, danger = destructive. */
+.af-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.7rem 1.1rem; border-radius: 14px; font-size: 0.9rem; font-weight: 600;
+  line-height: 1; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
+  transition: filter 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.af-btn:active { transform: scale(0.97); }
+.af-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.af-btn-sm { padding: 0.45rem 0.8rem; border-radius: 11px; font-size: 0.8rem; }
+
+.af-btn-primary { background: linear-gradient(135deg, #9a8fe0, #7c6fd0); color: #0a0b12; box-shadow: 0 4px 16px rgba(154,143,224,0.28); }
+.af-btn-primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 6px 22px rgba(154,143,224,0.4); }
+
+.af-btn-gold { background: #e3c07a; color: #0a0b12; box-shadow: 0 4px 16px rgba(227,192,122,0.22); }
+.af-btn-gold:hover:not(:disabled) { filter: brightness(1.06); }
+
+.af-btn-ghost { background: rgba(255,255,255,0.04); color: #cfc8e8; border-color: rgba(255,255,255,0.10); }
+.af-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.08); }
+
+.af-btn-danger { background: rgba(217,102,60,0.12); color: #e98b63; border-color: rgba(217,102,60,0.30); }
+.af-btn-danger:hover:not(:disabled) { background: rgba(217,102,60,0.20); }
+
+.af-input {
+  width: 100%; background: #0d0f1a; border: 1px solid #242a3b; border-radius: 12px;
+  padding: 0.7rem 0.9rem; color: #ece9e0; font-size: 0.9rem; outline: none;
+  transition: border-color 0.15s ease;
+}
+.af-input::placeholder { color: #5b5e72; }
+.af-input:focus { border-color: rgba(154,143,224,0.6); }
+
+.af-card { background: #11131f; border: 1px solid #242a3b; border-radius: 18px; }
