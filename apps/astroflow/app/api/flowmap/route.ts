@@ -5,10 +5,12 @@ import { serverClient } from '../../../lib/supabase-server';
 // context). RLS requires owner_fbid = current_fbid(), so we set it server-side.
 export async function POST(req: NextRequest) {
   try {
-    const { name, memberFbids, context } = (await req.json()) as {
+    const { name, memberFbids, context, purpose, intention } = (await req.json()) as {
       name: string;
       memberFbids: string[];
       context?: string;
+      purpose?: string;
+      intention?: string;
     };
     if (!name?.trim() || !Array.isArray(memberFbids) || memberFbids.length < 2)
       return NextResponse.json({ error: 'Need a name and at least two people.' }, { status: 400 });
@@ -25,6 +27,8 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         member_fbids: memberFbids,
         context: context ?? 'friendship',
+        purpose: purpose?.trim() || null,
+        intention: intention?.trim() || null,
       })
       .select('id')
       .single();

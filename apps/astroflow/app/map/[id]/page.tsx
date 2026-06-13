@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { serverClient } from '../../../lib/supabase-server';
 import ReadingPanel from '../../components/ReadingPanel';
 import GuestTools from '../../components/GuestTools';
+import CollectiveContext from '../../components/CollectiveContext';
 import type { Chart } from '../../../lib/astro/types';
 
 interface MapMember {
@@ -46,6 +47,14 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
 
   const members = (map.members ?? []) as MapMember[];
   const guests = (map.guests ?? []) as MapGuest[];
+
+  // Collective context (its saved purpose + intention) + am I the host?
+  const [{ data: ctxRow }, { data: meFbid }] = await Promise.all([
+    sb.from('flow_maps').select('purpose, intention, owner_fbid').eq('id', id).maybeSingle(),
+    sb.rpc('current_fbid'),
+  ]);
+  const ctx = ctxRow as { purpose?: string | null; intention?: string | null; owner_fbid?: string } | null;
+  const isOwner = !!meFbid && ctx?.owner_fbid === meFbid;
 
   // Member charts come through RLS — each viewer sees exactly what each
   // member's visibility + share level allows. Hidden members still appear by
@@ -93,6 +102,14 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         {map.owner_handle ? `woven by @${map.owner_handle} · ` : ''}
         {charts.length} {charts.length === 1 ? 'chart' : 'charts'} shining · {dominant}-leaning weave
       </p>
+
+      <CollectiveContext
+        mapId={map.id}
+        name={map.name}
+        purpose={ctx?.purpose ?? null}
+        intention={ctx?.intention ?? null}
+        isOwner={isOwner}
+      />
       {charts.length >= 2 && (
         <Link
           href={`/atlas/${map.id}`}
