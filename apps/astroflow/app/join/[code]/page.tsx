@@ -26,7 +26,7 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
         <>
           <h1 className="text-2xl font-serif mb-2">Invite not found</h1>
           <p className="text-[#9698a8] mb-5">This invite link is invalid or expired.</p>
-          <Link href="/" className="text-[#b6abec] underline">Go to AstroFlow</Link>
+          <Link href="/" className="text-[#b6abec] underline">Go to AstralFlow</Link>
         </>
       ) : (
         <>

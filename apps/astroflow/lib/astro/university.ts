@@ -1,6 +1,6 @@
 // ── The Astral University ────────────────────────────────────────────────────
 // FlowMe's generic knowledge, written down once and served from code — the
-// collective growing memory of AstroFlow. Reading these costs ZERO tokens:
+// collective growing memory of AstralFlow. Reading these costs ZERO tokens:
 // the living reference loads instantly for everyone, and the same framework
 // is what FlowMe holds (prompt-cached) when it channels a reading.
 

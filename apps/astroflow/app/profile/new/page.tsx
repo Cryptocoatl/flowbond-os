@@ -9,7 +9,7 @@ const TIERS: { v: Visibility; label: string; help: string }[] = [
   { v: 'private', label: 'Only me', help: 'Fully private. No one else can see your chart.' },
   { v: 'specific', label: 'Specific people', help: 'Only FlowBond @handles you grant. They can also request access.' },
   { v: 'friends', label: 'Just friends', help: 'Any accepted FlowBond friend can see your chart.' },
-  { v: 'public', label: 'Everyone on AstroFlow', help: 'Anyone on AstroFlow can view it and add you to collective flow maps.' },
+  { v: 'public', label: 'Everyone on AstralFlow', help: 'Anyone on AstralFlow can view it and add you to collective flow maps.' },
 ];
 
 export default function NewProfile() {
@@ -101,7 +101,7 @@ export default function NewProfile() {
       <label className="text-xs uppercase tracking-wider text-[#5b5e72]">Display name</label>
       <input className={input} value={form.displayName} onChange={(e) => set('displayName', e.target.value)} />
 
-      <label className="text-xs uppercase tracking-wider text-[#5b5e72] mt-4 block">Handle <span className="lowercase tracking-normal text-[#5b5e72]">(optional — your @ on AstroFlow)</span></label>
+      <label className="text-xs uppercase tracking-wider text-[#5b5e72] mt-4 block">Handle <span className="lowercase tracking-normal text-[#5b5e72]">(optional — your @ on AstralFlow)</span></label>
       <div className="flex items-center gap-1">
         <span className="text-[#9698a8]">@</span>
         <input className={input} placeholder="auto from your FlowBond ID if blank" value={form.handle}

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const { data: fbid } = await sb.rpc('current_fbid');
     if (!fbid) return NextResponse.json({ error: 'Not signed in to FlowBond.' }, { status: 401 });
 
-    // AstroFlow owns its own @handle namespace (flowbond_users has none).
+    // AstralFlow owns its own @handle namespace (flowbond_users has none).
     // Use the chosen handle, else derive a default automatically from the
     // email local-part (e.g. cryptocoatl101@… → "cryptocoatl101"), falling back
     // to the public FBID.

@@ -1,0 +1,38 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AstralFlow">
+  <defs>
+    <linearGradient id="afGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7FE9F6"/>
+      <stop offset="0.5" stop-color="#9FB6FF"/>
+      <stop offset="1" stop-color="#8F7CFF"/>
+    </linearGradient>
+    <radialGradient id="afGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#8F7CFF" stop-opacity="0.55"/>
+      <stop offset="0.6" stop-color="#7FE9F6" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#8F7CFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="afStar" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#EAF6FF"/>
+      <stop offset="0.45" stop-color="#7FE9F6"/>
+      <stop offset="1" stop-color="#8F7CFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ambient glow -->
+  <circle cx="60" cy="60" r="40" fill="url(#afGlow)"/>
+
+  <!-- orbit + orb (tilted for celestial perspective) -->
+  <g transform="rotate(-22 60 60)">
+    <ellipse cx="60" cy="60" rx="45" ry="45" fill="none" stroke="url(#afGrad)" stroke-width="1.5" opacity="0.85"/>
+    <circle cx="60" cy="15" r="4.4" fill="#8F7CFF"/>
+    <circle cx="60" cy="15" r="8" fill="url(#afGlow)"/>
+  </g>
+
+  <!-- the flow: a synchronicity wave threading the system -->
+  <path d="M12 80 C 34 66, 48 90, 70 75 S 102 62, 108 68"
+        fill="none" stroke="url(#afGrad)" stroke-width="2.2" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- the star: consciousness / the self -->
+  <path d="M60 22 Q60 60 98 60 Q60 60 60 98 Q60 60 22 60 Q60 60 60 22 Z" fill="url(#afStar)"/>
+  <!-- inner spark highlight -->
+  <path d="M60 40 Q60 60 80 60 Q60 60 60 80 Q60 60 40 60 Q60 60 60 40 Z" fill="#FFFFFF" opacity="0.25"/>
+</svg>

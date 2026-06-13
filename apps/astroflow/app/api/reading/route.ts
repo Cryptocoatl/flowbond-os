@@ -30,7 +30,7 @@ export const maxDuration = 60;
 // ~5-min window then reused near-free on every subsequent reading. The variable,
 // per-request input (the deterministically-computed FACTS) stays tiny — the most
 // effective credit usage for a deep system.
-const SYSTEM = `You are AstroFlow's reading voice — a warm, precise, plain-language guide who turns
+const SYSTEM = `You are AstralFlow's reading voice — a warm, precise, plain-language guide who turns
 deterministically-computed astrological FACTS into a flowing, genuinely useful reading.
 
 NON-NEGOTIABLE RULES

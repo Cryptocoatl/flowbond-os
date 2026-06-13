@@ -17,7 +17,7 @@ const chart = computeChart({
 const near = (got: number, want: number, tol = 0.3) =>
   expect(Math.abs(got - want)).toBeLessThanOrEqual(tol);
 
-describe('AstroFlow engine — validated CDMX reference chart', () => {
+describe('AstralFlow engine — validated CDMX reference chart', () => {
   it('Sun: Aries ~4.33° in House 5', () => {
     expect(chart.bodies.Sun.sign).toBe('Aries');
     near(chart.bodies.Sun.deg, 4.33);

@@ -279,7 +279,7 @@ export default function Constellation({
       {/* ── Top bar: clean on mobile, full actions on desktop ── */}
       <header className="flex items-center justify-between gap-3 mb-3">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-4xl font-serif text-[#ece9e0] leading-tight">AstroFlow</h1>
+          <h1 className="text-2xl sm:text-4xl font-serif text-[#ece9e0] leading-tight">AstralFlow</h1>
           <p className="hidden sm:block text-[#9698a8] text-sm">
             Your stars, woven with your people. Degree-accurate · privacy-first.
           </p>

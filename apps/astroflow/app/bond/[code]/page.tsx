@@ -25,7 +25,7 @@ export default async function BondPage({ params }: { params: Promise<{ code: str
       <Center>
         <h1 className="text-2xl font-serif mb-2">Bond link not found</h1>
         <p className="text-[#9698a8] mb-5">This astrobond link is invalid or expired.</p>
-        <Link href="/" className="text-[#b6abec] underline">Go to AstroFlow</Link>
+        <Link href="/" className="text-[#b6abec] underline">Go to AstralFlow</Link>
       </Center>
     );
 
@@ -64,7 +64,7 @@ export default async function BondPage({ params }: { params: Promise<{ code: str
         {preview.sun} Sun · {preview.moon} Moon{preview.rising ? ` · ${preview.rising} Rising` : ''}
       </p>
       <p className="text-sm text-[#b6b3cf] mb-7 leading-relaxed">
-        @{preview.handle} invites you to see your AstroFlows together. Bonding makes your skies visible
+        @{preview.handle} invites you to see your AstralFlows together. Bonding makes your skies visible
         to each other — you appear in each other&apos;s dashboards, can read what flows between you, and
         weave each other into collective charts: every constellation a little universe with its own
         collective reading. Your chart stays inside FlowBond&apos;s privacy layer, shared only as deep as you choose.

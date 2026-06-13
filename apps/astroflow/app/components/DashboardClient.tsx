@@ -149,7 +149,7 @@ export default function DashboardClient({
     <div className="max-w-3xl mx-auto p-6 text-[#ece9e0]">
       <header className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-serif">Your AstroFlow</h1>
+          <h1 className="text-3xl font-serif">Your AstralFlow</h1>
           {me ? (
             <p className="text-xs font-mono text-[#5b5e72]">@{me.handle} · {me.visibility}</p>
           ) : (

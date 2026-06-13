@@ -68,7 +68,7 @@ export default function Landing() {
 
       {/* nav */}
       <nav className="flex items-center justify-between max-w-6xl mx-auto px-6 py-5">
-        <span className="text-xl font-serif tracking-wide text-[#ece9e0]">AstroFlow</span>
+        <span className="text-xl font-serif tracking-wide text-[#ece9e0]">AstralFlow</span>
         <div className="flex items-center gap-3">
           <button onClick={() => setTour(true)} className="text-sm text-[#9698a8] hover:text-[#cfc8e8]">
             Take the tour
@@ -91,7 +91,7 @@ export default function Landing() {
             , made visible.
           </h1>
           <p className="text-[#b6b3cf] text-lg mt-5 max-w-md leading-relaxed">
-            AstroFlow turns degree-accurate astrology into a living map of how you relate — to people,
+            AstralFlow turns degree-accurate astrology into a living map of how you relate — to people,
             to places, and to the teams, homes and partnerships you&apos;re building. A holistic lens on
             the currents already moving through your life.
           </p>
@@ -132,7 +132,7 @@ export default function Landing() {
       <section className="max-w-3xl mx-auto px-6 py-16 text-center">
         <h2 className="font-serif text-3xl md:text-4xl text-[#ece9e0] mb-4">Not fortune-telling. A language for what&apos;s already moving.</h2>
         <p className="text-[#b6b3cf] text-lg leading-relaxed">
-          Every chart is a pattern of currents — drives, needs, ways of relating. AstroFlow computes
+          Every chart is a pattern of currents — drives, needs, ways of relating. AstralFlow computes
           them precisely and renders them into plain, useful language, so you can understand your
           relationships, design better teams, choose the right homes, and place yourself where your
           energy is genuinely amplified.
@@ -193,7 +193,7 @@ export default function Landing() {
         <h2 className="font-serif text-3xl text-[#ece9e0] mb-4">Privacy enforced in the database — not just hidden.</h2>
         <p className="text-[#b6b3cf] text-lg leading-relaxed">
           Choose who sees your chart: only you, specific people you grant, accepted friends, or everyone
-          on AstroFlow. Every tier is enforced at the data layer, per row. You decide who gets to weave
+          on AstralFlow. Every tier is enforced at the data layer, per row. You decide who gets to weave
           you into their constellation.
         </p>
       </section>
@@ -203,13 +203,13 @@ export default function Landing() {
         <h2 className="font-serif text-4xl md:text-5xl text-[#ece9e0] mb-6">Find your place in the constellation.</h2>
         <div className="flex justify-center gap-3">
           <a href="/auth/login" className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-7 py-3.5 text-lg">
-            Enter AstroFlow
+            Enter AstralFlow
           </a>
           <button onClick={() => setTour(true)} className="rounded-lg px-7 py-3.5 text-lg border border-[#9a8fe0]/40 text-[#cfc8e8]">
             Take the tour
           </button>
         </div>
-        <p className="text-xs text-[#5b5e72] mt-10">AstroFlow — a FlowBond Layer-0 system · one identity, every app.</p>
+        <p className="text-xs text-[#5b5e72] mt-10">AstralFlow — a FlowBond Layer-0 system · one identity, every app.</p>
       </section>
 
       <Tour open={tour} onClose={() => setTour(false)} />

@@ -47,7 +47,7 @@ export async function getProfileByHandle(handle: string): Promise<ProfileLookup>
   const sb = await serverClient();
   const { data } = await sb.from('profiles').select('*').eq('handle', handle).maybeSingle();
   if (data) return { status: 'ok', profile: rowToProfile(data) };
-  // RLS hid the row (or it doesn't exist). AstroFlow owns its own @handle
+  // RLS hid the row (or it doesn't exist). AstralFlow owns its own @handle
   // namespace (flowbond_users has no handle column), so probe astroflow.profiles
   // via a security-definer RPC to tell "private" apart from "missing".
   const { data: exists } = await sb.rpc('handle_exists', { target_handle: handle });

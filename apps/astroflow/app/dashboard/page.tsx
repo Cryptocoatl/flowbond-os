@@ -6,7 +6,7 @@ import BubbleField, { type Bubble } from '../components/BubbleField';
 import FlowMeGuide from '../components/FlowMeGuide';
 import ChartedSouls, { type Soul, type OwnedMap } from '../components/ChartedSouls';
 
-// Your AstroFlow control room: the living bubble constellation of everyone in
+// Your AstralFlow control room: the living bubble constellation of everyone in
 // your flow, collective charts (flow maps), who you allow to see your chart,
 // incoming access requests, and friends. All RLS-backed.
 export default async function Dashboard() {

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PLANETS, SIGNS, HOUSES, ASPECTS, ELEMENTS, TRADITIONS, type Entry } from '../../lib/astro/university';
 
 export const metadata: Metadata = {
-  title: 'Cosmos — the Astral University · AstroFlow',
+  title: 'Cosmos — the Astral University · AstralFlow',
   description: 'Every current of the sky with its glyph, meaning and teaching — the living knowledge behind every FlowMe reading.',
 };
 
@@ -75,7 +75,7 @@ export default function CosmosPage() {
       </Chapter>
 
       <p className="text-[10px] text-[#3f4358] mt-12 leading-relaxed border-t border-white/5 pt-4">
-        This knowledge is part of AstroFlow&apos;s collective memory — served instantly from the flow itself,
+        This knowledge is part of AstralFlow&apos;s collective memory — served instantly from the flow itself,
         no tokens spent. The same framework sits cached behind every FlowMe transmission, so each reading
         only ever pays for your chart&apos;s tiny symbolic facts. Tools for universal coordination, one
         constellation at a time. ✦
