@@ -1,14 +1,12 @@
 import { atLeast, getProfileByHandle, logChartRead, myFbid, myLevelOn, type ShareLevel } from '../../../lib/astro/access';
 import { natalAspects } from '../../../lib/astro/aspects';
 import { personLines } from '../../../lib/astro/interpret';
-import { rankPlaces, LINE_MEANING } from '../../../lib/astro/astrocartography';
+import { powerPlaces } from '../../../lib/astro/acg-geo';
 import { vedicChart, vedicSummary } from '../../../lib/astro/vedic';
 import { mayanSummary } from '../../../lib/astro/mayan';
 import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
-import { serverClient } from '../../../lib/supabase-server';
 import ReadingPanel from '../../components/ReadingPanel';
 import RequestAccess from '../../components/RequestAccess';
-import type { EcosystemPlace } from '../../../lib/astro/types';
 
 const LEVEL_LABEL: Record<ShareLevel, string> = {
   light: 'light share — the essentials',
@@ -42,13 +40,9 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
   const lines = showFull ? personLines(p.chart) : [];
   const aspects = showFull ? natalAspects(p.chart).filter((a) => a.type !== 'quincunx').slice(0, 9) : [];
 
-  let acg: ReturnType<typeof rankPlaces> = [];
-  if (showFull) {
-    const sb = await serverClient();
-    const { data: placeRows } = await sb.from('ecosystem_places').select('*');
-    const places = (placeRows ?? []).map((r: any) => ({ id: r.id, name: r.name, kind: r.kind, lat: r.lat, lng: r.lng })) as EcosystemPlace[];
-    acg = rankPlaces(p.chart, places, 4).slice(0, 5);
-  }
+  // Per-person astrocartography: the real cities THIS chart's own lines run
+  // through — deterministic, so it's identical everywhere it's shown.
+  const acg = showFull ? powerPlaces(p.chart, 5) : [];
 
   // Deep tier opens the other traditions: Vedic, both Mayan counts, Gene Keys.
   const traditions = showDeep
@@ -105,14 +99,15 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
       )}
 
       {acg.length > 0 && (
-        <Section title="Astrocartography · ecosystem activations">
-          {acg.map((r) => (
-            <div key={r.place.id} className="text-sm py-1">
-              <b className="text-[#e3c07a]">{r.place.name}</b>{' '}
-              <span className="text-[#9698a8]">— {r.activations.slice(0, 2).map((a) => `${a.planet} ${a.kind} (${LINE_MEANING[a.kind]})`).join(', ')}</span>
+        <Section title="Astrocartography · your power places">
+          {acg.map((r, i) => (
+            <div key={i} className="text-sm py-1">
+              <b className="text-[#e3c07a]">{r.city}</b> <span className="text-[#5b5e72]">{r.country}</span>{' '}
+              <span className="text-[#9698a8]">— {r.planet} {r.kind} · {r.meaning}</span>{' '}
+              <span className="font-mono text-xs text-[#5b5e72]">{r.orb}°</span>
             </div>
           ))}
-          <p className="text-[10px] text-[#5b5e72] mt-2">Where your angular lines fall near FlowBond places — guidance for retreats, builds &amp; gatherings.</p>
+          <p className="text-[10px] text-[#5b5e72] mt-2">Real places your <i>own</i> angular lines run through — where your chart lights up the map. Computed from your chart alone, the same every time.</p>
         </Section>
       )}
 

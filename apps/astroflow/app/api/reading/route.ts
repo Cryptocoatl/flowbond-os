@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { atLeast, getProfileByHandle, logChartRead, myFbid, myLevelOn } from '../../../lib/astro/access';
 import { synastry } from '../../../lib/astro/aspects';
 import { panorama, interpretAspect } from '../../../lib/astro/interpret';
-import { rankPlaces, LINE_MEANING } from '../../../lib/astro/astrocartography';
+import { LINE_MEANING } from '../../../lib/astro/astrocartography';
+import { powerPlaces } from '../../../lib/astro/acg-geo';
 import { serverClient } from '../../../lib/supabase-server';
 import { getOrBuildFacts, buildFacts, appendMemory, getConstellationCache, setConstellationCache, type ChartFacts } from '../../../lib/astro/memory';
-import type { RelContext, EcosystemPlace, AstroProfile } from '../../../lib/astro/types';
+import type { RelContext, AstroProfile } from '../../../lib/astro/types';
 
 // Which symbolic system(s) to read through. 'comparison' reads the SAME person
 // through two systems side by side (western vs vedic, gene keys vs the chart).
@@ -13,7 +14,10 @@ export type ReadingSystem = 'western' | 'vedic' | 'mayan' | 'genekeys' | 'compar
 const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comparison', 'unified'];
 
 // Model is env-configurable; see https://docs.claude.com/en/docs/about-claude/models
-const MODEL = process.env.ASTROFLOW_READING_MODEL || 'claude-sonnet-4-6';
+// Default to the deepest model — readings are reflective guidance people may
+// weigh real decisions against, so interpretive depth matters. (Astronomical
+// precision is the deterministic engine, not the model; this is the wisdom layer.)
+const MODEL = process.env.ASTROFLOW_READING_MODEL || 'claude-opus-4-8';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
 // ── The interpretive framework ───────────────────────────────────────────────
@@ -82,10 +86,11 @@ OTHER TRADITIONS — when the facts include them, read them on their own terms:
 
 ASTROCARTOGRAPHY (positioning into real places)
 Each person's angular lines activate places: MC = ${LINE_MEANING.MC}; IC = ${LINE_MEANING.IC};
-AC = ${LINE_MEANING.AC}; DC = ${LINE_MEANING.DC}. A tight orb near a FlowBond place means that
-location strongly amplifies that planet's energy for them — guidance for where to retreat, build,
-launch, or gather. For a group, the best shared place is where the most members are positively
-activated.
+AC = ${LINE_MEANING.AC}; DC = ${LINE_MEANING.DC}. The powerPlaces are the REAL cities this person's
+OWN lines run through (a tight orb = strongly amplified) — speak to those actual places by name as
+guidance for where to live, retreat, build, launch, or gather. They are unique to this chart, never
+a generic list. For a group, the best shared place is a real city where the most members are
+positively activated.
 
 WHEN THE PERSON BRINGS A QUESTION
 Sometimes the facts include a QUESTION the person is holding — a decision, a tension, a dream.
@@ -268,24 +273,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { data: placeRows } = await sb.from('ecosystem_places').select('*');
-    const places = (placeRows ?? []).map((r: any) => ({
-      id: r.id,
-      name: r.name,
-      kind: r.kind,
-      lat: r.lat,
-      lng: r.lng,
-    })) as EcosystemPlace[];
-
+    // Per-person astrocartography: the real cities THIS chart's own angular lines
+    // run through — deterministic and unique to them, not a fixed place list.
     const acgFor = (p: AstroProfile) =>
-      rankPlaces(p.chart, places, 4)
-        .slice(0, 4)
-        .map((r) => ({
-          place: r.place.name,
-          lines: r.activations
-            .slice(0, 2)
-            .map((a) => `${a.planet}-${a.kind} (${LINE_MEANING[a.kind]}, ${a.orbDeg}°)`),
-        }));
+      powerPlaces(p.chart, 4).map((r) => ({
+        place: `${r.city}, ${r.country}`,
+        city: r.city,
+        lines: [`${r.planet}-${r.kind} (${r.meaning}, ${r.orb}°, ${r.quality})`],
+      }));
 
     let facts: unknown = null;
     let ask = '';
@@ -318,12 +313,12 @@ export async function POST(req: NextRequest) {
         natalAspects: bundle.aspects,
         elements: bundle.elements,
         modalities: bundle.modalities,
-        ecosystemActivations: acgFor(p),
+        powerPlaces: acgFor(p),
       };
 
       if (system === 'western') {
         facts = western;
-        ask = `Write a "self" reading for ${firstName(p)}. Open with who they are at core (the big three), weave in the most defining placements and aspects (the gifts and the growth edges), note their elemental balance, and close with where in the FlowBond ecosystem their chart is most activated and what that suggests for retreat, building, or gathering.`;
+        ask = `Write a "self" reading for ${firstName(p)}. Open with who they are at core (the big three), weave in the most defining placements and aspects (the gifts and the growth edges), note their elemental balance, and close with their astrocartography power places — the real cities their own angular lines run through — and what each suggests (visibility/calling, home/roots, vitality/fresh starts, or relationships) for where to live, build, retreat, or gather.`;
       } else if (system === 'vedic') {
         facts = {
           name: firstName(p),
@@ -395,12 +390,15 @@ export async function POST(req: NextRequest) {
         }
       const groupScore = Math.round(pairs.reduce((s, p) => s + p.score, 0) / pairs.length);
       // Best shared place: sum each member's tightest activation per place.
+      // Real cities where the GROUP's lines converge: sum each member's tightness
+      // at every city their own lines touch — the warmer + more shared, the higher.
       const placeFit: Record<string, { score: number; lines: Set<string> }> = {};
       for (const p of profiles)
-        for (const r of rankPlaces(p.chart, places, 5)) {
-          const f = (placeFit[r.place.name] ??= { score: 0, lines: new Set() });
-          f.score += 5 - (r.activations[0]?.orbDeg ?? 5);
-          r.activations.slice(0, 1).forEach((a) => f.lines.add(`${a.planet}-${a.kind}`));
+        for (const r of powerPlaces(p.chart, 6)) {
+          const key = `${r.city}, ${r.country}`;
+          const f = (placeFit[key] ??= { score: 0, lines: new Set() });
+          f.score += Math.max(0, 2 - r.orb) * (r.quality === 'harmonious' ? 1.5 : 1);
+          f.lines.add(`${r.planet}-${r.kind}`);
         }
       const bestPlaces = Object.entries(placeFit)
         .sort((x, y) => y[1].score - x[1].score)

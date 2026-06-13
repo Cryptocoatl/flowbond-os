@@ -16,7 +16,7 @@ import { personLines } from './interpret';
 import { vedicChart, vedicSummary, vimshottariDasha } from './vedic';
 import { mayanSummary } from './mayan';
 import { geneKeys, geneKeysSummary } from './genekeys';
-import { strongestSpot } from './acg-geo';
+import { strongestSpot, powerPlaces } from './acg-geo';
 import type { Chart } from './types';
 
 export interface ChartFacts {
@@ -29,6 +29,7 @@ export interface ChartFacts {
   mayan: ReturnType<typeof mayanSummary>;
   geneKeys: ReturnType<typeof geneKeysSummary>;
   strongestSpot: ReturnType<typeof strongestSpot>;
+  powerPlaces: ReturnType<typeof powerPlaces>;
 }
 
 /** Stable, cheap hash of the chart — changes iff a placement/angle/jd changes. */
@@ -53,6 +54,7 @@ export function buildFacts(chart: Chart, birthDate: string): ChartFacts {
     mayan: mayanSummary(chart.jd, birthDate),
     geneKeys: geneKeysSummary(geneKeys(chart)),
     strongestSpot: strongestSpot(chart),
+    powerPlaces: powerPlaces(chart),
   };
 }
 
