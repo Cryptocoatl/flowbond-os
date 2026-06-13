@@ -7,7 +7,7 @@
  * Pure & server-safe (no DOM, no map lib) so it's unit-testable and runs in the
  * server component before handing plain JSON to the MapLibre client.
  */
-import { astrocartography } from './astrocartography';
+import { astrocartography, LINE_MEANING } from './astrocartography';
 import type { AcgLine, Chart, EcosystemPlace } from './types';
 
 // ── planet identity: colour + glyph + temperament ───────────────────────────
@@ -279,6 +279,47 @@ export function strongestSpot(chart: Chart): PowerSpot | null {
     }
   }
   return best;
+}
+
+export interface PowerPlace {
+  city: string; country: string; lat: number; lng: number;
+  planet: string; kind: AcgLine['kind']; meaning: string;
+  orb: number;                              // ° the city sits off the line (tighter = stronger)
+  quality: 'harmonious' | 'intense' | 'neutral';
+}
+
+/**
+ * A person's OWN astrocartography power places — the real cities their angular
+ * lines actually run through, ranked by how strongly (benefic + tightest first).
+ * Pure & deterministic: the same chart always yields the same places, so a
+ * person's "where the map lights up for me" is consistent everywhere it's shown
+ * and can be cached on their profile. This is per-person — NOT snapped to a
+ * fixed ecosystem list — so two different charts give two different maps.
+ */
+export function powerPlaces(chart: Chart, max = 6): PowerPlace[] {
+  const hits: PowerPlace[] = [];
+  for (const line of astrocartography(chart)) {
+    const quality: PowerPlace['quality'] =
+      BENEFIC.has(line.planet) ? 'harmonious' : INTENSE.has(line.planet) ? 'intense' : 'neutral';
+    for (const h of citiesAlong(polylinesOf(line), CITIES, 2.0, 6)) {
+      hits.push({
+        city: h.city.name, country: h.city.country, lat: h.city.lat, lng: h.city.lng,
+        planet: line.planet, kind: line.kind, meaning: LINE_MEANING[line.kind],
+        orb: h.orb, quality,
+      });
+    }
+  }
+  // One entry per city — keep its tightest line, preferring benefic over intense.
+  const rank = { harmonious: 0, neutral: 1, intense: 2 } as const;
+  const byCity = new Map<string, PowerPlace>();
+  for (const h of hits) {
+    const cur = byCity.get(h.city);
+    if (!cur || rank[h.quality] < rank[cur.quality] || (h.quality === cur.quality && h.orb < cur.orb))
+      byCity.set(h.city, h);
+  }
+  return [...byCity.values()]
+    .sort((a, b) => rank[a.quality] - rank[b.quality] || a.orb - b.orb || b.lat - a.lat)
+    .slice(0, max);
 }
 
 /** Power spots as GeoJSON points (one per person, optionally tinted per person). */
