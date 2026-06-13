@@ -73,6 +73,8 @@ export default function Constellation({
   const [activeGhost, setActiveGhost] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
   const [mapName, setMapName] = useState('');
+  const [mapPurpose, setMapPurpose] = useState('');
+  const [mapIntention, setMapIntention] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
   const [tour, setTour] = useState(false);
 
@@ -146,11 +148,11 @@ export default function Constellation({
     const res = await fetch('/api/flowmap', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: mapName, memberFbids: selected, context }),
+      body: JSON.stringify({ name: mapName, memberFbids: selected, context, purpose: mapPurpose, intention: mapIntention }),
     });
     const json = await res.json();
     setSaveMsg(res.ok ? 'Flow map saved ✦' : json.error || 'Failed to save');
-    if (res.ok) setMapName('');
+    if (res.ok) { setMapName(''); setMapPurpose(''); setMapIntention(''); }
   }
 
   const activeProfile = active ? byFbid[active] : null;
@@ -248,25 +250,32 @@ export default function Constellation({
               )}
               {pairPanorama && <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>}
               {selectedProfiles.length >= 2 && <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />}
-              <div className="mt-5 pt-4 border-t border-white/5">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">Save as collective flow map</label>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    value={mapName}
-                    onChange={(e) => setMapName(e.target.value)}
-                    placeholder="e.g. Tulum retreat crew"
-                    className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-xl px-3 py-2.5 text-sm text-[#ece9e0]"
-                  />
-                  <button
-                    onClick={saveFlowMap}
-                    disabled={!mapName.trim() || !myFbid}
-                    className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-4 disabled:opacity-50 active:scale-95 transition"
-                  >
-                    Save
-                  </button>
-                </div>
-                {!myFbid && <p className="text-[10px] text-[#d9883c] mt-1">Sign in to save flow maps.</p>}
-                {saveMsg && <p className="text-xs text-[#7fd1a8] mt-2">{saveMsg}</p>}
+              <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
+                <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">Save as a constellation</label>
+                <input
+                  value={mapName}
+                  onChange={(e) => setMapName(e.target.value)}
+                  placeholder="Name it — e.g. Tulum retreat crew"
+                  className="af-input"
+                />
+                <select value={mapPurpose} onChange={(e) => setMapPurpose(e.target.value)} className="af-input">
+                  <option value="">What is this group? (optional)</option>
+                  {['team / project', 'family', 'romance', 'co-living / house', 'friends', 'creative collab', 'dynamic mix'].map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+                <textarea
+                  value={mapIntention}
+                  onChange={(e) => setMapIntention(e.target.value)}
+                  placeholder="Why this constellation? What do you want to understand together? (focuses the reading)"
+                  rows={2}
+                  className="af-input resize-none"
+                />
+                <button onClick={saveFlowMap} disabled={!mapName.trim() || !myFbid} className="af-btn af-btn-gold w-full">
+                  ✦ Save constellation
+                </button>
+                {!myFbid && <p className="text-[10px] text-[#d9883c]">Sign in to save constellations.</p>}
+                {saveMsg && <p className="text-xs text-[#7fd1a8]">{saveMsg}</p>}
               </div>
             </>
           )}

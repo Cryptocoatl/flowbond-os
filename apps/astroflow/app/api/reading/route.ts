@@ -194,12 +194,19 @@ export async function POST(req: NextRequest) {
     const sb = await serverClient();
     const me = await myFbid();
     let profiles: AstroProfile[];
+    let collectivePurpose: string | null = null;
+    let collectiveIntention: string | null = null;
 
     if (mapId) {
       // Collective chart: members render at the depth the caller is allowed
       // (standard+ to be interpreted); guests were supplied by the map owner
       // and carry no privacy holder, so they always read.
       const { data: map } = await sb.rpc('get_flow_map', { map_id: mapId });
+      // The collective's saved purpose + intention (why this group exists) so the
+      // reading speaks to what they actually want to understand together.
+      const { data: ctxRow } = await sb.from('flow_maps').select('purpose, intention').eq('id', mapId).maybeSingle();
+      collectivePurpose = (ctxRow as { purpose?: string | null } | null)?.purpose ?? null;
+      collectiveIntention = (ctxRow as { intention?: string | null } | null)?.intention ?? null;
       if (!map) {
         return NextResponse.json(
           { error: 'Collective chart not found (or you are not woven into it).' },
@@ -417,10 +424,14 @@ export async function POST(req: NextRequest) {
         pairwise: pairs,
         bigThree: profiles.map(bigThree),
         bestSharedPlaces: bestPlaces,
+        purpose: collectivePurpose,
+        intention: collectiveIntention,
       };
       ask = `Write a collective ${context} reading for this group (${profiles
         .map(firstName)
-        .join(', ')}). Describe the group's overall dynamic, name the strongest bond and the one that needs the most care, and — using the astrocartography fit — recommend where this crew should base, build, or gather. This is for positioning a real ${
+        .join(', ')}).${collectivePurpose ? ` This constellation exists as: ${collectivePurpose}.` : ''}${
+        collectiveIntention ? ` What they want to understand together: "${collectiveIntention}". Center the whole reading on that.` : ''
+      } Describe the group's overall dynamic, name the strongest bond and the one that needs the most care, and — using the astrocartography fit — recommend where this crew should base, build, or gather. This is for positioning a real ${
         context === 'business' ? 'project/partnership' : context === 'coliving' ? 'shared living space' : 'group'
       }.`;
       maxTokens = 1100;
