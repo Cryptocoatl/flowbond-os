@@ -52,6 +52,42 @@ export default function NewProfile() {
       .catch(() => {});
   }, []);
 
+  // Editing your OWN chart: load your saved profile so the form is never blank
+  // again (you should never have to re-enter your birth data). Skipped when a
+  // ?claim= code is present (that flow prefills the guest's data instead).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('claim')) return;
+    (async () => {
+      try {
+        const sb = browserClient();
+        const { data: fbid } = await sb.rpc('current_fbid');
+        if (!fbid) return;
+        const { data: p } = await sb
+          .from('profiles')
+          .select('handle, display_name, avatar_color, birth_date, birth_time, birth_tz, birth_lat, birth_lng, birth_place, visibility')
+          .eq('fbid', fbid as string)
+          .maybeSingle();
+        if (!p) return;
+        setForm((f) => ({
+          ...f,
+          displayName: (p.display_name as string) ?? f.displayName,
+          handle: (p.handle as string) ?? f.handle,
+          date: (p.birth_date as string) ?? f.date,
+          time: p.birth_time ? String(p.birth_time).slice(0, 5) : f.time,
+          unknownTime: !p.birth_time,
+          place: (p.birth_place as string) ?? f.place,
+          tz: (p.birth_tz as string) ?? f.tz,
+          lat: p.birth_lat != null ? String(p.birth_lat) : f.lat,
+          lng: p.birth_lng != null ? String(p.birth_lng) : f.lng,
+          avatarColor: (p.avatar_color as string) ?? f.avatarColor,
+        }));
+        if (p.visibility) setVisibility(p.visibility as Visibility);
+      } catch {
+        /* no existing profile / not signed in — fresh form */
+      }
+    })();
+  }, []);
+
   async function submit() {
     setErr(''); setBusy(true);
     try {
