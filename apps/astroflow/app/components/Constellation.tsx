@@ -182,11 +182,8 @@ export default function Constellation({
             {activeProfile.chart.bodies.Sun.sign} Sun · {activeProfile.chart.bodies.Moon.sign} Moon
             {activeProfile.chart.asc ? ` · ${activeProfile.chart.asc.sign} Rising` : ''}
           </p>
-          <Link
-            href={`/chart/${activeProfile.handle}`}
-            className="inline-block mt-4 text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-xl px-4 py-2.5 active:scale-95 transition"
-          >
-            Open full chart →
+          <Link href={`/chart/${activeProfile.handle}`} className="af-btn af-btn-primary w-full mt-4">
+            ✦ Open full resume — chart, systems &amp; map
           </Link>
           <ReadingPanel handles={[activeProfile.handle]} />
         </div>

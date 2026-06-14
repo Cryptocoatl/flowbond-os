@@ -1,7 +1,9 @@
 import { atLeast, getProfileByHandle, logChartRead, myFbid, myLevelOn, type ShareLevel } from '../../../lib/astro/access';
 import { natalAspects } from '../../../lib/astro/aspects';
 import { personLines } from '../../../lib/astro/interpret';
-import { powerPlaces } from '../../../lib/astro/acg-geo';
+import { powerPlaces, linesToGeoJSON, spotsToGeoJSON, PLANET_COLOR, PLANET_GLYPH } from '../../../lib/astro/acg-geo';
+import { astrocartography } from '../../../lib/astro/astrocartography';
+import AcgMap from '../../components/AcgMap';
 import { vedicChart, vedicSummary } from '../../../lib/astro/vedic';
 import { mayanSummary } from '../../../lib/astro/mayan';
 import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
@@ -43,6 +45,13 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
   // Per-person astrocartography: the real cities THIS chart's own lines run
   // through — deterministic, so it's identical everywhere it's shown.
   const acg = showFull ? powerPlaces(p.chart, 5) : [];
+
+  // The living map, built from THIS chart's own lines — embedded in the resume.
+  const firstName = (p.displayName || p.handle || 'You').trim().split(/\s+/)[0];
+  const mapGeojson = showFull ? linesToGeoJSON(firstName, astrocartography(p.chart)) : null;
+  const mapPlaces = showFull && acg.length ? spotsToGeoJSON(acg as never) : undefined;
+  const MAP_PLANETS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  const mapLegend = MAP_PLANETS.map((pl) => ({ label: `${PLANET_GLYPH[pl]} ${pl}`, color: PLANET_COLOR[pl] }));
 
   // Deep tier opens the other traditions: Vedic, both Mayan counts, Gene Keys.
   const traditions = showDeep
@@ -108,6 +117,16 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
             </div>
           ))}
           <p className="text-[10px] text-[#5b5e72] mt-2">Real places your <i>own</i> angular lines run through — where your chart lights up the map. Computed from your chart alone, the same every time.</p>
+        </Section>
+      )}
+
+      {showFull && mapGeojson && (
+        <Section title="Astrocartography · your living map">
+          <p className="text-[10px] text-[#5b5e72] mb-2">
+            Every planet traces four lines across the earth — tap a line to read it, filter by planet, angle
+            or a theme (Love, Career, Home…), and zoom into any region.
+          </p>
+          <AcgMap layers={[{ id: 'me', geojson: mapGeojson }]} places={mapPlaces} legend={mapLegend} />
         </Section>
       )}
 
