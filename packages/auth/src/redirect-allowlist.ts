@@ -19,12 +19,15 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://xelva.live', path: '/auth/callback' },
   { origin: 'https://dev.flowbond.life', path: '/auth/callback' }, // ops
   { origin: 'https://fbid.flowbond.life', path: '/auth/callback' }, // hub's own login (dashboard)
-  { origin: 'https://v3.flowme.one', path: '/auth/callback' },      // flowstudio (legacy)
-  { origin: 'https://flowstudio.flowme.one', path: '/auth/callback' }, // flowstudio
+  { origin: 'https://studio.flowme.one', path: '/auth/callback' },    // flowstudio (canonical)
+  { origin: 'https://flowstudio.flowme.one', path: '/auth/callback' }, // flowstudio (alias)
+  { origin: 'https://v3.flowme.one', path: '/auth/callback' },        // flowstudio (legacy)
   { origin: 'https://flowme.one', path: '/auth/callback' },         // flowme profiles
   { origin: 'https://www.flowme.one', path: '/auth/callback' },
   { origin: 'https://claudia-flowbond.vercel.app', path: '/auth/callback' }, // claudia (La Guardiana)
   { origin: 'https://claudia-sable.vercel.app', path: '/auth/callback' },    // claudia (prod alias)
+  { origin: 'https://claudiaflow.life', path: '/auth/callback' },            // claudia (custom domain)
+  { origin: 'https://www.claudiaflow.life', path: '/auth/callback' },        // claudia (www)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
@@ -33,6 +36,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3003', path: '/auth/callback' },     // ops
   { origin: 'http://localhost:3030', path: '/auth/callback' },     // danz
   { origin: 'http://localhost:3013', path: '/auth/callback' },     // flow3
+  { origin: 'http://localhost:3021', path: '/auth/callback' },     // claudia (La Guardiana)
   { origin: 'http://localhost:3000', path: '/auth/callback' },     // flowme profiles
 ])
 

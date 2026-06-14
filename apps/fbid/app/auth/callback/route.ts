@@ -16,6 +16,8 @@ const APP_CALLBACKS: Record<string, string> = {
   danz: 'https://danz-now.vercel.app/auth/callback',
   flowbond: 'https://flowbond.life/api/auth/callback',
   ops: 'https://dev.flowbond.life/auth/callback',
+  flow3: 'https://studio.flowme.one/auth/callback',
+  claudia: 'https://claudiaflow.life/auth/callback',
 }
 
 /**

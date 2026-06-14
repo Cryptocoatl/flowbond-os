@@ -17,6 +17,9 @@ const APP_LABELS: Record<string, string> = {
   deck: 'FlowBond Deck',
   ops: 'FlowBond Ops',
   flowme: 'FlowMe',
+  flow3: 'FlowStudio',
+  flowstudio: 'FlowStudio',
+  claudia: 'ClaudIA',
 }
 
 export default function LoginClient() {

@@ -9,11 +9,13 @@ import ConnectedAccounts from './ConnectedAccounts'
 
 // FBID-integrated apps → seamless SSO via the hub handoff (one-time token, no re-login).
 const APPS: { slug: string; label: string; desc: string; callback: string; glyph: string }[] = [
+  { slug: 'flow3', label: 'FlowStudio', desc: 'The creation engine', callback: 'https://studio.flowme.one/auth/callback', glyph: '🎬' },
+  { slug: 'flowme', label: 'FlowMe', desc: 'Your living profile', callback: 'https://flowme.one/auth/callback', glyph: '🎭' },
   { slug: 'astroflow', label: 'AstroFlow', desc: 'Your cosmic map', callback: 'https://astro.flowbond.life/auth/callback', glyph: '🪐' },
   { slug: 'flowgarden', label: 'FlowGarden', desc: 'Garden intelligence', callback: 'https://flowgarden.life/auth/callback', glyph: '🌱' },
   { slug: 'danz', label: 'DANZ.NOW', desc: 'Dance & connection', callback: 'https://danz-now.vercel.app/auth/callback', glyph: '💃' },
+  { slug: 'claudia', label: 'ClaudIA', desc: 'Your zero-knowledge guardian', callback: 'https://claudiaflow.life/auth/callback', glyph: '🛡️' },
   { slug: 'flowbond', label: 'FlowBond', desc: 'Your identity home', callback: 'https://flowbond.life/api/auth/callback', glyph: '🔮' },
-  { slug: 'flowme', label: 'FlowMe', desc: 'Your living profile', callback: 'https://flowme.one/auth/callback', glyph: '🎭' },
 ]
 // Apps not yet on FBID → plain links (open their own login).
 const EXTERNAL: { label: string; desc: string; href: string; glyph: string }[] = [
