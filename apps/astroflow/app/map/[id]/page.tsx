@@ -3,6 +3,7 @@ import { serverClient } from '../../../lib/supabase-server';
 import ReadingPanel from '../../components/ReadingPanel';
 import GuestTools from '../../components/GuestTools';
 import CollectiveContext from '../../components/CollectiveContext';
+import AddToConstellation from '../../components/AddToConstellation';
 import type { Chart } from '../../../lib/astro/types';
 
 interface MapMember {
@@ -110,6 +111,10 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         intention={ctx?.intention ?? null}
         isOwner={isOwner}
       />
+
+      {isOwner && (
+        <AddToConstellation mapId={map.id} existingHandles={handles} />
+      )}
       {charts.length >= 2 && (
         <Link
           href={`/atlas/${map.id}`}
