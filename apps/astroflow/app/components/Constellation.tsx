@@ -282,7 +282,7 @@ export default function Constellation({
   );
 
   return (
-    <div className="relative mx-auto max-w-5xl px-4 pt-3 pb-44 sm:pb-8">
+    <div className="relative mx-auto max-w-5xl px-4 pt-3 pb-6 sm:pb-8">
       {/* ── Top bar: clean on mobile, full actions on desktop ── */}
       <header className="flex items-center justify-between gap-3 mb-3">
         <div className="min-w-0">
@@ -471,7 +471,7 @@ export default function Constellation({
             // desktop column
             'sm:static sm:max-h-none sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent sm:backdrop-blur-0 sm:shadow-none sm:translate-y-0'
           }
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          style={{ paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}
         >
           {/* grab handle + close (mobile only) */}
           <div className="sm:hidden sticky top-0 z-10 flex items-center justify-between px-4 pt-2.5 pb-1.5 bg-[#0c0e1a]/95 backdrop-blur-md">
