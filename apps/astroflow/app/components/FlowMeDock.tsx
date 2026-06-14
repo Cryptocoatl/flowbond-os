@@ -43,7 +43,7 @@ export default function FlowMeDock() {
       {/* floating launcher */}
       {!open && (
         <button onClick={() => setOpen(true)} aria-label="Ask FlowMe"
-          className="fixed z-[60] bottom-4 right-4 w-14 h-14 rounded-full grid place-items-center shadow-xl active:scale-95 transition"
+          className="fixed z-[60] bottom-[78px] right-4 sm:bottom-4 w-14 h-14 rounded-full grid place-items-center shadow-xl active:scale-95 transition"
           style={{ background: 'radial-gradient(circle at 35% 30%, #b6abec, #6f5fd0)', boxShadow: '0 0 18px 2px rgba(154,143,224,0.55)' }}>
           <span className="text-2xl" style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.5))' }}>✦</span>
         </button>

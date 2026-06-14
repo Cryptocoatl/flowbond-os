@@ -49,6 +49,7 @@ export default function ReadingPanel({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed');
       setReading(json.reading);
+      if (q) setQuestion(''); // clear the prompt so the conversation can flow on
     } catch (e: any) {
       setErr(e.message);
     } finally {
@@ -102,26 +103,8 @@ export default function ReadingPanel({
               </div>
             )}
           </div>
-          {!reading && !busy && (
-            <button onClick={() => run(context)}
-              className="text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2 hover:bg-[#9a8fe0]/25 transition">
-              ✦ Channel the {mapId ? 'collective' : pair ? 'compatibility' : 'personal'} reading
-            </button>
-          )}
-          {busy && (
-            <p className="text-[#9698a8] text-sm animate-pulse">
-              FlowMe is reading the sky{mapId ? ' you share' : ''}…
-            </p>
-          )}
-          {err && <p className="text-[#d9663c] text-sm">{err}</p>}
-          {reading && (
-            <p className="font-serif text-[15px] leading-relaxed text-[#ece9e0] whitespace-pre-wrap" style={{ animation: 'af-rise 0.6s ease-out' }}>
-              {reading}
-            </p>
-          )}
-
-          {/* Ask the stars — reflect a real decision through the chart(s) */}
-          <div className="mt-4 pt-3 border-t border-white/5 flex gap-2">
+          {/* The writing — ask the stars; the answer always appears BELOW it */}
+          <div className="flex gap-2">
             <input
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -138,7 +121,26 @@ export default function ReadingPanel({
               ✦ Ask
             </button>
           </div>
-          <p className="text-[10px] text-[#5b5e72] mt-1.5">
+          {!reading && !busy && (
+            <button onClick={() => run(context)}
+              className="text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2 mt-3 hover:bg-[#9a8fe0]/25 transition">
+              ✦ Channel the {mapId ? 'collective' : pair ? 'compatibility' : 'personal'} reading
+            </button>
+          )}
+
+          {/* The answer — under the writing */}
+          {busy && (
+            <p className="text-[#9698a8] text-sm animate-pulse mt-3">
+              FlowMe is reading the sky{mapId ? ' you share' : ''}…
+            </p>
+          )}
+          {err && <p className="text-[#d9663c] text-sm mt-3">{err}</p>}
+          {reading && (
+            <p className="font-serif text-[15px] leading-relaxed text-[#ece9e0] whitespace-pre-wrap mt-3" style={{ animation: 'af-rise 0.6s ease-out' }}>
+              {reading}
+            </p>
+          )}
+          <p className="text-[10px] text-[#5b5e72] mt-2">
             FlowMe reflects your question through the symbols — a mirror for star-aligned decisions, never a verdict.
           </p>
 

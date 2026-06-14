@@ -127,3 +127,8 @@ html, body { overscroll-behavior-y: none; }
 .af-input:focus { border-color: rgba(154,143,224,0.6); }
 
 .af-card { background: #11131f; border: 1px solid #242a3b; border-radius: 18px; }
+
+/* Make room for the mobile bottom tab bar so nothing hides behind it. */
+@media (max-width: 639px) {
+  .af-has-bottom-nav { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+}

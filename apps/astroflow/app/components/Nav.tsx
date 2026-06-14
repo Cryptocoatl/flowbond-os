@@ -32,7 +32,7 @@ export default async function Nav() {
           <Logo size={24} />
           <span className="font-serif tracking-wide">AstralFlow</span>
         </Link>
-        <div className="flex items-center gap-4 text-xs uppercase tracking-[0.14em] ml-auto">
+        <div className="hidden sm:flex items-center gap-4 text-xs uppercase tracking-[0.14em] ml-auto">
           <Link href="/" className="hover:text-[#cfc8e8] transition">Constellation</Link>
           <Link href="/dashboard" className="hover:text-[#cfc8e8] transition">Dashboard</Link>
           <Link href="/atlas" className="hover:text-[#cfc8e8] transition">Atlas</Link>
