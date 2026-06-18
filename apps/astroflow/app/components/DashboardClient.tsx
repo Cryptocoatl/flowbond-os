@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
 import BondInvite from './BondInvite';
 import FindFriends from './FindFriends';
+import QrPanel from './QrPanel';
 import ChartedSouls, { type Soul, type OwnedMap } from './ChartedSouls';
 
 interface Me {
@@ -224,6 +225,13 @@ export default function DashboardClient({
                   >
                     {copied === c.invite_code ? 'Copied ✓' : 'Copy invite'}
                   </button>
+                </div>
+                <div className="mt-2">
+                  <QrPanel
+                    url={inviteUrl(c.invite_code)}
+                    label="Show join QR"
+                    caption={`Scan to join “${c.name}” — sign in and your charts read together collectively.`}
+                  />
                 </div>
               </div>
             ))}
