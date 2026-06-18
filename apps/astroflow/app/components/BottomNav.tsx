@@ -1,6 +1,8 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { browserClient } from '../../lib/supabase';
 
 // Native-style bottom tab bar (mobile only). The always-there way to move
 // around AstralFlow — your sky, the map, the currents, the cosmos, and you.
@@ -37,6 +39,17 @@ export default function BottomNav() {
   const path = usePathname() || '/';
   const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 
+  // Pending bond requests → a badge on the "You" tab so it's never missed.
+  const [bondReqs, setBondReqs] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data } = await browserClient().rpc('my_incoming_bond_requests');
+      if (alive) setBondReqs(Array.isArray(data) ? data.length : 0);
+    })();
+    return () => { alive = false; };
+  }, [path]);
+
   // Hidden on the auth screens so it doesn't crowd the login flow.
   if (path.startsWith('/auth') || path.startsWith('/bond') || path.startsWith('/claim') || path.startsWith('/join')) return null;
 
@@ -54,7 +67,14 @@ export default function BottomNav() {
               href={t.href}
               className="flex-1 flex flex-col items-center justify-center gap-1 pt-2 pb-1.5 active:scale-90 transition"
             >
-              <Icon name={t.icon} active={active} />
+              <span className="relative">
+                <Icon name={t.icon} active={active} />
+                {t.icon === 'you' && bondReqs > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-[#e3c07a] text-[#0a0b12] text-[10px] font-bold leading-none">
+                    {bondReqs > 9 ? '9+' : bondReqs}
+                  </span>
+                )}
+              </span>
               <span className={`text-[10px] tracking-wide ${active ? 'text-[#e3c07a] font-medium' : 'text-[#6b6e86]'}`}>
                 {t.label}
               </span>

@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import Nav from './components/Nav';
 import FlowMeDock from './components/FlowMeDock';
 import BottomNav from './components/BottomNav';
+import BondAlerts from './components/BondAlerts';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${playfair.variable} dark`}>
       <body className="font-sans af-has-bottom-nav">
         <Nav />
+        <BondAlerts />
         {children}
         <FlowMeDock />
         <BottomNav />
