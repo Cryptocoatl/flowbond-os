@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 // In-app notification for incoming AstralBond requests. Bonds are two-sided:
 // when someone sends you a bond (or opens your link), it waits until you accept.
@@ -18,6 +19,7 @@ interface Req {
 export default function BondAlerts() {
   const path = usePathname() || '/';
   const router = useRouter();
+  const t = useT();
   const [reqs, setReqs] = useState<Req[]>([]);
   const [busy, setBusy] = useState('');
   const [loaded, setLoaded] = useState(false);
@@ -81,11 +83,11 @@ export default function BondAlerts() {
           <div className="min-w-0 flex-1">
             <p className="text-sm text-[#ece9e0] leading-tight">
               <span className="font-medium">{first.display_name}</span>
-              <span className="text-[#cfc8e8]"> wants to bond with you ✦</span>
+              <span className="text-[#cfc8e8]"> {t('wants to bond with you ✦')}</span>
             </p>
             {extra > 0 ? (
               <Link href="/dashboard" className="text-xs text-[#b6abec] hover:underline">
-                +{extra} more {extra === 1 ? 'request' : 'requests'} — view all
+                +{extra} {t('more')} {extra === 1 ? t('request') : t('requests')} {t('— view all')}
               </Link>
             ) : (
               <p className="text-[11px] text-[#9698a8] truncate">@{first.handle}</p>
@@ -97,15 +99,15 @@ export default function BondAlerts() {
               disabled={busy === first.handle}
               className="af-btn af-btn-primary af-btn-sm"
             >
-              ✦ Accept
+              {t('✦ Accept')}
             </button>
             <button
               onClick={() => decline(first.handle)}
               disabled={busy === first.handle}
               className="af-btn af-btn-ghost af-btn-sm"
-              aria-label="Decline"
+              aria-label={t('Decline')}
             >
-              Decline
+              {t('Decline')}
             </button>
           </div>
         </div>

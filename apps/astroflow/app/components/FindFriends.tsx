@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 // Find people by their handle and weave AstralBonds. Until someone accepts your
 // bond you see only their minimum public info (name, @handle, avatar) — never
@@ -31,6 +32,7 @@ function Avatar({ color, name }: { color: string; name: string }) {
 
 export default function FindFriends() {
   const router = useRouter();
+  const t = useT();
   const sb = browserClient();
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Result[]>([]);
@@ -97,7 +99,7 @@ export default function FindFriends() {
       {incoming.length > 0 && (
         <div className="af-card p-4">
           <p className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">
-            Bond requests · {incoming.length}
+            {t('Bond requests')} · {incoming.length}
           </p>
           <div className="space-y-2.5">
             {incoming.map((r) => (
@@ -108,10 +110,10 @@ export default function FindFriends() {
                   <p className="text-xs font-mono text-[#5b5e72] truncate">@{r.handle}</p>
                 </div>
                 <button onClick={() => accept(r.handle)} disabled={busy === r.handle} className="af-btn af-btn-primary af-btn-sm">
-                  ✦ Accept
+                  {t('✦ Accept')}
                 </button>
                 <button onClick={() => decline(r.handle)} disabled={busy === r.handle} className="af-btn af-btn-ghost af-btn-sm">
-                  Decline
+                  {t('Decline')}
                 </button>
               </div>
             ))}
@@ -126,7 +128,7 @@ export default function FindFriends() {
           <input
             value={q}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Find people by their @handle…"
+            placeholder={t('Find people by their @handle…')}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -137,9 +139,9 @@ export default function FindFriends() {
         {q.trim().length >= 2 && (
           <div className="mt-2 af-card divide-y divide-white/5 overflow-hidden">
             {searching && results.length === 0 ? (
-              <p className="text-sm text-[#9698a8] p-4">Searching the flow…</p>
+              <p className="text-sm text-[#9698a8] p-4">{t('Searching the flow…')}</p>
             ) : results.length === 0 ? (
-              <p className="text-sm text-[#9698a8] p-4">No one found for “{q.trim()}”. Invite them with your bond link below.</p>
+              <p className="text-sm text-[#9698a8] p-4">{t('No one found for “{query}”. Invite them with your bond link below.', { query: q.trim() })}</p>
             ) : (
               results.map((r) => (
                 <div key={r.handle} className="flex items-center gap-3 p-3">
@@ -149,12 +151,12 @@ export default function FindFriends() {
                     <p className="text-xs font-mono text-[#5b5e72] truncate">@{r.handle}</p>
                   </div>
                   {r.is_friend ? (
-                    <span className="text-xs text-[#7fd1a8] font-medium px-2">Bonded ✓</span>
+                    <span className="text-xs text-[#7fd1a8] font-medium px-2">{t('Bonded ✓')}</span>
                   ) : r.request_pending ? (
-                    <span className="text-xs text-[#b6abec] px-2">Requested</span>
+                    <span className="text-xs text-[#b6abec] px-2">{t('Requested')}</span>
                   ) : (
                     <button onClick={() => requestBond(r.handle)} disabled={busy === r.handle} className="af-btn af-btn-primary af-btn-sm">
-                      ✦ Bond
+                      {t('✦ Bond')}
                     </button>
                   )}
                 </div>
@@ -163,7 +165,7 @@ export default function FindFriends() {
           </div>
         )}
         <p className="text-[10px] text-[#5b5e72] mt-2 px-1">
-          They only see your name &amp; @handle until you&apos;re bonded — then your skies appear in each other&apos;s constellation.
+          {t("They only see your name & @handle until you're bonded — then your skies appear in each other's constellation.")}
         </p>
       </div>
     </div>

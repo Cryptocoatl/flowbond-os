@@ -2,12 +2,14 @@ import Link from 'next/link';
 import { serverClient } from '../../../lib/supabase-server';
 import { myFbid } from '../../../lib/astro/access';
 import AcceptBond from '../../components/AcceptBond';
+import { getT } from '../../../lib/i18n/server';
 
 // AstroBond landing: a personal invitation to see each other's skies.
 // Always FBID-first — login → create your chart → accept — then you appear
 // in each other's dashboards and constellations, weavable into any universe.
 export default async function BondPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
+  const t = await getT();
   const sb = await serverClient();
   const [{ data: preview }, fbid] = await Promise.all([
     sb.rpc('bond_preview', { code }),
@@ -23,9 +25,9 @@ export default async function BondPage({ params }: { params: Promise<{ code: str
   if (!preview)
     return (
       <Center>
-        <h1 className="text-2xl font-serif mb-2">Bond link not found</h1>
-        <p className="text-[#9698a8] mb-5">This astrobond link is invalid or expired.</p>
-        <Link href="/" className="text-[#b6abec] underline">Go to AstralFlow</Link>
+        <h1 className="text-2xl font-serif mb-2">{t('Bond link not found')}</h1>
+        <p className="text-[#9698a8] mb-5">{t('This astrobond link is invalid or expired.')}</p>
+        <Link href="/" className="text-[#b6abec] underline">{t('Go to AstralFlow')}</Link>
       </Center>
     );
 
@@ -49,7 +51,7 @@ export default async function BondPage({ params }: { params: Promise<{ code: str
       >
         {(preview.display_name ?? '?').charAt(0)}
       </span>
-      <p className="text-[11px] uppercase tracking-[0.32em] text-[#b6abec] mb-3">An astrobond invitation</p>
+      <p className="text-[11px] uppercase tracking-[0.32em] text-[#b6abec] mb-3">{t('An astrobond invitation')}</p>
       <h1
         className="text-4xl font-serif mb-1"
         style={{
@@ -61,13 +63,10 @@ export default async function BondPage({ params }: { params: Promise<{ code: str
         {preview.display_name}
       </h1>
       <p className="font-serif text-lg text-[#cfc8e8] mb-5">
-        {preview.sun} Sun · {preview.moon} Moon{preview.rising ? ` · ${preview.rising} Rising` : ''}
+        {preview.sun} {t('Sun')} · {preview.moon} {t('Moon')}{preview.rising ? ` · ${preview.rising} ${t('Rising')}` : ''}
       </p>
       <p className="text-sm text-[#b6b3cf] mb-7 leading-relaxed">
-        @{preview.handle} invites you to see your AstralFlows together. Bonding makes your skies visible
-        to each other — you appear in each other&apos;s dashboards, can read what flows between you, and
-        weave each other into collective charts: every constellation a little universe with its own
-        collective reading. Your chart stays inside FlowBond&apos;s privacy layer, shared only as deep as you choose.
+        {t('@{handle} invites you to see your AstralFlows together. Bonding makes your skies visible to each other — you appear in each other’s dashboards, can read what flows between you, and weave each other into collective charts: every constellation a little universe with its own collective reading. Your chart stays inside FlowBond’s privacy layer, shared only as deep as you choose.', { handle: preview.handle })}
       </p>
       <AcceptBond code={code} signedIn={!!fbid} hasProfile={hasProfile} />
     </Center>

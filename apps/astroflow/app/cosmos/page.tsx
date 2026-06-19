@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getT } from '../../lib/i18n/server';
 import { PLANETS, SIGNS, HOUSES, ASPECTS, ELEMENTS, TRADITIONS, type Entry } from '../../lib/astro/university';
 
 export const metadata: Metadata = {
@@ -9,10 +10,11 @@ export const metadata: Metadata = {
 // The living astral university: FlowMe's generic knowledge written into the
 // product itself. Static and instant — learning here costs zero tokens; the
 // same framework sits prompt-cached behind every channeled reading.
-export default function CosmosPage() {
+export default async function CosmosPage() {
+  const t = await getT();
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 text-[#ece9e0]">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">The Astral University</p>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">{t('The Astral University')}</p>
       <h1
         className="text-5xl font-serif mb-3"
         style={{
@@ -24,13 +26,12 @@ export default function CosmosPage() {
         Cosmos
       </h1>
       <p className="text-[#9698a8] leading-relaxed mb-2">
-        Every current of the sky, with its glyph and its teaching — the same living knowledge FlowMe
-        holds when it reads your chart. Study the symbols, then watch them move through your people.
+        {t('Every current of the sky, with its glyph and its teaching — the same living knowledge FlowMe holds when it reads your chart. Study the symbols, then watch them move through your people.')}
       </p>
       <nav className="flex flex-wrap gap-2 mt-5 mb-2 text-[10px] uppercase tracking-[0.14em]">
         {[
-          ['#elements', 'Elements'], ['#planets', 'Planets'], ['#signs', 'Signs'],
-          ['#houses', 'Houses'], ['#aspects', 'Aspects'], ['#traditions', 'Traditions'],
+          ['#elements', t('Elements')], ['#planets', t('Planets')], ['#signs', t('Signs')],
+          ['#houses', t('Houses')], ['#aspects', t('Aspects')], ['#traditions', t('Traditions')],
         ].map(([href, label]) => (
           <a key={href} href={href} className="px-3 py-1 rounded-full border border-[#242a3b] text-[#9698a8] hover:text-[#e3c07a] hover:border-[#e3c07a]/40 transition">
             {label}
@@ -38,47 +39,44 @@ export default function CosmosPage() {
         ))}
       </nav>
 
-      <Chapter id="elements" title="The four elements" sub="the primal currents every chart is made of">
+      <Chapter id="elements" title={t('The four elements')} sub={t('the primal currents every chart is made of')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {ELEMENTS.map((e) => <Card key={e.name} e={e} big />)}
         </div>
       </Chapter>
 
-      <Chapter id="planets" title="The planets" sub="the cast of characters — each a living function in you">
+      <Chapter id="planets" title={t('The planets')} sub={t('the cast of characters — each a living function in you')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {PLANETS.map((e) => <Card key={e.name} e={e} />)}
         </div>
       </Chapter>
 
-      <Chapter id="signs" title="The twelve signs" sub="the styles the planets wear">
+      <Chapter id="signs" title={t('The twelve signs')} sub={t('the styles the planets wear')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {SIGNS.map((e) => <Card key={e.name} e={e} />)}
         </div>
       </Chapter>
 
-      <Chapter id="houses" title="The twelve houses" sub="the arenas of life where the sky lands">
+      <Chapter id="houses" title={t('The twelve houses')} sub={t('the arenas of life where the sky lands')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {HOUSES.map((e) => <Card key={e.name} e={e} />)}
         </div>
       </Chapter>
 
-      <Chapter id="aspects" title="The aspects" sub="how two currents speak to each other">
+      <Chapter id="aspects" title={t('The aspects')} sub={t('how two currents speak to each other')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {ASPECTS.map((e) => <Card key={e.name} e={e} />)}
         </div>
       </Chapter>
 
-      <Chapter id="traditions" title="The deeper lenses" sub="three traditions FlowMe can read you through">
+      <Chapter id="traditions" title={t('The deeper lenses')} sub={t('three traditions FlowMe can read you through')}>
         <div className="space-y-3">
           {TRADITIONS.map((e) => <Card key={e.name} e={e} big />)}
         </div>
       </Chapter>
 
       <p className="text-[10px] text-[#3f4358] mt-12 leading-relaxed border-t border-white/5 pt-4">
-        This knowledge is part of AstralFlow&apos;s collective memory — served instantly from the flow itself,
-        no tokens spent. The same framework sits cached behind every FlowMe transmission, so each reading
-        only ever pays for your chart&apos;s tiny symbolic facts. Tools for universal coordination, one
-        constellation at a time. ✦
+        {t('This knowledge is part of AstralFlow’s collective memory — served instantly from the flow itself, no tokens spent. The same framework sits cached behind every FlowMe transmission, so each reading only ever pays for your chart’s tiny symbolic facts. Tools for universal coordination, one constellation at a time. ✦')}
       </p>
     </div>
   );

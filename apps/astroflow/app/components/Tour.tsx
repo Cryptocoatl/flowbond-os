@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useT } from '../../lib/i18n/provider';
 
 const STEPS: { glyph: string; title: string; body: string }[] = [
   {
@@ -40,6 +41,7 @@ const STEPS: { glyph: string; title: string; body: string }[] = [
 ];
 
 export default function Tour({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT();
   const [i, setI] = useState(0);
   if (!open) return null;
   const step = STEPS[i];
@@ -51,15 +53,15 @@ export default function Tour({ open, onClose }: { open: boolean; onClose: () => 
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-[#5b5e72] hover:text-[#9698a8] text-sm"
-          aria-label="Close tour"
+          aria-label={t('Close tour')}
         >
           ✕
         </button>
         <div className="text-4xl mb-4 text-[#e3c07a]" style={{ fontFamily: 'var(--font-display), serif' }}>
           {step.glyph}
         </div>
-        <h3 className="text-2xl font-serif text-[#ece9e0] mb-2">{step.title}</h3>
-        <p className="text-[#b6b3cf] leading-relaxed text-[15px]">{step.body}</p>
+        <h3 className="text-2xl font-serif text-[#ece9e0] mb-2">{t(step.title)}</h3>
+        <p className="text-[#b6b3cf] leading-relaxed text-[15px]">{t(step.body)}</p>
 
         <div className="flex items-center justify-between mt-7">
           <div className="flex gap-1.5">
@@ -73,7 +75,7 @@ export default function Tour({ open, onClose }: { open: boolean; onClose: () => 
           <div className="flex gap-2">
             {i > 0 && (
               <button onClick={() => setI(i - 1)} className="text-sm text-[#9698a8] px-3 py-1.5">
-                Back
+                {t('Back')}
               </button>
             )}
             {last ? (
@@ -81,14 +83,14 @@ export default function Tour({ open, onClose }: { open: boolean; onClose: () => 
                 href="/auth/login"
                 className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-1.5"
               >
-                Enter AstralFlow
+                {t('Enter AstralFlow')}
               </a>
             ) : (
               <button
                 onClick={() => setI(i + 1)}
                 className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 py-1.5"
               >
-                Next
+                {t('Next')}
               </button>
             )}
           </div>

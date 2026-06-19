@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 export default function JoinCrew({
   code,
@@ -13,6 +14,7 @@ export default function JoinCrew({
   hasProfile: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [pending, start] = useTransition();
   const [err, setErr] = useState('');
   const next = `/join/${code}`;
@@ -23,19 +25,19 @@ export default function JoinCrew({
         href={`/auth/login?next=${encodeURIComponent(next)}`}
         className="inline-block bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-6 py-3"
       >
-        Log in to join
+        {t('Log in to join')}
       </a>
     );
 
   if (!hasProfile)
     return (
       <div>
-        <p className="text-sm text-[#9698a8] mb-3">First, create your chart so the crew can read your path.</p>
+        <p className="text-sm text-[#9698a8] mb-3">{t('First, create your chart so the crew can read your path.')}</p>
         <a
           href={`/profile/new?next=${encodeURIComponent(next)}`}
           className="inline-block bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-6 py-3"
         >
-          Create my chart, then join
+          {t('Create my chart, then join')}
         </a>
       </div>
     );
@@ -56,7 +58,7 @@ export default function JoinCrew({
         disabled={pending}
         className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-7 py-3 disabled:opacity-50"
       >
-        {pending ? 'Joining…' : 'Join the crew'}
+        {pending ? t('Joining…') : t('Join the crew')}
       </button>
       {err && <p className="text-[#d9663c] text-sm mt-3">{err}</p>}
     </div>

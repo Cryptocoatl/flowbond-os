@@ -9,6 +9,7 @@ import { mayanSummary } from '../../../lib/astro/mayan';
 import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
 import ReadingPanel from '../../components/ReadingPanel';
 import RequestAccess from '../../components/RequestAccess';
+import { getT } from '../../../lib/i18n/server';
 
 const LEVEL_LABEL: Record<ShareLevel, string> = {
   light: 'light share — the essentials',
@@ -19,14 +20,15 @@ const LEVEL_LABEL: Record<ShareLevel, string> = {
 
 export default async function ChartPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
+  const t = await getT();
   const look = await getProfileByHandle(handle);
 
   if (look.status === 'not_found')
-    return <Shell><p className="text-[#9698a8]">No FlowBond user <b>@{handle}</b>.</p></Shell>;
+    return <Shell><p className="text-[#9698a8]">{t('No FlowBond user @{handle}.', { handle })}</p></Shell>;
   if (look.status === 'forbidden')
     return (
       <Shell>
-        <p className="text-[#9698a8] mb-4"><b>@{handle}</b> keeps their chart private.</p>
+        <p className="text-[#9698a8] mb-4">{t('@{handle} keeps their chart private.', { handle })}</p>
         <RequestAccess handle={handle} />
       </Shell>
     );
@@ -56,9 +58,9 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
   // Deep tier opens the other traditions: Vedic, both Mayan counts, Gene Keys.
   const traditions = showDeep
     ? [
-        { name: 'Vedic (sidereal)', lines: vedicSummary(vedicChart(p.chart)) },
-        { name: 'Mayan — traditional & Dreamspell', lines: mayanSummary(p.chart.jd, p.birth.date) },
-        { name: 'Gene Keys / Human Design', lines: geneKeysSummary(geneKeys(p.chart)) },
+        { name: t('Vedic (sidereal)'), lines: vedicSummary(vedicChart(p.chart)) },
+        { name: t('Mayan — traditional & Dreamspell'), lines: mayanSummary(p.chart.jd, p.birth.date) },
+        { name: t('Gene Keys / Human Design'), lines: geneKeysSummary(geneKeys(p.chart)) },
       ]
     : [];
 
@@ -70,17 +72,16 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
         <span className="text-xs font-mono text-[#5b5e72]">@{p.handle} · {p.visibility}</span>
       </div>
       <p className="font-serif text-lg mt-2">
-        {p.chart.bodies.Sun.sign} Sun · {p.chart.bodies.Moon.sign} Moon{p.chart.asc ? ` · ${p.chart.asc.sign} Rising` : ' · (no birth time)'}
+        {p.chart.bodies.Sun.sign} {t('Sun')} · {p.chart.bodies.Moon.sign} {t('Moon')}{p.chart.asc ? ` · ${p.chart.asc.sign} ${t('Rising')}` : ` · ${t('(no birth time)')}`}
       </p>
       {!isSelf && level && (
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mt-1">{LEVEL_LABEL[level]}</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mt-1">{t(LEVEL_LABEL[level])}</p>
       )}
 
       {!showFull && (
         <div className="mt-6 pt-4 border-t border-white/5">
           <p className="text-sm text-[#9698a8]">
-            @{p.handle} shares the essentials with you — sun, moon{p.chart.asc ? ', rising' : ''} and elemental
-            balance. Ask them for a deeper share to see placements, aspects and traditions.
+            {t('@{handle} shares the essentials with you — sun, moon{rising} and elemental balance. Ask them for a deeper share to see placements, aspects and traditions.', { handle: p.handle, rising: p.chart.asc ? t(', rising') : '' })}
           </p>
           <div className="flex gap-4 mt-3 text-sm text-[#cfc8e8]">
             {Object.entries(p.chart.elements).map(([el, n]) => (
@@ -91,13 +92,13 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
       )}
 
       {showFull && (
-        <Section title="Placements">
+        <Section title={t('Placements')}>
           {lines.map((l) => <div key={l.planet} className="text-sm text-[#cfc8e8] py-0.5">{l.line}</div>)}
         </Section>
       )}
 
       {showFull && (
-        <Section title="Natal aspects">
+        <Section title={t('Natal aspects')}>
           {aspects.map((a, i) => (
             <div key={i} className="text-sm py-0.5">
               <span className={a.harmony > 0 ? 'text-[#7bd0c6]' : 'text-[#e8956a]'}>{a.glyph}</span>{' '}
@@ -108,7 +109,7 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
       )}
 
       {acg.length > 0 && (
-        <Section title="Astrocartography · your power places">
+        <Section title={t('Astrocartography · your power places')}>
           {acg.map((r, i) => (
             <div key={i} className="text-sm py-1">
               <b className="text-[#e3c07a]">{r.city}</b> <span className="text-[#5b5e72]">{r.country}</span>{' '}
@@ -116,15 +117,14 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
               <span className="font-mono text-xs text-[#5b5e72]">{r.orb}°</span>
             </div>
           ))}
-          <p className="text-[10px] text-[#5b5e72] mt-2">Real places your <i>own</i> angular lines run through — where your chart lights up the map. Computed from your chart alone, the same every time.</p>
+          <p className="text-[10px] text-[#5b5e72] mt-2">{t('Real places your own angular lines run through — where your chart lights up the map. Computed from your chart alone, the same every time.')}</p>
         </Section>
       )}
 
       {showFull && mapGeojson && (
-        <Section title="Astrocartography · your living map">
+        <Section title={t('Astrocartography · your living map')}>
           <p className="text-[10px] text-[#5b5e72] mb-2">
-            Every planet traces four lines across the earth — tap a line to read it, filter by planet, angle
-            or a theme (Love, Career, Home…), and zoom into any region.
+            {t('Every planet traces four lines across the earth — tap a line to read it, filter by planet, angle or a theme (Love, Career, Home…), and zoom into any region.')}
           </p>
           <AcgMap layers={[{ id: 'me', geojson: mapGeojson }]} places={mapPlaces} legend={mapLegend} />
         </Section>

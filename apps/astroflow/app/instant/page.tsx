@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import PlaceAutocomplete, { type PlaceResult } from '../components/PlaceAutocomplete';
 import type { Chart } from '../../lib/astro/types';
+import { useT } from '../../lib/i18n/provider';
 
 const ELEMENTS = ['Fire', 'Earth', 'Air', 'Water'] as const;
 const EL_COLOR: Record<string, string> = {
@@ -13,6 +14,7 @@ const EL_COLOR: Record<string, string> = {
 // their own FBID; but you can mint their personal activation link from this
 // very chart, and the moment they claim it you are bonded in full flow.
 export default function InstantChart() {
+  const t = useT();
   const [form, setForm] = useState({ name: '', date: '', time: '', unknownTime: false, place: '', tz: '', lat: NaN, lng: NaN });
   const [chart, setChart] = useState<Chart | null>(null);
   const [lines, setLines] = useState<string[]>([]);
@@ -40,7 +42,7 @@ export default function InstantChart() {
         body: JSON.stringify({ birth: birth() }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed');
+      if (!res.ok) throw new Error(json.error || t('Failed'));
       setChart(json.chart); setLines(json.lines ?? []);
     } catch (e: any) {
       setErr(e.message);
@@ -55,10 +57,10 @@ export default function InstantChart() {
       const res = await fetch('/api/guest', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ displayName: form.name || 'A friend', birth: birth() }),
+        body: JSON.stringify({ displayName: form.name || t('A friend'), birth: birth() }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Sign in and create your chart first.');
+      if (!res.ok) throw new Error(json.error || t('Sign in and create your chart first.'));
       setLink(`${window.location.origin}/claim/${json.claimCode}`);
     } catch (e: any) {
       setErr(e.message);
@@ -78,7 +80,7 @@ export default function InstantChart() {
 
   return (
     <div className="max-w-lg mx-auto p-6 text-[#ece9e0]">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">One-time chart</p>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">{t('One-time chart')}</p>
       <h1
         className="text-4xl font-serif mb-2"
         style={{
@@ -86,21 +88,21 @@ export default function InstantChart() {
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         }}
       >
-        Read any sky, instantly
+        {t('Read any sky, instantly')}
       </h1>
       <p className="text-[#9698a8] text-sm mb-6 leading-relaxed">
-        Have someone&apos;s birth moment? See their chart right now — computed live, <b className="text-[#cfc8e8]">stored nowhere</b>.
-        They only become a profile when they activate their own FBID; until then this is just light passing through.
+        {t('Have someone’s birth moment? See their chart right now — computed live,')} <b className="text-[#cfc8e8]">{t('stored nowhere')}</b>.
+        {' '}{t('They only become a profile when they activate their own FBID; until then this is just light passing through.')}
       </p>
 
-      <input className={input} placeholder="Their name (optional — used for the invite)" value={form.name} onChange={(e) => set('name', e.target.value)} />
+      <input className={input} placeholder={t('Their name (optional — used for the invite)')} value={form.name} onChange={(e) => set('name', e.target.value)} />
       <div className="grid grid-cols-2 gap-3 mt-3">
         <input type="date" className={input} value={form.date} onChange={(e) => set('date', e.target.value)} />
         <input type="time" disabled={form.unknownTime} className={input} value={form.time} onChange={(e) => set('time', e.target.value)} />
       </div>
       <label className="flex items-center gap-2 mt-2 text-xs text-[#9698a8]">
         <input type="checkbox" checked={form.unknownTime} onChange={(e) => set('unknownTime', e.target.checked)} />
-        birth time unknown (skips houses &amp; rising)
+        {t('birth time unknown (skips houses & rising)')}
       </label>
       <div className="mt-3">
         <PlaceAutocomplete
@@ -113,14 +115,14 @@ export default function InstantChart() {
         disabled={busy || !ready}
         className="mt-4 w-full bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg py-3 disabled:opacity-50"
       >
-        {busy ? 'Reading the sky…' : '✦ Reveal the chart'}
+        {busy ? t('Reading the sky…') : t('✦ Reveal the chart')}
       </button>
       {err && <p className="text-[#d9663c] text-sm mt-3">{err}</p>}
 
       {chart && (
         <div className="mt-7 rounded-2xl border border-[#242a3b] bg-[#11131f]/90 p-5" style={{ animation: 'af-rise 0.6s ease-out' }}>
           <p className="font-serif text-xl">
-            {chart.bodies.Sun.sign} Sun · {chart.bodies.Moon.sign} Moon{chart.asc ? ` · ${chart.asc.sign} Rising` : ''}
+            {chart.bodies.Sun.sign} {t('Sun')} · {chart.bodies.Moon.sign} {t('Moon')}{chart.asc ? ` · ${chart.asc.sign} ${t('Rising')}` : ''}
           </p>
           <div className="mt-3 space-y-1.5 max-w-[280px]">
             {ELEMENTS.map((el) => {
@@ -148,21 +150,20 @@ export default function InstantChart() {
                   disabled={linkBusy}
                   className="text-sm bg-[#9a8fe0]/20 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-lg px-4 py-2 hover:bg-[#9a8fe0]/30 transition disabled:opacity-50"
                 >
-                  {linkBusy ? 'Minting their link…' : '✦ Create their activation link'}
+                  {linkBusy ? t('Minting their link…') : t('✦ Create their activation link')}
                 </button>
                 <p className="text-[10px] text-[#5b5e72] mt-2 leading-relaxed">
-                  A personal invite minted from this very chart. When they activate their FBID through it,
-                  this becomes their real profile and you are bonded — full mutual flow, from the chart you made.
+                  {t('A personal invite minted from this very chart. When they activate their FBID through it, this becomes their real profile and you are bonded — full mutual flow, from the chart you made.')}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-xs text-[#7bd0c6] mb-2">✓ Saved to your charted souls — manage them anytime on your <a href="/dashboard" className="underline">dashboard</a>.</p>
+                <p className="text-xs text-[#7bd0c6] mb-2">{t('✓ Saved to your charted souls — manage them anytime on your')} <a href="/dashboard" className="underline">{t('dashboard')}</a>.</p>
                 <div className="flex gap-2 items-center">
                   <input readOnly value={link} onFocus={(e) => e.currentTarget.select()}
                     className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-xs text-[#9698a8] font-mono" />
                   <button onClick={copyLink} className="text-xs bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-3 py-2">
-                    {copied ? 'Copied ✓' : 'Copy'}
+                    {copied ? t('Copied ✓') : t('Copy')}
                   </button>
                 </div>
               </>

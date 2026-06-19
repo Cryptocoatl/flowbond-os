@@ -9,6 +9,7 @@ import ReadingPanel from './ReadingPanel';
 import BondInvite from './BondInvite';
 import FindFriends from './FindFriends';
 import Tour from './Tour';
+import { useT } from '../../lib/i18n/provider';
 
 type Mode = 'explore' | 'combine';
 
@@ -63,6 +64,7 @@ export default function Constellation({
   friendFbids?: string[];
   savedMaps?: SavedMap[];
 }) {
+  const t = useT();
   const friendSet = useMemo(() => new Set(friendFbids), [friendFbids]);
   const [addFriend, setAddFriend] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -151,7 +153,7 @@ export default function Constellation({
       body: JSON.stringify({ name: mapName, memberFbids: selected, context, purpose: mapPurpose, intention: mapIntention }),
     });
     const json = await res.json();
-    setSaveMsg(res.ok ? 'Flow map saved ✦' : json.error || 'Failed to save');
+    setSaveMsg(res.ok ? t('Flow map saved ✦') : json.error || t('Failed to save'));
     if (res.ok) { setMapName(''); setMapPurpose(''); setMapIntention(''); }
   }
 
@@ -179,11 +181,11 @@ export default function Constellation({
             @{activeProfile.handle} · {activeProfile.visibility}
           </p>
           <p className="font-serif text-lg mt-3 text-[#ece9e0]">
-            {activeProfile.chart.bodies.Sun.sign} Sun · {activeProfile.chart.bodies.Moon.sign} Moon
-            {activeProfile.chart.asc ? ` · ${activeProfile.chart.asc.sign} Rising` : ''}
+            {activeProfile.chart.bodies.Sun.sign} {t('Sun')} · {activeProfile.chart.bodies.Moon.sign} {t('Moon')}
+            {activeProfile.chart.asc ? ` · ${activeProfile.chart.asc.sign} ${t('Rising')}` : ''}
           </p>
           <Link href={`/chart/${activeProfile.handle}`} className="af-btn af-btn-primary w-full mt-4">
-            ✦ Open full resume — chart, systems &amp; map
+            {t('✦ Open full resume — chart, systems & map')}
           </Link>
           <ReadingPanel handles={[activeProfile.handle]} />
         </div>
@@ -194,42 +196,40 @@ export default function Constellation({
             <span className="w-4 h-4 rounded-full border border-dashed" style={{ borderColor: activeGhostNode.avatar_color, background: `${activeGhostNode.avatar_color}33` }} />
             <h2 className="text-2xl font-serif text-[#ece9e0]">{activeGhostNode.display_name}</h2>
           </div>
-          <p className="text-[10px] uppercase tracking-[0.16em] text-[#8fb8e0] mt-1">ghost star · awaiting FBID</p>
+          <p className="text-[10px] uppercase tracking-[0.16em] text-[#8fb8e0] mt-1">{t('ghost star · awaiting FBID')}</p>
           <p className="font-serif text-lg mt-3 text-[#cfc8e8]">
-            {activeGhostNode.sun} Sun · {activeGhostNode.moon} Moon{activeGhostNode.rising ? ` · ${activeGhostNode.rising} Rising` : ''}
+            {activeGhostNode.sun} {t('Sun')} · {activeGhostNode.moon} {t('Moon')}{activeGhostNode.rising ? ` · ${activeGhostNode.rising} ${t('Rising')}` : ''}
           </p>
           <p className="text-sm text-[#9698a8] mt-3 leading-relaxed">
-            You charted them, but their star is still light passing through. Invite them to activate their
-            FBID — they take this avatar space for real, and you&apos;re bonded into full flow.
+            {t('You charted them, but their star is still light passing through. Invite them to activate their FBID — they take this avatar space for real, and you’re bonded into full flow.')}
           </p>
           <button
             onClick={() => inviteGhost(activeGhostNode.claim_code)}
             className="inline-block mt-4 text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-4 py-2.5 active:scale-95 transition"
           >
-            {copied === activeGhostNode.claim_code ? 'Activation link copied ✓' : '✦ Copy their activation link'}
+            {copied === activeGhostNode.claim_code ? t('Activation link copied ✓') : t('✦ Copy their activation link')}
           </button>
         </div>
       )}
       {mode === 'explore' && !activeProfile && !activeGhostNode && (
         <div className="hidden sm:block border border-dashed border-[#242a3b] rounded-2xl p-8 text-center text-[#9698a8]">
-          Tap a star to read their chart{guests.length > 0 ? ', or a ghost star ✦ to invite them in' : ''}.
+          {guests.length > 0 ? t('Tap a star to read their chart, or a ghost star ✦ to invite them in.') : t('Tap a star to read their chart.')}
         </div>
       )}
 
       {mode === 'combine' && (
         <div className="border border-[#242a3b] rounded-2xl p-5 bg-[#11131f]">
-          <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">Combine · {context}</h2>
+          <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">{t('Combine')} · {context}</h2>
           {myFbid && (
             <div className="mb-4 pb-4 border-b border-white/5">
               <BondInvite compact />
               <p className="text-[10px] text-[#5b5e72] mt-1.5">
-                Send your astrobond link — they create their FBID + chart, you see each other
-                everywhere, and you can weave them into any universe.
+                {t('Send your astrobond link — they create their FBID + chart, you see each other everywhere, and you can weave them into any universe.')}
               </p>
             </div>
           )}
           {selectedProfiles.length < 2 ? (
-            <p className="text-[#9698a8] text-sm">Tap two or more stars above to weave a flow map.</p>
+            <p className="text-[#9698a8] text-sm">{t('Tap two or more stars above to weave a flow map.')}</p>
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-3">
@@ -241,37 +241,37 @@ export default function Constellation({
               </div>
               {avgScore !== null && (
                 <p className="font-serif text-[#ece9e0]">
-                  {selectedProfiles.length === 2 ? 'Compatibility' : 'Group flow'}:{' '}
+                  {selectedProfiles.length === 2 ? t('Compatibility') : t('Group flow')}:{' '}
                   <b style={{ color: harmonyColor(avgScore) }}>{avgScore}</b> / 100
                 </p>
               )}
               {pairPanorama && <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>}
               {selectedProfiles.length >= 2 && <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />}
               <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
-                <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">Save as a constellation</label>
+                <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">{t('Save as a constellation')}</label>
                 <input
                   value={mapName}
                   onChange={(e) => setMapName(e.target.value)}
-                  placeholder="Name it — e.g. Tulum retreat crew"
+                  placeholder={t('Name it — e.g. Tulum retreat crew')}
                   className="af-input"
                 />
                 <select value={mapPurpose} onChange={(e) => setMapPurpose(e.target.value)} className="af-input">
-                  <option value="">What is this group? (optional)</option>
+                  <option value="">{t('What is this group? (optional)')}</option>
                   {['team / project', 'family', 'romance', 'co-living / house', 'friends', 'creative collab', 'dynamic mix'].map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                    <option key={p} value={p}>{t(p)}</option>
                   ))}
                 </select>
                 <textarea
                   value={mapIntention}
                   onChange={(e) => setMapIntention(e.target.value)}
-                  placeholder="Why this constellation? What do you want to understand together? (focuses the reading)"
+                  placeholder={t('Why this constellation? What do you want to understand together? (focuses the reading)')}
                   rows={2}
                   className="af-input resize-none"
                 />
                 <button onClick={saveFlowMap} disabled={!mapName.trim() || !myFbid} className="af-btn af-btn-gold w-full">
-                  ✦ Save constellation
+                  {t('✦ Save constellation')}
                 </button>
-                {!myFbid && <p className="text-[10px] text-[#d9883c]">Sign in to save constellations.</p>}
+                {!myFbid && <p className="text-[10px] text-[#d9883c]">{t('Sign in to save constellations.')}</p>}
                 {saveMsg && <p className="text-xs text-[#7fd1a8]">{saveMsg}</p>}
               </div>
             </>
@@ -288,24 +288,24 @@ export default function Constellation({
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-4xl font-serif text-[#ece9e0] leading-tight">AstralFlow</h1>
           <p className="hidden sm:block text-[#9698a8] text-sm">
-            Your stars, woven with your people. Degree-accurate · privacy-first.
+            {t('Your stars, woven with your people. Degree-accurate · privacy-first.')}
           </p>
         </div>
 
         {/* desktop actions */}
         <div className="hidden sm:flex items-center gap-3">
           {myFbid && hasProfile && (
-            <button onClick={() => setAddFriend((v) => !v)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">+ Add friend</button>
+            <button onClick={() => setAddFriend((v) => !v)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">{t('+ Add friend')}</button>
           )}
-          <button onClick={() => setTour(true)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">Tour</button>
-          {myFbid && <Link href="/dashboard" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">Dashboard</Link>}
+          <button onClick={() => setTour(true)} className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">{t('Tour')}</button>
+          {myFbid && <Link href="/dashboard" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">{t('Dashboard')}</Link>}
           {myFbid ? (
-            <Link href="/profile/new" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec]">{hasProfile ? 'Edit your chart' : '+ Add your profile'}</Link>
+            <Link href="/profile/new" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec]">{hasProfile ? t('Edit your chart') : t('+ Add your profile')}</Link>
           ) : (
-            <Link href="/auth/login" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">Log in</Link>
+            <Link href="/auth/login" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#e3c07a] text-[#0a0b12] font-semibold">{t('Log in')}</Link>
           )}
           {myFbid && (
-            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="text-xs text-[#5b5e72] hover:text-[#9698a8]" title="Sign out">sign out</button>
+            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="text-xs text-[#5b5e72] hover:text-[#9698a8]" title={t('Sign out')}>{t('sign out')}</button>
           )}
         </div>
 
@@ -313,12 +313,12 @@ export default function Constellation({
         <div className="flex sm:hidden items-center gap-2 shrink-0">
           {myFbid ? (
             <Link href="/profile/new" className="text-[11px] font-semibold px-3 py-2 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] active:scale-95 transition">
-              {hasProfile ? 'Edit' : '+ Chart'}
+              {hasProfile ? t('Edit') : t('+ Chart')}
             </Link>
           ) : (
-            <Link href="/auth/login" className="text-[11px] font-semibold px-3 py-2 rounded-full bg-[#e3c07a] text-[#0a0b12] active:scale-95 transition">Log in</Link>
+            <Link href="/auth/login" className="text-[11px] font-semibold px-3 py-2 rounded-full bg-[#e3c07a] text-[#0a0b12] active:scale-95 transition">{t('Log in')}</Link>
           )}
-          <button onClick={() => setMenuOpen((v) => !v)} aria-label="More" className="w-9 h-9 grid place-items-center rounded-full border border-[#242a3b] text-[#cfc8e8] text-lg active:scale-90 transition">⋯</button>
+          <button onClick={() => setMenuOpen((v) => !v)} aria-label={t('More')} className="w-9 h-9 grid place-items-center rounded-full border border-[#242a3b] text-[#cfc8e8] text-lg active:scale-90 transition">⋯</button>
         </div>
       </header>
 
@@ -326,12 +326,12 @@ export default function Constellation({
       {menuOpen && (
         <div className="sm:hidden mb-3 rounded-2xl border border-[#242a3b] bg-[#11131f] overflow-hidden af-rise">
           {myFbid && hasProfile && (
-            <button onClick={() => { setAddFriend((v) => !v); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">+ Add friend</button>
+            <button onClick={() => { setAddFriend((v) => !v); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('+ Add friend')}</button>
           )}
-          {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">Dashboard</Link>}
-          <button onClick={() => { setTour(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">Take the tour</button>
+          {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Dashboard')}</Link>}
+          <button onClick={() => { setTour(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Take the tour')}</button>
           {myFbid && (
-            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="w-full text-left px-4 py-3 text-sm text-[#9698a8] active:bg-white/5">Sign out</button>
+            <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="w-full text-left px-4 py-3 text-sm text-[#9698a8] active:bg-white/5">{t('Sign out')}</button>
           )}
         </div>
       )}
@@ -341,11 +341,11 @@ export default function Constellation({
         <div className="mb-4 rounded-2xl border border-[#9a8fe0]/30 bg-[#11131f] p-4 af-rise space-y-4">
           <FindFriends />
           <div className="pt-3 border-t border-white/5">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">Or share your bond link</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">{t('Or share your bond link')}</p>
             <div className="flex flex-wrap items-center gap-3">
               <BondInvite />
               <span className="text-[11px] text-[#5b5e72]">
-                or chart someone from their birth data on <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">Instant</Link>
+                {t('or chart someone from their birth data on')} <Link href="/instant" className="text-[#b6abec] underline decoration-dotted">{t('Instant')}</Link>
               </span>
             </div>
           </div>
@@ -355,7 +355,7 @@ export default function Constellation({
       {/* Saved constellations — horizontal scroll on mobile */}
       {savedMaps.length > 0 && (
         <div className="mb-4">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">Your saved constellations</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] mb-2">{t('Your saved constellations')}</div>
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap no-scrollbar">
             {savedMaps.map((m) => (
               <Link key={m.id} href={`/map/${m.id}`} className="group flex items-center gap-2 rounded-full border border-[#242a3b] bg-[#11131f] px-3 py-2 hover:border-[#9a8fe0]/50 transition shrink-0">
@@ -378,7 +378,7 @@ export default function Constellation({
               mode === m ? 'bg-[#e3c07a] text-[#0a0b12] shadow' : 'text-[#9698a8]'
             }`}
           >
-            {m === 'explore' ? '✶ Explore' : '✦ Combine'}
+            {m === 'explore' ? t('✶ Explore') : t('✦ Combine')}
             {m === 'combine' && selected.length > 0 && (
               <span className={`ml-2 inline-grid place-items-center min-w-5 h-5 px-1 rounded-full text-[11px] ${mode === m ? 'bg-[#0a0b12]/20 text-[#0a0b12]' : 'bg-[#9a8fe0]/30 text-[#cfc8e8]'}`}>{selected.length}</span>
             )}
@@ -388,7 +388,7 @@ export default function Constellation({
 
       {/* Relationship lens — horizontal scroll on mobile */}
       <div className="flex items-center gap-2 mb-4 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] shrink-0">Lens</span>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72] shrink-0">{t('Lens')}</span>
         {REL_CONTEXTS.map((c) => (
           <button
             key={c}
@@ -407,8 +407,8 @@ export default function Constellation({
         <div>
           {profiles.length === 0 ? (
             <div className="aspect-square rounded-2xl border border-dashed border-[#242a3b] flex flex-col items-center justify-center text-center p-8">
-              <p className="text-[#9698a8] mb-4">No charts you can see yet.</p>
-              <Link href="/profile/new" className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-5 py-3 active:scale-95 transition">+ Add your profile</Link>
+              <p className="text-[#9698a8] mb-4">{t('No charts you can see yet.')}</p>
+              <Link href="/profile/new" className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-xl px-5 py-3 active:scale-95 transition">{t('+ Add your profile')}</Link>
             </div>
           ) : (
             <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full max-w-[560px] mx-auto block select-none" style={{ touchAction: 'manipulation' }}>
@@ -457,7 +457,7 @@ export default function Constellation({
             </svg>
           )}
           <p className="text-[11px] text-[#5b5e72] text-center mt-2">
-            {mode === 'explore' ? 'Tap a star to read their chart.' : 'Tap stars to weave them — lines show how each connection flows under this lens.'}
+            {mode === 'explore' ? t('Tap a star to read their chart.') : t('Tap stars to weave them — lines show how each connection flows under this lens.')}
           </p>
         </div>
 
@@ -476,7 +476,7 @@ export default function Constellation({
           {/* grab handle + close (mobile only) */}
           <div className="sm:hidden sticky top-0 z-10 flex items-center justify-between px-4 pt-2.5 pb-1.5 bg-[#0c0e1a]/95 backdrop-blur-md">
             <span className="mx-auto h-1.5 w-10 rounded-full bg-[#3a4158]" />
-            <button onClick={closeSheet} aria-label="Close" className="absolute right-3 top-2 w-8 h-8 grid place-items-center rounded-full text-[#9698a8] active:scale-90">✕</button>
+            <button onClick={closeSheet} aria-label={t('Close')} className="absolute right-3 top-2 w-8 h-8 grid place-items-center rounded-full text-[#9698a8] active:scale-90">✕</button>
           </div>
           {panel}
         </aside>

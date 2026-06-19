@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { serverClient } from '../../../lib/supabase-server';
 import { getOrBuildFacts } from '../../../lib/astro/memory';
+import { LANG_COOKIE } from '../../../lib/i18n/config';
+
+// Reply in the caller's chosen UI language (separate uncached system block; the
+// cached GUIDE stays language-agnostic). English is the default, no directive.
+const LANG_DIRECTIVE: Record<string, string> = {
+  es: 'IMPORTANT: Reply ENTIRELY in warm, natural Latin American Spanish (español) — including astrological terms (Sol, Luna, Ascendente, signo, casa, aspecto, carta). Clear, plain-language Spanish. Never switch to English.',
+};
 
 // FlowMe — guide of AstralFlow AND the caller's own pocket astrologer. It is
 // given the CALLER'S OWN chart (their authed session, RLS owner-only, symbols +
@@ -123,6 +131,15 @@ export async function POST(req: NextRequest) {
       { role: 'user' as const, content: `${stateLine}\n\nThey ask: ${message.trim().slice(0, 500)}` },
     ];
 
+    let langBlocks: { type: 'text'; text: string }[] = [];
+    try {
+      const lang = (await cookies()).get(LANG_COOKIE)?.value;
+      const d = lang ? LANG_DIRECTIVE[lang] : undefined;
+      if (d) langBlocks = [{ type: 'text', text: d }];
+    } catch {
+      /* default English */
+    }
+
     const res = await fetch(ANTHROPIC_URL, {
       method: 'POST',
       headers: {
@@ -136,12 +153,11 @@ export async function POST(req: NextRequest) {
         // FlowMe's guidance brain is prompt-cached (1h) — loaded once, reused
         // near-free across everyone's questions. The caller's own chart rides as a
         // second, per-user (uncached) block so readings stay personal + private.
-        system: chartBlock
-          ? [
-              { type: 'text', text: GUIDE, cache_control: { type: 'ephemeral', ttl: '1h' } },
-              { type: 'text', text: chartBlock },
-            ]
-          : [{ type: 'text', text: GUIDE, cache_control: { type: 'ephemeral', ttl: '1h' } }],
+        system: [
+          { type: 'text', text: GUIDE, cache_control: { type: 'ephemeral', ttl: '1h' } },
+          ...(chartBlock ? [{ type: 'text', text: chartBlock }] : []),
+          ...langBlocks,
+        ],
         messages: msgs,
       }),
     });

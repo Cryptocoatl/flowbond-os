@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 import QrPanel from './QrPanel';
 
 // Invite a friend to bond — as a link OR a QR code, their choice. Whoever opens
@@ -15,6 +16,7 @@ import QrPanel from './QrPanel';
 type State = 'idle' | 'busy' | 'shared' | 'copied' | 'reveal' | 'nochart';
 
 export default function BondInvite({ compact }: { compact?: boolean }) {
+  const t = useT();
   const [state, setState] = useState<State>('idle');
   const [link, setLink] = useState('');
 
@@ -53,7 +55,7 @@ export default function BondInvite({ compact }: { compact?: boolean }) {
       return;
     }
 
-    const text = 'Bond our skies on AstroFlow ✦ — open this and tap “Bond our skies”:';
+    const text = t('Bond our skies on AstroFlow ✦ — open this and tap “Bond our skies”:');
 
     // Native share sheet (best on mobile).
     if (typeof navigator !== 'undefined' && navigator.share) {
@@ -78,11 +80,11 @@ export default function BondInvite({ compact }: { compact?: boolean }) {
   }
 
   const label =
-    state === 'shared' ? 'Invite sent ✓'
-    : state === 'copied' ? 'Bond link copied ✓'
-    : state === 'nochart' ? 'Create your chart first'
+    state === 'shared' ? t('Invite sent ✓')
+    : state === 'copied' ? t('Bond link copied ✓')
+    : state === 'nochart' ? t('Create your chart first')
     : state === 'busy' ? '…'
-    : '✦ Invite a friend — share your bond link';
+    : t('✦ Invite a friend — share your bond link');
 
   return (
     <div className={compact ? 'inline-block' : 'w-full'}>
@@ -97,8 +99,8 @@ export default function BondInvite({ compact }: { compact?: boolean }) {
         {link && (
           <QrPanel
             url={link}
-            label="Show my QR"
-            caption="Have your friend scan this — they’ll open your bond invite, sign in, and your skies bond."
+            label={t('Show my QR')}
+            caption={t('Have your friend scan this — they’ll open your bond invite, sign in, and your skies bond.')}
           />
         )}
       </div>
@@ -106,7 +108,7 @@ export default function BondInvite({ compact }: { compact?: boolean }) {
       {state === 'reveal' && link && (
         <div className="mt-2.5 text-left">
           <p className="text-[11px] text-[#b6abec] mb-1.5">
-            Copy this link and send it to your friend — when they open it and tap “Bond our skies,” you’re bonded:
+            {t('Copy this link and send it to your friend — when they open it and tap “Bond our skies,” you’re bonded:')}
           </p>
           <input
             readOnly

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getT } from '../../lib/i18n/server';
 import { serverClient } from '../../lib/supabase-server';
 import { myFbid } from '../../lib/astro/access';
 import { dreamspell } from '../../lib/astro/mayan';
@@ -10,12 +11,13 @@ import type { Chart } from '../../lib/astro/types';
 // "Your currents" — the personalized encyclopedia hub. Each card is YOU in that
 // system at a glance; tap to open the full, readable page for that tradition.
 export default async function SystemsHub() {
+  const t = await getT();
   const me = await myFbid();
-  if (!me) return <Gate cta="Sign in" href="/auth/login?next=/systems" line="Sign in to see yourself across every tradition." />;
+  if (!me) return <Gate title={t('Your currents')} cta={t('Sign in')} href="/auth/login?next=/systems" line={t('Sign in to see yourself across every tradition.')} />;
 
   const sb = await serverClient();
   const { data: prof } = await sb.from('profiles').select('birth_date, chart').eq('fbid', me).maybeSingle();
-  if (!prof?.chart) return <Gate cta="Create your chart" href="/profile/new" line="Create your chart and every current opens for you." />;
+  if (!prof?.chart) return <Gate title={t('Your currents')} cta={t('Create your chart')} href="/profile/new" line={t('Create your chart and every current opens for you.')} />;
 
   const chart = prof.chart as Chart;
   const date = prof.birth_date as string;
@@ -33,15 +35,13 @@ export default async function SystemsHub() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 text-[#ece9e0]">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">Your currents</p>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-2">{t('Your currents')}</p>
       <h1 className="text-4xl font-serif mb-3"
         style={{ background: 'linear-gradient(100deg,#ece9e0 15%,#e3c07a 50%,#b6abec 85%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-        You, across every tradition
+        {t('You, across every tradition')}
       </h1>
       <p className="text-[#9698a8] leading-relaxed mb-6">
-        The same birth moment, read through four living systems. Each page shows who you are in that current,
-        with every symbol explained — so you can recognise yourself fast, in the language you already know or
-        the one you want to learn.
+        {t('The same birth moment, read through four living systems. Each page shows who you are in that current, with every symbol explained — so you can recognise yourself fast, in the language you already know or the one you want to learn.')}
       </p>
 
       <div className="grid sm:grid-cols-2 gap-3">
@@ -61,16 +61,16 @@ export default async function SystemsHub() {
       </div>
 
       <p className="text-[11px] text-[#5b5e72] mt-6">
-        Want the symbol library itself? Visit <Link href="/cosmos" className="text-[#b6abec] underline">Cosmos ✦</Link> — every planet, sign, house and aspect explained.
+        {t('Want the symbol library itself? Visit')} <Link href="/cosmos" className="text-[#b6abec] underline">Cosmos ✦</Link> {t('— every planet, sign, house and aspect explained.')}
       </p>
     </div>
   );
 }
 
-function Gate({ line, cta, href }: { line: string; cta: string; href: string }) {
+function Gate({ line, cta, href, title }: { line: string; cta: string; href: string; title: string }) {
   return (
     <div className="max-w-2xl mx-auto p-6 text-[#ece9e0]">
-      <h1 className="text-2xl font-serif mb-2">Your currents</h1>
+      <h1 className="text-2xl font-serif mb-2">{title}</h1>
       <p className="text-[#9698a8] mb-5">{line}</p>
       <Link href={href} className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-5 py-2.5">{cta}</Link>
     </div>

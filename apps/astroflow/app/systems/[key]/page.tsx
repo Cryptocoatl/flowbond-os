@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getT, tFor, getLocale } from '../../../lib/i18n/server';
+import type { Locale } from '../../../lib/i18n/config';
 import { serverClient } from '../../../lib/supabase-server';
 import { myFbid } from '../../../lib/astro/access';
 import { personLines } from '../../../lib/astro/interpret';
@@ -15,15 +17,17 @@ import type { Chart } from '../../../lib/astro/types';
 
 export default async function SystemPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
+  const t = await getT();
+  const locale = await getLocale();
   const meta = systemByKey(key);
   if (!meta) notFound();
 
   const me = await myFbid();
-  if (!me) return <Gate cta="Sign in" href={`/auth/login?next=/systems/${key}`} line="Sign in to see yourself in this current." />;
+  if (!me) return <Gate cta={t('Sign in')} href={`/auth/login?next=/systems/${key}`} line={t('Sign in to see yourself in this current.')} title={t('This current')} />;
 
   const sb = await serverClient();
   const { data: prof } = await sb.from('profiles').select('handle, birth_date, chart').eq('fbid', me).maybeSingle();
-  if (!prof?.chart) return <Gate cta="Create your chart" href="/profile/new" line="Create your chart to open this current." />;
+  if (!prof?.chart) return <Gate cta={t('Create your chart')} href="/profile/new" line={t('Create your chart to open this current.')} title={t('This current')} />;
 
   const chart = prof.chart as Chart;
   const date = prof.birth_date as string;
@@ -31,7 +35,7 @@ export default async function SystemPage({ params }: { params: Promise<{ key: st
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10 text-[#ece9e0]">
-      <Link href="/systems" className="text-xs text-[#5b5e72]">← your currents</Link>
+      <Link href="/systems" className="text-xs text-[#5b5e72]">← {t('your currents')}</Link>
       <div className="flex items-baseline gap-3 mt-3">
         <span className="text-3xl" style={{ color: meta.color, textShadow: `0 0 14px ${meta.color}66` }}>{meta.glyph}</span>
         <h1 className="text-4xl font-serif">{meta.title}</h1>
@@ -39,13 +43,13 @@ export default async function SystemPage({ params }: { params: Promise<{ key: st
       <div className="text-[10px] uppercase tracking-[0.18em] mt-1.5 mb-2" style={{ color: meta.color }}>{meta.tagline}</div>
       <p className="text-[#9698a8] leading-relaxed mb-6">{meta.about}</p>
 
-      {key === 'western' && <Western chart={chart} color={meta.color} />}
-      {key === 'mayan' && <Mayan date={date} jd={chart.jd} color={meta.color} />}
-      {key === 'vedic' && <Vedic chart={chart} color={meta.color} />}
-      {key === 'genekeys' && <GeneKeysView chart={chart} color={meta.color} />}
+      {key === 'western' && <Western chart={chart} color={meta.color} locale={locale} />}
+      {key === 'mayan' && <Mayan date={date} jd={chart.jd} color={meta.color} locale={locale} />}
+      {key === 'vedic' && <Vedic chart={chart} color={meta.color} locale={locale} />}
+      {key === 'genekeys' && <GeneKeysView chart={chart} color={meta.color} locale={locale} />}
 
       <div className="mt-9 pt-5 border-t border-white/5">
-        <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">Read mine with FlowMe</div>
+        <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">{t('Read mine with FlowMe')}</div>
         <ReadingPanel handles={[handle]} traditions={key !== 'western'} />
       </div>
     </div>
@@ -53,18 +57,19 @@ export default async function SystemPage({ params }: { params: Promise<{ key: st
 }
 
 // ── Western ──────────────────────────────────────────────────────────────────
-function Western({ chart, color }: { chart: Chart; color: string }) {
+function Western({ chart, color, locale }: { chart: Chart; color: string; locale: Locale }) {
+  const t = tFor(locale);
   const lines = personLines(chart);
   const aspects = natalAspects(chart).filter((a) => a.type !== 'quincunx').slice(0, 9);
   const els = Object.entries(chart.elements);
   return (
     <>
-      <Hero color={color} big={`${chart.bodies.Sun.sign} Sun · ${chart.bodies.Moon.sign} Moon${chart.asc ? ` · ${chart.asc.sign} Rising` : ''}`}
-        small={chart.asc ? 'your big three — identity, inner world, and the mask you meet life through' : 'no birth time on file — rising & houses hidden'} />
-      <Section title="Your placements">
+      <Hero color={color} big={`${chart.bodies.Sun.sign} ${t('Sun')} · ${chart.bodies.Moon.sign} ${t('Moon')}${chart.asc ? ` · ${chart.asc.sign} ${t('Rising')}` : ''}`}
+        small={chart.asc ? t('your big three — identity, inner world, and the mask you meet life through') : t('no birth time on file — rising & houses hidden')} />
+      <Section title={t('Your placements')}>
         {lines.map((l) => <Row key={l.planet}>{l.line}</Row>)}
       </Section>
-      <Section title="Your aspects — how your energies talk">
+      <Section title={t('Your aspects — how your energies talk')}>
         {aspects.map((a, i) => (
           <Row key={i}>
             <span style={{ color: a.harmony > 0 ? '#7bd0c6' : '#e8956a' }}>{a.glyph}</span> {a.p1} {a.type} {a.p2}{' '}
@@ -72,18 +77,19 @@ function Western({ chart, color }: { chart: Chart; color: string }) {
           </Row>
         ))}
       </Section>
-      <Section title="Your elemental balance">
+      <Section title={t('Your elemental balance')}>
         <div className="flex gap-4 flex-wrap">
           {els.map(([el, n]) => <span key={el} className="text-sm text-[#cfc8e8]">{el} <b style={{ color }}>{n}</b></span>)}
         </div>
       </Section>
-      <Reference>Every planet, sign, house and aspect explained in <Link href="/cosmos" className="underline text-[#b6abec]">Cosmos ✦</Link>.</Reference>
+      <Reference>{t('Every planet, sign, house and aspect explained in')} <Link href="/cosmos" className="underline text-[#b6abec]">Cosmos ✦</Link>.</Reference>
     </>
   );
 }
 
 // ── Mayan · 13 Moons ─────────────────────────────────────────────────────────
-function Mayan({ date, jd, color }: { date: string; jd: number; color: string }) {
+function Mayan({ date, jd, color, locale }: { date: string; jd: number; color: string; locale: Locale }) {
+  const t = tFor(locale);
   const ds = dreamspell(date);
   const tz = tzolkin(jd);
   const fam = COLOR_FAMILY[ds.color];
@@ -93,13 +99,13 @@ function Mayan({ date, jd, color }: { date: string; jd: number; color: string })
   return (
     <>
       <Hero color={fam.hex} big={`${ds.color} ${ds.toneName} ${ds.sealName.split(' ').slice(1).join(' ')}`}
-        small={`Kin ${ds.kin} · Dreamspell galactic signature · ${fam.role}`} />
-      <Section title="Your seal & tone">
-        <Row><b style={{ color: fam.hex }}>{ds.sealName}</b> — {SEAL_KEY[ds.seal - 1]} <span className="text-[#5b5e72]">(seal {ds.seal})</span></Row>
-        <Row><b style={{ color }}>Tone {ds.tone} · {ds.toneName}</b> — {TONE_KEY[ds.tone - 1]}</Row>
-        <Row className="text-[#9698a8]">Traditional (GMT) count: {tz.number} {tz.dayName} — {tz.meaning}</Row>
+        small={`Kin ${ds.kin} · ${t('Dreamspell galactic signature')} · ${fam.role}`} />
+      <Section title={t('Your seal & tone')}>
+        <Row><b style={{ color: fam.hex }}>{ds.sealName}</b> — {SEAL_KEY[ds.seal - 1]} <span className="text-[#5b5e72]">({t('seal')} {ds.seal})</span></Row>
+        <Row><b style={{ color }}>{t('Tone')} {ds.tone} · {ds.toneName}</b> — {TONE_KEY[ds.tone - 1]}</Row>
+        <Row className="text-[#9698a8]">{t('Traditional (GMT) count:')} {tz.number} {tz.dayName} — {tz.meaning}</Row>
       </Section>
-      <Section title="Your oracle — the four energies around you">
+      <Section title={t('Your oracle — the four energies around you')}>
         <div className="grid sm:grid-cols-2 gap-2">
           {oracle.map(([role, seal]) => (
             <div key={role} className="rounded-xl border border-[#242a3b] bg-[#11131f]/80 p-3">
@@ -110,7 +116,7 @@ function Mayan({ date, jd, color }: { date: string; jd: number; color: string })
           ))}
         </div>
       </Section>
-      <Section title="The four color families">
+      <Section title={t('The four color families')}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {Object.entries(COLOR_FAMILY).map(([c, f]) => (
             <div key={c} className={`rounded-xl border p-2.5 ${c === ds.color ? '' : 'opacity-50'}`}
@@ -121,10 +127,10 @@ function Mayan({ date, jd, color }: { date: string; jd: number; color: string })
           ))}
         </div>
       </Section>
-      <Section title="The 20 solar seals">
+      <Section title={t('The 20 solar seals')}>
         <Grid items={DREAMSPELL_SEALS.map((n, i) => ({ label: n, sub: SEAL_KEY[i], on: i + 1 === ds.seal }))} color={fam.hex} />
       </Section>
-      <Section title="The 13 galactic tones">
+      <Section title={t('The 13 galactic tones')}>
         <Grid items={DREAMSPELL_TONES.map((n, i) => ({ label: `${i + 1} ${n}`, sub: TONE_KEY[i], on: i + 1 === ds.tone }))} color={color} />
       </Section>
     </>
@@ -132,19 +138,20 @@ function Mayan({ date, jd, color }: { date: string; jd: number; color: string })
 }
 
 // ── Vedic ────────────────────────────────────────────────────────────────────
-function Vedic({ chart, color }: { chart: Chart; color: string }) {
+function Vedic({ chart, color, locale }: { chart: Chart; color: string; locale: Locale }) {
+  const t = tFor(locale);
   const v = vedicChart(chart);
   const dasha = vimshottariDasha(chart);
   const summary = vedicSummary(v);
   return (
     <>
-      <Hero color={color} big={`${v.asc ? `${v.asc.rashi} Lagna` : 'no birth time'}${v.bodies.Moon ? ` · Moon in ${v.bodies.Moon.nakshatra}` : ''}`}
-        small="your sidereal ground — the karmic layer beneath the personality" />
-      <Section title="Your sidereal chart">
+      <Hero color={color} big={`${v.asc ? `${v.asc.rashi} Lagna` : t('no birth time')}${v.bodies.Moon ? ` · ${t('Moon')} ${t('in')} ${v.bodies.Moon.nakshatra}` : ''}`}
+        small={t('your sidereal ground — the karmic layer beneath the personality')} />
+      <Section title={t('Your sidereal chart')}>
         {summary.map((l, i) => <Row key={i}>{l}</Row>)}
       </Section>
-      <Section title="Your life chapter — Vimshottari dasha">
-        <Row><b style={{ color }}>{dasha.lord}</b> mahadasha at birth · ~{dasha.balanceYears.toFixed(1)} years of it remaining when you were born</Row>
+      <Section title={t('Your life chapter — Vimshottari dasha')}>
+        <Row><b style={{ color }}>{dasha.lord}</b> {t('mahadasha at birth · ~{years} years of it remaining when you were born', { years: dasha.balanceYears.toFixed(1) })}</Row>
         <div className="flex flex-wrap gap-1.5 mt-2">
           {dasha.sequence.map((d, i) => (
             <span key={i} className="text-[11px] px-2 py-1 rounded-full border"
@@ -154,22 +161,23 @@ function Vedic({ chart, color }: { chart: Chart; color: string }) {
           ))}
         </div>
       </Section>
-      <Reference>Sidereal and tropical are two lenses, never a contradiction — see both in your <Link href="/systems/western" className="underline text-[#b6abec]">Western chart</Link>.</Reference>
+      <Reference>{t('Sidereal and tropical are two lenses, never a contradiction — see both in your')} <Link href="/systems/western" className="underline text-[#b6abec]">{t('Western chart')}</Link>.</Reference>
     </>
   );
 }
 
 // ── Gene Keys / Human Design ─────────────────────────────────────────────────
-function GeneKeysView({ chart, color }: { chart: Chart; color: string }) {
+function GeneKeysView({ chart, color, locale }: { chart: Chart; color: string; locale: Locale }) {
+  const t = tFor(locale);
   const gk = geneKeys(chart);
   const spheres: Array<[string, { gate: number; line: number }]> = [
-    ["Life's Work", gk.spheres.lifesWork], ['Evolution', gk.spheres.evolution],
-    ['Radiance', gk.spheres.radiance], ['Purpose', gk.spheres.purpose],
+    [t("Life's Work"), gk.spheres.lifesWork], [t('Evolution'), gk.spheres.evolution],
+    [t('Radiance'), gk.spheres.radiance], [t('Purpose'), gk.spheres.purpose],
   ];
   return (
     <>
-      <Hero color={color} big={`Profile ${gk.profile}`} small={`Incarnation Cross of gates ${gk.incarnationCross.join(' · ')} — your four prime gifts`} />
-      <Section title="Your Activation Sequence — shadow → gift → siddhi">
+      <Hero color={color} big={`${t('Profile')} ${gk.profile}`} small={t('Incarnation Cross of gates {gates} — your four prime gifts', { gates: gk.incarnationCross.join(' · ') })} />
+      <Section title={t('Your Activation Sequence — shadow → gift → siddhi')}>
         <div className="space-y-2.5">
           {spheres.map(([name, g]) => {
             const k = GENE_KEYS[g.gate];
@@ -177,7 +185,7 @@ function GeneKeysView({ chart, color }: { chart: Chart; color: string }) {
               <div key={name} className="rounded-xl border border-[#242a3b] bg-[#11131f]/80 p-3.5">
                 <div className="flex items-baseline gap-2">
                   <span className="text-[10px] uppercase tracking-wider" style={{ color }}>{name}</span>
-                  <span className="font-mono text-xs text-[#5b5e72]">Gate {g.gate}.{g.line}</span>
+                  <span className="font-mono text-xs text-[#5b5e72]">{t('Gate')} {g.gate}.{g.line}</span>
                 </div>
                 <div className="mt-1 text-sm">
                   <span className="text-[#e8956a]">{k.shadow}</span>
@@ -191,7 +199,7 @@ function GeneKeysView({ chart, color }: { chart: Chart; color: string }) {
           })}
         </div>
       </Section>
-      <Reference>Each gate carries an arc: the shadow is the contracted pattern, the gift its unlocked expression, the siddhi the far star. Your profile <b className="text-[#cfc8e8]">{gk.profile}</b> describes how you walk it.</Reference>
+      <Reference>{t('Each gate carries an arc: the shadow is the contracted pattern, the gift its unlocked expression, the siddhi the far star. Your profile')} <b className="text-[#cfc8e8]">{gk.profile}</b> {t('describes how you walk it.')}</Reference>
     </>
   );
 }
@@ -233,10 +241,10 @@ function Grid({ items, color }: { items: { label: string; sub: string; on: boole
   );
 }
 
-function Gate({ line, cta, href }: { line: string; cta: string; href: string }) {
+function Gate({ line, cta, href, title }: { line: string; cta: string; href: string; title: string }) {
   return (
     <div className="max-w-2xl mx-auto p-6 text-[#ece9e0]">
-      <h1 className="text-2xl font-serif mb-2">This current</h1>
+      <h1 className="text-2xl font-serif mb-2">{title}</h1>
       <p className="text-[#9698a8] mb-5">{line}</p>
       <Link href={href} className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-5 py-2.5">{cta}</Link>
     </div>

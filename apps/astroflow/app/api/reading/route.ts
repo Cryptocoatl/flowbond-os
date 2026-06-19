@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { LANG_COOKIE } from '../../../lib/i18n/config';
 import { atLeast, getProfileByHandle, logChartRead, myFbid, myLevelOn } from '../../../lib/astro/access';
 import { synastry } from '../../../lib/astro/aspects';
 import { panorama, interpretAspect } from '../../../lib/astro/interpret';
@@ -128,7 +130,25 @@ ending with one concrete, encouraging takeaway for the given context.`;
 // FlowBond's privacy layer.
 const firstName = (p: AstroProfile) => (p.displayName ?? '').trim().split(/\s+/)[0] || 'this soul';
 
+// Respond in the reader's chosen UI language. Sent as a separate (uncached)
+// system block so the big cached SYSTEM prompt stays language-agnostic and
+// shared. English is the model's default, so no directive needed for 'en'.
+const LANG_DIRECTIVE: Record<string, string> = {
+  es: 'IMPORTANT: Write your ENTIRE response in warm, natural Latin American Spanish (español) — translate everything, including astrological terms (Sol, Luna, Ascendente, signo, casa, aspecto, carta). Clear, plain-language Spanish. Never switch to English.',
+};
+
+async function readerLangBlocks(): Promise<{ type: 'text'; text: string }[]> {
+  try {
+    const lang = (await cookies()).get(LANG_COOKIE)?.value;
+    const d = lang ? LANG_DIRECTIVE[lang] : undefined;
+    return d ? [{ type: 'text', text: d }] : [];
+  } catch {
+    return [];
+  }
+}
+
 async function channelFlowMe(facts: unknown, ask: string, maxTokens = 800) {
+  const langBlocks = await readerLangBlocks();
   const res = await fetch(ANTHROPIC_URL, {
     method: 'POST',
     headers: {
@@ -142,7 +162,10 @@ async function channelFlowMe(facts: unknown, ask: string, maxTokens = 800) {
       // System sent as a cached block — FlowMe's generic knowledge is loaded
       // once per hour, then reused near-free: the collective framework lives
       // in cache, only the tiny per-reading facts cost fresh tokens.
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral', ttl: '1h' } }],
+      system: [
+        { type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral', ttl: '1h' } },
+        ...langBlocks,
+      ],
       messages: [{ role: 'user', content: `${ask}\n\nFACTS:\n${JSON.stringify(facts, null, 2)}` }],
     }),
   });

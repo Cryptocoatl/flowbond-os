@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 import BondInvite from './BondInvite';
 import FindFriends from './FindFriends';
 import QrPanel from './QrPanel';
@@ -85,6 +86,7 @@ export default function DashboardClient({
   ownedMaps: OwnedMap[];
 }) {
   const router = useRouter();
+  const t = useT();
   const [pending, start] = useTransition();
   const [grantHandle, setGrantHandle] = useState('');
   const [grantLevel, setGrantLevel] = useState<string>('standard');
@@ -103,7 +105,7 @@ export default function DashboardClient({
     setMsg('');
     start(async () => {
       const { error } = await sb.rpc('create_crew', { crew_name: crewName.trim() });
-      setMsg(error ? error.message : `Crew "${crewName}" created`);
+      setMsg(error ? error.message : t('Crew "{name}" created', { name: crewName }));
       if (!error) {
         setCrewName('');
         router.refresh();
@@ -133,16 +135,16 @@ export default function DashboardClient({
   const grant = (h: string, lvl = grantLevel, ctx = grantContext) =>
     act(
       async () => await sb.rpc('grant_access', { target_handle: h.replace(/^@/, ''), lvl, ctx }),
-      `Shared with @${h} (${LEVEL_LABEL[lvl]} · ${ctx})`,
+      t('Shared with @{handle} ({level} · {context})', { handle: h, level: LEVEL_LABEL[lvl], context: ctx }),
     );
   const revoke = (h: string) =>
-    act(async () => await sb.rpc('revoke_access', { target_handle: h }), `Revoked @${h}`);
+    act(async () => await sb.rpc('revoke_access', { target_handle: h }), t('Revoked @{handle}', { handle: h }));
   // Erase a bond — mutual + sticky: they leave your flow both ways, and can only
   // come back by requesting access (which you approve). Not the same as 'revoke'.
   const eraseBond = (h: string) =>
     act(
       async () => await sb.rpc('erase_bond', { peer_handle: h }),
-      `Bond with @${h} erased. You're both out of each other's flow — they'd need to request to reconnect.`,
+      t("Bond with @{handle} erased. You're both out of each other's flow — they'd need to request to reconnect.", { handle: h }),
     );
 
   const pendingReqs = requests.filter((r) => r.status === 'pending');
@@ -151,19 +153,19 @@ export default function DashboardClient({
     <div className="max-w-3xl mx-auto p-6 text-[#ece9e0]">
       <header className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-serif">Your AstralFlow</h1>
+          <h1 className="text-3xl font-serif">{t('Your AstralFlow')}</h1>
           {me ? (
             <p className="text-xs font-mono text-[#5b5e72]">@{me.handle} · {me.visibility}</p>
           ) : (
-            <p className="text-sm text-[#9698a8]">You don&apos;t have a chart yet.</p>
+            <p className="text-sm text-[#9698a8]">{t("You don't have a chart yet.")}</p>
           )}
         </div>
         <div className="flex gap-2">
           <Link href="/" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full border border-[#242a3b] text-[#9698a8]">
-            Constellation
+            {t('Constellation')}
           </Link>
           <Link href="/profile/new" className="text-xs uppercase tracking-wider px-4 py-1.5 rounded-full bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec]">
-            {me ? 'Edit chart' : '+ Add chart'}
+            {me ? t('Edit chart') : t('+ Add chart')}
           </Link>
         </div>
       </header>
@@ -171,12 +173,12 @@ export default function DashboardClient({
       {msg && <p className="text-sm text-[#7fd1a8] mb-4">{msg}</p>}
 
       {/* Crews — invite people, share charts across the group */}
-      <Section title="Your crews">
+      <Section title={t('Your crews')}>
         <div className="flex gap-2 mb-3">
           <input
             value={crewName}
             onChange={(e) => setCrewName(e.target.value)}
-            placeholder="Name a crew (e.g. Tulum crew)"
+            placeholder={t('Name a crew (e.g. Tulum crew)')}
             className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-sm"
           />
           <button
@@ -184,11 +186,11 @@ export default function DashboardClient({
             disabled={pending || !crewName.trim()}
             className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-50"
           >
-            Create
+            {t('Create')}
           </button>
         </div>
         {crews.length === 0 ? (
-          <Empty>No crews yet. Create one, share the invite link, and your people join with one tap.</Empty>
+          <Empty>{t('No crews yet. Create one, share the invite link, and your people join with one tap.')}</Empty>
         ) : (
           <div className="space-y-3">
             {crews.map((c) => (
@@ -196,8 +198,8 @@ export default function DashboardClient({
                 <div className="flex items-center justify-between">
                   <div className="font-serif text-lg">{c.name}</div>
                   <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">
-                    {(c.members ?? []).length} {(c.members ?? []).length === 1 ? 'member' : 'members'}
-                    {c.is_owner ? ' · host' : ''}
+                    {(c.members ?? []).length} {(c.members ?? []).length === 1 ? t('member') : t('members')}
+                    {c.is_owner ? t(' · host') : ''}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -223,14 +225,14 @@ export default function DashboardClient({
                     onClick={() => copyInvite(c.invite_code)}
                     className="text-xs bg-[#9a8fe0]/20 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-lg px-3"
                   >
-                    {copied === c.invite_code ? 'Copied ✓' : 'Copy invite'}
+                    {copied === c.invite_code ? t('Copied ✓') : t('Copy invite')}
                   </button>
                 </div>
                 <div className="mt-2">
                   <QrPanel
                     url={inviteUrl(c.invite_code)}
-                    label="Show join QR"
-                    caption={`Scan to join “${c.name}” — sign in and your charts read together collectively.`}
+                    label={t('Show join QR')}
+                    caption={t('Scan to join “{name}” — sign in and your charts read together collectively.', { name: c.name })}
                   />
                 </div>
               </div>
@@ -240,11 +242,10 @@ export default function DashboardClient({
       </Section>
 
       {/* Collective charts */}
-      <Section title="Your collective charts">
+      <Section title={t('Your collective charts')}>
         {maps.length === 0 ? (
           <Empty>
-            No flow maps yet. In the constellation, switch to <b>Combine</b>, weave people together, and
-            save them as a flow map.
+            {t('No flow maps yet. In the constellation, switch to')} <b>{t('Combine')}</b>, {t('weave people together, and save them as a flow map.')}
           </Empty>
         ) : (
           <div className="space-y-3">
@@ -255,7 +256,7 @@ export default function DashboardClient({
                     {m.name} <span className="text-xs text-[#5b5e72]">→</span>
                   </Link>
                   <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">
-                    {m.context}{m.is_owner ? '' : ' · added by a friend'}
+                    {m.context}{m.is_owner ? '' : t(' · added by a friend')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -265,9 +266,9 @@ export default function DashboardClient({
                         key={`g${i}`}
                         className="text-xs px-2.5 py-1 rounded-full border border-dashed"
                         style={{ borderColor: `${mem.avatar_color}66`, color: '#9698a8' }}
-                        title={mem.claimed ? 'claimed their chart' : 'guest — not in the flow yet'}
+                        title={mem.claimed ? t('claimed their chart') : t('guest — not in the flow yet')}
                       >
-                        {mem.display_name} {mem.claimed ? '✓' : '·  guest'}
+                        {mem.display_name} {mem.claimed ? '✓' : t('·  guest')}
                       </span>
                     ) : (
                       <Link
@@ -288,12 +289,12 @@ export default function DashboardClient({
       </Section>
 
       {/* Friend allowance — choose how deep and in what context */}
-      <Section title="Who can see your chart">
+      <Section title={t('Who can see your chart')}>
         <div className="flex gap-2 mb-2">
           <input
             value={grantHandle}
             onChange={(e) => setGrantHandle(e.target.value)}
-            placeholder="@handle to share with"
+            placeholder={t('@handle to share with')}
             className="flex-1 bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-3 py-2 text-sm"
           />
           <button
@@ -301,7 +302,7 @@ export default function DashboardClient({
             disabled={pending || !grantHandle.trim()}
             className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-50"
           >
-            Share
+            {t('Share')}
           </button>
         </div>
         <div className="flex gap-2 mb-1 items-center flex-wrap">
@@ -313,7 +314,7 @@ export default function DashboardClient({
                 grantLevel === l ? 'bg-[#9a8fe0]/25 border-[#9a8fe0]/60 text-[#cfc8e8]' : 'border-[#242a3b] text-[#5b5e72]'
               }`}
             >
-              {LEVEL_LABEL[l]}
+              {t(LEVEL_LABEL[l])}
             </button>
           ))}
           <select
@@ -321,22 +322,21 @@ export default function DashboardClient({
             onChange={(e) => setGrantContext(e.target.value)}
             className="text-xs bg-[#0d0f1a] border border-[#242a3b] rounded-lg px-2 py-1 text-[#9698a8]"
           >
-            {CONTEXTS.map((c) => <option key={c} value={c}>{c}</option>)}
+            {CONTEXTS.map((c) => <option key={c} value={c}>{t(c)}</option>)}
           </select>
         </div>
         <p className="text-[10px] text-[#5b5e72] mb-3">
-          light = the essentials · standard = full chart · deep = patterns, shadow work &amp; all traditions ·
-          open heart = full transparency
+          {t('light = the essentials · standard = full chart · deep = patterns, shadow work & all traditions · open heart = full transparency')}
         </p>
         {allowances.length === 0 ? (
-          <Empty>You haven&apos;t shared your chart with anyone yet.</Empty>
+          <Empty>{t("You haven't shared your chart with anyone yet.")}</Empty>
         ) : (
           allowances.map((a) => (
             <Row key={a.handle}>
               <span>
                 {a.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{a.handle}</span>{' '}
                 <span className="text-[10px] uppercase tracking-wide text-[#b6abec]">
-                  {LEVEL_LABEL[a.level] ?? a.level} · {a.context}
+                  {t(LEVEL_LABEL[a.level] ?? a.level)} · {t(a.context)}
                 </span>
               </span>
               <span className="flex gap-2 items-center">
@@ -346,10 +346,10 @@ export default function DashboardClient({
                   disabled={pending}
                   className="text-[10px] bg-[#0d0f1a] border border-[#242a3b] rounded px-1 py-0.5 text-[#9698a8]"
                 >
-                  {LEVELS.map((l) => <option key={l} value={l}>{LEVEL_LABEL[l]}</option>)}
+                  {LEVELS.map((l) => <option key={l} value={l}>{t(LEVEL_LABEL[l])}</option>)}
                 </select>
                 <button onClick={() => revoke(a.handle)} disabled={pending} className="text-xs text-[#d9663c]">
-                  revoke
+                  {t('revoke')}
                 </button>
               </span>
             </Row>
@@ -358,19 +358,19 @@ export default function DashboardClient({
       </Section>
 
       {/* Consent transparency — who is actually reading you */}
-      <Section title="Who's been reading you">
+      <Section title={t("Who's been reading you")}>
         {audience.length === 0 ? (
-          <Empty>No one has opened your chart yet. When they do, you&apos;ll see it here.</Empty>
+          <Empty>{t("No one has opened your chart yet. When they do, you'll see it here.")}</Empty>
         ) : (
           audience.map((v) => (
             <Row key={v.handle}>
               <span className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: v.avatar_color ?? '#5b5e72' }} />
-                {v.display_name ?? 'Someone'}{' '}
+                {v.display_name ?? t('Someone')}{' '}
                 <span className="text-[#5b5e72] font-mono text-xs">@{v.handle ?? '?'}</span>
               </span>
               <span className="text-[10px] uppercase tracking-wider text-[#5b5e72]">
-                {v.reads} {v.reads === 1 ? 'read' : 'reads'} · last {new Date(v.last_read).toLocaleDateString()}
+                {v.reads} {v.reads === 1 ? t('read') : t('reads')} · {t('last')} {new Date(v.last_read).toLocaleDateString()}
               </span>
             </Row>
           ))
@@ -378,15 +378,15 @@ export default function DashboardClient({
       </Section>
 
       {/* Incoming requests */}
-      <Section title="Requests to see your chart">
+      <Section title={t('Requests to see your chart')}>
         {pendingReqs.length === 0 ? (
-          <Empty>No pending requests.</Empty>
+          <Empty>{t('No pending requests.')}</Empty>
         ) : (
           pendingReqs.map((r) => (
             <Row key={r.handle}>
-              <span>{r.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{r.handle}</span> wants access</span>
+              <span>{r.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{r.handle}</span> {t('wants access')}</span>
               <button onClick={() => grant(r.handle)} disabled={pending} className="af-btn af-btn-primary af-btn-sm">
-                Allow
+                {t('Allow')}
               </button>
             </Row>
           ))
@@ -397,34 +397,33 @@ export default function DashboardClient({
       <ChartedSouls souls={souls} myMaps={ownedMaps} />
 
       {/* Friends — find people by handle, accept requests, weave bonds */}
-      <Section title="Friends">
+      <Section title={t('Friends')}>
         <div className="mb-4">
           <FindFriends />
         </div>
         <div className="mb-3 pt-3 border-t border-white/5">
           <BondInvite />
           <p className="text-[10px] text-[#5b5e72] mt-1.5">
-            Your personal astrobond link: they log in once with their FBID, create their chart, and you
-            see each other&apos;s skies — in dashboards, constellations, and every universe you weave together.
+            {t("Your personal astrobond link: they log in once with their FBID, create their chart, and you see each other's skies — in dashboards, constellations, and every universe you weave together.")}
           </p>
         </div>
         {friends.length === 0 ? (
-          <Empty>No bonds yet — send your link and watch your sky fill up.</Empty>
+          <Empty>{t('No bonds yet — send your link and watch your sky fill up.')}</Empty>
         ) : (
           friends.map((f) => (
             <Row key={f.handle}>
               <span>{f.display_name} <span className="text-[#5b5e72] font-mono text-xs">@{f.handle}</span></span>
               {confirmErase === f.handle ? (
                 <span className="flex gap-2 items-center text-[10px]">
-                  <span className="text-[#d9663c]">erase this bond? it&apos;s mutual</span>
+                  <span className="text-[#d9663c]">{t("erase this bond? it's mutual")}</span>
                   <button
                     onClick={() => { setConfirmErase(''); eraseBond(f.handle); }}
                     disabled={pending}
                     className="uppercase tracking-wide bg-[#d9663c]/20 border border-[#d9663c]/50 text-[#e98b63] rounded-full px-2.5 py-0.5"
                   >
-                    erase
+                    {t('erase')}
                   </button>
-                  <button onClick={() => setConfirmErase('')} className="text-[#5b5e72]">keep</button>
+                  <button onClick={() => setConfirmErase('')} className="text-[#5b5e72]">{t('keep')}</button>
                 </span>
               ) : (
                 <span className="flex gap-3 items-center">
@@ -434,7 +433,7 @@ export default function DashboardClient({
                     disabled={pending}
                     className="text-[10px] text-[#d9663c]/60 hover:text-[#d9663c]"
                   >
-                    erase bond
+                    {t('erase bond')}
                   </button>
                 </span>
               )}
@@ -442,9 +441,7 @@ export default function DashboardClient({
           ))
         )}
         <p className="text-[10px] text-[#5b5e72] mt-2">
-          Erasing a bond is mutual and clean: you both leave each other&apos;s dashboards and
-          constellations, shared skies close, and reconnecting takes a fresh request you approve.
-          No drama, no surveillance — just free flow.
+          {t("Erasing a bond is mutual and clean: you both leave each other's dashboards and constellations, shared skies close, and reconnecting takes a fresh request you approve. No drama, no surveillance — just free flow.")}
         </p>
       </Section>
     </div>

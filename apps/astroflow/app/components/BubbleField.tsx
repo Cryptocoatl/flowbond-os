@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { useT } from '../../lib/i18n/provider';
 
 export interface Bubble {
   handle: string;          // real profiles; '' for ghosts
@@ -25,6 +26,7 @@ const rng = (i: number, salt: number) => {
 // haven't activated their FBID yet — tap one to send their activation link
 // and watch their avatar light up for real.
 export default function BubbleField({ people }: { people: Bubble[] }) {
+  const t = useT();
   const [hover, setHover] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
 
@@ -51,7 +53,7 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
   if (people.length === 0)
     return (
       <div className="rounded-2xl border border-[#242a3b] bg-[#0e1020] p-6 text-center text-sm text-[#5b5e72]">
-        Your sky is quiet — invite friends or open someone&apos;s claim link and the bubbles appear here.
+        {t('Your sky is quiet — invite friends or open someone’s claim link and the bubbles appear here.')}
       </div>
     );
 
@@ -106,7 +108,7 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
             >
               <b className="text-[#ece9e0]">{b.name}</b>{' '}
               {b.ghost ? (
-                <span className="text-[#8fb8e0]">{copied === b.claimCode ? 'link copied ✓' : 'tap to invite ✦'}</span>
+                <span className="text-[#8fb8e0]">{copied === b.claimCode ? t('link copied ✓') : t('tap to invite ✦')}</span>
               ) : (
                 <span className="text-[#9698a8]">
                   {b.sun} ☉ · {b.moon} ☾{b.rising ? ` · ${b.rising} ↑` : ''}
@@ -115,7 +117,7 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
             </span>
             {hover !== b.id && (
               <span className="mt-1 text-[9px] text-[#5b5e72] group-hover:opacity-0">
-                {b.isMe ? 'you' : b.ghost ? '✦ invite' : b.name.split(' ')[0]}
+                {b.isMe ? t('you') : b.ghost ? t('✦ invite') : b.name.split(' ')[0]}
               </span>
             )}
           </>
@@ -146,7 +148,7 @@ export default function BubbleField({ people }: { people: Bubble[] }) {
         href="/"
         className="absolute bottom-2.5 right-3 text-[10px] uppercase tracking-[0.16em] text-[#b6abec] bg-[#0a0b14]/80 border border-[#9a8fe0]/30 rounded-full px-3 py-1 hover:bg-[#9a8fe0]/15 transition z-20"
       >
-        weave in the constellation →
+        {t('weave in the constellation →')}
       </Link>
     </div>
   );

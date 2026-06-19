@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 // Host-only: grow a constellation by searching a friend's @handle and weaving
 // them in. You can only add people you're connected to (a bond, or they granted
@@ -13,6 +14,7 @@ interface Result {
 
 export default function AddToConstellation({ mapId, existingHandles }: { mapId: string; existingHandles: string[] }) {
   const router = useRouter();
+  const t = useT();
   const sb = browserClient();
   const have = new Set(existingHandles);
   const [open, setOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function AddToConstellation({ mapId, existingHandles }: { mapId: 
     try {
       const { error } = await sb.rpc('add_member_to_map', { p_map_id: mapId, p_member_handle: handle });
       if (error) {
-        setNote(/not_connected/.test(error.message) ? `Bond with @${handle} first, then add them.` : error.message);
+        setNote(/not_connected/.test(error.message) ? t('Bond with @{handle} first, then add them.', { handle }) : error.message);
         return;
       }
       setQ(''); setResults([]); setOpen(false);
@@ -53,7 +55,7 @@ export default function AddToConstellation({ mapId, existingHandles }: { mapId: 
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="af-btn af-btn-primary af-btn-sm mt-3">
-        + Add someone
+        {t('+ Add someone')}
       </button>
     );
   }
@@ -61,22 +63,22 @@ export default function AddToConstellation({ mapId, existingHandles }: { mapId: 
   return (
     <div className="af-card p-4 mt-3 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec]">Add someone to this constellation</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec]">{t('Add someone to this constellation')}</p>
         <button onClick={() => { setOpen(false); setQ(''); setResults([]); }} className="text-[#9698a8] text-sm">✕</button>
       </div>
       <input
         value={q}
         onChange={(e) => onSearch(e.target.value)}
-        placeholder="Search a friend by @handle…"
+        placeholder={t('Search a friend by @handle…')}
         autoCapitalize="none" autoCorrect="off" spellCheck={false}
         className="af-input"
       />
       {q.trim().length >= 2 && (
         <div className="divide-y divide-white/5">
           {searching && results.length === 0 ? (
-            <p className="text-sm text-[#9698a8] py-2">Searching…</p>
+            <p className="text-sm text-[#9698a8] py-2">{t('Searching…')}</p>
           ) : results.length === 0 ? (
-            <p className="text-sm text-[#9698a8] py-2">No one found for “{q.trim()}”.</p>
+            <p className="text-sm text-[#9698a8] py-2">{t('No one found for “{query}”.', { query: q.trim() })}</p>
           ) : (
             results.map((r) => (
               <div key={r.handle} className="flex items-center gap-3 py-2.5">
@@ -88,10 +90,10 @@ export default function AddToConstellation({ mapId, existingHandles }: { mapId: 
                   <p className="text-xs font-mono text-[#5b5e72] truncate">@{r.handle}</p>
                 </div>
                 {have.has(r.handle) ? (
-                  <span className="text-xs text-[#7fd1a8] px-2">In ✓</span>
+                  <span className="text-xs text-[#7fd1a8] px-2">{t('In ✓')}</span>
                 ) : (
                   <button onClick={() => add(r.handle)} disabled={busy === r.handle} className="af-btn af-btn-primary af-btn-sm">
-                    Add
+                    {t('Add')}
                   </button>
                 )}
               </div>
