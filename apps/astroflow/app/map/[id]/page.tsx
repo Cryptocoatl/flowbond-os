@@ -5,6 +5,8 @@ import ReadingPanel from '../../components/ReadingPanel';
 import GuestTools from '../../components/GuestTools';
 import CollectiveContext from '../../components/CollectiveContext';
 import AddToConstellation from '../../components/AddToConstellation';
+import CurrentsLens from '../../components/CurrentsLens';
+import { buildCurrents } from '../../../lib/astro/currents';
 import type { Chart } from '../../../lib/astro/types';
 
 interface MapMember {
@@ -77,6 +79,17 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
   for (const c of charts) for (const el of ELEMENTS) composite[el] += c.elements?.[el] ?? 0;
   const total = Object.values(composite).reduce((a, b) => a + b, 0) || 1;
   const dominant = ELEMENTS.slice().sort((a, b) => composite[b] - composite[a])[0];
+
+  // Per-current collective layout (each member projected into every tradition's
+  // visual frame). Hidden members carry no chart and show as "hidden".
+  const currents = buildCurrents([
+    ...members.map((m) => ({
+      name: m.display_name ?? t('Unknown'),
+      color: m.avatar_color ?? '#9a8fe0',
+      chart: m.handle ? chartByHandle.get(m.handle) : undefined,
+    })),
+    ...guests.map((g) => ({ name: g.display_name, color: g.avatar_color, chart: g.chart })),
+  ]);
 
   return (
     <Shell>
@@ -176,6 +189,15 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           ))}
         </div>
       </Section>
+
+      {currents.count >= 1 && (
+        <Section title={t('Read through a current')}>
+          <p className="text-xs text-[#9698a8] -mt-1 mb-3">
+            {t('See the whole crew through one tradition at a time — pick a current to lay everyone out in its frame.')}
+          </p>
+          <CurrentsLens data={currents} />
+        </Section>
+      )}
 
       {map.is_owner && (
         <Section title={t('Summon someone into the weave')}>
