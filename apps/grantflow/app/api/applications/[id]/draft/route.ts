@@ -62,6 +62,21 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       .select()
       .single();
     if (saveErr) throw saveErr;
+
+    // ClaudIA records her own work in the activity ledger.
+    await admin.from('interactions').insert({
+      kind: 'ai_draft',
+      actor: 'ClaudIA',
+      model,
+      direction: 'internal',
+      summary: `Drafted application for ${grant.name}`,
+      body: draft.summary,
+      grant_id: app.grant_id,
+      application_id: id,
+      project_slug: app.project_slug,
+      occurred_at: now,
+    });
+
     return NextResponse.json(saved);
   } catch (e) {
     await admin

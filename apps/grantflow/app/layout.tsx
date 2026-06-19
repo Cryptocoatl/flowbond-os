@@ -11,13 +11,14 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: 'GrantFlow — FlowBond funding engine',
+  title: 'ClaudIA — steward of FlowBond funding',
   description:
-    'Live grant intelligence for the FlowBond ecosystem — every open opportunity, scored against every project, across web3, ReFi, social, cultural and tech.',
+    'Unalienable technology, made and followed by love. ClaudIA finds the grants, writes the applications, and keeps every funder, partner, and conversation in one structured place.',
+  icons: { icon: '/claudia-logo.png', apple: '/claudia-logo.png' },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#07100d',
+  themeColor: '#0a1410',
   width: 'device-width',
   initialScale: 1,
 };

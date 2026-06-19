@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TABS = [
+  { href: '/claudia', label: 'ClaudIA' },
   { href: '/', label: 'Dashboard' },
   { href: '/grants', label: 'Grants' },
-  { href: '/projects', label: 'Projects' },
   { href: '/pipeline', label: 'Pipeline' },
+  { href: '/contacts', label: 'CRM' },
 ];
 
 export default function Nav() {
@@ -18,8 +19,9 @@ export default function Nav() {
         className="gf-wrap"
         style={{ display: 'flex', alignItems: 'center', gap: 24, height: 58 }}
       >
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <span style={{ fontSize: 20 }}>🌱</span>
+        <Link href="/claudia" style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/claudia-logo.png" alt="" width={26} height={26} style={{ filter: 'drop-shadow(0 0 8px rgba(231,193,135,0.4))' }} />
           <span
             style={{
               fontFamily: 'var(--font-display), Georgia, serif',
@@ -28,7 +30,7 @@ export default function Nav() {
               letterSpacing: '-0.01em',
             }}
           >
-            Grant<span style={{ color: 'var(--gf-emerald)' }}>Flow</span>
+            Claud<span style={{ color: 'var(--cl-gold)' }}>IA</span>
           </span>
         </Link>
         <div style={{ display: 'flex', gap: 20, marginLeft: 'auto' }}>

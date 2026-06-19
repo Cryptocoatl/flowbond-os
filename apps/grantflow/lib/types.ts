@@ -55,6 +55,60 @@ export interface Application {
   decision_at: string | null;
 }
 
+export interface Contact {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  organization: string | null;
+  role: string | null;
+  relationship: string | null;
+  project_slug: string | null;
+  grant_id: string | null;
+  tags: string[];
+  links: Record<string, string>;
+  notes: string | null;
+  last_contacted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Interaction {
+  id: string;
+  kind: 'note' | 'email' | 'call' | 'meeting' | 'dm' | 'ai_draft' | 'model';
+  actor: string | null;
+  model: string | null;
+  direction: string | null;
+  channel: string | null;
+  summary: string;
+  body: string | null;
+  contact_id: string | null;
+  grant_id: string | null;
+  application_id: string | null;
+  project_slug: string | null;
+  occurred_at: string;
+  created_at: string;
+}
+
+export const RELATIONSHIPS = [
+  'funder',
+  'program-officer',
+  'partner',
+  'advisor',
+  'community',
+  'press',
+] as const;
+
+export const INTERACTION_KINDS = [
+  'note',
+  'email',
+  'call',
+  'meeting',
+  'dm',
+  'ai_draft',
+  'model',
+] as const;
+
 export const LAYERS: Layer[] = ['web3', 'refi', 'social', 'cultural', 'tech'];
 
 export const LAYER_LABEL: Record<string, string> = {
