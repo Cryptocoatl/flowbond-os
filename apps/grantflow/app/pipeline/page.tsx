@@ -27,10 +27,14 @@ export default async function PipelinePage() {
     grant_id: a.grant_id,
     grantName: a.grant_id ? grantName.get(a.grant_id) ?? 'Unknown grant' : 'Unknown grant',
     projectName: a.project_slug ? projName.get(a.project_slug) ?? a.project_slug : null,
+    hasProject: !!a.project_slug,
     stage: a.stage,
     owner: a.owner,
     amount_requested: a.amount_requested,
     notes: a.notes,
+    draft: ((a as { draft?: PipelineCard['draft'] }).draft ?? null),
+    draftStatus: (a as { draft_status?: string }).draft_status ?? 'none',
+    draftedBy: (a as { drafted_by?: string | null }).drafted_by ?? null,
   }));
 
   return (
