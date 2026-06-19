@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useT } from '../../lib/i18n/provider';
 
 // A scannable QR for any invite link. Tap to reveal — your friend points their
 // camera at it and lands straight on the invite (login → bond / join collective
@@ -9,14 +10,16 @@ import { QRCodeSVG } from 'qrcode.react';
 export default function QrPanel({
   url,
   caption,
-  label = 'Show QR code',
+  label,
 }: {
   url: string;
   caption?: string;
   label?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   if (!url) return null;
+  const showLabel = label ?? t('Show QR code');
 
   return (
     <div>
@@ -25,7 +28,7 @@ export default function QrPanel({
         onClick={() => setOpen((o) => !o)}
         className="af-btn af-btn-ghost af-btn-sm"
       >
-        {open ? 'Hide QR' : `⊞ ${label}`}
+        {open ? t('Hide QR') : `⊞ ${showLabel}`}
       </button>
 
       {open && (
@@ -41,7 +44,7 @@ export default function QrPanel({
             />
           </div>
           <p className="text-[11px] text-[#b6abec] mt-2.5 text-center max-w-[15rem] leading-relaxed">
-            {caption ?? 'Have your friend scan this with their camera to join.'}
+            {caption ?? t('Have your friend scan this with their camera to join.')}
           </p>
         </div>
       )}

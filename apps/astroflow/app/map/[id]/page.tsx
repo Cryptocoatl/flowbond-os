@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getT } from '../../../lib/i18n/server';
 import { serverClient } from '../../../lib/supabase-server';
 import ReadingPanel from '../../components/ReadingPanel';
 import GuestTools from '../../components/GuestTools';
@@ -34,15 +35,16 @@ const EL_GLYPH: Record<string, string> = { Fire: '🜂', Earth: '🜃', Air: '�
 // they claim their personalized invite and take their real seat in the weave.
 export default async function MapPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const t = await getT();
   const sb = await serverClient();
   const { data: map } = await sb.rpc('get_flow_map', { map_id: id });
 
   if (!map)
     return (
       <Shell>
-        <h1 className="text-2xl font-serif mb-2">Collective chart not found</h1>
-        <p className="text-[#9698a8]">It may not exist, or you haven&apos;t been woven into it yet.</p>
-        <Link href="/dashboard" className="text-[#b6abec] underline text-sm mt-4 inline-block">Back to dashboard</Link>
+        <h1 className="text-2xl font-serif mb-2">{t('Collective chart not found')}</h1>
+        <p className="text-[#9698a8]">{t('It may not exist, or you haven’t been woven into it yet.')}</p>
+        <Link href="/dashboard" className="text-[#b6abec] underline text-sm mt-4 inline-block">{t('Back to dashboard')}</Link>
       </Shell>
     );
 
@@ -87,8 +89,8 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           animation: 'af-aurora 12s ease-in-out infinite',
         }}
       />
-      <Link href="/dashboard" className="text-xs text-[#5b5e72]">← dashboard</Link>
-      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mt-4 mb-2">Collective chart · {map.context}</p>
+      <Link href="/dashboard" className="text-xs text-[#5b5e72]">← {t('dashboard')}</Link>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mt-4 mb-2">{t('Collective chart')} · {map.context}</p>
       <h1
         className="text-5xl font-serif"
         style={{
@@ -100,8 +102,8 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         {map.name}
       </h1>
       <p className="text-xs text-[#5b5e72] mt-2">
-        {map.owner_handle ? `woven by @${map.owner_handle} · ` : ''}
-        {charts.length} {charts.length === 1 ? 'chart' : 'charts'} shining · {dominant}-leaning weave
+        {map.owner_handle ? `${t('woven by')} @${map.owner_handle} · ` : ''}
+        {charts.length} {charts.length === 1 ? t('chart shining') : t('charts shining')} · {t('{element}-leaning weave', { element: dominant })}
       </p>
 
       <CollectiveContext
@@ -120,21 +122,22 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           href={`/atlas/${map.id}`}
           className="inline-flex items-center gap-2 mt-3 px-3.5 py-2 rounded-lg text-sm bg-[#11131f] border border-[#2c3350] text-[#cfc8e8] hover:border-[#3a4670] transition"
         >
-          🌍 View on the globe — where your lines cross
+          🌍 {t('View on the globe — where your lines cross')}
         </Link>
       )}
 
-      <Section title="The weave — your crew of stars">
+      <Section title={t('The weave — your crew of stars')}>
         <div className="grid sm:grid-cols-2 gap-3">
           {members.map((m) => {
             const chart = m.handle ? chartByHandle.get(m.handle) : undefined;
             return (
               <HeroCard
                 key={m.fbid}
-                name={m.display_name ?? 'Unknown'}
+                name={m.display_name ?? t('Unknown')}
                 color={m.avatar_color ?? '#9a8fe0'}
                 chart={chart}
                 href={m.handle ? `/chart/${m.handle}` : undefined}
+                notShared={t('their sky is not shared with you')}
               />
             );
           })}
@@ -144,13 +147,14 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
               name={g.display_name}
               color={g.avatar_color}
               chart={g.chart}
-              badge={g.claimed ? 'claimed ✓' : 'summoned — not yet in the flow'}
+              badge={g.claimed ? t('claimed ✓') : t('summoned — not yet in the flow')}
+              notShared={t('their sky is not shared with you')}
             />
           ))}
         </div>
       </Section>
 
-      <Section title="Collective cosmic powers">
+      <Section title={t('Collective cosmic powers')}>
         <div className="flex h-3.5 rounded-full overflow-hidden border border-[#242a3b]">
           {ELEMENTS.map((el) => (
             <div
@@ -174,7 +178,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
       </Section>
 
       {map.is_owner && (
-        <Section title="Summon someone into the weave">
+        <Section title={t('Summon someone into the weave')}>
           <GuestTools
             mapId={map.id}
             guests={guests.map((g) => ({
@@ -188,7 +192,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         <ReadingPanel mapId={map.id} pair={false} />
       ) : (
         <p className="text-sm text-[#5b5e72] mt-8">
-          The collective reading opens once at least two charts shine here for you.
+          {t('The collective reading opens once at least two charts shine here for you.')}
         </p>
       )}
     </Shell>
@@ -197,8 +201,8 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
 
 // A stellar-hero card: identity star, big three, and the four elements as
 // cosmic power bars — your in-game character sheet, computed from the sky.
-function HeroCard({ name, color, chart, href, badge }: {
-  name: string; color: string; chart?: Chart; href?: string; badge?: string;
+function HeroCard({ name, color, chart, href, badge, notShared }: {
+  name: string; color: string; chart?: Chart; href?: string; badge?: string; notShared: string;
 }) {
   const maxEl = chart ? Math.max(1, ...ELEMENTS.map((el) => chart.elements?.[el] ?? 0)) : 1;
   const inner = (
@@ -240,7 +244,7 @@ function HeroCard({ name, color, chart, href, badge }: {
           </div>
         </>
       ) : (
-        <div className="text-xs text-[#5b5e72] mt-1.5">their sky is not shared with you</div>
+        <div className="text-xs text-[#5b5e72] mt-1.5">{notShared}</div>
       )}
     </div>
   );

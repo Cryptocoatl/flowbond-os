@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { useT } from '../../lib/i18n/provider';
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from 'd3-geo';
 import { feature } from 'topojson-client';
 import worldData from 'world-atlas/countries-110m.json';
@@ -41,6 +42,7 @@ const clampK = (k: number) => Math.min(12, Math.max(1, k));
 type Info = { title: string; titleColor?: string; sub?: string; body?: string };
 
 export default function AcgMap({ layers, crossings, places, legend, crossingKey, focus }: Props) {
+  const t = useT();
   const wrap = useRef<HTMLDivElement>(null);
   const [info, setInfo] = useState<Info | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -125,7 +127,7 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
       title: `${multi ? f.properties.person + ' · ' : ''}${f.properties.planet} ${f.properties.kind}`,
       titleColor: f.properties.color,
       sub: KIND_LABEL[f.properties.kind as 'MC'],
-      body: near.length ? `Runs through ${near.map((h) => h.city.name).join(' · ')}` : 'Crosses open ocean / few major cities here',
+      body: near.length ? t('Runs through {cities}', { cities: near.map((h) => h.city.name).join(' · ') }) : t('Crosses open ocean / few major cities here'),
     });
   };
 
@@ -172,7 +174,7 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
             const col = (f.properties.color as string) ?? '#e3c07a';
             return (
               <g key={`pl-${i}`} style={{ cursor: 'pointer' }}
-                 onClick={(e) => { e.stopPropagation(); setInfo({ title: f.properties.name, titleColor: col, sub: 'strongest power spot', body: f.properties.detail }); }}>
+                 onClick={(e) => { e.stopPropagation(); setInfo({ title: f.properties.name, titleColor: col, sub: t('strongest power spot'), body: f.properties.detail }); }}>
                 <circle cx={p[0]} cy={p[1]} r={14 / view.k} fill="transparent" />
                 <circle cx={p[0]} cy={p[1]} r={11 / view.k} fill={col} opacity={0.2} />
                 <path d={`M${p[0]},${p[1] - 6 / view.k} l${4 / view.k},${10 / view.k} l${-4 / view.k},${-3 / view.k} l${-4 / view.k},${3 / view.k} Z`}
@@ -188,7 +190,7 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
             const col = f.properties.color as string; const r = 8 + 10 * (f.properties.score ?? 0.5);
             return (
               <g key={`cx-${i}`} style={{ cursor: 'pointer' }}
-                 onClick={(e) => { e.stopPropagation(); setInfo({ title: f.properties.title, titleColor: col, sub: `${f.properties.quality} crossing` }); }}>
+                 onClick={(e) => { e.stopPropagation(); setInfo({ title: f.properties.title, titleColor: col, sub: t('{quality} crossing', { quality: t(f.properties.quality) }) }); }}>
                 <circle cx={p[0]} cy={p[1]} r={Math.max(r, 14) / view.k} fill={col} opacity={0.22} />
                 <circle cx={p[0]} cy={p[1]} r={4.5 / view.k} fill={col} stroke="#fff" strokeOpacity={0.85} strokeWidth={1.4 / view.k} />
               </g>
@@ -201,14 +203,14 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
       <div className="absolute top-2.5 left-2.5 right-14">
         <button onClick={() => setShowFilters((s) => !s)}
           className="text-[11px] px-3 py-1.5 rounded-full bg-[#0d0f1c]/90 border border-[#2c3350] text-[#cfc8e8] active:scale-95 transition">
-          ⚲ Filter lines {showFilters ? '▲' : '▼'}
+          ⚲ {t('Filter lines')} {showFilters ? '▲' : '▼'}
         </button>
         {showFilters && (
           <div className="mt-1.5 px-2.5 py-2 rounded-xl bg-[#0d0f1c]/92 border border-[#242a3b] backdrop-blur-sm max-w-[420px]">
             <div className="flex flex-wrap gap-1 mb-2">
               {PRESETS.map((p) => (
                 <button key={p.label} onClick={() => applyPreset(p)}
-                  className="text-[11px] px-2.5 py-1 rounded-full border border-[#2c3350] text-[#cfc8e8] active:bg-[#1a1f33] transition">{p.label}</button>
+                  className="text-[11px] px-2.5 py-1 rounded-full border border-[#2c3350] text-[#cfc8e8] active:bg-[#1a1f33] transition">{t(p.label)}</button>
               ))}
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -240,7 +242,7 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
           <button key={label} onClick={() => setView((v) => ({ ...v, k: clampK(v.k * f) }))}
             className="w-9 h-9 rounded-lg bg-[#0d0f1c]/90 border border-[#2c3350] text-[#cfc8e8] text-xl leading-none active:scale-95 transition">{label}</button>
         ))}
-        <button onClick={() => setView(initial)} title="reset view"
+        <button onClick={() => setView(initial)} title={t('reset view')}
           className="w-9 h-9 rounded-lg bg-[#0d0f1c]/90 border border-[#2c3350] text-[#cfc8e8] text-sm active:scale-95 transition">⌖</button>
       </div>
 
@@ -258,7 +260,7 @@ export default function AcgMap({ layers, crossings, places, legend, crossingKey,
           })}
           {crossingKey?.length ? (
             <div className="mt-1.5 pt-1.5 border-t border-white/10">
-              <div className="text-[9px] uppercase tracking-wider text-[#5b5e72] mb-1">crossings</div>
+              <div className="text-[9px] uppercase tracking-wider text-[#5b5e72] mb-1">{t('crossings')}</div>
               {crossingKey.map((k) => (
                 <div key={k.label} className="flex items-center gap-2 py-0.5">
                   <span className="w-2 h-2 rounded-full" style={{ background: k.color, boxShadow: `0 0 6px ${k.color}` }} />{k.label}

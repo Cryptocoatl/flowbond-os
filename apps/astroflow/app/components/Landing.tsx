@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Tour from './Tour';
+import { useT } from '../../lib/i18n/provider';
 
 // Deterministic pseudo-random (stable across SSR/hydration) for the starfield.
 function rng(i: number, salt: number) {
@@ -22,6 +23,7 @@ const STEPS = [
 ];
 
 export default function Landing() {
+  const t = useT();
   const [tour, setTour] = useState(false);
   const stars = useMemo(
     () =>
@@ -71,10 +73,10 @@ export default function Landing() {
         <span className="text-xl font-serif tracking-wide text-[#ece9e0]">AstralFlow</span>
         <div className="flex items-center gap-3">
           <button onClick={() => setTour(true)} className="text-sm text-[#9698a8] hover:text-[#cfc8e8]">
-            Take the tour
+            {t('Take the tour')}
           </button>
           <a href="/auth/login" className="text-sm bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-full px-5 py-2">
-            Enter
+            {t('Enter')}
           </a>
         </div>
       </nav>
@@ -82,28 +84,26 @@ export default function Landing() {
       {/* hero */}
       <section className="max-w-6xl mx-auto px-6 pt-12 pb-20 grid md:grid-cols-2 gap-10 items-center">
         <div className="af-rise">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-4">A FlowBond constellation</p>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-4">{t('A FlowBond constellation')}</p>
           <h1 className="font-serif text-5xl md:text-6xl leading-[1.05] text-[#ece9e0]">
-            The currents{' '}
+            {t('The currents')}{' '}
             <span style={{ background: 'linear-gradient(120deg,#e3c07a,#b6abec,#7fd1c6)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-              between us
+              {t('between us')}
             </span>
-            , made visible.
+            {t(', made visible.')}
           </h1>
           <p className="text-[#b6b3cf] text-lg mt-5 max-w-md leading-relaxed">
-            AstralFlow turns degree-accurate astrology into a living map of how you relate — to people,
-            to places, and to the teams, homes and partnerships you&apos;re building. A holistic lens on
-            the currents already moving through your life.
+            {t('AstralFlow turns degree-accurate astrology into a living map of how you relate — to people, to places, and to the teams, homes and partnerships you’re building. A holistic lens on the currents already moving through your life.')}
           </p>
           <div className="flex gap-3 mt-8">
             <a href="/auth/login" className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-6 py-3">
-              Add your chart
+              {t('Add your chart')}
             </a>
             <button onClick={() => setTour(true)} className="rounded-lg px-6 py-3 border border-[#9a8fe0]/40 text-[#cfc8e8]">
-              Take the tour
+              {t('Take the tour')}
             </button>
           </div>
-          <p className="text-[11px] text-[#5b5e72] mt-4">Patterns and tendencies — never fixed fate.</p>
+          <p className="text-[11px] text-[#5b5e72] mt-4">{t('Patterns and tendencies — never fixed fate.')}</p>
         </div>
 
         {/* animated constellation */}
@@ -130,28 +130,25 @@ export default function Landing() {
 
       {/* holistic vision */}
       <section className="max-w-3xl mx-auto px-6 py-16 text-center">
-        <h2 className="font-serif text-3xl md:text-4xl text-[#ece9e0] mb-4">Not fortune-telling. A language for what&apos;s already moving.</h2>
+        <h2 className="font-serif text-3xl md:text-4xl text-[#ece9e0] mb-4">{t('Not fortune-telling. A language for what’s already moving.')}</h2>
         <p className="text-[#b6b3cf] text-lg leading-relaxed">
-          Every chart is a pattern of currents — drives, needs, ways of relating. AstralFlow computes
-          them precisely and renders them into plain, useful language, so you can understand your
-          relationships, design better teams, choose the right homes, and place yourself where your
-          energy is genuinely amplified.
+          {t('Every chart is a pattern of currents — drives, needs, ways of relating. AstralFlow computes them precisely and renders them into plain, useful language, so you can understand your relationships, design better teams, choose the right homes, and place yourself where your energy is genuinely amplified.')}
         </p>
       </section>
 
       {/* four lenses */}
       <section className="max-w-5xl mx-auto px-6 py-12">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] text-center mb-8">Four lenses, one sky</p>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] text-center mb-8">{t('Four lenses, one sky')}</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {LENSES.map((l) => (
             <div key={l.name} className="rounded-2xl border border-[#242a3b] bg-[#11131f]/70 p-5">
               <div className="text-3xl text-[#e3c07a] mb-3" style={{ fontFamily: 'var(--font-display), serif' }}>{l.glyph}</div>
-              <h3 className="font-serif text-xl text-[#ece9e0] mb-1.5">{l.name}</h3>
-              <p className="text-sm text-[#9698a8] leading-relaxed">{l.desc}</p>
+              <h3 className="font-serif text-xl text-[#ece9e0] mb-1.5">{t(l.name)}</h3>
+              <p className="text-sm text-[#9698a8] leading-relaxed">{t(l.desc)}</p>
             </div>
           ))}
         </div>
-        <p className="text-center text-sm text-[#5b5e72] mt-5">The same placements, weighted differently for the bond you actually care about.</p>
+        <p className="text-center text-sm text-[#5b5e72] mt-5">{t('The same placements, weighted differently for the bond you actually care about.')}</p>
       </section>
 
       {/* how it works */}
@@ -160,8 +157,8 @@ export default function Landing() {
           {STEPS.map((s) => (
             <div key={s.n}>
               <div className="text-[#e3c07a]/70 font-serif text-3xl">{s.n}</div>
-              <h3 className="font-serif text-xl text-[#ece9e0] mt-2 mb-1.5">{s.t}</h3>
-              <p className="text-sm text-[#9698a8] leading-relaxed">{s.d}</p>
+              <h3 className="font-serif text-xl text-[#ece9e0] mt-2 mb-1.5">{t(s.t)}</h3>
+              <p className="text-sm text-[#9698a8] leading-relaxed">{t(s.d)}</p>
             </div>
           ))}
         </div>
@@ -170,46 +167,40 @@ export default function Landing() {
       {/* places + teams */}
       <section className="max-w-5xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-8">
         <div className="rounded-2xl border border-[#242a3b] bg-[#11131f]/70 p-7">
-          <h3 className="font-serif text-2xl text-[#ece9e0] mb-2">Position into the real world</h3>
+          <h3 className="font-serif text-2xl text-[#ece9e0] mb-2">{t('Position into the real world')}</h3>
           <p className="text-[#9698a8] leading-relaxed">
-            Astrocartography reveals where your chart is most activated — where to retreat, build,
-            launch, or gather. Tie people to real FlowBond places: a lakehouse, Tulum, a retreat,
-            an event.
+            {t('Astrocartography reveals where your chart is most activated — where to retreat, build, launch, or gather. Tie people to real FlowBond places: a lakehouse, Tulum, a retreat, an event.')}
           </p>
         </div>
         <div className="rounded-2xl border border-[#242a3b] bg-[#11131f]/70 p-7">
-          <h3 className="font-serif text-2xl text-[#ece9e0] mb-2">Built for teams & belonging</h3>
+          <h3 className="font-serif text-2xl text-[#ece9e0] mb-2">{t('Built for teams & belonging')}</h3>
           <p className="text-[#9698a8] leading-relaxed">
-            Save groups as collective flow maps — the strongest bonds, the friction to tend, the best
-            base for the crew. Configure the team that ships, the household that flows, the partnership
-            that lasts.
+            {t('Save groups as collective flow maps — the strongest bonds, the friction to tend, the best base for the crew. Configure the team that ships, the household that flows, the partnership that lasts.')}
           </p>
         </div>
       </section>
 
       {/* privacy */}
       <section className="max-w-3xl mx-auto px-6 py-16 text-center">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-3">Yours to control</p>
-        <h2 className="font-serif text-3xl text-[#ece9e0] mb-4">Privacy enforced in the database — not just hidden.</h2>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-3">{t('Yours to control')}</p>
+        <h2 className="font-serif text-3xl text-[#ece9e0] mb-4">{t('Privacy enforced in the database — not just hidden.')}</h2>
         <p className="text-[#b6b3cf] text-lg leading-relaxed">
-          Choose who sees your chart: only you, specific people you grant, accepted friends, or everyone
-          on AstralFlow. Every tier is enforced at the data layer, per row. You decide who gets to weave
-          you into their constellation.
+          {t('Choose who sees your chart: only you, specific people you grant, accepted friends, or everyone on AstralFlow. Every tier is enforced at the data layer, per row. You decide who gets to weave you into their constellation.')}
         </p>
       </section>
 
       {/* final CTA */}
       <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-        <h2 className="font-serif text-4xl md:text-5xl text-[#ece9e0] mb-6">Find your place in the constellation.</h2>
+        <h2 className="font-serif text-4xl md:text-5xl text-[#ece9e0] mb-6">{t('Find your place in the constellation.')}</h2>
         <div className="flex justify-center gap-3">
           <a href="/auth/login" className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-7 py-3.5 text-lg">
-            Enter AstralFlow
+            {t('Enter AstralFlow')}
           </a>
           <button onClick={() => setTour(true)} className="rounded-lg px-7 py-3.5 text-lg border border-[#9a8fe0]/40 text-[#cfc8e8]">
-            Take the tour
+            {t('Take the tour')}
           </button>
         </div>
-        <p className="text-xs text-[#5b5e72] mt-10">AstralFlow — a FlowBond Layer-0 system · one identity, every app.</p>
+        <p className="text-xs text-[#5b5e72] mt-10">{t('AstralFlow — a FlowBond Layer-0 system · one identity, every app.')}</p>
       </section>
 
       <Tour open={tour} onClose={() => setTour(false)} />

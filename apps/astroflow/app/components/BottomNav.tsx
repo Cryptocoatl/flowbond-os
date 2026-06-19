@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 // Native-style bottom tab bar (mobile only). The always-there way to move
 // around AstralFlow — your sky, the map, the currents, the cosmos, and you.
@@ -36,6 +37,7 @@ function Icon({ name, active }: { name: string; active: boolean }) {
 }
 
 export default function BottomNav() {
+  const tr = useT();
   const path = usePathname() || '/';
   const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 
@@ -76,7 +78,7 @@ export default function BottomNav() {
                 )}
               </span>
               <span className={`text-[10px] tracking-wide ${active ? 'text-[#e3c07a] font-medium' : 'text-[#6b6e86]'}`}>
-                {t.label}
+                {tr(t.label)}
               </span>
             </Link>
           );

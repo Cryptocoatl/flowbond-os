@@ -5,19 +5,21 @@ import DashboardClient from '../components/DashboardClient';
 import BubbleField, { type Bubble } from '../components/BubbleField';
 import FlowMeGuide from '../components/FlowMeGuide';
 import ChartedSouls, { type Soul, type OwnedMap } from '../components/ChartedSouls';
+import { getT } from '../../lib/i18n/server';
 
 // Your AstralFlow control room: the living bubble constellation of everyone in
 // your flow, collective charts (flow maps), who you allow to see your chart,
 // incoming access requests, and friends. All RLS-backed.
 export default async function Dashboard() {
+  const t = await getT();
   const fbid = await myFbid();
   if (!fbid) {
     return (
       <div className="max-w-md mx-auto p-6 mt-16 text-center text-[#ece9e0]">
-        <h1 className="text-2xl font-serif mb-3">Your dashboard</h1>
-        <p className="text-[#9698a8] mb-5">Sign in to see your collective charts and allowances.</p>
+        <h1 className="text-2xl font-serif mb-3">{t('Your dashboard')}</h1>
+        <p className="text-[#9698a8] mb-5">{t('Sign in to see your collective charts and allowances.')}</p>
         <Link href="/auth/login?next=/dashboard" className="bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-5 py-2.5">
-          Log in
+          {t('Log in')}
         </Link>
       </div>
     );

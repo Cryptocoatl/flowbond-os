@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import type { RelContext } from '../../lib/astro/types';
+import { useT } from '../../lib/i18n/provider';
 
 const CONTEXTS: RelContext[] = ['friendship', 'romance', 'coliving', 'business'];
 
@@ -30,6 +31,7 @@ export default function ReadingPanel({
   pair?: boolean;
   traditions?: boolean;
 }) {
+  const t = useT();
   const [context, setContext] = useState<RelContext>('friendship');
   const [system, setSystem] = useState<SystemKey>('western');
   const [question, setQuestion] = useState('');
@@ -47,7 +49,7 @@ export default function ReadingPanel({
         body: JSON.stringify({ ...base, context: ctx, system: sys, question: q || undefined }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Failed');
+      if (!res.ok) throw new Error(json.error || t('Failed'));
       setReading(json.reading);
       if (q) setQuestion(''); // clear the prompt so the conversation can flow on
     } catch (e: any) {
@@ -80,14 +82,14 @@ export default function ReadingPanel({
                 style={{ boxShadow: '0 0 8px 2px rgba(154,143,224,0.8)', animation: busy ? 'af-twinkle 1.1s ease-in-out infinite' : undefined }}
               />
               <span className="text-[#cfc8e8]">FlowMe</span>
-              <span className="text-[#5b5e72] normal-case tracking-normal">· voice of the flow</span>
+              <span className="text-[#5b5e72] normal-case tracking-normal">{t('· voice of the flow')}</span>
             </h3>
             {pair && (
               <div className="flex gap-1">
                 {CONTEXTS.map((c) => (
                   <button key={c} onClick={() => run(c)}
                     className={`text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border ${context === c ? 'bg-[#e3c07a] text-[#0a0b12] border-[#e3c07a]' : 'border-[#242a3b] text-[#9698a8]'}`}>
-                    {c}
+                    {t(c)}
                   </button>
                 ))}
               </div>
@@ -97,7 +99,7 @@ export default function ReadingPanel({
                 {SYSTEMS.map((s) => (
                   <button key={s.key} onClick={() => run(context, s.key)}
                     className={`text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border ${system === s.key ? 'bg-[#e3c07a] text-[#0a0b12] border-[#e3c07a]' : 'border-[#242a3b] text-[#9698a8]'}`}>
-                    {s.label}
+                    {t(s.label)}
                   </button>
                 ))}
               </div>
@@ -110,7 +112,7 @@ export default function ReadingPanel({
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && question.trim() && !busy) run(context, system, question); }}
               maxLength={300}
-              placeholder="Ask the stars — a decision, a tension, a dream…"
+              placeholder={t('Ask the stars — a decision, a tension, a dream…')}
               className="flex-1 bg-[#0a0b14] border border-[#242a3b] rounded-lg px-3 py-2 text-sm text-[#ece9e0] placeholder-[#454962] focus:border-[#9a8fe0]/50 outline-none"
             />
             <button
@@ -118,20 +120,20 @@ export default function ReadingPanel({
               disabled={busy || !question.trim()}
               className="text-sm bg-[#e3c07a]/90 text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-40 hover:bg-[#e3c07a] transition"
             >
-              ✦ Ask
+              {t('✦ Ask')}
             </button>
           </div>
           {!reading && !busy && (
             <button onClick={() => run(context)}
               className="text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2 mt-3 hover:bg-[#9a8fe0]/25 transition">
-              ✦ Channel the {mapId ? 'collective' : pair ? 'compatibility' : 'personal'} reading
+              {t('✦ Channel the {kind} reading', { kind: mapId ? t('collective') : pair ? t('compatibility') : t('personal') })}
             </button>
           )}
 
           {/* The answer — under the writing */}
           {busy && (
             <p className="text-[#9698a8] text-sm animate-pulse mt-3">
-              FlowMe is reading the sky{mapId ? ' you share' : ''}…
+              {mapId ? t('FlowMe is reading the sky you share…') : t('FlowMe is reading the sky…')}
             </p>
           )}
           {err && <p className="text-[#d9663c] text-sm mt-3">{err}</p>}
@@ -141,12 +143,12 @@ export default function ReadingPanel({
             </p>
           )}
           <p className="text-[10px] text-[#5b5e72] mt-2">
-            FlowMe reflects your question through the symbols — a mirror for star-aligned decisions, never a verdict.
+            {t('FlowMe reflects your question through the symbols — a mirror for star-aligned decisions, never a verdict.')}
           </p>
 
           <p className="text-[9px] text-[#3f4358] mt-4 tracking-wide">
-            Channeled live, never stored — your chart speaks in symbols, your identity stays in the flow ·{' '}
-            <a href="/cosmos" className="text-[#5b5e72] underline decoration-dotted hover:text-[#b6abec]">study the symbols ✦</a>
+            {t('Channeled live, never stored — your chart speaks in symbols, your identity stays in the flow ·')}{' '}
+            <a href="/cosmos" className="text-[#5b5e72] underline decoration-dotted hover:text-[#b6abec]">{t('study the symbols ✦')}</a>
           </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getT } from '../../../lib/i18n/server';
 import { serverClient } from '../../../lib/supabase-server';
 import { astrocartography } from '../../../lib/astro/astrocartography';
 import {
@@ -20,15 +21,16 @@ const firstName = (s: string | null) => (s || 'Someone').trim().split(/\s+/)[0];
 // Jupiter" stops being a sentence and becomes a glowing point on the earth.
 export default async function CollectiveAtlas({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const t = await getT();
   const sb = await serverClient();
   const { data: map } = await sb.rpc('get_flow_map', { map_id: id });
 
   if (!map)
     return (
       <Shell>
-        <h1 className="text-2xl font-serif mb-2">Collective Atlas not found</h1>
-        <p className="text-[#9698a8]">It may not exist, or you haven&apos;t been woven into it yet.</p>
-        <Link href="/dashboard" className="text-[#b6abec] underline text-sm mt-4 inline-block">Back to dashboard</Link>
+        <h1 className="text-2xl font-serif mb-2">{t('Collective Atlas not found')}</h1>
+        <p className="text-[#9698a8]">{t('It may not exist, or you haven’t been woven into it yet.')}</p>
+        <Link href="/dashboard" className="text-[#b6abec] underline text-sm mt-4 inline-block">{t('Back to dashboard')}</Link>
       </Shell>
     );
 
@@ -60,10 +62,9 @@ export default async function CollectiveAtlas({ params }: { params: Promise<{ id
     return (
       <Shell>
         <Link href={`/map/${id}`} className="text-xs text-[#5b5e72]">← {map.name}</Link>
-        <h1 className="text-2xl font-serif mt-3 mb-2">{map.name} · Atlas</h1>
+        <h1 className="text-2xl font-serif mt-3 mb-2">{map.name} · {t('Atlas')}</h1>
         <p className="text-[#9698a8]">
-          Power spots appear once at least two charts shine here for you. Invite more souls into the weave, or
-          ask them for a deeper share.
+          {t('Power spots appear once at least two charts shine here for you. Invite more souls into the weave, or ask them for a deeper share.')}
         </p>
       </Shell>
     );
@@ -86,7 +87,7 @@ export default async function CollectiveAtlas({ params }: { params: Promise<{ id
     <Shell wide>
       <Backdrop />
       <Link href={`/map/${id}`} className="text-xs text-[#5b5e72]">← {map.name}</Link>
-      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mt-3 mb-1">Collective Atlas · {map.context}</p>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mt-3 mb-1">{t('Collective Atlas')} · {map.context}</p>
       <h1
         className="text-4xl font-serif"
         style={{ background: 'linear-gradient(100deg,#ece9e0 20%,#e3c07a 55%,#b6abec 90%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
@@ -94,9 +95,7 @@ export default async function CollectiveAtlas({ params }: { params: Promise<{ id
         {map.name}
       </h1>
       <p className="text-sm text-[#9698a8] mt-2 mb-5 max-w-2xl">
-        {people.length} charts overlaid on the earth. The glowing points are <b className="text-[#cfc8e8]">crossings</b> —
-        where one person&apos;s line meets another&apos;s. Tap one to see whose energies meet there, and let it guide
-        where this crew gathers, builds, or retreats.
+        {t('{count} charts overlaid on the earth. The glowing points are', { count: people.length })} <b className="text-[#cfc8e8]">{t('crossings')}</b> {t('— where one person’s line meets another’s. Tap one to see whose energies meet there, and let it guide where this crew gathers, builds, or retreats.')}
       </p>
 
       <AcgMap
@@ -105,16 +104,16 @@ export default async function CollectiveAtlas({ params }: { params: Promise<{ id
         places={places}
         legend={people.map((p) => ({ label: p.name, color: p.color }))}
         crossingKey={[
-          { label: 'harmonious', color: QUALITY_COLOR.harmonious },
-          { label: 'intense', color: QUALITY_COLOR.intense },
-          { label: 'mixed', color: QUALITY_COLOR.mixed },
+          { label: t('harmonious'), color: QUALITY_COLOR.harmonious },
+          { label: t('intense'), color: QUALITY_COLOR.intense },
+          { label: t('mixed'), color: QUALITY_COLOR.mixed },
         ]}
         focus={focus}
       />
 
       {spots.length > 0 && (
         <div className="mt-7 pt-5 border-t border-white/5">
-          <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">Strongest power spots</div>
+          <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">{t('Strongest power spots')}</div>
           <div className="grid sm:grid-cols-2 gap-2">
             {spots.slice(0, 8).map((c, i) => (
               <div key={i} className="text-sm py-1 flex items-start gap-2">

@@ -3,6 +3,7 @@ import { serverClient } from '../../../lib/supabase-server';
 import { myFbid } from '../../../lib/astro/access';
 import ClaimGuest from '../../components/ClaimGuest';
 import type { Chart } from '../../../lib/astro/types';
+import { getT } from '../../../lib/i18n/server';
 
 const ELEMENTS = ['Fire', 'Earth', 'Air', 'Water'] as const;
 const EL_COLOR: Record<string, string> = {
@@ -15,6 +16,7 @@ const EL_COLOR: Record<string, string> = {
 // membership in every weave that holds them, and their crew revealed.
 export default async function ClaimPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
+  const t = await getT();
   const sb = await serverClient();
   const [{ data: invite }, fbid] = await Promise.all([
     sb.rpc('guest_invite', { code }),
@@ -30,9 +32,9 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
   if (!invite)
     return (
       <Center>
-        <h1 className="text-2xl font-serif mb-2">Invite not found</h1>
-        <p className="text-[#9698a8] mb-5">This invite link is invalid or expired.</p>
-        <Link href="/" className="text-[#b6abec] underline">Go to AstralFlow</Link>
+        <h1 className="text-2xl font-serif mb-2">{t('Invite not found')}</h1>
+        <p className="text-[#9698a8] mb-5">{t('This invite link is invalid or expired.')}</p>
+        <Link href="/" className="text-[#b6abec] underline">{t('Go to AstralFlow')}</Link>
       </Center>
     );
 
@@ -42,9 +44,9 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
   if (invite.claimed)
     return (
       <Center>
-        <h1 className="text-2xl font-serif mb-2">Already claimed</h1>
-        <p className="text-[#9698a8] mb-5">This seat has been taken — the chart is live in the collective.</p>
-        <Link href="/dashboard" className="text-[#b6abec] underline">Open your dashboard</Link>
+        <h1 className="text-2xl font-serif mb-2">{t('Already claimed')}</h1>
+        <p className="text-[#9698a8] mb-5">{t('This seat has been taken — the chart is live in the collective.')}</p>
+        <Link href="/dashboard" className="text-[#b6abec] underline">{t('Open your dashboard')}</Link>
       </Center>
     );
 
@@ -68,7 +70,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         ❖
       </div>
       <p className="text-[11px] uppercase tracking-[0.32em] text-[#b6abec] mb-3">
-        {invite.invited_by ? `@${invite.invited_by} summoned you to the weave` : 'The weave is calling you'}
+        {invite.invited_by ? t('@{by} summoned you to the weave', { by: invite.invited_by }) : t('The weave is calling you')}
       </p>
       <h1
         className="text-4xl font-serif mb-2"
@@ -81,7 +83,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
         {invite.display_name}
       </h1>
       <p className="font-serif text-lg text-[#cfc8e8] mb-4" style={{ animation: 'af-rise 0.8s ease-out' }}>
-        {chart.bodies.Sun.sign} Sun · {chart.bodies.Moon.sign} Moon{chart.asc ? ` · ${chart.asc.sign} Rising` : ''}
+        {chart.bodies.Sun.sign} {t('Sun')} · {chart.bodies.Moon.sign} {t('Moon')}{chart.asc ? ` · ${chart.asc.sign} ${t('Rising')}` : ''}
       </p>
 
       {/* their cosmic powers, already computed and shining */}
@@ -109,7 +111,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
             >
               <div className="font-serif">{m.name}</div>
               <div className="text-[10px] uppercase tracking-wider text-[#5b5e72]">
-                {m.context} · {m.member_count} in the weave — your stars are already shining in it
+                {m.context} · {t('{count} in the weave — your stars are already shining in it', { count: m.member_count })}
               </div>
             </div>
           ))}
@@ -117,9 +119,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ code: st
       )}
 
       <p className="text-sm text-[#b6b3cf] mb-7 leading-relaxed">
-        Your planets are already part of {maps.length === 1 ? 'this living collective chart' : 'these living collective charts'},
-        updating in real time. Claim your seat to hold your own chart, meet the crew you&apos;re woven with,
-        and let FlowMe read your path — everything stays inside FlowBond&apos;s privacy layer, shared only as deep as you choose.
+        {t('Your planets are already part of {charts}, updating in real time. Claim your seat to hold your own chart, meet the crew you’re woven with, and let FlowMe read your path — everything stays inside FlowBond’s privacy layer, shared only as deep as you choose.', { charts: maps.length === 1 ? t('this living collective chart') : t('these living collective charts') })}
       </p>
       <ClaimGuest code={code} signedIn={!!fbid} hasProfile={hasProfile} />
     </Center>

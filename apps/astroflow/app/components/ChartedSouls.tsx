@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { browserClient } from '../../lib/supabase';
+import { useT } from '../../lib/i18n/provider';
 
 export interface Soul {
   id: string;
@@ -19,6 +20,7 @@ export interface OwnedMap { id: string; name: string }
 // or brand-new), or forget them. This is where Instant charts live on.
 export default function ChartedSouls({ souls, myMaps }: { souls: Soul[]; myMaps: OwnedMap[] }) {
   const router = useRouter();
+  const t = useT();
   const [pending, start] = useTransition();
   const [copied, setCopied] = useState('');
   const [openAdd, setOpenAdd] = useState('');
@@ -34,7 +36,7 @@ export default function ChartedSouls({ souls, myMaps }: { souls: Soul[]; myMaps:
     start(async () => { await sb.rpc('attach_guest', { map_id: mapId, guest }); setOpenAdd(''); router.refresh(); });
   const newMap = (guest: string, name: string) =>
     start(async () => {
-      const { data } = await sb.rpc('create_guest_map', { name: name || 'Our constellation', ctx: 'friendship', guest });
+      const { data } = await sb.rpc('create_guest_map', { name: name || t('Our constellation'), ctx: 'friendship', guest });
       setOpenAdd(''); setNewName('');
       if (data) router.push(`/map/${data}`); else router.refresh();
     });
@@ -43,14 +45,13 @@ export default function ChartedSouls({ souls, myMaps }: { souls: Soul[]; myMaps:
 
   return (
     <div id="souls" className="mt-6 pt-4 border-t border-white/5 scroll-mt-16">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec] mb-1">Souls you&apos;ve charted</div>
+      <div className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec] mb-1">{t("Souls you've charted")}</div>
       <p className="text-[11px] text-[#5b5e72] mb-3">
-        People you read from their birth data. They wait as ghost stars until they activate their FBID — send
-        their link, weave them into a constellation, or let them go.
+        {t('People you read from their birth data. They wait as ghost stars until they activate their FBID — send their link, weave them into a constellation, or let them go.')}
       </p>
       {souls.length === 0 ? (
         <div className="text-sm text-[#5b5e72] border border-dashed border-[#242a3b] rounded-xl p-4">
-          None yet — chart someone on <a href="/instant" className="text-[#b6abec] underline">Instant</a> and they appear here, kept safe.
+          {t('None yet — chart someone on')} <a href="/instant" className="text-[#b6abec] underline">{t('Instant')}</a> {t('and they appear here, kept safe.')}
         </div>
       ) : (
         <div className="space-y-2">
@@ -62,16 +63,16 @@ export default function ChartedSouls({ souls, myMaps }: { souls: Soul[]; myMaps:
                 <span className="text-xs text-[#9698a8]">
                   {s.sun} ☉ · {s.moon} ☾{s.rising ? ` · ${s.rising} ↑` : ''}
                 </span>
-                <span className="text-[9px] uppercase tracking-wide text-[#8fb8e0] ml-auto">ghost · awaiting FBID</span>
+                <span className="text-[9px] uppercase tracking-wide text-[#8fb8e0] ml-auto">{t('ghost · awaiting FBID')}</span>
               </div>
               <div className="flex flex-wrap gap-2 mt-2.5">
                 <button onClick={() => copyLink(s.claim_code)} className="text-xs bg-[#e3c07a] text-[#0a0b12] font-semibold rounded-lg px-3 py-1.5">
-                  {copied === s.claim_code ? 'Link copied ✓' : '✦ Send activation link'}
+                  {copied === s.claim_code ? t('Link copied ✓') : t('✦ Send activation link')}
                 </button>
                 <button onClick={() => setOpenAdd(openAdd === s.id ? '' : s.id)} disabled={pending} className="text-xs bg-[#9a8fe0]/20 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-lg px-3 py-1.5">
-                  Add to a constellation
+                  {t('Add to a constellation')}
                 </button>
-                <button onClick={() => forget(s.id)} disabled={pending} className="text-xs text-[#d9663c]">forget</button>
+                <button onClick={() => forget(s.id)} disabled={pending} className="text-xs text-[#d9663c]">{t('forget')}</button>
               </div>
               {openAdd === s.id && (
                 <div className="mt-3 pt-3 border-t border-white/5" style={{ animation: 'af-rise 0.3s ease-out' }}>
@@ -86,10 +87,10 @@ export default function ChartedSouls({ souls, myMaps }: { souls: Soul[]; myMaps:
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="…or name a new constellation"
+                    <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t('…or name a new constellation')}
                       className="flex-1 bg-[#0a0b14] border border-[#242a3b] rounded-lg px-3 py-1.5 text-xs text-[#ece9e0] outline-none" />
                     <button onClick={() => newMap(s.id, newName)} disabled={pending} className="text-xs bg-[#9a8fe0]/25 border border-[#9a8fe0]/50 text-[#cfc8e8] rounded-lg px-3">
-                      Weave it ✦
+                      {t('Weave it ✦')}
                     </button>
                   </div>
                 </div>
