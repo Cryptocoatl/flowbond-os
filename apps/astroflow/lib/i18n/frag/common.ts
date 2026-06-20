@@ -18,6 +18,13 @@ export const common: Record<string, string> = {
   'Copied ✓': 'Copiado ✓',
   'Accept': 'Aceptar',
   'Decline': 'Rechazar',
+  'Clear': 'Limpiar',
+  // combine on mobile
+  'Tap more stars': 'Toca más estrellas',
+  '{n} stars selected': '{n} estrellas seleccionadas',
+  'Tap 2+ stars to weave them': 'Toca 2+ estrellas para entrelazarlas',
+  '1 selected': '1 seleccionada',
+  '✦ Weave': '✦ Entrelazar',
   'Log in': 'Iniciar sesión',
   'Log out': 'Cerrar sesión',
   // core nouns (for inline reuse)

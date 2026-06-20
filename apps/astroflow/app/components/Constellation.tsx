@@ -71,6 +71,10 @@ export default function Constellation({
   const [mode, setMode] = useState<Mode>('explore');
   const [context, setContext] = useState<RelContext>('friendship');
   const [selected, setSelected] = useState<string[]>([]);
+  // On mobile the combine panel is a fixed bottom sheet. It must NOT auto-cover
+  // the constellation (you'd be unable to tap stars to pick people) — so in
+  // combine mode we show a short bar and only raise the full sheet on demand.
+  const [combineExpanded, setCombineExpanded] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const [activeGhost, setActiveGhost] = useState<string | null>(null);
   const [copied, setCopied] = useState('');
@@ -121,6 +125,7 @@ export default function Constellation({
     setActive(null);
     setActiveGhost(null);
     setSelected([]);
+    setCombineExpanded(false);
     setSaveMsg('');
   }
 
@@ -161,10 +166,13 @@ export default function Constellation({
 
   // On mobile the side panel becomes a bottom sheet that slides up only when
   // there's something to act on; on desktop (sm+) it's always the right column.
-  const sheetOpen = mode === 'combine' || !!activeProfile || !!activeGhostNode;
+  // In combine mode the full sheet only rises once the user expands it (via the
+  // compact bar) — otherwise it would cover the stars they need to tap.
+  const sheetOpen = !!activeProfile || !!activeGhostNode || (mode === 'combine' && combineExpanded);
   function closeSheet() {
     setActive(null);
     setActiveGhost(null);
+    setCombineExpanded(false);
     if (mode === 'combine') switchMode('explore');
   }
 
@@ -219,7 +227,10 @@ export default function Constellation({
 
       {mode === 'combine' && (
         <div className="border border-[#242a3b] rounded-2xl p-5 bg-[#11131f]">
-          <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec] mb-3">{t('Combine')} · {context}</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs uppercase tracking-[0.18em] text-[#b6abec]">{t('Combine')} · {context}</h2>
+            <button onClick={() => setCombineExpanded(false)} className="sm:hidden text-xs text-[#b6abec] active:scale-95">← {t('Tap more stars')}</button>
+          </div>
           {myFbid && (
             <div className="mb-4 pb-4 border-b border-white/5">
               <BondInvite compact />
@@ -481,6 +492,36 @@ export default function Constellation({
           {panel}
         </aside>
       </div>
+
+      {/* Mobile combine bar — keeps the constellation tappable while you pick
+          people; raises the full sheet (reading + save) only on demand. */}
+      {mode === 'combine' && !combineExpanded && (
+        <div className="sm:hidden fixed inset-x-0 z-40 px-3" style={{ bottom: 'calc(58px + env(safe-area-inset-bottom))' }}>
+          <div className="max-w-md mx-auto flex items-center gap-2 rounded-2xl border border-[#e3c07a]/40 bg-[#0c0e1a]/95 backdrop-blur-md px-3 py-2.5 shadow-[0_-8px_30px_rgba(0,0,0,0.5)]">
+            <div className="flex-1 min-w-0">
+              {selected.length >= 2 ? (
+                <p className="text-sm text-[#ece9e0]">{t('{n} stars selected', { n: selected.length })}</p>
+              ) : (
+                <p className="text-sm text-[#9698a8]">
+                  {t('Tap 2+ stars to weave them')}
+                  {selected.length === 1 ? ` · ${t('1 selected')}` : ''}
+                </p>
+              )}
+            </div>
+            {selected.length > 0 && (
+              <button onClick={() => setSelected([])} className="text-xs text-[#9698a8] px-1.5 active:scale-95">{t('Clear')}</button>
+            )}
+            <button
+              onClick={() => setCombineExpanded(true)}
+              disabled={selected.length < 2}
+              className="af-btn af-btn-gold af-btn-sm disabled:opacity-40"
+            >
+              {t('✦ Weave')}
+            </button>
+            <button onClick={() => switchMode('explore')} aria-label={t('Close')} className="w-8 h-8 grid place-items-center rounded-full text-[#9698a8] active:scale-90 shrink-0">✕</button>
+          </div>
+        </div>
+      )}
 
       <Tour open={tour} onClose={() => setTour(false)} />
     </div>
