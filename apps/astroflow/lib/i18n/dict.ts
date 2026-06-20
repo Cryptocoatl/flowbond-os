@@ -5,6 +5,7 @@ import { group2 } from './frag/group2';
 import { group3 } from './frag/group3';
 import { group4 } from './frag/group4';
 import { currents } from './frag/currents';
+import { privacy } from './frag/privacy';
 
 // One Spanish map, assembled from per-area fragments so they can be authored
 // independently without merge collisions. Keys are the English SOURCE strings;
@@ -16,6 +17,7 @@ export const es: Record<string, string> = {
   ...group3,
   ...group4,
   ...currents,
+  ...privacy,
 };
 
 export const DICT: Record<Exclude<Locale, 'en'>, Record<string, string>> = {
