@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { dbAdmin, dbRead } from '@/lib/supabase-server';
 import { Grant } from '@/lib/types';
 import { ActivityRail, InteractionRow } from './ActivityRail';
+import ClaudiaChat from './ClaudiaChat';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,9 +66,25 @@ export default async function ClaudiaHome() {
         <span className="cl-sun" aria-hidden />
 
         <div className="cl-stagger" style={{ textAlign: 'center', maxWidth: 760 }}>
-          <div className="cl-logo-halo" style={{ marginBottom: 6 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="cl-logo-img" src="/claudia-logo.png" alt="ClaudIA" width={260} height={260} />
+          <div className="cl-logo-halo" style={{ marginBottom: 10 }}>
+            <video
+              className="cl-logo-img"
+              src="/claudia-identity.mp4"
+              poster="/claudia-poster.jpg"
+              autoPlay
+              muted
+              loop
+              playsInline
+              width={264}
+              style={{
+                width: 264,
+                height: 330,
+                objectFit: 'cover',
+                borderRadius: 26,
+                border: '1px solid rgba(231,193,135,0.5)',
+                boxShadow: '0 0 60px rgba(231,193,135,0.28)',
+              }}
+            />
           </div>
 
           <h1
@@ -115,6 +132,11 @@ export default async function ClaudiaHome() {
           {stat(applications.length, 'in pipeline', '/pipeline')}
           {stat(drafted.length, 'ClaudIA drafts', '/pipeline')}
           {stat(contactCount ?? 0, 'contacts', '/contacts')}
+        </section>
+
+        {/* Talk to her — the living agent */}
+        <section style={{ marginBottom: 22 }}>
+          <ClaudiaChat />
         </section>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 18 }}>
