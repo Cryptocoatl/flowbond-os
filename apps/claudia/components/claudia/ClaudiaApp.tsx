@@ -1,13 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Orb } from './Orb';
+import { Cinematic } from './Cinematic';
 import { ModeBadge } from './ModeBadge';
 import { ChatPanel } from './ChatPanel';
-import { CarePanel, card, type CareItem } from './CarePanel';
+import { CarePanel, type CareItem } from './CarePanel';
 import { TaskPanel } from './TaskPanel';
 import { NUDGE_COPY } from './NudgeBanner';
-import { ClaudiaVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
+import { getVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
 import { parseReply } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
 import { hubRedirect } from '@flowbond/auth';
@@ -27,9 +28,6 @@ function sinceLabel(ms: number): string {
 }
 
 export function ClaudiaApp() {
-  const vaultRef = useRef<ClaudiaVault | null>(null);
-  const getVault = () => (vaultRef.current ??= new ClaudiaVault());
-
   const [phase, setPhase] = useState<Phase>('loading');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [tasks, setTasks] = useState<ReadyTask[]>([]);
@@ -167,6 +165,97 @@ export function ClaudiaApp() {
     setTasks((ts) => ts.map((x) => (x.id === t.id ? { ...x, status } : x)));
   }
 
+  // ════ cinematic threshold — every pre-vault phase plays over her identity film ══
+  if (phase !== 'ready') {
+    return (
+      <Cinematic>
+        {phase === 'loading' && (
+          <p className="cine-rise" style={{ fontSize: 16, fontStyle: 'italic', letterSpacing: '0.06em', color: 'rgba(244,241,234,.72)' }}>
+            Despertando… 🌙
+          </p>
+        )}
+
+        {phase === 'signin' && (
+          <>
+            <h1 className="cine-title cine-rise" style={{ animationDelay: '.05s' }}>ClaudIA</h1>
+            <p className="cine-rise" style={{ animationDelay: '.18s', margin: 0, fontSize: 15, fontStyle: 'italic', letterSpacing: '0.08em', color: 'rgba(244,241,234,.8)' }}>
+              La Guardiana del Imperio · te tengo cubierta
+            </p>
+            <p className="cine-rise" style={{ animationDelay: '.3s', margin: '2px 0 6px', fontSize: 13.5, lineHeight: 1.6, color: 'rgba(244,241,234,.62)', maxWidth: 420 }}>
+              Te reconozco por tu FBID — una identidad, todos los mundos.
+            </p>
+            <button
+              className="cine-cta cine-rise"
+              style={{ animationDelay: '.42s' }}
+              onClick={() => {
+                window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`);
+              }}
+            >
+              Entrar al imperio ✦
+            </button>
+            <p className="cine-rise" style={{ animationDelay: '.55s', margin: '12px 0 0', fontSize: 11, letterSpacing: '0.08em', color: 'rgba(244,241,234,.4)' }}>
+              zero-knowledge by design
+            </p>
+          </>
+        )}
+
+        {phase === 'enroll' && !recoveryPhrase && (
+          <Gate title="Sella tu bóveda">
+            <p style={gateText}>
+              Lo que compartes con ClaudIA se guarda <strong>cifrado de extremo a extremo</strong>. Ni FlowBond
+              ni nadie con acceso a la base de datos puede leerlo — solo tú, con tu llave. Vamos a crear esa llave.
+            </p>
+            <button onClick={doEnroll} disabled={busy} className="cine-cta">
+              {busy ? 'Creando tu llave…' : 'Crear mi bóveda (passkey + frase)'}
+            </button>
+            {err && <ErrText>{friendly(err)}</ErrText>}
+          </Gate>
+        )}
+
+        {phase === 'enroll' && recoveryPhrase && (
+          <Gate title="Tu frase de recuperación">
+            <p style={gateText}>
+              Guárdala en un lugar seguro y privado. Es tu <strong>único respaldo</strong> si pierdes tu passkey —
+              nadie puede regenerarla, ni siquiera ClaudIA. No la guardamos en ningún servidor.
+            </p>
+            <div style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(244,241,234,.14)', borderRadius: 14, padding: 16, fontFamily: 'ui-monospace, monospace', fontSize: 14, lineHeight: 1.8, letterSpacing: '0.02em', wordSpacing: '0.3em', color: '#FFD27A' }}>
+              {recoveryPhrase}
+            </div>
+            <button onClick={finishEnroll} className="cine-cta" style={{ marginTop: 16 }}>
+              La guardé — continuar
+            </button>
+          </Gate>
+        )}
+
+        {phase === 'unlock' && (
+          <Gate title="Abre tu bóveda">
+            {factors.includes('passkey') && (
+              <button onClick={doUnlockPasskey} disabled={busy} className="cine-cta">
+                {busy ? 'Verificando…' : 'Abrir con passkey'}
+              </button>
+            )}
+            {factors.includes('recovery') && (
+              <div style={{ marginTop: 14 }}>
+                <p style={{ ...gateText, marginBottom: 8 }}>o usa tu frase de recuperación (24 palabras):</p>
+                <textarea
+                  value={recoveryInput}
+                  onChange={(e) => setRecoveryInput(e.target.value)}
+                  rows={3}
+                  placeholder="palabra1 palabra2 …"
+                  style={{ width: '100%', resize: 'none', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(244,241,234,.14)', borderRadius: 13, color: '#F4F1EA', padding: '11px 13px', fontSize: 14, fontFamily: 'ui-monospace, monospace' }}
+                />
+                <button onClick={doUnlockRecovery} disabled={busy || !recoveryInput.trim()} className="cine-cta" style={{ marginTop: 10 }}>
+                  Abrir con frase
+                </button>
+              </div>
+            )}
+            {err && <ErrText>{friendly(err)}</ErrText>}
+          </Gate>
+        )}
+      </Cinematic>
+    );
+  }
+
   // ════════════════════════════════════════════════════════════════════════
   return (
     <div style={{ minHeight: '100vh', padding: '22px 16px', position: 'relative', overflow: 'hidden' }}>
@@ -183,97 +272,25 @@ export function ClaudiaApp() {
         <p style={{ margin: '4px 0 0', fontSize: 12, fontStyle: 'italic', letterSpacing: '0.06em', color: 'rgba(244,241,234,.55)' }}>
           La Guardiana del Imperio · te tengo cubierta
         </p>
-        {phase === 'ready' && <ModeBadge />}
+        <ModeBadge />
       </header>
 
       <main style={{ maxWidth: 980, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-        {phase === 'loading' && <Centered>Despertando… 🌙</Centered>}
-
-        {phase === 'signin' && (
-          <Gate title="Entra al imperio">
-            <p style={gateText}>ClaudIA te reconoce por tu FBID — una identidad, todos los mundos.</p>
-            <button
-              onClick={() => {
-                window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`);
-              }}
-              style={primaryBtn}
-            >
-              Iniciar sesión con FlowBond
-            </button>
-          </Gate>
-        )}
-
-        {phase === 'enroll' && !recoveryPhrase && (
-          <Gate title="Sella tu bóveda">
-            <p style={gateText}>
-              Lo que compartes con ClaudIA se guarda <strong>cifrado de extremo a extremo</strong>. Ni FlowBond
-              ni nadie con acceso a la base de datos puede leerlo — solo tú, con tu llave. Vamos a crear esa llave.
-            </p>
-            <button onClick={doEnroll} disabled={busy} style={primaryBtn}>
-              {busy ? 'Creando tu llave…' : 'Crear mi bóveda (passkey + frase)'}
-            </button>
-            {err && <ErrText>{friendly(err)}</ErrText>}
-          </Gate>
-        )}
-
-        {phase === 'enroll' && recoveryPhrase && (
-          <Gate title="Tu frase de recuperación">
-            <p style={gateText}>
-              Guárdala en un lugar seguro y privado. Es tu <strong>único respaldo</strong> si pierdes tu passkey —
-              nadie puede regenerarla, ni siquiera ClaudIA. No la guardamos en ningún servidor.
-            </p>
-            <div style={{ ...card({ padding: 16 }), fontFamily: 'ui-monospace, monospace', fontSize: 14, lineHeight: 1.8, letterSpacing: '0.02em', wordSpacing: '0.3em', color: '#FFD27A' }}>
-              {recoveryPhrase}
-            </div>
-            <button onClick={finishEnroll} style={primaryBtn}>
-              La guardé — continuar
-            </button>
-          </Gate>
-        )}
-
-        {phase === 'unlock' && (
-          <Gate title="Abre tu bóveda">
-            {factors.includes('passkey') && (
-              <button onClick={doUnlockPasskey} disabled={busy} style={primaryBtn}>
-                {busy ? 'Verificando…' : 'Abrir con passkey'}
-              </button>
-            )}
-            {factors.includes('recovery') && (
-              <div style={{ marginTop: 14 }}>
-                <p style={{ ...gateText, marginBottom: 8 }}>o usa tu frase de recuperación (24 palabras):</p>
-                <textarea
-                  value={recoveryInput}
-                  onChange={(e) => setRecoveryInput(e.target.value)}
-                  rows={3}
-                  placeholder="palabra1 palabra2 …"
-                  style={{ width: '100%', resize: 'none', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(244,241,234,.14)', borderRadius: 13, color: '#F4F1EA', padding: '11px 13px', fontSize: 14, fontFamily: 'ui-monospace, monospace' }}
-                />
-                <button onClick={doUnlockRecovery} disabled={busy || !recoveryInput.trim()} style={{ ...primaryBtn, marginTop: 8, opacity: busy || !recoveryInput.trim() ? 0.5 : 1 }}>
-                  Abrir con frase
-                </button>
-              </div>
-            )}
-            {err && <ErrText>{friendly(err)}</ErrText>}
-          </Gate>
-        )}
-
-        {phase === 'ready' && (
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <ChatPanel
-              messages={messages}
-              loading={sending}
-              input={input}
-              setInput={setInput}
-              onSend={send}
-              nudge={nudge}
-              onCloseNudge={() => setNudge('')}
-            />
-            <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 260 }}>
-              <CarePanel items={careItems} onLog={logCare} />
-              <TaskPanel tasks={tasks} onToggle={toggleTask} />
-            </div>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <ChatPanel
+            messages={messages}
+            loading={sending}
+            input={input}
+            setInput={setInput}
+            onSend={send}
+            nudge={nudge}
+            onCloseNudge={() => setNudge('')}
+          />
+          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 260 }}>
+            <CarePanel items={careItems} onLog={logCare} />
+            <TaskPanel tasks={tasks} onToggle={toggleTask} />
           </div>
-        )}
+        </div>
       </main>
 
       <p style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'rgba(244,241,234,.32)', letterSpacing: '0.05em', position: 'relative', zIndex: 2 }}>
@@ -284,34 +301,19 @@ export function ClaudiaApp() {
 }
 
 // ── small presentational helpers ────────────────────────────────────────────
+// Gate floats as a glass card over the cinematic film (see Cinematic.tsx).
 function Gate({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ ...card({ padding: 28 }), maxWidth: 520, margin: '0 auto', textAlign: 'center' }}>
+    <div className="cine-glass cine-rise" style={{ padding: 28, width: '100%', maxWidth: 480, textAlign: 'center' }}>
       <h2 style={{ fontSize: 20, fontWeight: 400, margin: '0 0 14px', letterSpacing: '0.04em' }}>{title}</h2>
       {children}
     </div>
   );
 }
-function Centered({ children }: { children: React.ReactNode }) {
-  return <div style={{ textAlign: 'center', padding: 60, color: 'rgba(244,241,234,.55)', fontStyle: 'italic' }}>{children}</div>;
-}
 function ErrText({ children }: { children: React.ReactNode }) {
   return <p style={{ color: '#FF8A6B', fontSize: 13, marginTop: 12 }}>{children}</p>;
 }
 const gateText: React.CSSProperties = { fontSize: 14, lineHeight: 1.6, color: 'rgba(244,241,234,.7)', marginBottom: 18 };
-const primaryBtn: React.CSSProperties = {
-  display: 'inline-block',
-  border: 'none',
-  borderRadius: 13,
-  padding: '12px 22px',
-  cursor: 'pointer',
-  fontSize: 15,
-  fontWeight: 600,
-  color: '#0E1A2B',
-  background: 'linear-gradient(135deg, #FFD27A, #FF8A6B)',
-  fontFamily: 'system-ui, sans-serif',
-  textDecoration: 'none',
-};
 function friendly(code: string): string {
   const map: Record<string, string> = {
     'no-passkey-factor': 'No hay passkey en este dispositivo — usa tu frase de recuperación.',

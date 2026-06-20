@@ -217,3 +217,11 @@ export class ClaudiaVault {
     return this.rpc<{ id: string; kind: string }[]>('claudia_my_nudges');
   }
 }
+
+// One vault instance per browser session — the derived keys live in memory after
+// unlock, so the VaultGate (where she grants access) and the app behind it must
+// share the SAME instance, or the app would boot locked again.
+let _vault: ClaudiaVault | null = null;
+export function getVault(): ClaudiaVault {
+  return (_vault ??= new ClaudiaVault());
+}
