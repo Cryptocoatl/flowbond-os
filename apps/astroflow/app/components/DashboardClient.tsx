@@ -170,6 +170,11 @@ export default function DashboardClient({
         </div>
       </header>
 
+      <Link href="/privacy" className="flex items-center justify-between rounded-xl border border-[#9a8fe0]/25 bg-[#9a8fe0]/[0.06] px-4 py-3 mb-6 hover:border-[#9a8fe0]/50 transition">
+        <span className="text-sm text-[#cfc8e8]">🛡 {t('Your data & sovereignty')}</span>
+        <span className="text-xs text-[#9698a8]">{t('see who you’re weaved with · manage · erase')} →</span>
+      </Link>
+
       {msg && <p className="text-sm text-[#7fd1a8] mb-4">{msg}</p>}
 
       {/* Crews — invite people, share charts across the group */}

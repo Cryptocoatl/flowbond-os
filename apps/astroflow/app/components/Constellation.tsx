@@ -340,6 +340,7 @@ export default function Constellation({
             <button onClick={() => { setAddFriend((v) => !v); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('+ Add friend')}</button>
           )}
           {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Dashboard')}</Link>}
+          {myFbid && <Link href="/privacy" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">🛡 {t('Your data & privacy')}</Link>}
           <button onClick={() => { setTour(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Take the tour')}</button>
           {myFbid && (
             <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="w-full text-left px-4 py-3 text-sm text-[#9698a8] active:bg-white/5">{t('Sign out')}</button>

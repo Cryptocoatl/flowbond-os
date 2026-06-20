@@ -6,6 +6,7 @@ import GuestTools from '../../components/GuestTools';
 import CollectiveContext from '../../components/CollectiveContext';
 import AddToConstellation from '../../components/AddToConstellation';
 import CurrentsLens from '../../components/CurrentsLens';
+import MapMembership from '../../components/MapMembership';
 import { buildCurrents } from '../../../lib/astro/currents';
 import type { Chart } from '../../../lib/astro/types';
 
@@ -60,6 +61,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
   ]);
   const ctx = ctxRow as { purpose?: string | null; intention?: string | null; owner_fbid?: string } | null;
   const isOwner = !!meFbid && ctx?.owner_fbid === meFbid;
+  const isMember = !!meFbid && members.some((m) => m.fbid === meFbid);
 
   // Member charts come through RLS — each viewer sees exactly what each
   // member's visibility + share level allows. Hidden members still appear by
@@ -217,6 +219,8 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           {t('The collective reading opens once at least two charts shine here for you.')}
         </p>
       )}
+
+      {meFbid && (isOwner || isMember) && <MapMembership mapId={map.id} isOwner={isOwner} />}
     </Shell>
   );
 }
