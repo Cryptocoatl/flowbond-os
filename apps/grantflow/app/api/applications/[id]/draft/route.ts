@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbAdmin, dbRead } from '@/lib/supabase-server';
 import { draftApplication } from '@/lib/claudia';
+import { requireAccess } from '@/lib/auth';
 import { Grant, Project, Match } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,7 @@ export const maxDuration = 120;
 
 // POST /api/applications/[id]/draft — ClaudIA drafts the application from its grant + project.
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireAccess())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const { id } = await params;
   const admin = dbAdmin();
 

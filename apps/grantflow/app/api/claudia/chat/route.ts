@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatWithClaudia, ChatTurn } from '@/lib/agent';
+import { requireAccess } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
+  if (!(await requireAccess())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   const body = await req.json().catch(() => null);
   const history = body?.messages as ChatTurn[] | undefined;
   if (!Array.isArray(history) || history.length === 0) {
