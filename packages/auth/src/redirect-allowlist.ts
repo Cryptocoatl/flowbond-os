@@ -28,6 +28,8 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://claudia-sable.vercel.app', path: '/auth/callback' },    // claudia (prod alias)
   { origin: 'https://claudiaflow.life', path: '/auth/callback' },            // claudia (custom domain)
   { origin: 'https://www.claudiaflow.life', path: '/auth/callback' },        // claudia (www)
+  { origin: 'https://grants.claudiaflow.life', path: '/auth/callback' },     // grantflow (custom domain)
+  { origin: 'https://claudia-grants.vercel.app', path: '/auth/callback' },   // grantflow (vercel)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
@@ -38,6 +40,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3013', path: '/auth/callback' },     // flow3
   { origin: 'http://localhost:3021', path: '/auth/callback' },     // claudia (La Guardiana)
   { origin: 'http://localhost:3000', path: '/auth/callback' },     // flowme profiles
+  { origin: 'http://localhost:3012', path: '/auth/callback' },     // grantflow
 ])
 
 /** True only if `raw` exactly matches an allowed (origin, pathname) pair. */
