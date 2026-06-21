@@ -2,11 +2,8 @@
 
 import Script from 'next/script';
 
+const REEL = 'https://www.instagram.com/reel/DZteNpkRW7U/'; // TODO(content): swap permalink to rotate the featured reel
 const HANDLE = 'https://www.instagram.com/reciprociudad';
-// Set REEL to a specific reel/post permalink (e.g. 'https://www.instagram.com/reel/XXXX/')
-// to feature it via the official embed. While null, the featured card links to
-// the profile so the link is always live (no dead reel).
-const REEL: string | null = null;
 
 declare global {
   interface Window {
@@ -15,10 +12,9 @@ declare global {
 }
 
 /**
- * Instagram — follow button + featured content.
- * If REEL is set, the official embed transforms the blockquote on load (with the
- * branded `.ig-card` as fallback until embed.js runs). Otherwise the card links
- * straight to @reciprociudad.
+ * Instagram — follow button + the featured reel via the official embed.
+ * `embed.js` transforms the blockquote on load; until then (or in a sandbox
+ * that blocks it) the branded `.ig-card` fallback shows and links to the reel.
  */
 export default function Social() {
   return (
@@ -48,43 +44,31 @@ export default function Social() {
           </div>
 
           <div className="ig-frame reveal">
-            {REEL ? (
-              <blockquote
-                className="instagram-media"
-                data-instgrm-permalink={REEL}
-                data-instgrm-version="14"
-                style={{ background: 'transparent', border: 0, margin: 0, width: '100%' }}
-              >
-                <FeaturedCard href={REEL} />
-              </blockquote>
-            ) : (
-              <FeaturedCard href={HANDLE} />
-            )}
+            <blockquote
+              className="instagram-media"
+              data-instgrm-permalink={REEL}
+              data-instgrm-version="14"
+              style={{ background: 'transparent', border: 0, margin: 0, width: '100%' }}
+            >
+              <a className="ig-card" href={REEL} target="_blank" rel="noopener">
+                <div className="play">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div className="meta">REEL · @reciprociudad</div>
+                <h3>Ver el reel en Instagram →</h3>
+              </a>
+            </blockquote>
           </div>
         </div>
       </div>
 
-      {REEL && (
-        <Script
-          src="https://www.instagram.com/embed.js"
-          strategy="lazyOnload"
-          onLoad={() => window.instgrm?.Embeds.process()}
-        />
-      )}
+      <Script
+        src="https://www.instagram.com/embed.js"
+        strategy="lazyOnload"
+        onLoad={() => window.instgrm?.Embeds.process()}
+      />
     </section>
-  );
-}
-
-function FeaturedCard({ href }: { href: string }) {
-  return (
-    <a className="ig-card" href={href} target="_blank" rel="noopener">
-      <div className="play">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </div>
-      <div className="meta">@reciprociudad · Instagram</div>
-      <h3>Ver la red en Instagram →</h3>
-    </a>
   );
 }
