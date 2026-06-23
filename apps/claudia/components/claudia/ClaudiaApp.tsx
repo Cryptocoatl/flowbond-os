@@ -202,8 +202,9 @@ export function ClaudiaApp() {
         {phase === 'enroll' && !recoveryPhrase && (
           <Gate title="Sella tu bóveda">
             <p style={gateText}>
-              Lo que compartes con ClaudIA se guarda <strong>cifrado de extremo a extremo</strong>. Ni FlowBond
-              ni nadie con acceso a la base de datos puede leerlo — solo tú, con tu llave. Vamos a crear esa llave.
+              Tus memorias con ClaudIA son <strong>tuyas — para siempre</strong>. Se guardan <strong>cifradas de
+              extremo a extremo</strong> con una llave que solo tú tienes: <strong>nadie más puede acceder a ellas</strong> —
+              ni FlowBond, ni nadie con acceso a la base de datos, ni la propia ClaudIA fuera de tu conversación. Vamos a crear esa llave.
             </p>
             <button onClick={doEnroll} disabled={busy} className="cine-cta">
               {busy ? 'Creando tu llave…' : 'Crear mi bóveda (passkey + frase)'}
