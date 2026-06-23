@@ -11,6 +11,7 @@ import { NUDGE_COPY } from './NudgeBanner';
 import { getVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
 import { parseReply } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
+import { isCommand, runCommand } from '../../lib/claudia/admin';
 import { hubRedirect } from '@flowbond/auth';
 
 type Phase = 'loading' | 'signin' | 'enroll' | 'unlock' | 'ready';
@@ -128,6 +129,24 @@ export function ClaudiaApp() {
   async function send() {
     const text = input.trim();
     if (!text || sending) return;
+
+    // Admin slash-commands (/admin, /whoami) run LOCALLY against the gated grant
+    // RPCs — never encrypted into the vault, never sent to the relay or the LLM.
+    if (isCommand(text)) {
+      setMessages((m) => [...m, { role: 'user', text }]);
+      setInput('');
+      setSending(true);
+      try {
+        const reply = await runCommand(text);
+        setMessages((m) => [...m, { role: 'assistant', text: reply }]);
+      } catch (e) {
+        setMessages((m) => [...m, { role: 'assistant', text: `No se pudo ejecutar el comando: ${(e as Error).message}` }]);
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
     const next: ChatMessage[] = [...messages, { role: 'user', text }];
     setMessages(next);
     setInput('');
