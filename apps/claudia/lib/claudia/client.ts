@@ -12,6 +12,7 @@
 
 import { browserClient } from '../supabase';
 import * as ZK from './crypto';
+import * as GZ from './group-crypto';
 import type { ClaudiaTask } from './contract';
 
 const CRED_KEY = (uid: string) => `claudia.passkey.cred.${uid}`;
@@ -49,6 +50,8 @@ export class ClaudiaVault {
   private dek!: Uint8Array;
   private dekId!: string;
   private threadId!: string;
+  private identity: GZ.IdentityKeyPair | null = null;
+  private roomKeys = new Map<string, Uint8Array>();
 
   // ── identity ────────────────────────────────────────────────────────────
   private async requireUser(): Promise<string> {
@@ -156,6 +159,29 @@ export class ClaudiaVault {
         p_wrapped_dek: wrapped,
       });
     }
+
+    // Ensure this FBID has an identity keypair (for group-ZK sharing).
+    await this.ensureIdentityKey();
+  }
+
+  // ── identity keypair (group-ZK) — minted once, private sealed under KEK ────
+  private async ensureIdentityKey(): Promise<void> {
+    const rows = await this.rpc<{ public_jwk: JsonWebKey; sealed_private: string; sealed_nonce: string }[]>(
+      'claudia_my_identity_key',
+    );
+    if (rows && rows.length) {
+      const b64 = ZK.decryptContent({ ciphertext: rows[0].sealed_private, nonce: rows[0].sealed_nonce }, this.kek);
+      this.identity = { publicJwk: rows[0].public_jwk, privatePkcs8: ZK.fromB64(b64) };
+      return;
+    }
+    const kp = await GZ.generateIdentityKeyPair();
+    const sealed = ZK.encryptContent(ZK.toB64(kp.privatePkcs8), this.kek);
+    await this.rpc('claudia_upsert_identity_key', {
+      p_public_jwk: kp.publicJwk,
+      p_sealed_private: sealed.ciphertext,
+      p_sealed_nonce: sealed.nonce,
+    });
+    this.identity = kp;
   }
 
   get ready(): boolean { return !!this.dek; }
@@ -347,6 +373,89 @@ export class ClaudiaVault {
   async deleteMeeting(meetingId: string): Promise<void> {
     await this.rpc('claudia_delete_meeting', { p_id: meetingId });
     this.meetingDeks.delete(meetingId);
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  Group-ZK rooms — a shared recap or community thread, server-blind. The
+  //  room key (RK) encrypts all shared content; it is wrapped per-member to
+  //  each member's published identity public key. Only members can open it.
+  // ════════════════════════════════════════════════════════════════════════
+
+  /** This FBID's published identity public key (for others to wrap to it). */
+  get publicKey(): JsonWebKey {
+    if (!this.identity) throw new Error('identity-not-ready');
+    return this.identity.publicJwk;
+  }
+
+  async getPeerPublicKey(userId: string): Promise<JsonWebKey> {
+    const jwk = await this.rpc<JsonWebKey | null>('claudia_identity_public', { p_user_id: userId });
+    if (!jwk) throw new Error('peer-has-no-identity-key');
+    return jwk;
+  }
+
+  /** Create a room, seal its title under a fresh RK, and add SELF as a member. */
+  async createRoom(kind: 'meeting' | 'community', refId?: string, title?: string): Promise<{ roomId: string; roomKey: Uint8Array }> {
+    const roomKey = GZ.randomRoomKey();
+    let p_title_ct: string | null = null;
+    let p_title_nonce: string | null = null;
+    if (title && title.trim()) {
+      const sealed = ZK.encryptContent(title.trim(), roomKey);
+      p_title_ct = sealed.ciphertext; p_title_nonce = sealed.nonce;
+    }
+    const roomId = await this.rpc<string>('claudia_create_room', {
+      p_kind: kind, p_ref_id: refId ?? null, p_title_ct, p_title_nonce,
+    });
+    this.roomKeys.set(roomId, roomKey);
+    // owner must hold a wrapped key too, or they couldn't reopen the room later
+    await this.addRoomMember(roomId, this.uid);
+    return { roomId, roomKey };
+  }
+
+  /** Wrap this room's RK to a member (by FBID) and store the per-member blob. */
+  async addRoomMember(roomId: string, memberUserId: string): Promise<void> {
+    const roomKey = await this.openRoomKey(roomId);
+    const peerPub = memberUserId === this.uid ? this.publicKey : await this.getPeerPublicKey(memberUserId);
+    const wrapped = await GZ.wrapRoomKeyFor(roomKey, peerPub);
+    await this.rpc('claudia_add_room_member', {
+      p_room_id: roomId, p_member_id: memberUserId,
+      p_ephemeral_pub: wrapped.ephemeralPubJwk, p_wrapped_rk: wrapped.wrapped,
+    });
+  }
+
+  /** Recover the room key as a member (unwrap with our sealed private key). */
+  async openRoomKey(roomId: string): Promise<Uint8Array> {
+    const cached = this.roomKeys.get(roomId);
+    if (cached) return cached;
+    if (!this.identity) throw new Error('identity-not-ready');
+    const rows = await this.rpc<{ ephemeral_pub: JsonWebKey; wrapped_rk: string }[]>(
+      'claudia_my_room_key', { p_room_id: roomId },
+    );
+    if (!rows || !rows.length) throw new Error('not-a-room-member');
+    const rk = await GZ.unwrapRoomKey(
+      { ephemeralPubJwk: rows[0].ephemeral_pub, wrapped: rows[0].wrapped_rk },
+      this.identity.privatePkcs8,
+    );
+    this.roomKeys.set(roomId, rk);
+    return rk;
+  }
+
+  async myRooms(): Promise<{ id: string; kind: 'meeting' | 'community'; refId: string | null; ownerId: string; title: string }[]> {
+    const rows = await this.rpc<{
+      id: string; kind: 'meeting' | 'community'; ref_id: string | null; owner_id: string;
+      title_ct: string | null; title_nonce: string | null;
+    }[]>('claudia_my_rooms');
+    const out: { id: string; kind: 'meeting' | 'community'; refId: string | null; ownerId: string; title: string }[] = [];
+    for (const r of rows ?? []) {
+      let title = '';
+      if (r.title_ct && r.title_nonce) {
+        try {
+          const rk = await this.openRoomKey(r.id);
+          title = ZK.decryptContent({ ciphertext: r.title_ct, nonce: r.title_nonce }, rk);
+        } catch { /* skip undecryptable */ }
+      }
+      out.push({ id: r.id, kind: r.kind, refId: r.ref_id, ownerId: r.owner_id, title });
+    }
+    return out;
   }
 }
 
