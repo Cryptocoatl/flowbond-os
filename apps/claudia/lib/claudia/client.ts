@@ -87,7 +87,10 @@ export class ClaudiaVault {
       recovery: ZK.recoveryFactorKey(recoveryPhrase),
     };
 
-    if (opts.wantPasskey) {
+    // Only attempt a passkey when the platform can actually make a usable one —
+    // otherwise a phone/in-app-browser can hang on credentials.create(). The
+    // recovery phrase always seals the MS, so enrollment never depends on this.
+    if (opts.wantPasskey && (await ZK.platformPasskeyReady())) {
       try {
         const { credentialId } = await ZK.enrollPasskey(this.uid, opts.displayName || 'flow');
         localStorage.setItem(CRED_KEY(this.uid), credentialId);
@@ -160,8 +163,14 @@ export class ClaudiaVault {
       });
     }
 
-    // Ensure this FBID has an identity keypair (for group-ZK sharing).
-    await this.ensureIdentityKey();
+    // Ensure this FBID has an identity keypair (for group-ZK sharing). This is a
+    // NON-ESSENTIAL feature (groups) whose RPCs may not be deployed yet — it must
+    // NEVER block core unlock. Fail soft so the vault always opens.
+    try {
+      await this.ensureIdentityKey();
+    } catch {
+      /* group identity key unavailable (RPCs not deployed) — core vault still works */
+    }
   }
 
   // ── identity keypair (group-ZK) — minted once, private sealed under KEK ────
@@ -456,6 +465,75 @@ export class ClaudiaVault {
       out.push({ id: r.id, kind: r.kind, refId: r.ref_id, ownerId: r.owner_id, title });
     }
     return out;
+  }
+
+  // ── recap sharing (group-ZK): publish a meeting digest to other FBIDs ──────
+  /**
+   * Share a finished meeting's digest with the given FBIDs. Finds or creates the
+   * room for this meeting, encrypts the digest under its room key, then wraps the
+   * room key to each member. Members who have never opened ClaudIA (no published
+   * identity key) land in `failed` — they must open it once before they can be
+   * added. Returns the room id + per-member outcome.
+   */
+  async shareMeetingRecap(meetingId: string, memberFbids: string[]): Promise<{
+    roomId: string; shared: string[]; failed: { fbid: string; reason: string }[];
+  }> {
+    const json = await this.getMeetingNotes(meetingId);
+    if (!json) throw new Error('no-notes-to-share');
+
+    // reuse an existing room for this meeting, else create one + store the recap
+    const mine = await this.myRooms();
+    const existing = mine.find((r) => r.kind === 'meeting' && r.refId === meetingId && r.ownerId === this.uid);
+    let roomId: string;
+    let roomKey: Uint8Array;
+    if (existing) {
+      roomId = existing.id;
+      roomKey = await this.openRoomKey(roomId);
+    } else {
+      let title = 'Reunión';
+      try { title = JSON.parse(json).title || title; } catch { /* keep default */ }
+      const created = await this.createRoom('meeting', meetingId, title);
+      roomId = created.roomId; roomKey = created.roomKey;
+    }
+    // (re)write the encrypted recap under the room key
+    const sealed = ZK.encryptContent(json, roomKey);
+    await this.rpc('claudia_save_room_recap', {
+      p_room_id: roomId, p_ciphertext: sealed.ciphertext, p_nonce: sealed.nonce,
+    });
+
+    const shared: string[] = [];
+    const failed: { fbid: string; reason: string }[] = [];
+    for (const fbid of memberFbids) {
+      const id = fbid.trim();
+      if (!id || id === this.uid) continue;
+      try { await this.addRoomMember(roomId, id); shared.push(id); }
+      catch (e) { failed.push({ fbid: id, reason: (e as Error).message }); }
+    }
+    return { roomId, shared, failed };
+  }
+
+  /** Decrypted digest JSON string for a room recap (member or owner), or null. */
+  async loadRoomRecap(roomId: string): Promise<string | null> {
+    const rk = await this.openRoomKey(roomId);
+    const rows = await this.rpc<{ ciphertext: string; nonce: string }[]>(
+      'claudia_get_room_recap', { p_room_id: roomId },
+    );
+    if (!rows || !rows.length) return null;
+    try { return ZK.decryptContent({ ciphertext: rows[0].ciphertext, nonce: rows[0].nonce }, rk); }
+    catch { return null; }
+  }
+
+  /** Meeting rooms shared WITH me (I'm a member, someone else owns them). */
+  async sharedMeetingRooms(): Promise<{ id: string; title: string; ownerId: string }[]> {
+    const rooms = await this.myRooms();
+    return rooms
+      .filter((r) => r.kind === 'meeting' && r.ownerId !== this.uid)
+      .map((r) => ({ id: r.id, title: r.title || 'Reunión compartida', ownerId: r.ownerId }));
+  }
+
+  async roomMembers(roomId: string): Promise<string[]> {
+    const rows = await this.rpc<{ member_id: string }[]>('claudia_room_members', { p_room_id: roomId });
+    return (rows ?? []).map((r) => r.member_id);
   }
 }
 

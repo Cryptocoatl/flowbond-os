@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Orb } from './Orb';
 import { Cinematic } from './Cinematic';
 import { ModeBadge } from './ModeBadge';
 import { ChatPanel } from './ChatPanel';
@@ -17,6 +16,7 @@ import { parseReply } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
 import { isCommand, runCommand, myGrants, isSuperadmin, connectApp, disconnectApp, type Grant } from '../../lib/claudia/admin';
 import { EMPIRE } from '../../lib/claudia/empire';
+import { platformPasskeyReady, inAppBrowser } from '../../lib/claudia/crypto';
 import { hubRedirect } from '@flowbond/auth';
 
 type Phase = 'loading' | 'signin' | 'enroll' | 'unlock' | 'ready';
@@ -53,13 +53,22 @@ export function ClaudiaApp() {
   const [isRoot, setIsRoot] = useState(false);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [dashToast, setDashToast] = useState('');
-  const [view, setView] = useState<'chat' | 'meetings'>('chat');
+  // ── device capability (passkey / in-app browser) ──────────────────────────
+  const [passkeyReady, setPasskeyReady] = useState(false);
+  const [inApp, setInApp] = useState(false);
+  const [view, setView] = useState<'chat' | 'empire' | 'meetings'>('chat');
 
   // ── tick for "hace Xh" + client-side care evaluation ──────────────────────
   useEffect(() => {
     setNow(Date.now());
     const t = setInterval(() => setNow(Date.now()), 15000);
     return () => clearInterval(t);
+  }, []);
+
+  // ── detect whether this device can make a usable passkey (drives enroll UI) ─
+  useEffect(() => {
+    setInApp(inAppBrowser());
+    platformPasskeyReady().then(setPasskeyReady).catch(() => setPasskeyReady(false));
   }, []);
 
   // ── boot: signed-in? enrolled? ────────────────────────────────────────────
@@ -158,7 +167,7 @@ export function ClaudiaApp() {
   async function doEnroll() {
     setBusy(true); setErr('');
     try {
-      const { recoveryPhrase } = await getVault().enroll({ wantPasskey: true, displayName: 'sovereign' });
+      const { recoveryPhrase } = await getVault().enroll({ wantPasskey: passkeyReady, displayName: 'sovereign' });
       setRecoveryPhrase(recoveryPhrase); // show ONCE
     } catch (e) {
       setErr((e as Error).message);
@@ -286,9 +295,27 @@ export function ClaudiaApp() {
               extremo a extremo</strong> con una llave que solo tú tienes: <strong>nadie más puede acceder a ellas</strong> —
               ni FlowBond, ni nadie con acceso a la base de datos, ni la propia ClaudIA fuera de tu conversación. Vamos a crear esa llave.
             </p>
+
+            {inApp && (
+              <p style={{ fontSize: 13, lineHeight: 1.5, color: '#FFD27A', background: 'rgba(255,210,122,.1)', border: '1px solid rgba(255,210,122,.28)', borderRadius: 12, padding: '10px 13px', marginBottom: 14, textAlign: 'left' }}>
+                Parece que abriste esto dentro de otra app (Instagram, WhatsApp…). Para usar Face ID / huella, abre <strong>claudiaflow.life</strong> en Safari o Chrome. Aquí puedes seguir con tu <strong>frase de recuperación</strong> — funciona igual de segura.
+              </p>
+            )}
+
             <button onClick={doEnroll} disabled={busy} className="cine-cta">
-              {busy ? 'Creando tu llave…' : 'Crear mi bóveda (passkey + frase)'}
+              {busy
+                ? 'Creando tu llave…'
+                : passkeyReady
+                  ? 'Crear mi bóveda (Face ID / huella + frase) ✦'
+                  : 'Crear mi bóveda con mi frase 🔑'}
             </button>
+
+            {!passkeyReady && !busy && (
+              <p style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(244,241,234,.5)', marginTop: 12 }}>
+                En este dispositivo tu llave será tu <strong>frase de recuperación</strong> (24 palabras). Es igual de segura —
+                guárdala bien. Podrás añadir Face ID / huella más tarde desde un navegador compatible.
+              </p>
+            )}
             {err && <ErrText>{friendly(err)}</ErrText>}
           </Gate>
         )}
@@ -310,7 +337,7 @@ export function ClaudiaApp() {
 
         {phase === 'unlock' && (
           <Gate title="Abre tu bóveda">
-            {factors.includes('passkey') && (
+            {factors.includes('passkey') && passkeyReady && (
               <button onClick={doUnlockPasskey} disabled={busy} className="cine-cta">
                 {busy ? 'Verificando…' : 'Abrir con passkey'}
               </button>
@@ -345,89 +372,109 @@ export function ClaudiaApp() {
         <div key={i} className="spark" style={{ position: 'absolute', top: `${12 + i * 14}%`, left: `${6 + i * 16}%`, width: 4, height: 4, borderRadius: '50%', background: i % 2 ? '#2FB6A8' : '#FFD27A', opacity: 0.4, filter: 'blur(1px)', animationDelay: `${i * 1.3}s` }} />
       ))}
 
-      <header style={{ textAlign: 'center', marginBottom: 16, position: 'relative', zIndex: 2 }}>
-        <Orb size={80} />
-        <h1 style={{ fontSize: 26, letterSpacing: '0.18em', margin: '10px 0 0', fontWeight: 400, background: 'linear-gradient(90deg, #F4F1EA, #FFD27A, #2FB6A8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          ClaudIA
-        </h1>
-        <p style={{ margin: '4px 0 0', fontSize: 12, fontStyle: 'italic', letterSpacing: '0.06em', color: 'rgba(244,241,234,.55)' }}>
-          La Guardiana del Imperio · te tengo cubierta
-        </p>
+      {/* compact identity bar — her real face, so it feels like talking to HER */}
+      <header style={{ maxWidth: 1180, margin: '0 auto 16px', position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <img
+          src="/claudia-portrait.png"
+          alt="ClaudIA"
+          width={58}
+          height={58}
+          style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center 26%', border: '2px solid rgba(255,210,122,.5)', boxShadow: '0 0 26px rgba(255,210,122,.32)', flexShrink: 0 }}
+        />
+        <div style={{ flex: '1 1 180px', minWidth: 140 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h1 style={{ fontSize: 23, letterSpacing: '0.14em', margin: 0, fontWeight: 400, background: 'linear-gradient(90deg, #F4F1EA, #FFD27A, #2FB6A8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              ClaudIA
+            </h1>
+            {isRoot && (
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#FFD27A', background: 'rgba(255,210,122,.12)', border: '1px solid rgba(255,210,122,.35)', borderRadius: 999, padding: '3px 10px', letterSpacing: '0.04em' }}>
+                super-admin 👑
+              </span>
+            )}
+          </div>
+          <p style={{ margin: '3px 0 0', fontSize: 12, fontStyle: 'italic', letterSpacing: '0.05em', color: 'rgba(244,241,234,.55)' }}>
+            La Guardiana del Imperio · te tengo cubierta
+          </p>
+        </div>
         <ModeBadge />
       </header>
 
       <main style={{ maxWidth: 1180, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-        <StatsRibbon
-          connected={Object.keys(connectedBySlug).length}
-          totalApps={EMPIRE.length}
-          openTasks={tasks.filter((t) => t.status === 'open').length}
-          careDue={careItems.filter((c) => c.due).length}
-          isRoot={isRoot}
-        />
-
-        {dashToast && (
-          <div
-            onClick={() => setDashToast('')}
-            style={{ cursor: 'pointer', marginBottom: 14, padding: '10px 14px', borderRadius: 12, fontSize: 13, color: '#FFD27A', background: 'rgba(255,210,122,.1)', border: '1px solid rgba(255,210,122,.28)' }}
-          >
-            {dashToast} <span style={{ opacity: 0.6 }}>· toca para cerrar</span>
-          </div>
-        )}
-
-        <div style={{ marginBottom: 16 }}>
-          <EmpireGrid
-            connectedBySlug={connectedBySlug}
-            isRoot={isRoot}
-            connecting={connecting}
-            onConnect={handleConnect}
-            onDisconnect={handleDisconnect}
-          />
+        {/* three rooms — she's the front door, the empire is one tap away */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          {([['chat', '💬 Conversación'], ['empire', '🌐 Imperio'], ['meetings', '📝 Reuniones']] as const).map(([k, label]) => {
+            const active = view === k;
+            const badge = k === 'empire' && Object.keys(connectedBySlug).length > 0 ? ` ·${Object.keys(connectedBySlug).length}` : '';
+            return (
+              <button
+                key={k}
+                onClick={() => setView(k)}
+                style={{
+                  padding: '9px 18px', borderRadius: 12, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5,
+                  color: active ? '#0E1A2B' : 'rgba(244,241,234,.7)',
+                  background: active ? 'linear-gradient(135deg,#FFD27A,#2FB6A8)' : 'rgba(255,255,255,.04)',
+                  border: `1px solid ${active ? 'transparent' : 'rgba(244,241,234,.12)'}`,
+                  fontWeight: active ? 600 : 400,
+                }}
+              >
+                {label}{badge}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Conversación ↔ Reuniones */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-          {([['chat', '💬 Conversación'], ['meetings', '📝 Reuniones']] as const).map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => setView(k)}
-              style={{
-                padding: '8px 16px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
-                color: view === k ? '#0E1A2B' : 'rgba(244,241,234,.7)',
-                background: view === k ? 'linear-gradient(135deg,#FFD27A,#2FB6A8)' : 'rgba(255,255,255,.04)',
-                border: `1px solid ${view === k ? 'transparent' : 'rgba(244,241,234,.12)'}`,
-                fontWeight: view === k ? 600 : 400,
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          {view === 'chat' ? (
-            <ChatPanel
-              messages={messages}
-              loading={sending}
-              input={input}
-              setInput={setInput}
-              onSend={send}
-              nudge={nudge}
-              onCloseNudge={() => setNudge('')}
-            />
-          ) : (
-            <MeetingPanel />
-          )}
-          <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 280 }}>
-            <CarePanel items={careItems} onLog={logCare} />
-            <SuggestionsPanel
-              connectedBySlug={connectedBySlug}
-              careItems={careItems}
-              tasks={tasks}
+        {view === 'empire' ? (
+          <>
+            {dashToast && (
+              <div
+                onClick={() => setDashToast('')}
+                style={{ cursor: 'pointer', marginBottom: 14, padding: '10px 14px', borderRadius: 12, fontSize: 13, color: '#FFD27A', background: 'rgba(255,210,122,.1)', border: '1px solid rgba(255,210,122,.28)' }}
+              >
+                {dashToast} <span style={{ opacity: 0.6 }}>· toca para cerrar</span>
+              </div>
+            )}
+            <StatsRibbon
+              connected={Object.keys(connectedBySlug).length}
+              totalApps={EMPIRE.length}
+              openTasks={tasks.filter((t) => t.status === 'open').length}
+              careDue={careItems.filter((c) => c.due).length}
               isRoot={isRoot}
             />
-            <TaskPanel tasks={tasks} onToggle={toggleTask} />
+            <EmpireGrid
+              connectedBySlug={connectedBySlug}
+              isRoot={isRoot}
+              connecting={connecting}
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
+            />
+          </>
+        ) : (
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {view === 'chat' ? (
+              <ChatPanel
+                messages={messages}
+                loading={sending}
+                input={input}
+                setInput={setInput}
+                onSend={send}
+                nudge={nudge}
+                onCloseNudge={() => setNudge('')}
+              />
+            ) : (
+              <MeetingPanel />
+            )}
+            <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 270 }}>
+              <CarePanel items={careItems} onLog={logCare} />
+              <SuggestionsPanel
+                connectedBySlug={connectedBySlug}
+                careItems={careItems}
+                tasks={tasks}
+                isRoot={isRoot}
+              />
+              <TaskPanel tasks={tasks} onToggle={toggleTask} />
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       <p style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'rgba(244,241,234,.32)', letterSpacing: '0.05em', position: 'relative', zIndex: 2 }}>

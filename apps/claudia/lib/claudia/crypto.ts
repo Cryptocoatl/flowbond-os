@@ -269,6 +269,33 @@ export async function passkeyFactorKey(credentialId?: string): Promise<Uint8Arra
   return hkdf32(bufToU8(prf), 'claudia-factor-passkey');
 }
 
+/** True inside known in-app browsers (Instagram / Facebook / TikTok / WhatsApp …)
+ *  where WebAuthn is unreliable or hangs forever. We steer these users to a real
+ *  browser or to the recovery-phrase path instead of a doomed passkey attempt. */
+export function inAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter|TikTok|musical_ly|Snapchat|WhatsApp|MicroMessenger|GSA\//i.test(ua);
+}
+
+/** Can this device most likely create a USABLE platform passkey? Checks that a
+ *  user-verifying platform authenticator exists and we're not in a flaky webview.
+ *  (PRF/hmac-secret still isn't guaranteed — if it's missing, enrollment silently
+ *  falls back to the recovery phrase rather than hanging.) */
+export async function platformPasskeyReady(): Promise<boolean> {
+  try {
+    if (typeof window === 'undefined') return false;
+    const PKC = (window as unknown as {
+      PublicKeyCredential?: { isUserVerifyingPlatformAuthenticatorAvailable?: () => Promise<boolean> };
+    }).PublicKeyCredential;
+    if (!PKC?.isUserVerifyingPlatformAuthenticatorAvailable) return false;
+    if (inAppBrowser()) return false;
+    return await PKC.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch {
+    return false;
+  }
+}
+
 // ── enrollment + unlock ceremonies ────────────────────────────────────────
 export interface SealedShareRow { factor: FactorId; sealed_share: string; }
 
