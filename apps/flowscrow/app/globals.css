@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --flow-gold: #c9a961;
+  --flow-dark: #0f2e1f;
+  --flow-sage: #8fa98f;
+  --flow-cream: #efe8d8;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(201, 169, 97, 0.1), transparent 60%),
+    #0a1a12;
+  color: var(--flow-cream);
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(201, 169, 97, 0.18);
+  border-radius: 16px;
+}
+
+.gold {
+  color: var(--flow-gold);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn-gold {
+  background: var(--flow-gold);
+  color: #14241a;
+}
+.btn-gold:hover {
+  filter: brightness(1.06);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(201, 169, 97, 0.35);
+  color: var(--flow-cream);
+}
+.btn-ghost:hover {
+  background: rgba(201, 169, 97, 0.08);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.field {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(201, 169, 97, 0.25);
+  border-radius: 10px;
+  padding: 11px 13px;
+  color: var(--flow-cream);
+  font-size: 15px;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--flow-gold);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
