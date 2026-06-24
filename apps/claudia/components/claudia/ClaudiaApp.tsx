@@ -71,6 +71,13 @@ export function ClaudiaApp() {
     platformPasskeyReady().then(setPasskeyReady).catch(() => setPasskeyReady(false));
   }, []);
 
+  // ── arriving from an invite link → open the Reuniones tab so it can redeem ──
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('claudia.pendingInvite')) setView('meetings');
+    } catch { /* noop */ }
+  }, []);
+
   // ── boot: signed-in? enrolled? ────────────────────────────────────────────
   useEffect(() => {
     (async () => {

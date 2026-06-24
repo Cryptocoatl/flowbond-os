@@ -535,6 +535,76 @@ export class ClaudiaVault {
     const rows = await this.rpc<{ member_id: string }[]>('claudia_room_members', { p_room_id: roomId });
     return (rows ?? []).map((r) => r.member_id);
   }
+
+  /** This session's FBID (for "tú" vs others in shared chat). */
+  get myFbid(): string { return this.uid; }
+
+  // ── room chat (encrypted under RK; sender_id is plaintext metadata) ────────
+  async postRoomMessage(roomId: string, text: string): Promise<void> {
+    const rk = await this.openRoomKey(roomId);
+    const sealed = ZK.encryptContent(text, rk);
+    await this.rpc('claudia_post_room_message', {
+      p_room_id: roomId, p_ciphertext: sealed.ciphertext, p_nonce: sealed.nonce,
+    });
+  }
+
+  async loadRoomMessages(roomId: string, since?: string): Promise<{ id: string; senderId: string; text: string; at: string }[]> {
+    const rk = await this.openRoomKey(roomId);
+    const rows = await this.rpc<{ id: string; sender_id: string; ciphertext: string; nonce: string; created_at: string }[]>(
+      'claudia_room_messages', { p_room_id: roomId, p_since: since ?? null },
+    );
+    return (rows ?? []).map((r) => {
+      let text = '';
+      try { text = ZK.decryptContent({ ciphertext: r.ciphertext, nonce: r.nonce }, rk); }
+      catch { /* foreign/tampered — skip content */ }
+      return { id: r.id, senderId: r.sender_id, text, at: r.created_at };
+    });
+  }
+
+  /** A standalone community room (chat-first), with optional initial members. */
+  async createCommunityRoom(title: string, memberFbids: string[] = []): Promise<string> {
+    const { roomId } = await this.createRoom('community', undefined, title);
+    for (const fbid of memberFbids) {
+      const id = fbid.trim();
+      if (id && id !== this.uid) { try { await this.addRoomMember(roomId, id); } catch { /* skip */ } }
+    }
+    return roomId;
+  }
+
+  // ── invite links (RK sealed under a link key carried only in the URL #) ────
+  /** Mint an invite. Returns the token + the link key to place in the URL fragment. */
+  async createInvite(roomId: string, opts?: { expiresAt?: string; maxUses?: number }): Promise<{ token: string; linkKey: string }> {
+    const rk = await this.openRoomKey(roomId);
+    const linkKey = GZ.randomRoomKey();                 // 32-byte symmetric link key
+    const sealed = ZK.encryptContent(ZK.toB64(rk), linkKey);
+    const token = await this.rpc<string>('claudia_create_invite', {
+      p_room_id: roomId, p_wrapped_ct: sealed.ciphertext, p_wrapped_nonce: sealed.nonce,
+      p_expires_at: opts?.expiresAt ?? null, p_max_uses: opts?.maxUses ?? null,
+    });
+    return { token, linkKey: ZK.toB64(linkKey) };
+  }
+
+  /** Redeem an invite: unwrap RK from the fragment key, then self-join as a member. */
+  async redeemInvite(token: string, linkKeyB64: string): Promise<string> {
+    const rows = await this.rpc<{ room_id: string; wrapped_ct: string; wrapped_nonce: string }[]>(
+      'claudia_get_invite', { p_token: token },
+    );
+    if (!rows || !rows.length) throw new Error('invite-invalid');
+    const linkKey = ZK.fromB64(linkKeyB64);
+    const rk = ZK.fromB64(ZK.decryptContent({ ciphertext: rows[0].wrapped_ct, nonce: rows[0].wrapped_nonce }, linkKey));
+    const roomId = rows[0].room_id;
+    this.roomKeys.set(roomId, rk);
+    // become a persistent member: wrap RK to my own identity key
+    const wrapped = await GZ.wrapRoomKeyFor(rk, this.publicKey);
+    await this.rpc('claudia_join_room_via_invite', {
+      p_token: token, p_ephemeral_pub: wrapped.ephemeralPubJwk, p_wrapped_rk: wrapped.wrapped,
+    });
+    return roomId;
+  }
+
+  async revokeInvite(token: string): Promise<void> {
+    await this.rpc('claudia_revoke_invite', { p_token: token });
+  }
 }
 
 // One vault instance per browser session — the derived keys live in memory after
