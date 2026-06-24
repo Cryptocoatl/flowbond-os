@@ -67,6 +67,23 @@ export async function myGrants(): Promise<Grant[]> {
   return rpc<Grant[]>('my_grants');
 }
 
+// ── empire "connect" — bind an app to ClaudIA via the grant spine ──────────
+//  Connecting an app = granting THIS FBID admin over that app_slug. For the
+//  super-admin this is the registry of "worlds ClaudIA organizes for me"; the
+//  same rows authorize editing later (has_grant). Superadmin-gated by the RPC.
+
+/** Connect (grant yourself admin over) an app by slug. Returns the grant id. */
+export async function connectApp(appSlug: string): Promise<string> {
+  const fbid = await myFbid();
+  if (!fbid) throw new Error('not_authenticated');
+  return grantAccess(fbid, appSlug, null, 'admin');
+}
+
+/** Disconnect an app you previously connected (revoke that grant). */
+export async function disconnectApp(grantId: string): Promise<void> {
+  return revokeAccess(grantId);
+}
+
 // ── /admin command interpreter ────────────────────────────────────────────
 //  Returns a chat-ready reply string for any `/`-prefixed input, or null if
 //  the text is NOT a command (so the normal relay turn proceeds). Pure text in,

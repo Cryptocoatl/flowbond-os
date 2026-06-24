@@ -5,13 +5,18 @@ import { Orb } from './Orb';
 import { Cinematic } from './Cinematic';
 import { ModeBadge } from './ModeBadge';
 import { ChatPanel } from './ChatPanel';
+import { MeetingPanel } from './MeetingPanel';
 import { CarePanel, type CareItem } from './CarePanel';
 import { TaskPanel } from './TaskPanel';
+import { EmpireGrid } from './EmpireGrid';
+import { StatsRibbon } from './StatsRibbon';
+import { SuggestionsPanel } from './SuggestionsPanel';
 import { NUDGE_COPY } from './NudgeBanner';
 import { getVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
 import { parseReply } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
-import { isCommand, runCommand } from '../../lib/claudia/admin';
+import { isCommand, runCommand, myGrants, isSuperadmin, connectApp, disconnectApp, type Grant } from '../../lib/claudia/admin';
+import { EMPIRE } from '../../lib/claudia/empire';
 import { hubRedirect } from '@flowbond/auth';
 
 type Phase = 'loading' | 'signin' | 'enroll' | 'unlock' | 'ready';
@@ -43,6 +48,12 @@ export function ClaudiaApp() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [now, setNow] = useState(0);
+  // ── empire / grants ───────────────────────────────────────────────────────
+  const [grants, setGrants] = useState<Grant[]>([]);
+  const [isRoot, setIsRoot] = useState(false);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const [dashToast, setDashToast] = useState('');
+  const [view, setView] = useState<'chat' | 'meetings'>('chat');
 
   // ── tick for "hace Xh" + client-side care evaluation ──────────────────────
   useEffect(() => {
@@ -68,6 +79,17 @@ export function ClaudiaApp() {
     })();
   }, []);
 
+  // Grants + root status come from the (server-readable) grant spine, NOT the
+  // vault — they're access-control metadata, a separate plane from the ZK store.
+  const refreshGrants = useCallback(async () => {
+    const [g, root] = await Promise.all([
+      myGrants().catch(() => [] as Grant[]),
+      isSuperadmin().catch(() => false),
+    ]);
+    setGrants(g);
+    setIsRoot(root);
+  }, []);
+
   const loadAll = useCallback(async () => {
     const v = getVault();
     const [msgs, tsk, care, p] = await Promise.all([
@@ -77,9 +99,46 @@ export function ClaudiaApp() {
     setTasks(tsk);
     setCareState(care);
     setPrefs(p as unknown as Record<string, number>);
+    await refreshGrants();
     const pending = await v.pendingNudges();
     if (pending.length) setNudge(NUDGE_COPY[pending[0].kind] ?? '');
-  }, []);
+  }, [refreshGrants]);
+
+  // slug → grant id for the apps you've connected (whole-site grants; the '*'
+  // superadmin row is excluded so it never marks every world as connected).
+  const connectedBySlug = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const g of grants) {
+      if (g.app_slug !== '*' && g.page_path == null && !map[g.app_slug]) map[g.app_slug] = g.id;
+    }
+    return map;
+  }, [grants]);
+
+  async function handleConnect(slug: string) {
+    setConnecting(slug); setDashToast('');
+    try {
+      await connectApp(slug);
+      await refreshGrants();
+    } catch (e) {
+      const m = (e as Error).message;
+      setDashToast(m.includes('superadmin_required')
+        ? 'Reclama tu super-admin primero: escribe /admin init.'
+        : `No se pudo conectar: ${m}`);
+    } finally {
+      setConnecting(null);
+    }
+  }
+  async function handleDisconnect(grantId: string, slug: string) {
+    setConnecting(slug); setDashToast('');
+    try {
+      await disconnectApp(grantId);
+      await refreshGrants();
+    } catch (e) {
+      setDashToast(`No se pudo desconectar: ${(e as Error).message}`);
+    } finally {
+      setConnecting(null);
+    }
+  }
 
   // ── care items (timing only) ──────────────────────────────────────────────
   const careItems: CareItem[] = useMemo(() => {
@@ -139,6 +198,8 @@ export function ClaudiaApp() {
       try {
         const reply = await runCommand(text);
         setMessages((m) => [...m, { role: 'assistant', text: reply }]);
+        // /admin init|grant|revoke change the grant spine — reflect it live.
+        await refreshGrants();
       } catch (e) {
         setMessages((m) => [...m, { role: 'assistant', text: `No se pudo ejecutar el comando: ${(e as Error).message}` }]);
       } finally {
@@ -295,19 +356,75 @@ export function ClaudiaApp() {
         <ModeBadge />
       </header>
 
-      <main style={{ maxWidth: 980, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-          <ChatPanel
-            messages={messages}
-            loading={sending}
-            input={input}
-            setInput={setInput}
-            onSend={send}
-            nudge={nudge}
-            onCloseNudge={() => setNudge('')}
+      <main style={{ maxWidth: 1180, margin: '0 auto', position: 'relative', zIndex: 2 }}>
+        <StatsRibbon
+          connected={Object.keys(connectedBySlug).length}
+          totalApps={EMPIRE.length}
+          openTasks={tasks.filter((t) => t.status === 'open').length}
+          careDue={careItems.filter((c) => c.due).length}
+          isRoot={isRoot}
+        />
+
+        {dashToast && (
+          <div
+            onClick={() => setDashToast('')}
+            style={{ cursor: 'pointer', marginBottom: 14, padding: '10px 14px', borderRadius: 12, fontSize: 13, color: '#FFD27A', background: 'rgba(255,210,122,.1)', border: '1px solid rgba(255,210,122,.28)' }}
+          >
+            {dashToast} <span style={{ opacity: 0.6 }}>· toca para cerrar</span>
+          </div>
+        )}
+
+        <div style={{ marginBottom: 16 }}>
+          <EmpireGrid
+            connectedBySlug={connectedBySlug}
+            isRoot={isRoot}
+            connecting={connecting}
+            onConnect={handleConnect}
+            onDisconnect={handleDisconnect}
           />
-          <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 260 }}>
+        </div>
+
+        {/* Conversación ↔ Reuniones */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          {([['chat', '💬 Conversación'], ['meetings', '📝 Reuniones']] as const).map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setView(k)}
+              style={{
+                padding: '8px 16px', borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13,
+                color: view === k ? '#0E1A2B' : 'rgba(244,241,234,.7)',
+                background: view === k ? 'linear-gradient(135deg,#FFD27A,#2FB6A8)' : 'rgba(255,255,255,.04)',
+                border: `1px solid ${view === k ? 'transparent' : 'rgba(244,241,234,.12)'}`,
+                fontWeight: view === k ? 600 : 400,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          {view === 'chat' ? (
+            <ChatPanel
+              messages={messages}
+              loading={sending}
+              input={input}
+              setInput={setInput}
+              onSend={send}
+              nudge={nudge}
+              onCloseNudge={() => setNudge('')}
+            />
+          ) : (
+            <MeetingPanel />
+          )}
+          <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 280 }}>
             <CarePanel items={careItems} onLog={logCare} />
+            <SuggestionsPanel
+              connectedBySlug={connectedBySlug}
+              careItems={careItems}
+              tasks={tasks}
+              isRoot={isRoot}
+            />
             <TaskPanel tasks={tasks} onToggle={toggleTask} />
           </div>
         </div>
