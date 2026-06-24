@@ -29,6 +29,9 @@ export async function middleware(request: NextRequest) {
   // Public routes — always allow
   if (
     pathname === '/' ||
+    // Marketing landing (the app's clean-URL move relocated it here from /);
+    // must be reachable logged-out — it's where unauthenticated visitors land.
+    pathname === '/welcome' ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/debug') ||
