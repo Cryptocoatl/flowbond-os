@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { card } from './CarePanel';
+import { RoomChat } from './RoomChat';
 import { getVault, type MeetingSource, type MeetingSummary } from '../../lib/claudia/client';
 import { Transcriber, type LoadProgress } from '../../lib/claudia/transcribe';
 import { startCapture, type CaptureHandle } from '../../lib/claudia/capture';
@@ -51,6 +52,7 @@ export function MeetingPanel() {
   const [shareInput, setShareInput] = useState('');
   const [sharing, setSharing] = useState(false);
   const [shareResult, setShareResult] = useState<{ shared: number; failed: { fbid: string; reason: string }[] } | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   const transcriberRef = useRef<Transcriber | null>(null);
   const captureRef = useRef<CaptureHandle | null>(null);
@@ -183,6 +185,7 @@ export function MeetingPanel() {
     try {
       const res = await getVault().shareMeetingRecap(id, fbids);
       setShareResult({ shared: res.shared.length, failed: res.failed });
+      setRoomId(res.roomId);   // owner can now chat + mint invite links
       setShareInput('');
       refreshMeetings();
     } catch (e) {
@@ -198,12 +201,32 @@ export function MeetingPanel() {
       const json = await getVault().loadRoomRecap(room.id);
       setDigest(json ? parseDigest(json) : EMPTY_DIGEST);
       setSegments([]);
+      setRoomId(room.id);
       setMode('review');
     } catch (e) {
       setViewingShared(false);
       setErr(friendly((e as Error).message));
     }
   }
+
+  // Redeem an invite link parked by /invite/[token] (key was in the URL fragment).
+  useEffect(() => {
+    (async () => {
+      let pending: { token?: string; linkKey?: string } | null = null;
+      try { pending = JSON.parse(sessionStorage.getItem('claudia.pendingInvite') || 'null'); } catch { /* noop */ }
+      if (!pending?.token || !pending?.linkKey) return;
+      sessionStorage.removeItem('claudia.pendingInvite');
+      try {
+        const rid = await getVault().redeemInvite(pending.token, pending.linkKey);
+        meetingIdRef.current = null; setViewingShared(true);
+        const json = await getVault().loadRoomRecap(rid).catch(() => null);
+        if (json) setDigest(parseDigest(json)); else setDigest(EMPTY_DIGEST);
+        setRoomId(rid); setMode('review'); refreshMeetings();
+      } catch (e) {
+        setErr(friendly((e as Error).message));
+      }
+    })();
+  }, [refreshMeetings]);
 
   async function openPast(m: MeetingSummary) {
     setErr(''); setViewingShared(false); setShareResult(null);
@@ -226,7 +249,7 @@ export function MeetingPanel() {
 
   function reset() {
     setMode('idle'); setDigest(null); setSegments([]); meetingIdRef.current = null;
-    setViewingShared(false); setShareResult(null); setShareInput('');
+    setViewingShared(false); setShareResult(null); setShareInput(''); setRoomId(null);
     refreshMeetings();
   }
 
@@ -328,6 +351,7 @@ export function MeetingPanel() {
               🔒 Compartida contigo · descifrada con tu llave. Puedes guardar las acciones en tus tareas.
             </p>
           )}
+          {roomId && <RoomChat roomId={roomId} canInvite={!viewingShared} />}
           <button onClick={reset} style={ghostBtn}>← Volver</button>
         </>
       )}
@@ -491,6 +515,7 @@ function friendly(code: string): string {
     'no-notes-to-share': 'Primero sintetiza las notas de esta reunión, luego puedes compartir el recap.',
     'peer-has-no-identity-key': 'Esa persona aún no ha abierto ClaudIA — pídele que entre una vez y vuelve a compartir.',
     'not-a-room-member': 'No tienes acceso a este recap compartido.',
+    'invite-invalid': 'Este enlace de invitación expiró, fue revocado o ya no es válido.',
     'identity-not-ready': 'Tu llave de identidad aún no está lista — recarga e intenta de nuevo.',
     'no-tab-audio': 'No se compartió el audio de la pestaña — vuelve a intentar y activa “Compartir audio de la pestaña”.',
     'transcribe-worker-error': 'No se pudo cargar el modelo de transcripción (revisa tu conexión la primera vez).',
