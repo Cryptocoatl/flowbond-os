@@ -36,12 +36,8 @@ create unique index if not exists flowbond_grants_active_uniq
   on public.flowbond_grants (grantee_fbid, app_slug, coalesce(page_path, ''), role)
   where status = 'active';
 
--- ── RLS: read your own grants; superadmin reads all; writes only via RPC ───
-alter table public.flowbond_grants enable row level security;
-drop policy if exists flowbond_grants_read on public.flowbond_grants;
-create policy flowbond_grants_read on public.flowbond_grants
-  for select using (grantee_fbid = auth.uid() or public.is_superadmin());
--- (no insert/update/delete policies → all writes go through the SECURITY DEFINER RPCs below)
+-- NOTE: RLS policy is defined AFTER the functions below, because the policy's
+-- USING clause calls public.is_superadmin() — that function must exist first.
 
 -- ── role ranking (viewer < editor < admin < superadmin) ───────────────────
 create or replace function public.flowbond_role_rank(p_role text)
@@ -59,6 +55,14 @@ returns boolean language sql stable security definer set search_path = public as
     where grantee_fbid = p_fbid and role = 'superadmin' and status = 'active'
   );
 $$;
+
+-- ── RLS: read your own grants; superadmin reads all; writes only via RPC ───
+--  Placed here (not next to the table) so is_superadmin() already exists.
+alter table public.flowbond_grants enable row level security;
+drop policy if exists flowbond_grants_read on public.flowbond_grants;
+create policy flowbond_grants_read on public.flowbond_grants
+  for select using (grantee_fbid = auth.uid() or public.is_superadmin());
+-- (no insert/update/delete policies → all writes go through the SECURITY DEFINER RPCs below)
 
 -- ── does p_fbid hold at least p_min_role on this app (+page)? ──────────────
 --  A whole-site grant (page_path IS NULL) covers every page. A page-scoped
