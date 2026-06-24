@@ -8,6 +8,7 @@ import { MeetingPanel } from './MeetingPanel';
 import { CarePanel, type CareItem } from './CarePanel';
 import { TaskPanel } from './TaskPanel';
 import { EmpireGrid } from './EmpireGrid';
+import { FloGuardPanel } from './FloGuardPanel';
 import { StatsRibbon } from './StatsRibbon';
 import { SuggestionsPanel } from './SuggestionsPanel';
 import { NUDGE_COPY } from './NudgeBanner';
@@ -454,6 +455,7 @@ export function ClaudiaApp() {
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
             />
+            <FloGuardPanel />
           </>
         ) : (
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>

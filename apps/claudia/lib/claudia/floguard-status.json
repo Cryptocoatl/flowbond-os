@@ -1,0 +1,19 @@
+{
+  "_comment": "FloGuard status snapshot for the ClaudIA dashboard. Regenerated each FloGuard round from apps/claudia/operator/floguard/BACKLOG.md. NEVER contains secret values — operational metadata only.",
+  "generated": "2026-06-24",
+  "lastAudit": "2026-06-24",
+  "cadence": "semanal · lun 09:00",
+  "posture": "alto",
+  "advisors": { "errors": 0, "warn": 219, "info": 72 },
+  "critical": 0,
+  "counts": { "total": 25, "open": 3, "inProgress": 3, "blocked": 19, "done": 0 },
+  "rotationsQueued": 16,
+  "active": [
+    { "id": "FG-030", "sev": "headers", "status": "in-progress", "title": "Cabeceras de seguridad (paquete @flowbond/security) — vault ya no embebible" },
+    { "id": "FG-022", "sev": "hardening", "status": "in-progress", "title": "Fijar search_path de flowbond_role_rank (migración 006)" },
+    { "id": "FG-023", "sev": "hardening", "status": "in-progress", "title": "Políticas deny explícitas banoseco_donations/deposits (migración 006)" },
+    { "id": "FG-005", "sev": "p2", "status": "open", "title": "RPCs admin anon-alcanzables protegidos solo por secreto (admin_*/mt_*)" },
+    { "id": "FG-020", "sev": "hardening", "status": "open", "title": "7 políticas INSERT always-true en tablas de captura" }
+  ],
+  "headline": "0 críticos · 219 avisos / 0 errores en advisors · sin secretos filtrados a git"
+}
