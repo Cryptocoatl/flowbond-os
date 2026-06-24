@@ -113,7 +113,7 @@ export default function TeamConsole() {
       <style>{CSS}</style>
       {toast && <div className={`st-toast ${toast.kind}`}>{toast.msg}</div>}
       {phase === 'loading' && <Splash text="Abriendo el templo…" />}
-      {phase === 'login' && <Login flash={flash} />}
+      {phase === 'login' && <Login />}
       {phase === 'noaccess' && <Gate
         title="Sin acceso todavía"
         body="Tu correo aún no está en el equipo de Sani Templo. Pide a un administrador que te invite y vuelve a entrar."
@@ -151,11 +151,9 @@ function Gate({ title, body, onSignOut }: { title: string; body: string; onSignO
   );
 }
 
-/* ── login (email OTP + magic link) ────────────────────────────────────────── */
-function Login({ flash }: { flash: (k: 'ok' | 'err', m: string) => void }) {
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [sent, setSent] = useState(false);
+/* ── login — bounce to the FBID hub (one identity for every app) ────────────── */
+function Login() {
+  const FBID_HUB = process.env.NEXT_PUBLIC_FBID_URL || 'https://fbid.flowbond.life';
   const [busy, setBusy] = useState(false);
 
   if (!saniConfigured) {
@@ -166,25 +164,12 @@ function Login({ flash }: { flash: (k: 'ok' | 'err', m: string) => void }) {
     </div></div>;
   }
 
-  async function send() {
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { flash('err', 'Correo inválido.'); return; }
+  function go() {
     setBusy(true);
-    const { error } = await saniClient().auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/team`, shouldCreateUser: true },
-    });
-    setBusy(false);
-    if (error) { flash('err', error.message); return; }
-    setSent(true);
-    flash('ok', 'Te enviamos un enlace y un código a tu correo.');
-  }
-  async function verify() {
-    if (code.trim().length < 6) { flash('err', 'Ingresa el código de 6 dígitos.'); return; }
-    setBusy(true);
-    const { error } = await saniClient().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' });
-    setBusy(false);
-    if (error) { flash('err', error.message); return; }
-    // onAuthStateChange handles the transition into the console.
+    // Bounce to the FBID hub; it authenticates (magic link / password / wallet)
+    // and hands the session back to /auth/callback, which lands on /team.
+    const cb = `${window.location.origin}/auth/callback?next=/team`;
+    window.location.assign(`${FBID_HUB}/?app=reciprociudad&redirect=${encodeURIComponent(cb)}`);
   }
 
   return (
@@ -194,33 +179,15 @@ function Login({ flash }: { flash: (k: 'ok' | 'err', m: string) => void }) {
         <div className="st-eyebrow">Consola de operación</div>
         <h2 className="st-h2" style={{ marginTop: 8 }}>Entra al templo</h2>
         <p className="st-muted" style={{ marginTop: 8 }}>
-          Acceso solo para el equipo. Recibirás un enlace mágico y un código de un solo uso.
+          Acceso del equipo con tu <strong style={{ color: 'var(--cream)' }}>FlowBond ID</strong> — una sola
+          identidad, segura, para todas las apps.
         </p>
-        <div className="st-field" style={{ marginTop: 20 }}>
-          <label>Correo</label>
-          <input type="email" value={email} placeholder="tu@correo.com" autoComplete="email"
-            onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !sent && send()} />
-        </div>
-        {!sent ? (
-          <button className="st-btn gold" disabled={busy} onClick={send} style={{ marginTop: 16, width: '100%' }}>
-            {busy ? 'Enviando…' : 'Enviar acceso'}
-          </button>
-        ) : (
-          <>
-            <div className="st-field" style={{ marginTop: 14 }}>
-              <label>Código de 6 dígitos</label>
-              <input inputMode="numeric" value={code} placeholder="••••••" maxLength={8}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                onKeyDown={(e) => e.key === 'Enter' && verify()} />
-            </div>
-            <button className="st-btn gold" disabled={busy} onClick={verify} style={{ marginTop: 16, width: '100%' }}>
-              {busy ? 'Verificando…' : 'Verificar y entrar'}
-            </button>
-            <button className="st-link" style={{ marginTop: 12 }} disabled={busy} onClick={send}>
-              Reenviar código
-            </button>
-          </>
-        )}
+        <button className="st-btn gold" disabled={busy} onClick={go} style={{ marginTop: 20, width: '100%' }}>
+          {busy ? 'Abriendo…' : 'Entrar con FlowBond ID'}
+        </button>
+        <p className="st-muted" style={{ marginTop: 12, fontSize: 12.5 }}>
+          Te llevamos a FlowBond ID para verificar tu identidad y regresar aquí automáticamente.
+        </p>
       </div>
     </div>
   );

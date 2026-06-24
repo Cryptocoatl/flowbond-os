@@ -1,17 +1,18 @@
 'use client';
 
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 /**
  * Browser Supabase client for the Sani Templo ops console (/team).
  *
- * Scoped to the `sani` schema so `.rpc()` reaches the SECURITY DEFINER
- * functions that enforce role/grants in the database. The anon key is a
- * public credential by design — every privileged path is gated server-side
- * in Postgres against auth.uid(), so the browser cannot escalate.
+ * Cookie-based session (via @supabase/ssr) so it shares the exact session the
+ * FBID-hub handoff establishes in /auth/callback (server-side cookies) — the
+ * browser reads the same cookie jar, so `.rpc()` carries the user's JWT and the
+ * SECURITY DEFINER functions see auth.uid().
  *
- * Session persists in localStorage; magic-link hashes are auto-detected so a
- * clicked email link lands an authenticated session on /team.
+ * Scoped to the `sani` schema. The anon key is a public credential by design —
+ * every privileged path is gated in Postgres against auth.uid()/role, so the
+ * browser cannot escalate.
  */
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -19,14 +20,8 @@ const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 export const saniConfigured = Boolean(URL && ANON);
 
 function make() {
-  return createClient(URL, ANON, {
+  return createBrowserClient(URL, ANON, {
     db: { schema: 'sani' },
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
-    },
   });
 }
 
