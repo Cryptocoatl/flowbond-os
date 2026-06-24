@@ -46,6 +46,11 @@ export function MeetingPanel() {
   const [meetings, setMeetings] = useState<MeetingSummary[]>([]);
   const [err, setErr] = useState('');
   const [addedActions, setAddedActions] = useState<Set<number>>(new Set());
+  const [sharedRooms, setSharedRooms] = useState<{ id: string; title: string; ownerId: string }[]>([]);
+  const [viewingShared, setViewingShared] = useState(false);
+  const [shareInput, setShareInput] = useState('');
+  const [sharing, setSharing] = useState(false);
+  const [shareResult, setShareResult] = useState<{ shared: number; failed: { fbid: string; reason: string }[] } | null>(null);
 
   const transcriberRef = useRef<Transcriber | null>(null);
   const captureRef = useRef<CaptureHandle | null>(null);
@@ -56,7 +61,14 @@ export function MeetingPanel() {
   const t0Ref = useRef(0);
 
   const refreshMeetings = useCallback(async () => {
-    try { setMeetings(await getVault().listMeetings()); } catch { /* noop */ }
+    try {
+      const [mine, shared] = await Promise.all([
+        getVault().listMeetings(),
+        getVault().sharedMeetingRooms().catch(() => [] as { id: string; title: string; ownerId: string }[]),
+      ]);
+      setMeetings(mine);
+      setSharedRooms(shared);
+    } catch { /* noop */ }
   }, []);
 
   useEffect(() => { refreshMeetings(); }, [refreshMeetings]);
@@ -162,8 +174,39 @@ export function MeetingPanel() {
     } catch { /* noop */ }
   }
 
+  async function doShare() {
+    const id = meetingIdRef.current;
+    if (!id || sharing) return;
+    const fbids = shareInput.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
+    if (!fbids.length) return;
+    setSharing(true); setErr(''); setShareResult(null);
+    try {
+      const res = await getVault().shareMeetingRecap(id, fbids);
+      setShareResult({ shared: res.shared.length, failed: res.failed });
+      setShareInput('');
+      refreshMeetings();
+    } catch (e) {
+      setErr(friendly((e as Error).message));
+    } finally {
+      setSharing(false);
+    }
+  }
+
+  async function openSharedRoom(room: { id: string; title: string }) {
+    setErr(''); meetingIdRef.current = null; setViewingShared(true); setShareResult(null);
+    try {
+      const json = await getVault().loadRoomRecap(room.id);
+      setDigest(json ? parseDigest(json) : EMPTY_DIGEST);
+      setSegments([]);
+      setMode('review');
+    } catch (e) {
+      setViewingShared(false);
+      setErr(friendly((e as Error).message));
+    }
+  }
+
   async function openPast(m: MeetingSummary) {
-    setErr('');
+    setErr(''); setViewingShared(false); setShareResult(null);
     meetingIdRef.current = m.id;
     try {
       if (m.hasNotes) {
@@ -183,6 +226,8 @@ export function MeetingPanel() {
 
   function reset() {
     setMode('idle'); setDigest(null); setSegments([]); meetingIdRef.current = null;
+    setViewingShared(false); setShareResult(null); setShareInput('');
+    refreshMeetings();
   }
 
   useEffect(() => () => {
@@ -239,6 +284,7 @@ export function MeetingPanel() {
           </button>
 
           {meetings.length > 0 && <PastList meetings={meetings} onOpen={openPast} />}
+          {sharedRooms.length > 0 && <SharedList rooms={sharedRooms} onOpen={openSharedRoom} />}
         </>
       )}
 
@@ -274,6 +320,14 @@ export function MeetingPanel() {
             </>
           )}
           {digest && <Digest d={digest} addedActions={addedActions} onAddAction={addAction} />}
+          {digest && !viewingShared && meetingIdRef.current && (
+            <ShareBox value={shareInput} setValue={setShareInput} onShare={doShare} sharing={sharing} result={shareResult} />
+          )}
+          {viewingShared && (
+            <p style={{ ...muted, fontSize: 11.5, marginTop: 10 }}>
+              🔒 Compartida contigo · descifrada con tu llave. Puedes guardar las acciones en tus tareas.
+            </p>
+          )}
           <button onClick={reset} style={ghostBtn}>← Volver</button>
         </>
       )}
@@ -373,8 +427,71 @@ function PastList({ meetings, onOpen }: { meetings: MeetingSummary[]; onOpen: (m
   );
 }
 
+function ShareBox({ value, setValue, onShare, sharing, result }: {
+  value: string;
+  setValue: (v: string) => void;
+  onShare: () => void;
+  sharing: boolean;
+  result: { shared: number; failed: { fbid: string; reason: string }[] } | null;
+}) {
+  return (
+    <div style={{ marginTop: 14, borderTop: '1px solid rgba(244,241,234,.1)', paddingTop: 14 }}>
+      <div style={sectionHead}>Compartir recap</div>
+      <p style={{ ...muted, fontSize: 11.5, marginBottom: 8 }}>
+        Pega los FBID con quienes compartir. Se cifra <strong>para cada persona</strong> — el servidor nunca lo lee.
+        (Cada persona debe haber abierto ClaudIA al menos una vez.)
+      </p>
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={2}
+        placeholder="fbid-1  fbid-2  …"
+        style={{ width: '100%', resize: 'none', background: 'rgba(255,255,255,.05)', border: '1px solid rgba(244,241,234,.14)', borderRadius: 12, color: '#F4F1EA', padding: '10px 12px', fontSize: 13, fontFamily: 'ui-monospace, monospace' }}
+      />
+      <button onClick={onShare} disabled={sharing || !value.trim()} className="cine-cta" style={{ marginTop: 8 }}>
+        {sharing ? 'Compartiendo…' : 'Compartir ✦'}
+      </button>
+      {result && (
+        <div style={{ marginTop: 8, fontSize: 12.5 }}>
+          {result.shared > 0 && <div style={{ color: '#2FB6A8' }}>✓ Compartido con {result.shared} persona(s).</div>}
+          {result.failed.map((f, i) => (
+            <div key={i} style={{ color: '#FF8A6B' }}>
+              ⚠ {f.fbid.slice(0, 8)}…: {f.reason === 'peer-has-no-identity-key' ? 'aún no ha abierto ClaudIA' : f.reason}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SharedList({ rooms, onOpen }: {
+  rooms: { id: string; title: string; ownerId: string }[];
+  onOpen: (r: { id: string; title: string }) => void;
+}) {
+  return (
+    <div style={{ marginTop: 18 }}>
+      <div style={sectionHead}>Compartidas contigo</div>
+      {rooms.map((r) => (
+        <button key={r.id} onClick={() => onOpen(r)} style={pastRow}>
+          <span style={{ fontSize: 16 }}>🤝</span>
+          <span style={{ flex: 1, textAlign: 'left', fontSize: 13.5 }}>
+            {r.title}
+            <span style={{ display: 'block', fontSize: 11, color: 'rgba(244,241,234,.4)' }}>recap compartido contigo</span>
+          </span>
+          <span style={{ fontSize: 16, color: 'rgba(244,241,234,.4)' }}>›</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function friendly(code: string): string {
   const map: Record<string, string> = {
+    'no-notes-to-share': 'Primero sintetiza las notas de esta reunión, luego puedes compartir el recap.',
+    'peer-has-no-identity-key': 'Esa persona aún no ha abierto ClaudIA — pídele que entre una vez y vuelve a compartir.',
+    'not-a-room-member': 'No tienes acceso a este recap compartido.',
+    'identity-not-ready': 'Tu llave de identidad aún no está lista — recarga e intenta de nuevo.',
     'no-tab-audio': 'No se compartió el audio de la pestaña — vuelve a intentar y activa “Compartir audio de la pestaña”.',
     'transcribe-worker-error': 'No se pudo cargar el modelo de transcripción (revisa tu conexión la primera vez).',
     'transcriber-not-ready': 'El oído de ClaudIA aún no está listo — intenta de nuevo.',
