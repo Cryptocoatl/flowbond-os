@@ -11,7 +11,7 @@ import { hubRedirect } from '@flowbond/auth'
 // `ref` and `next` are preserved through the round-trip.
 function Redirector() {
   const params = useSearchParams()
-  const next = params.get('next') ?? '/flowgarden'
+  const next = params.get('next') ?? '/'
   const ref = params.get('ref') ?? ''
 
   useEffect(() => {

@@ -103,7 +103,7 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
             </p>
           </div>
           <Link
-            href="/auth/set-password?next=/flowgarden/settings"
+            href="/auth/set-password?next=/settings"
             className="text-xs font-semibold rounded-lg px-4 py-2 transition-colors shrink-0"
             style={{ backgroundColor: '#1A5C35', color: '#EFE8D8' }}
           >
@@ -201,7 +201,7 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
                 {isPending ? 'Saving…' : 'Save changes'}
               </button>
               {saved && <span className="text-xs" style={{ color: '#C9A961' }}>✓ Saved</span>}
-              <Link href="/flowgarden/world" className="text-xs text-fg-gold hover:underline ml-auto">View on map →</Link>
+              <Link href="/world" className="text-xs text-fg-gold hover:underline ml-auto">View on map →</Link>
             </div>
           </div>
         </div>

@@ -4,12 +4,12 @@ import type { MetadataRoute } from 'next'
 // Makes FlowGarden installable to the home screen as a standalone app.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    id: '/flowgarden',
+    id: '/',
     name: 'FlowGarden — Grow · Flow · Thrive',
     short_name: 'FlowGarden',
     description:
       'A living ecosystem where growth is effortless, connected and abundant. Track your garden, log moments, and complete missions.',
-    start_url: '/flowgarden?source=pwa',
+    start_url: '/?source=pwa',
     scope: '/',
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui'],
@@ -28,19 +28,19 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Log a moment',
         short_name: 'Journal',
         description: 'Capture what is happening in your garden',
-        url: '/flowgarden/journal?source=pwa-shortcut',
+        url: '/journal?source=pwa-shortcut',
       },
       {
         name: 'Today’s missions',
         short_name: 'Missions',
         description: 'See what needs doing today',
-        url: '/flowgarden/tasks?source=pwa-shortcut',
+        url: '/tasks?source=pwa-shortcut',
       },
       {
         name: 'My plants',
         short_name: 'Plants',
         description: 'Check on your plants',
-        url: '/flowgarden/plants?source=pwa-shortcut',
+        url: '/plants?source=pwa-shortcut',
       },
     ],
   }

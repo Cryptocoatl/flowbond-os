@@ -103,7 +103,7 @@ export function TourGuide() {
 
   // Auto-run once for first-time users, on the dashboard (anchors live there).
   useEffect(() => {
-    if (pathname !== '/flowgarden') return
+    if (pathname !== '/') return
     let done = false
     try { done = localStorage.getItem(DONE_KEY) === '1' } catch { /* ignore */ }
     if (done) return

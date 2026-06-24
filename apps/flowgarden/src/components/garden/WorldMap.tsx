@@ -149,7 +149,7 @@ export function WorldMap() {
             <p className="text-xs mb-3" style={{ color: 'rgba(239,232,216,0.55)' }}>
               Every garden starts private. Be the first to put your garden on the map.
             </p>
-            <Link href="/flowgarden/settings" className="text-xs font-semibold underline" style={{ color: '#C9A961' }}>
+            <Link href="/settings" className="text-xs font-semibold underline" style={{ color: '#C9A961' }}>
               Open Settings →
             </Link>
           </div>

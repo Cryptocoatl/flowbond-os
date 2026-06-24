@@ -12,7 +12,7 @@ import { FlowMeChip } from '@flowbond/ui'
 export default async function GardenLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getGardenContext()
 
-  if (!ctx) redirect('/auth/login')
+  if (!ctx) redirect('/welcome')
   if (!ctx.garden) redirect('/onboarding')
 
   // Ecosystem back-link: this gardener's FlowMe profile (cross-app read of

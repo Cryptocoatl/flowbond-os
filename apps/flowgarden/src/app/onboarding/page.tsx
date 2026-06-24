@@ -25,7 +25,7 @@ export default async function OnboardingPage({
     .single()
 
   if (membership) {
-    redirect('/flowgarden')
+    redirect('/')
   }
 
   // Get existing display name if set

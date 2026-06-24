@@ -161,7 +161,7 @@ export default async function DashboardPage() {
       <div data-tour="stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
-            href: '/flowgarden/map',
+            href: '/map',
             label: 'Zones',
             icon: '🗺️',
             value: zones.length,
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
             subColor: 'text-fg-gold',
           },
           {
-            href: '/flowgarden/plants',
+            href: '/plants',
             label: 'Plants',
             icon: '🌿',
             value: totalPlantQty,
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
             subColor: 'text-fg-secondary',
           },
           {
-            href: '/flowgarden/tasks',
+            href: '/tasks',
             label: 'Missions today',
             icon: '🎯',
             value: missionsToday,
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-fg">Active Missions</h2>
-            <Link href="/flowgarden/tasks" className="text-xs text-fg-gold hover:underline transition-colors">
+            <Link href="/tasks" className="text-xs text-fg-gold hover:underline transition-colors">
               All missions →
             </Link>
           </div>
@@ -275,7 +275,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-fg">Latest Sensor Readings</h2>
-            <Link href="/flowgarden/devices" className="text-xs text-fg-gold hover:underline transition-colors">
+            <Link href="/devices" className="text-xs text-fg-gold hover:underline transition-colors">
               All data →
             </Link>
           </div>
@@ -317,7 +317,7 @@ export default async function DashboardPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-fg">Leaderboard</h2>
-            <Link href="/flowgarden/tasks" className="text-xs text-fg-gold hover:underline">
+            <Link href="/tasks" className="text-xs text-fg-gold hover:underline">
               View missions →
             </Link>
           </div>

@@ -49,7 +49,7 @@ export default function OnboardingClient({ email, existingDisplayName, inviteCod
         setError(data.error ?? 'Failed to create garden')
         return
       }
-      router.push('/flowgarden')
+      router.push('/')
       router.refresh()
     })
   }
@@ -71,7 +71,7 @@ export default function OnboardingClient({ email, existingDisplayName, inviteCod
         setError(data.error ?? 'Failed to join garden')
         return
       }
-      router.push('/flowgarden')
+      router.push('/')
       router.refresh()
     })
   }

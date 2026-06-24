@@ -49,7 +49,7 @@ export function GardenSwitcher({
         body: JSON.stringify({ garden_id: id }),
       })
       setOpen(false)
-      router.push('/flowgarden')
+      router.push('/')
       router.refresh()
     } finally {
       setSwitchingId(null)
@@ -169,7 +169,7 @@ function CreateGardenModal({ onClose }: { onClose: () => void }) {
         return
       }
       onClose()
-      router.push('/flowgarden')
+      router.push('/')
       router.refresh()
     })
   }

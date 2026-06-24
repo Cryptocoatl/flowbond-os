@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) redirect('/flowgarden')
+  if (user) redirect('/')
 
   return (
     <main className="min-h-screen" style={{ backgroundColor: '#050E07', fontFamily: 'var(--font-sans, system-ui)' }}>

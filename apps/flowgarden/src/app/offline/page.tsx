@@ -13,7 +13,7 @@ export default function OfflinePage() {
         FlowGarden can’t reach the garden right now. Check your connection — your
         plants are still growing. 🌱
       </p>
-      <a href="/flowgarden" className="btn-primary mt-6">Try again</a>
+      <a href="/" className="btn-primary mt-6">Try again</a>
     </div>
   )
 }

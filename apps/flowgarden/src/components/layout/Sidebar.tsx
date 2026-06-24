@@ -13,7 +13,7 @@ interface GardenOption { id: string; name: string; role: string }
 
 const NAV = [
   {
-    href: '/flowgarden',
+    href: '/',
     label: 'Dashboard',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -22,7 +22,7 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/map',
+    href: '/map',
     label: 'Garden Map',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -31,7 +31,7 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/world',
+    href: '/world',
     label: 'Garden World',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -40,7 +40,7 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/plants',
+    href: '/plants',
     label: 'Plants',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -49,7 +49,7 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/journal',
+    href: '/journal',
     label: 'Journal',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -58,7 +58,16 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/tasks',
+    href: '/tianguis',
+    label: 'Tianguis',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path d="M3 3a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 3H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/tasks',
     label: 'Missions',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -67,7 +76,7 @@ const NAV = [
     ),
   },
   {
-    href: '/flowgarden/devices',
+    href: '/devices',
     label: 'Devices',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -103,7 +112,7 @@ export function Sidebar({
     >
       {/* Logo lockup */}
       <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--fg-sidebar-border)' }}>
-        <Link href="/flowgarden" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group">
           <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
             <Image
               src="/logos/mark/flowgarden-mark-gold-1024.png"
@@ -137,8 +146,8 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(item => {
-          const isActive = item.href === '/flowgarden'
-            ? pathname === '/flowgarden'
+          const isActive = item.href === '/'
+            ? pathname === '/'
             : pathname.startsWith(item.href)
           return (
             <Link
@@ -198,7 +207,7 @@ export function Sidebar({
           Take a tour
         </button>
         <Link
-          href="/flowgarden/settings"
+          href="/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
           style={{ color: 'var(--fg-sidebar-text)' }}
           onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 
 function SetPasswordForm() {
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/flowgarden'
+  const next = searchParams.get('next') ?? '/'
 
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')

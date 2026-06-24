@@ -26,6 +26,7 @@ const ICONS = {
   world: 'M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z',
   more: 'M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm2 2a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h8a1 1 0 100-2H6zm0 4a1 1 0 100 2h4a1 1 0 100-2H6z',
   map: 'M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z',
+  tianguis: 'M3 3a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 3H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z',
   journal: 'M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z',
   devices: 'M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z',
   settings: 'M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z',
@@ -34,18 +35,19 @@ const ICONS = {
 }
 
 const PRIMARY = [
-  { href: '/flowgarden', label: 'Home', icon: ICONS.home },
-  { href: '/flowgarden/plants', label: 'Plants', icon: ICONS.plants },
-  { href: '/flowgarden/tasks', label: 'Missions', icon: ICONS.missions },
-  { href: '/flowgarden/world', label: 'World', icon: ICONS.world },
+  { href: '/', label: 'Home', icon: ICONS.home },
+  { href: '/plants', label: 'Plants', icon: ICONS.plants },
+  { href: '/tasks', label: 'Missions', icon: ICONS.missions },
+  { href: '/world', label: 'World', icon: ICONS.world },
 ]
 
 // Destinations that live in the "More" menu sheet.
 const MORE_LINKS = [
-  { href: '/flowgarden/map', label: 'Garden Map', icon: ICONS.map },
-  { href: '/flowgarden/journal', label: 'Journal', icon: ICONS.journal },
-  { href: '/flowgarden/devices', label: 'Devices', icon: ICONS.devices },
-  { href: '/flowgarden/settings', label: 'Settings', icon: ICONS.settings },
+  { href: '/tianguis', label: 'Tianguis', icon: ICONS.tianguis },
+  { href: '/map', label: 'Garden Map', icon: ICONS.map },
+  { href: '/journal', label: 'Journal', icon: ICONS.journal },
+  { href: '/devices', label: 'Devices', icon: ICONS.devices },
+  { href: '/settings', label: 'Settings', icon: ICONS.settings },
 ]
 
 export function MobileNav({
@@ -109,7 +111,7 @@ export function MobileNav({
         }}
       >
         {PRIMARY.map(item => {
-          const isActive = item.href === '/flowgarden' ? pathname === '/flowgarden' : pathname.startsWith(item.href)
+          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}
