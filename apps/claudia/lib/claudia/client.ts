@@ -13,6 +13,7 @@
 import { browserClient } from '../supabase';
 import * as ZK from './crypto';
 import * as GZ from './group-crypto';
+import { tierHas, FREE_ENTITLEMENT, type Entitlement, type Feature, type Tier } from './tiers';
 import type { ClaudiaTask } from './contract';
 
 const CRED_KEY = (uid: string) => `claudia.passkey.cred.${uid}`;
@@ -604,6 +605,28 @@ export class ClaudiaVault {
 
   async revokeInvite(token: string): Promise<void> {
     await this.rpc('claudia_revoke_invite', { p_token: token });
+  }
+
+  // ── SafeFlow entitlements (tier/feature gating; authz plane, not ZK content) ─
+  private entitlement: Entitlement | null = null;
+
+  /** Effective entitlement for an app ('*' = account-wide). Caches the global one. */
+  async myEntitlement(appSlug = '*'): Promise<Entitlement> {
+    const rows = await this.rpc<{ tier: Tier; features: string[] | null; app_slug: string; expires_at: string | null }[]>(
+      'claudia_my_entitlement', { p_app_slug: appSlug },
+    ).catch(() => null);
+    const r = rows?.[0];
+    const ent: Entitlement = r
+      ? { tier: r.tier, features: r.features ?? [], appSlug: r.app_slug, expiresAt: r.expires_at }
+      : FREE_ENTITLEMENT;
+    if (appSlug === '*') this.entitlement = ent;
+    return ent;
+  }
+
+  /** Does the current user's tier unlock this feature? (UX gate; enforce server-side too.) */
+  async can(feature: Feature, appSlug = '*'): Promise<boolean> {
+    const ent = appSlug === '*' && this.entitlement ? this.entitlement : await this.myEntitlement(appSlug);
+    return tierHas(ent, feature);
   }
 }
 
