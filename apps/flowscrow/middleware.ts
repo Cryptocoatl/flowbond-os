@@ -4,9 +4,8 @@ import { createServerClient } from '@supabase/ssr';
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Routes reachable without a session.
-const OPEN = ['/login', '/auth/callback'];
-
+// The vault (root) + documents are public — entry is the in-app 4-digit code gate,
+// not a Supabase session. Only the FBID escrow dashboard requires a login.
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({ request: req });
 
@@ -25,20 +24,16 @@ export async function middleware(req: NextRequest) {
     data: { user },
   } = await sb.auth.getUser();
 
-  const path = req.nextUrl.pathname;
-  const isOpen = OPEN.some((p) => path === p || path.startsWith(p + '/'));
-
-  if (!user && !isOpen) {
+  if (!user) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
-    url.search = path === '/' ? '' : `?next=${encodeURIComponent(path)}`;
+    url.search = `?next=${encodeURIComponent(req.nextUrl.pathname)}`;
     return NextResponse.redirect(url);
   }
-
   return res;
 }
 
 export const config = {
-  // Run on everything except static assets and API routes (routes do their own auth).
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|ico)$).*)'],
+  // Only the escrow dashboard is gated; the vault and everything else is public.
+  matcher: ['/dashboard/:path*'],
 };
