@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Deal } from '@/lib/types';
+import { apiUrl } from '@/lib/path';
 
 export function CounselActions({
   deal,
@@ -18,7 +19,7 @@ export function CounselActions({
   async function call(endpoint: string) {
     setBusy(true);
     setErr(null);
-    const res = await fetch(endpoint, {
+    const res = await fetch(apiUrl(endpoint), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dealId: deal.id }),

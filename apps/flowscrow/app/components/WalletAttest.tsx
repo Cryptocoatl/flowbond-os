@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createWalletClient, custom } from 'viem';
 import { attestationMessage } from '@/lib/attest';
+import { apiUrl } from '@/lib/path';
 
 // Optional supplementary personal signature. The party signs the attestation
 // message with their own wallet (EIP-191 personal_sign); the server verifies and
@@ -26,7 +27,7 @@ export function WalletAttest({ dealId, current }: { dealId: string; current: str
       const message = attestationMessage(dealId, address, nonce);
       const signature = await wallet.signMessage({ account: address, message });
 
-      const res = await fetch('/api/wallet/attest', {
+      const res = await fetch(apiUrl('/api/wallet/attest'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dealId, address, signature, nonce }),

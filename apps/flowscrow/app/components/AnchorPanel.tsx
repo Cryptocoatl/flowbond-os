@@ -10,6 +10,7 @@ import {
   type Hex,
 } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
+import { apiUrl } from '@/lib/path';
 
 // Non-custodial Base anchor. The party signs + pays with their OWN wallet; we only
 // record tx_hash + package_hash. Nothing sensitive on-chain — just two hashes.
@@ -133,7 +134,7 @@ export function AnchorPanel({
 
       const txHash = await wallet.sendTransaction({ account, to: target.to as Hex, data, chain });
 
-      const res = await fetch('/api/anchor', {
+      const res = await fetch(apiUrl('/api/anchor'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dealId, txHash, packageHash, chain: 'base' }),

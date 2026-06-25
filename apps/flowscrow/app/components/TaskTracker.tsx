@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PartyRole, Task } from '@/lib/types';
 import { canConfirm, canSubmit, taskStatusColor } from '@/lib/ui';
+import { apiUrl } from '@/lib/path';
 
 const PHASES: { key: 'A' | 'B' | 'C'; label: string }[] = [
   { key: 'A', label: 'Phase A — Execution & escrow' },
@@ -55,7 +56,7 @@ function TaskRow({ task, myRoles }: { task: Task; myRoles: PartyRole[] }) {
   async function act(endpoint: string) {
     setBusy(true);
     setErr(null);
-    const res = await fetch(endpoint, {
+    const res = await fetch(apiUrl(endpoint), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ taskId: task.id }),
