@@ -103,9 +103,11 @@ export interface EnvelopeRecipient {
 
 export interface CreateEnvelopeInput {
   emailSubject: string;
-  /** base64-encoded PDF */
+  /** base64-encoded document (PDF by default, or HTML if fileExtension='html') */
   documentBase64: string;
   documentName: string;
+  /** document format DocuSign should ingest. Defaults to 'pdf'. */
+  fileExtension?: string;
   recipients: EnvelopeRecipient[];
   /** 'sent' to send immediately, 'created' to keep as draft */
   status?: 'sent' | 'created';
@@ -127,7 +129,7 @@ export async function createEnvelope(input: CreateEnvelopeInput): Promise<string
       {
         documentBase64: input.documentBase64,
         name: input.documentName,
-        fileExtension: 'pdf',
+        fileExtension: input.fileExtension ?? 'pdf',
         documentId: '1',
       },
     ],
@@ -138,8 +140,9 @@ export async function createEnvelope(input: CreateEnvelopeInput): Promise<string
         recipientId: r.recipientId,
         routingOrder: String(r.routingOrder ?? 1),
         tabs: {
+          // Per-recipient anchor (/sig1/, /sig2/) so each signer gets their own tab.
           signHereTabs: [
-            { anchorString: '/sig/', anchorUnits: 'pixels', anchorXOffset: '0', anchorYOffset: '0' },
+            { anchorString: `/sig${r.recipientId}/`, anchorUnits: 'pixels', anchorXOffset: '0', anchorYOffset: '0' },
           ],
         },
       })),

@@ -35,3 +35,30 @@ export async function vaultSignatures(): Promise<Signature[]> {
   if (error) throw error;
   return (data as Signature[]) ?? [];
 }
+
+// ── witnesses (hidden, view-only) ──
+const WITNESS_LC = ['anup', 'jackson', 'jeff', 'ryan'];
+export const isWitnessName = (n: string) => WITNESS_LC.includes(n.trim().toLowerCase());
+
+export interface Witness {
+  id: string;
+  name: string;
+  first_viewed_at: string;
+  last_viewed_at: string;
+}
+
+/** Record a witness view (code-gated, by recognized name). */
+export async function vaultWitness(name: string, code: string): Promise<Witness> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_witness', { p_name: name, p_code: code });
+  if (error) throw error;
+  return data as Witness;
+}
+
+/** Read who has witnessed (public). */
+export async function vaultWitnesses(): Promise<Witness[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_witnesses');
+  if (error) throw error;
+  return (data as Witness[]) ?? [];
+}
