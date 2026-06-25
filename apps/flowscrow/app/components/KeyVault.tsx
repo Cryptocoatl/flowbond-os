@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { keccak256, toHex } from 'viem';
-import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PARTIES } from '@/lib/documents';
+import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
@@ -204,8 +204,18 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
   }, [code, isSigner]);
   const refresh = () => { vaultSignatures().then(setSigs).catch(() => {}); };
 
+  const note = r.person_key ? PERSONAL[r.person_key] : null;
+
   return (
     <div className="reveal enter">
+      {note && (
+        <div className="v-card" style={{ marginBottom: 18, borderColor: 'rgba(245,215,122,.5)', background: 'rgba(40,22,72,.6)' }}>
+          <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>A personal note for you</div>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, margin: '6px 0 8px', color: 'var(--v-ink)' }}>{note.title}</h3>
+          {note.paras.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 10px' }}>{p}</p>)}
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--v-dim)' }}>— Estefanía</p>
+        </div>
+      )}
       {!isSigner && (
         <div className="v-card v-noprint" style={{ marginBottom: 18, borderColor: 'rgba(245,215,122,.4)', textAlign: 'center' }}>
           <b className="gold">Witness · view only</b> — welcome, {who}. You may read and verify these documents.
@@ -453,8 +463,8 @@ function Acknowledgment({ role, code, canAct, sigs, onSigned }: { role: VaultRol
       `Period: ${a.period.replace(/\*/g, '')}`, '', 'Scope of contribution:',
       ...a.scope.map((s) => ' - ' + s.replace(/\*/g, '')), '',
       'Acknowledgment. ' + a.acknowledgment, '',
-      `Also acknowledged — ${a.deven.name} (${a.deven.role.replace(/\*/g, '')}): ${a.deven.text.replace(/\*/g, '')}`, '',
-      'Scope & clarity. ' + a.scopeClarity, '',
+      ...a.also.map((x) => `Also recognized — ${x.name} (${x.role.replace(/\*/g, '')}): ${x.text.replace(/\*/g, '')}`),
+      '', 'Scope & clarity. ' + a.scopeClarity, '',
       'Acknowledged and agreed:', '', 'Estefanía Ferrera — ______________________   Date: __________', '',
       'Russell Herod — ______________________   Date: __________',
       ...sigs.filter((s) => s.document === 'acknowledgment').map((s) => `\n[signed in vault, FBID-verified] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
@@ -470,10 +480,12 @@ function Acknowledgment({ role, code, canAct, sigs, onSigned }: { role: VaultRol
         <p style={{ margin: '8px 0 4px' }}><b>Scope of contribution</b></p>
         <ul style={{ margin: '0 0 10px', paddingLeft: 20 }}>{a.scope.map((s, i) => <li key={i} style={{ margin: '4px 0' }}>{richText(s)}</li>)}</ul>
         <p><b>Acknowledgment.</b> {a.acknowledgment}</p>
-        <div style={{ borderLeft: '3px solid #8a5cff', paddingLeft: 14, margin: '14px 0' }}>
-          <p style={{ margin: '0 0 2px', fontWeight: 700 }}>Also acknowledged — {a.deven.name} <span style={{ fontWeight: 400, color: '#6b5b8c' }}>({richText(a.deven.role)})</span></p>
-          <p style={{ margin: 0, fontSize: 14 }}>{richText(a.deven.text)}</p>
-        </div>
+        {a.also.map((x, i) => (
+          <div key={i} style={{ borderLeft: '3px solid #8a5cff', paddingLeft: 14, margin: '14px 0' }}>
+            <p style={{ margin: '0 0 2px', fontWeight: 700 }}>Also recognized — {x.name} <span style={{ fontWeight: 400, color: '#6b5b8c' }}>({richText(x.role)})</span></p>
+            <p style={{ margin: 0, fontSize: 14 }}>{richText(x.text)}</p>
+          </div>
+        ))}
         <p style={{ fontSize: 13.5, color: '#4a3a6c' }}><b>Scope &amp; clarity.</b> {a.scopeClarity}</p>
         <div className="sig-line">
           <span><b>Estefanía Ferrera</b> {sigs.find((s) => s.party_role === 'steph' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>

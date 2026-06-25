@@ -25,6 +25,7 @@ export interface Resolved {
   kind: 'signer' | 'witness';
   party_role: VaultRole | null;
   display_name: string;
+  person_key: string | null;
 }
 
 /** Identify a person by their unique code (no email leaked). */

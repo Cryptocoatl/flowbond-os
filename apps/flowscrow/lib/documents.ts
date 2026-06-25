@@ -8,8 +8,57 @@ export const PARTIES = {
   entity: 'FlowBond / FlowBond Tech',
 };
 
-// Hidden, view-only witnesses (gate them by name + code 4444; never sign/download).
-export const WITNESSES = ['Anup', 'Jackson', 'Jeff', 'Ryan'];
+// View-only witnesses (each has a private code; never sign/download).
+export const WITNESSES = ['Anup', 'Jackson', 'Jeff', 'Ryan', 'Roman'];
+
+// A personal note shown to each person when they open the vault (keyed by person_key).
+export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
+  steph: {
+    title: 'This closing is yours, Estefanía',
+    paras: [
+      'This is your vault — you are the founder and sole owner of FlowBond. Verify with your cryptocoatl FBID to sign and release. Everything here is yours to issue.',
+    ],
+  },
+  russell: {
+    title: 'Russell — your note and your recognition are below',
+    paras: [
+      'Welcome, Russell. Your full note, your Early Co-founder recognition, and both documents are below. When you’re ready, verify with FBID and we sign together.',
+    ],
+  },
+  roman: {
+    title: 'Roman — you were there at the origin',
+    paras: [
+      'Roman, you’re my original early co-founder, and I’m putting that on the record where it belongs. You may not have had time to build a lot, but what you did mattered: the BLE and movement-tracking for the smart-watch integration, and standing with us at the very first DANZ event in Argentina — DanzConnect — with 100+ people in the room.',
+      'You’re here as a witness to this closing with Russell. And once that signature is done, I want us to sit down — just you and me — and really talk about the possibilities and next steps for you on FlowBond. I think there’s something here for us; let’s find it together.',
+    ],
+  },
+  anup: {
+    title: 'Anup — thank you, truly',
+    paras: [
+      'Anup, thank you for the Harmonik support — it meant more than you know. You’re here as a witness to this closing, and I’m grateful to have you in the room for it.',
+    ],
+  },
+  jackson: {
+    title: 'Jackson — there’s a whole world for your land',
+    paras: [
+      'Jackson, your community building, your gardens, the honey — and so much more — are exactly the kind of real, rooted work I want to build with. There’s a whole world I’d love to integrate into your land, and I want to put FBID into the hands of your community so it’s truly theirs.',
+      'You’re here as a witness to this closing, and I see you as a big part of where this goes next. Let’s keep dreaming it out loud.',
+    ],
+  },
+  jeff: {
+    title: 'Jeff — glad you’re here',
+    paras: [
+      'Jeff, thank you for standing as a witness to this. Your presence and trust mean a lot to me, and I’m grateful to have you alongside as this chapter closes and the next one opens.',
+    ],
+  },
+  ryan: {
+    title: 'Ryan — peace, and what’s ahead',
+    paras: [
+      'Ryan, there’s a real peace between us — the kind that’s both genuine friendship and clear, honest professional discernment — and I value it deeply. You’re here as a witness to this closing.',
+      'And I’m genuinely excited about where we could go together: the vehicles on refirides.com, the modal integration, and whatever development that takes to make it real. Let’s explore it.',
+    ],
+  },
+};
 
 // Part 1 — the framing message (now resolved on "Early Co-founder").
 export const MESSAGE = {
@@ -36,7 +85,7 @@ export const AGREEMENT = {
   recitals: [
     'WHEREAS, the Company operates the FlowBond ecosystem, which was founded, owned, and principally built by Estefanía Ferrera;',
     'WHEREAS, the Contributor made a real, early contribution to the Company, principally on the DANZ and FlowB (FlowBondTech) workstreams, and the Company recognizes him as an “Early Co-founder” of those workstreams in honorary and historical acknowledgment of that contribution;',
-    'WHEREAS, the Company further acknowledges the contribution of Deven to the Company, as recorded in the Acknowledgment (Exhibit 5);',
+    'WHEREAS, the Company further recognizes Roman as an original Early Co-founder, and acknowledges the contribution of Deven, each as recorded in the Acknowledgment (Exhibit 5);',
     'WHEREAS, notwithstanding such recognition, no equity, ownership interest, option, token allocation, partnership, joint venture, or continuing-compensation arrangement was ever granted to or agreed with the Contributor or any other contributor;',
     'WHEREAS, the Parties wish to formalize the conclusion of the Contributor’s involvement, effect the orderly and verified transfer of all Company access and assets, fully and finally resolve all claims between them, and record an accurate Acknowledgment of Contribution (Exhibit 5);',
     'WHEREAS, the Company offered to involve its legal counsel to ensure fairness to both Parties, and the Contributor declined that counsel; the Parties therefore adopt the objective, independently-verifiable methods of validation set forth in Article 11, attested by the witnesses named in the execution block;',
@@ -91,7 +140,7 @@ export const AGREEMENT = {
     {
       n: '6', t: 'Consideration and Recognition',
       paras: [
-        '6.1  In consideration of the covenants herein, the Company shall issue the Acknowledgment of Contribution (Exhibit 5), accurately recognizing the Contributor as an Early Co-founder of DANZ and FlowB and acknowledging the contribution of Deven.',
+        '6.1  In consideration of the covenants herein, the Company shall issue the Acknowledgment of Contribution (Exhibit 5), accurately recognizing the Contributor as an Early Co-founder of DANZ and FlowB, recognizing Roman as an original Early Co-founder, and acknowledging the contribution of Deven.',
         '6.2  The Acknowledgment is released to the Contributor upon the Closing and the Company’s approval, stands alongside this Agreement, and does not alter it.',
       ],
     },
@@ -188,13 +237,21 @@ export const ACKNOWLEDGMENT = {
   ],
   acknowledgment:
     'Estefanía Ferrera and FlowBond gratefully recognize Russell Herod as an Early Co-founder of the DANZ and FlowB workstreams, and the time, skill, and effort he brought to that work. Russell is free to reference this Early Co-founder recognition in his professional materials.',
-  // Second recognition — Deven.
-  deven: {
-    name: 'Deven',
-    role: 'Contributor *(EDITABLE — Deven’s role)*',
-    text:
-      'The Company also gratefully acknowledges the contribution of Deven to FlowBond. *(EDITABLE — add Deven’s specific contribution and dates.)* Deven is free to reference this acknowledgment in his professional materials.',
-  },
+  // Further recognitions — Roman (original Early Co-founder) and Deven.
+  also: [
+    {
+      name: 'Roman',
+      role: 'Original Early Co-founder',
+      text:
+        'The Company recognizes Roman as an original Early Co-founder of FlowBond / DANZ. Roman contributed early work on BLE and movement-tracking for smart-watch integration, and supported the first DANZ event in Argentina — DanzConnect (100+ attendees). *(EDITABLE — refine dates/scope.)* Roman is free to reference this recognition in his professional materials.',
+    },
+    {
+      name: 'Deven',
+      role: 'Contributor *(EDITABLE — Deven’s role)*',
+      text:
+        'The Company also gratefully acknowledges the contribution of Deven to FlowBond. *(EDITABLE — add Deven’s specific contribution and dates.)* Deven is free to reference this acknowledgment in his professional materials.',
+    },
+  ],
   scopeClarity:
     'This is an acknowledgment of contribution and honorary recognition only. The “Early Co-founder” recognition does not constitute or imply equity, ownership, options, tokens, control, or any continuing claim, role, or compensation, and no such agreement was ever in place. It stands alongside, and does not alter, the Separation Agreement between the parties.',
 };
