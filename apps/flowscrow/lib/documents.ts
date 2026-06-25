@@ -21,6 +21,38 @@ export const MESSAGE = {
   signoff: 'With genuine respect and thanks,\nSteph Ferrera',
 };
 
+// Part 0 — the Separation & Transition Agreement (primary document).
+// Drafted from the real facts (Exhibit 3 transfers, no-equity, mutual release).
+// A working framework, NOT legal advice — review with counsel before executing.
+export const AGREEMENT = {
+  title: 'Separation & Transition Agreement',
+  subtitle: 'FlowBond Tech · Steph Ferrera ⟷ Russell Herod',
+  effective: '____________  *(EDITABLE — effective date)*',
+  parties:
+    'This Separation & Transition Agreement (the "Agreement") is entered into between Steph Ferrera, individually and on behalf of FlowBond / FlowBond Tech (the "Company"), and Russell Herod ("Contributor"). Steph Ferrera and Russell Herod are each a "Party" and together the "Parties."',
+  recitals: [
+    'Contributor provided time, skill and engineering effort to the Company — principally on the DANZ / flowb (FlowBondTech) workstream — during the period of his involvement.',
+    'No equity, ownership, co-founder, partnership, or continuing-compensation agreement was ever entered into between the Parties.',
+    'The Parties wish to formalize Contributor’s separation, transfer all access and Company assets cleanly to the Company, fully and finally resolve any claims, and record an accurate Acknowledgment of Contribution (attached as Exhibit 5).',
+  ],
+  clauses: [
+    { h: '1 · Separation', b: 'Contributor’s involvement with the Company has ended. Contributor holds no title, office, role, authority, or responsibility with the Company, and will not represent himself as acting for or on behalf of the Company after the effective date.' },
+    { h: '2 · Transition of access & assets (Exhibit 3)', b: 'Contributor will transfer to the Company sole ownership and control of all Company assets and remove himself from all Company accounts, per the Closing Tasks Schedule (Exhibit 3): (a) domains — flowbond.tech, danz.now, flowb.me, pee.network; (b) all repositories and credentials; (c) communication accounts (Telegram / Base / Farcaster) with owner/admin + recovery to the Company; (d) Web3 keys, delivered via a secure off-platform channel, with the Company confirming control in writing; (e) Company crypto balances moved to the Company wallet; (f) Mercury, Stripe, and Coinbase accounts; (g) infrastructure (Supabase, Vercel, Apple/Google, DNS, secrets); and (h) social de-identification. Each item is verified before the closing completes.' },
+    { h: '3 · No equity or ownership', b: 'Contributor acknowledges he holds, and has held, no equity, ownership interest, option, token allocation, profit share, or other continuing claim in the Company or any of its products, and that none was ever granted or agreed. This Agreement is full and final.' },
+    { h: '4 · Mutual release', b: 'Each Party releases and forever discharges the other from any and all claims, demands, and liabilities, known or unknown, arising from or relating to Contributor’s involvement with the Company up to the effective date, except for the obligations created by this Agreement itself.' },
+    { h: '5 · Confidentiality & return of materials', b: 'Contributor will keep the Company’s non-public information confidential and will not retain, copy, or use any Company code, credentials, data, or materials after the transfers in Section 2 are complete.' },
+    { h: '6 · Non-disparagement', b: 'Neither Party will make false or disparaging statements about the other. Both may describe Contributor’s actual contribution truthfully, consistent with the Acknowledgment in Exhibit 5.' },
+    { h: '7 · Recognition', b: 'The Company will issue the Acknowledgment of Contribution (Exhibit 5), which Contributor may reference in his professional materials. It is released to Contributor once the closing conditions are met, and stands alongside — and does not alter — this Agreement.' },
+    { h: '8 · Entire agreement · governing law · counterparts', b: 'This Agreement, with its Exhibits, is the entire agreement between the Parties and supersedes any prior understanding. It is governed by the laws of [____________ *(EDITABLE — jurisdiction)*], may be signed in counterparts, and electronic signatures are binding.' },
+  ],
+  exhibits: [
+    'Exhibit 1 — Stock Power (executed, held in escrow)',
+    'Exhibit 2 — Resignation (executed, held in escrow)',
+    'Exhibit 3 — Closing Tasks Schedule (the transfers in Section 2)',
+    'Exhibit 5 — Acknowledgment of Contribution (the letter)',
+  ],
+};
+
 // Part 2 — the signable Acknowledgment of Contribution.
 export const ACKNOWLEDGMENT = {
   title: 'Acknowledgment of Contribution',

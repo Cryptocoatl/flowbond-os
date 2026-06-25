@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MESSAGE, ACKNOWLEDGMENT, PARTIES } from '@/lib/documents';
+import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, PARTIES } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import { vaultSign, vaultSignatures, VAULT_CODE, type VaultRole, type Signature } from '@/lib/vault';
 
@@ -254,6 +254,16 @@ function Reveal({ role, code }: { role: VaultRole; code: string }) {
       <section id="sign">
         <div className="v-eyebrow">5 · The documents</div>
         <h2 className="v-h2">Read, download &amp; sign</h2>
+        <p className="v-lead" style={{ margin: '4px 0 16px' }}>
+          Two documents sit in escrow: the <b style={{ color: 'var(--v-ink)' }}>Separation &amp; Transition
+          Agreement</b> (the binding closing) and, alongside it, the <b style={{ color: 'var(--v-ink)' }}>
+          Acknowledgment of Contribution</b> (Exhibit 5 — the letter). Read, download, or sign either.
+        </p>
+
+        <div style={{ marginBottom: 8 }} className="v-eyebrow">Document 1 — Separation Agreement</div>
+        <AgreementPaper role={role} code={code} sigs={sigs} onSigned={refresh} />
+
+        <div style={{ margin: '28px 0 8px' }} className="v-eyebrow">Document 2 — Acknowledgment of Contribution (Exhibit 5)</div>
         <Acknowledgment role={role} code={code} sigs={sigs} onSigned={refresh} />
       </section>
 
@@ -266,29 +276,110 @@ function Reveal({ role, code }: { role: VaultRole; code: string }) {
   );
 }
 
-/* ── the signable Acknowledgment paper ── */
-function Acknowledgment({ role, code, sigs, onSigned }: { role: VaultRole; code: string; sigs: Signature[]; onSigned: () => void }) {
-  const a = ACKNOWLEDGMENT;
+/* ── shared sign + download controls ── */
+function SignControls({
+  role, code, document, sigs, onSigned, buildText, filename,
+}: {
+  role: VaultRole; code: string; document: 'agreement' | 'acknowledgment';
+  sigs: Signature[]; onSigned: () => void; buildText: () => string; filename: string;
+}) {
   const [name, setName] = useState(PARTIES[role].full);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const mySig = sigs.find((s) => s.party_role === role && s.document === 'acknowledgment');
+  const mySig = sigs.find((s) => s.party_role === role && s.document === document);
 
   async function sign() {
-    setBusy(true);
-    setErr(null);
-    try {
-      await vaultSign(role, code, name, 'acknowledgment');
-      onSigned();
-    } catch (e) {
-      setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
+    setBusy(true); setErr(null);
+    try { await vaultSign(role, code, name, document); onSigned(); }
+    catch (e) { setErr((e as Error).message); }
+    finally { setBusy(false); }
   }
-
   function download() {
-    const lines = [
+    const blob = new Blob([buildText()], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document_.createElement('a');
+    link.href = url; link.download = filename; link.click();
+    URL.revokeObjectURL(url);
+  }
+  // (document is a prop name here; use the global via document_)
+  const document_ = globalThis.document;
+
+  return (
+    <div className="v-card v-noprint" style={{ marginTop: 14 }}>
+      {mySig ? (
+        <div style={{ color: 'var(--v-gold)', fontWeight: 700 }}>
+          ✓ Signed as {mySig.signer_name} · {new Date(mySig.signed_at).toLocaleString()}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name"
+            style={{ flex: 1, minWidth: 200, background: 'rgba(0,0,0,.25)', border: '1px solid rgba(179,136,255,.3)', borderRadius: 10, padding: '11px 13px', color: 'var(--v-ink)', fontSize: 15 }} />
+          <button className="vbtn vbtn-gold" disabled={busy} onClick={sign}>
+            {busy ? 'Signing…' : `Sign as ${PARTIES[role].short}`}
+          </button>
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+        <button className="vbtn vbtn-ghost" onClick={download}>⬇ Download (.txt)</button>
+        <button className="vbtn vbtn-ghost" onClick={() => window.print()}>🖨 Print / Save as PDF</button>
+      </div>
+      {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 10 }}>{err}</p>}
+    </div>
+  );
+}
+
+/* ── the Separation & Transition Agreement paper ── */
+function AgreementPaper({ role, code, sigs, onSigned }: { role: VaultRole; code: string; sigs: Signature[]; onSigned: () => void }) {
+  const g = AGREEMENT;
+  const stephSigned = sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement');
+  const russellSigned = sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
+  const buildText = () =>
+    [
+      g.title, g.subtitle, '', `Effective: ${g.effective.replace(/\*/g, '')}`, '',
+      g.parties, '', 'Recitals:', ...g.recitals.map((r) => ' - ' + r), '',
+      ...g.clauses.flatMap((c) => [c.h, c.b, '']),
+      'Exhibits:', ...g.exhibits.map((e) => ' - ' + e), '',
+      'Signed:', '', 'Steph Ferrera — ______________________   Date: __________', '',
+      'Russell Herod — ______________________   Date: __________',
+      ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
+    ].join('\n');
+
+  return (
+    <>
+      <div className="doc-paper" style={{ marginTop: 12 }}>
+        <h3>{g.title}</h3>
+        <div className="meta">{g.subtitle} · Effective {richText(g.effective)}</div>
+        <p style={{ margin: '14px 0' }}>{g.parties}</p>
+        <p style={{ margin: '8px 0 4px', fontWeight: 700 }}>Recitals</p>
+        <ul style={{ margin: '0 0 10px', paddingLeft: 20 }}>
+          {g.recitals.map((r, i) => <li key={i} style={{ margin: '4px 0' }}>{r}</li>)}
+        </ul>
+        {g.clauses.map((c, i) => (
+          <p key={i} style={{ margin: '12px 0' }}><b>{c.h}.</b> {richText(c.b)}</p>
+        ))}
+        <p style={{ margin: '12px 0 4px', fontWeight: 700 }}>Exhibits</p>
+        <ul style={{ margin: '0', paddingLeft: 20 }}>
+          {g.exhibits.map((e, i) => <li key={i} style={{ margin: '4px 0' }}>{e}</li>)}
+        </ul>
+        <p style={{ fontSize: 12.5, color: '#6b5b8c', marginTop: 14 }}>
+          Draft framework for review with counsel — not legal advice. Binding execution via DocuSign.
+        </p>
+        <div className="sig-line">
+          <span><b>Steph Ferrera</b> {stephSigned ? '✓ signed' : '— ____________'}</span>
+          <span><b>Russell Herod</b> {russellSigned ? '✓ signed' : '— ____________'}</span>
+        </div>
+      </div>
+      <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned}
+        buildText={buildText} filename="Separation-Agreement.txt" />
+    </>
+  );
+}
+
+/* ── the signable Acknowledgment paper ── */
+function Acknowledgment({ role, code, sigs, onSigned }: { role: VaultRole; code: string; sigs: Signature[]; onSigned: () => void }) {
+  const a = ACKNOWLEDGMENT;
+  const buildText = () =>
+    [
       a.title, '',
       `Issued by: ${a.issuedBy}`,
       `In recognition of: ${a.recognitionOf}`,
@@ -302,15 +393,7 @@ function Acknowledgment({ role, code, sigs, onSigned }: { role: VaultRole; code:
       'Steph Ferrera — ______________________   Date: __________', '',
       'Russell Herod — ______________________   Date: __________',
       ...sigs.filter((s) => s.document === 'acknowledgment').map((s) => `\n[signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Acknowledgment-of-Contribution.txt';
-    link.click();
-    URL.revokeObjectURL(url);
-  }
+    ].join('\n');
 
   return (
     <>
@@ -327,41 +410,13 @@ function Acknowledgment({ role, code, sigs, onSigned }: { role: VaultRole; code:
         </ul>
         <p><b>Acknowledgment.</b> {a.acknowledgment}</p>
         <p style={{ fontSize: 13.5, color: '#4a3a6c' }}><b>Scope &amp; clarity.</b> {a.scopeClarity}</p>
-
         <div className="sig-line">
           <span><b>Steph Ferrera</b> {sigs.find((s) => s.party_role === 'steph' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>
           <span><b>Russell Herod</b> {sigs.find((s) => s.party_role === 'russell' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>
         </div>
       </div>
-
-      <div className="v-card v-noprint" style={{ marginTop: 14 }}>
-        {mySig ? (
-          <div style={{ color: 'var(--v-gold)', fontWeight: 700 }}>
-            ✓ Signed as {mySig.signer_name} · {new Date(mySig.signed_at).toLocaleString()}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your full name"
-              style={{ flex: 1, minWidth: 200, background: 'rgba(0,0,0,.25)', border: '1px solid rgba(179,136,255,.3)', borderRadius: 10, padding: '11px 13px', color: 'var(--v-ink)', fontSize: 15 }}
-            />
-            <button className="vbtn vbtn-gold" disabled={busy} onClick={sign}>
-              {busy ? 'Signing…' : `Sign as ${PARTIES[role].short}`}
-            </button>
-          </div>
-        )}
-        <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-          <button className="vbtn vbtn-ghost" onClick={download}>⬇ Download (.txt)</button>
-          <button className="vbtn vbtn-ghost" onClick={() => window.print()}>🖨 Print / Save as PDF</button>
-        </div>
-        {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 10 }}>{err}</p>}
-        <p style={{ fontSize: 11.5, color: 'var(--v-dim)', marginTop: 10 }}>
-          Signing here records your acknowledgment in the FlowScrow audit log. Binding legal execution still goes
-          through DocuSign + counsel; this captures intent and the agreed wording.
-        </p>
-      </div>
+      <SignControls role={role} code={code} document="acknowledgment" sigs={sigs} onSigned={onSigned}
+        buildText={buildText} filename="Acknowledgment-of-Contribution.txt" />
     </>
   );
 }
