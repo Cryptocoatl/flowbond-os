@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, PARTIES } from '@/lib/documents';
+import { keccak256, toHex } from 'viem';
+import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, PARTIES } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import { vaultSign, vaultSignatures, VAULT_CODE, type VaultRole, type Signature } from '@/lib/vault';
 
@@ -134,6 +135,29 @@ export function KeyVault() {
   );
 }
 
+/* ── transparent "where we stand today" panel ── */
+function StandingPanel() {
+  const tone = (t: string) => (t === 'good' ? '#8FA98F' : t === 'pending' ? 'var(--v-gold)' : 'var(--v-violet)');
+  return (
+    <section style={{ marginBottom: 28 }}>
+      <div className="v-eyebrow">Where we stand today</div>
+      <h2 className="v-h2">The standing, in plain terms</h2>
+      <p className="v-lead" style={{ margin: '4px 0 12px' }}>
+        Nothing hidden. This is exactly where the two of us stand as of today — the same facts the
+        cryptographic record and the audit trail below attest to.
+      </p>
+      <div className="v-card" style={{ display: 'grid', gap: 0 }}>
+        {STANDING.map((s, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 14, padding: '11px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, color: 'var(--v-ink)' }}>{s.k}</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: tone(s.tone), textAlign: 'right' }}>{s.v}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ─────────────────────────── the opened vault ─────────────────────────── */
 function Reveal({ role, code }: { role: VaultRole; code: string }) {
   const [sigs, setSigs] = useState<Signature[]>([]);
@@ -161,6 +185,9 @@ function Reveal({ role, code }: { role: VaultRole; code: string }) {
           download, and sign here.
         </p>
       </div>
+
+      {/* WHERE WE STAND TODAY */}
+      <StandingPanel />
 
       {/* 1 — THE NOTE */}
       <section style={{ marginBottom: 28 }}>
@@ -335,40 +362,64 @@ function AgreementPaper({ role, code, sigs, onSigned }: { role: VaultRole; code:
   const russellSigned = sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
   const buildText = () =>
     [
-      g.title, g.subtitle, '', `Effective: ${g.effective.replace(/\*/g, '')}`, '',
-      g.parties, '', 'Recitals:', ...g.recitals.map((r) => ' - ' + r), '',
-      ...g.clauses.flatMap((c) => [c.h, c.b, '']),
-      'Exhibits:', ...g.exhibits.map((e) => ' - ' + e), '',
-      'Signed:', '', 'Steph Ferrera — ______________________   Date: __________', '',
-      'Russell Herod — ______________________   Date: __________',
-      ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
+      g.title.toUpperCase(), g.subtitle, '', `Effective Date: ${g.effective.replace(/\*/g, '')}`, '',
+      g.parties, '', 'RECITALS', ...g.recitals.map((r) => '  ' + r), '',
+      ...g.articles.flatMap((a) => [`ARTICLE ${a.n} — ${a.t.toUpperCase()}`, ...a.paras.map((p) => '  ' + p.replace(/\*/g, '')), '']),
+      'EXHIBITS', ...g.exhibits.map((e) => '  ' + e), '',
+      'IN WITNESS WHEREOF, the Parties execute this Agreement as of the Effective Date.', '',
+      'Steph Ferrera (Company) — ______________________   Date: __________', '',
+      'Russell Herod (Contributor) — ______________________   Date: __________',
+      ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[electronically signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
     ].join('\n');
+  // Cryptographic fingerprint of the exact canonical text (Article 11.1).
+  const fingerprint = useMemo(() => keccak256(toHex(buildText())), [sigs]);
 
   return (
     <>
       <div className="doc-paper" style={{ marginTop: 12 }}>
         <h3>{g.title}</h3>
-        <div className="meta">{g.subtitle} · Effective {richText(g.effective)}</div>
+        <div className="meta">{g.subtitle} · Effective Date {richText(g.effective)}</div>
         <p style={{ margin: '14px 0' }}>{g.parties}</p>
-        <p style={{ margin: '8px 0 4px', fontWeight: 700 }}>Recitals</p>
-        <ul style={{ margin: '0 0 10px', paddingLeft: 20 }}>
-          {g.recitals.map((r, i) => <li key={i} style={{ margin: '4px 0' }}>{r}</li>)}
-        </ul>
-        {g.clauses.map((c, i) => (
-          <p key={i} style={{ margin: '12px 0' }}><b>{c.h}.</b> {richText(c.b)}</p>
+        <p style={{ margin: '14px 0 6px', fontWeight: 700, letterSpacing: '.04em' }}>RECITALS</p>
+        {g.recitals.map((r, i) => <p key={i} style={{ margin: '6px 0', fontSize: 14 }}>{r}</p>)}
+        {g.articles.map((a) => (
+          <div key={a.n} style={{ marginTop: 14 }}>
+            <p style={{ margin: '0 0 4px', fontWeight: 700 }}>ARTICLE {a.n} — {a.t}</p>
+            {a.paras.map((p, j) => <p key={j} style={{ margin: '6px 0', fontSize: 14 }}>{richText(p)}</p>)}
+          </div>
         ))}
-        <p style={{ margin: '12px 0 4px', fontWeight: 700 }}>Exhibits</p>
+        <p style={{ margin: '14px 0 4px', fontWeight: 700 }}>EXHIBITS</p>
         <ul style={{ margin: '0', paddingLeft: 20 }}>
           {g.exhibits.map((e, i) => <li key={i} style={{ margin: '4px 0' }}>{e}</li>)}
         </ul>
         <p style={{ fontSize: 12.5, color: '#6b5b8c', marginTop: 14 }}>
-          Draft framework for review with counsel — not legal advice. Binding execution via DocuSign.
+          Full framework for review with counsel of either Party’s choosing — not legal advice.
+          Validated cryptographically per Article 11; binding execution may also be completed via DocuSign.
         </p>
         <div className="sig-line">
           <span><b>Steph Ferrera</b> {stephSigned ? '✓ signed' : '— ____________'}</span>
           <span><b>Russell Herod</b> {russellSigned ? '✓ signed' : '— ____________'}</span>
         </div>
       </div>
+
+      {/* validation seal */}
+      <div className="v-card" style={{ marginTop: 14, borderColor: 'rgba(245,215,122,.4)' }}>
+        <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Cryptographic validation · Article 11</div>
+        <p className="v-lead" style={{ fontSize: 13.5, margin: '6px 0 10px' }}>
+          Counsel was offered and declined. This Agreement instead stands on objective, tamper-evident proof
+          anyone can verify — not on any one advisor’s word. This is the seal of the exact text above; change a
+          single character and it changes.
+        </p>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '10px 12px', borderRadius: 10 }}>
+          keccak256 · {fingerprint}
+        </div>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 10, fontSize: 12.5, color: 'var(--v-dim)' }}>
+          <span>🔒 Immutable audit trail</span>
+          <span>⛓ Anchorable on Base</span>
+          <span>✍️ Binding e-signature (ESIGN/UETA)</span>
+        </div>
+      </div>
+
       <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned}
         buildText={buildText} filename="Separation-Agreement.txt" />
     </>
