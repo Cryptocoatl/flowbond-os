@@ -516,6 +516,8 @@ function friendly(code: string): string {
     'peer-has-no-identity-key': 'Esa persona aún no ha abierto ClaudIA — pídele que entre una vez y vuelve a compartir.',
     'not-a-room-member': 'No tienes acceso a este recap compartido.',
     'invite-invalid': 'Este enlace de invitación expiró, fue revocado o ya no es válido.',
+    'feature-locked': 'La síntesis de notas es parte de Plus. Mejora tu plan para activarla.',
+    'auth-required': 'Necesitas iniciar sesión con tu FBID para esto.',
     'identity-not-ready': 'Tu llave de identidad aún no está lista — recarga e intenta de nuevo.',
     'no-tab-audio': 'No se compartió el audio de la pestaña — vuelve a intentar y activa “Compartir audio de la pestaña”.',
     'transcribe-worker-error': 'No se pudo cargar el modelo de transcripción (revisa tu conexión la primera vez).',

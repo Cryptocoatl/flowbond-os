@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireFeature } from '../../../../lib/claudia/entitlement-server';
 
 // ════════════════════════════════════════════════════════════════════════
 //  ClaudIA · MEETING-NOTES SYNTHESIS · BLIND RELAY  — master spec §5
@@ -40,6 +41,14 @@ export async function POST(req: NextRequest) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     return NextResponse.json({ error: 'relay-unconfigured' }, { status: 503 });
+  }
+
+  // Notes synthesis is a Plus+ feature ('meetings'). Requires an authed FBID;
+  // tier-blocks once 0007 is live. Reads metadata only — the transcript is never
+  // logged or persisted (ZDR holds).
+  const gate = await requireFeature('meetings');
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
   let transcript: string;

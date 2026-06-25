@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CLAUDIA_SYSTEM_PROMPT } from '../../../../lib/claudia/system-prompt';
+import { requireFeature } from '../../../../lib/claudia/entitlement-server';
 
 // ════════════════════════════════════════════════════════════════════════
 //  ClaudIA · BLIND RELAY  (private-cloud mode)  — master spec §5
@@ -26,6 +27,7 @@ export const dynamic = 'force-dynamic';
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = process.env.CLAUDIA_MODEL || 'claude-sonnet-4-6';
+const MODEL_PRO = process.env.CLAUDIA_MODEL_PRO || MODEL; // optional better model for Pro tier
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -34,6 +36,15 @@ export async function POST(req: NextRequest) {
   if (!key) {
     return NextResponse.json({ error: 'relay-unconfigured' }, { status: 503 });
   }
+
+  // Require an authenticated FBID (every tier includes 'chat'). This closes the
+  // open-relay abuse vector — no anonymous use of the Anthropic key. Tier-blocking
+  // activates once 0007 is live; auth is always required. Reads metadata only (ZDR).
+  const gate = await requireFeature('chat');
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
+  }
+  const model = gate.ent?.tier === 'pro' ? MODEL_PRO : MODEL;
 
   let messages: Msg[];
   try {
@@ -56,7 +67,7 @@ export async function POST(req: NextRequest) {
       },
       // NOTE: plain system text — deliberately NO cache_control (caching breaks ZDR).
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: 1000,
         system: CLAUDIA_SYSTEM_PROMPT,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
