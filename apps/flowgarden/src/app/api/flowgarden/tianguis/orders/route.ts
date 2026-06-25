@@ -3,11 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getGardenContext } from '@/lib/garden-context'
 import { createDelivery } from '@/lib/refirides'
+import { openEscrow, escrowEnabled } from '@/lib/flowscrow'
 
 export const dynamic = 'force-dynamic'
 
 const ORDER_COLS =
-  'id, product_id, garden_id, producer_user_id, buyer_user_id, buyer_name, buyer_phone, quantity, unit, item_cents, total_cents, currency, fulfillment, dropoff_label, dropoff_lat, dropoff_lng, delivery_id, delivery_provider, delivery_status, delivery_fee_cents, delivery_eta_minutes, delivery_distance_m, delivery_tracking_url, payment_method, status, notes, created_at'
+  'id, product_id, garden_id, producer_user_id, buyer_user_id, buyer_name, buyer_phone, quantity, unit, item_cents, total_cents, currency, fulfillment, dropoff_label, dropoff_lat, dropoff_lng, delivery_id, delivery_provider, delivery_status, delivery_fee_cents, delivery_eta_minutes, delivery_distance_m, delivery_tracking_url, payment_method, status, notes, escrow_id, escrow_provider, escrow_status, created_at'
 
 // GET — orders the caller is party to. ?role=buyer|producer to narrow.
 export async function GET(request: Request) {
@@ -172,11 +173,44 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // --- FlowScrow escrow hold (non-fatal; dormant unless FLOWSCROW_API_URL set) ---
+  // Hold the buyer's payment until the order is fulfilled (released) or canceled
+  // (voided). We store only the reference to the hold FlowScrow owns.
+  let order = data
+  if (escrowEnabled() && totalCents > 0) {
+    const hold = await openEscrow({
+      reference: order.id,
+      amount_cents: totalCents,
+      currency,
+      payer: { fbid: user.id, name: buyer_name?.trim() || ctx.user.email || null },
+      payee: { fbid: product.user_id },
+      description: `Tianguis: ${qty} ${product.unit} ${product.name}`,
+      release_on: mode === 'delivery' ? 'delivery_confirmed' : 'pickup_confirmed',
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: updated } = await (admin as any)
+      .from('flowgarden_tianguis_orders')
+      .update({
+        escrow_id: hold?.id ?? null,
+        escrow_provider: 'flowscrow',
+        escrow_status: hold ? (hold.status || 'held') : 'pending',
+      })
+      .eq('id', order.id)
+      .select(ORDER_COLS)
+      .single()
+    if (updated) order = updated
+  }
+
   return NextResponse.json({
-    data,
+    data: order,
     // surface a soft warning if delivery was requested but dispatch didn't go through
     delivery_warning: mode === 'delivery' && !delivery
       ? 'Order placed, but the rider network didn’t confirm yet — the producer will arrange dispatch.'
+      : null,
+    // surface a soft warning if escrow was expected but the hold didn't open
+    escrow_warning: escrowEnabled() && totalCents > 0 && !order.escrow_id
+      ? 'Order placed, but escrow didn’t open yet — payment will be settled directly.'
       : null,
   }, { status: 201 })
 }

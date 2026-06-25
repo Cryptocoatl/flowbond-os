@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { releaseEscrow, voidEscrow, escrowEnabled } from '@/lib/flowscrow'
 
 export const dynamic = 'force-dynamic'
 
 const ORDER_COLS =
-  'id, product_id, garden_id, producer_user_id, buyer_user_id, status, fulfillment, delivery_status, total_cents, currency, created_at'
+  'id, product_id, garden_id, producer_user_id, buyer_user_id, status, fulfillment, delivery_status, total_cents, currency, escrow_id, escrow_status, created_at'
 
 // PATCH — update order status. Producer: confirm/fulfill/cancel. Buyer: cancel.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -22,7 +23,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: order } = await (admin as any)
     .from('flowgarden_tianguis_orders')
-    .select('id, producer_user_id, buyer_user_id')
+    .select('id, producer_user_id, buyer_user_id, escrow_id')
     .eq('id', id)
     .maybeSingle()
 
@@ -45,5 +46,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data })
+
+  // --- FlowScrow escrow transition (non-fatal) -------------------------------
+  // 'fulfilled' (delivery/handoff confirmed) releases the hold to the producer;
+  // 'canceled' voids it back to the buyer. No-op if escrow was never opened.
+  let result = data
+  if (escrowEnabled() && order.escrow_id && (status === 'fulfilled' || status === 'canceled')) {
+    const hold = status === 'fulfilled'
+      ? await releaseEscrow({ reference: id, escrow_id: order.escrow_id, reason: 'order fulfilled' })
+      : await voidEscrow({ reference: id, escrow_id: order.escrow_id, reason: 'order canceled' })
+    if (hold) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updated } = await (admin as any)
+        .from('flowgarden_tianguis_orders')
+        .update({ escrow_status: hold.status || (status === 'fulfilled' ? 'released' : 'voided') })
+        .eq('id', id)
+        .select(ORDER_COLS)
+        .single()
+      if (updated) result = updated
+    }
+  }
+
+  return NextResponse.json({ data: result })
 }
