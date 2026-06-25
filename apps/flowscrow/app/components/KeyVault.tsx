@@ -5,19 +5,20 @@ import { keccak256, toHex } from 'viem';
 import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PARTIES } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import {
-  vaultSign, vaultSignatures, vaultWitness, vaultWitnesses, isWitnessName, VAULT_CODE,
-  type VaultRole, type Signature, type Witness,
+  vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
+  type VaultRole, type Signature, type Witness, type Resolved,
 } from '@/lib/vault';
+import { sendMagicLink } from '@/lib/fbid';
 import { apiUrl } from '@/lib/path';
 
-type Access = { mode: 'party'; role: VaultRole } | { mode: 'witness'; name: string };
+const CODE_LEN = 6;
+const SS_KEY = 'fs_vault_code';
 
 /* ── animated infinity background (deterministic → no hydration mismatch) ── */
 function InfinityField() {
   const items = useMemo(
     () => Array.from({ length: 22 }, (_, i) => ({
-      left: (i * 53) % 100, size: 16 + ((i * 7) % 26),
-      dur: 14 + ((i * 5) % 16), delay: -((i * 3) % 18),
+      left: (i * 53) % 100, size: 16 + ((i * 7) % 26), dur: 14 + ((i * 5) % 16), delay: -((i * 3) % 18),
     })),
     [],
   );
@@ -34,7 +35,7 @@ function InfinityField() {
 }
 
 function richText(s: string) {
-  const parts = s.split(/(\*[^*]+\*|\*\*[^*]+\*\*)/g);
+  const parts = s.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
   return parts.map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**')) return <b key={i} className="gold">{p.slice(2, -2)}</b>;
     if (p.startsWith('*') && p.endsWith('*')) return <em key={i}>{p.slice(1, -1)}</em>;
@@ -43,35 +44,34 @@ function richText(s: string) {
 }
 
 export function KeyVault() {
-  const [role, setRole] = useState<VaultRole | null>(null);
-  const [witnessMode, setWitnessMode] = useState(false);
-  const [wname, setWname] = useState('');
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
   const [turning, setTurning] = useState(false);
-  const [access, setAccess] = useState<Access | null>(null);
+  const [access, setAccess] = useState<{ code: string; r: Resolved } | null>(null);
 
-  const canType = witnessMode ? isWitnessName(wname) : !!role;
+  // Resume after an FBID login round-trip (code persisted in sessionStorage).
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? sessionStorage.getItem(SS_KEY) : null;
+    if (!saved) return;
+    vaultResolve(saved).then((r) => { if (r) setAccess({ code: saved, r }); }).catch(() => {});
+  }, []);
+
+  async function complete(code: string) {
+    setTurning(true);
+    let r: Resolved | null = null;
+    try { r = await vaultResolve(code); } catch { /* ignore */ }
+    if (!r) { setTurning(false); setErr(true); setTimeout(() => setPin(''), 600); return; }
+    if (r.kind === 'witness') { try { await vaultWitness(code); } catch { /* non-fatal */ } }
+    sessionStorage.setItem(SS_KEY, code);
+    setTimeout(() => setAccess({ code, r: r! }), 1100);
+  }
 
   function press(d: string) {
     if (turning || access) return;
     setErr(false);
-    const next = (pin + d).slice(0, 4);
+    const next = (pin + d).slice(0, CODE_LEN);
     setPin(next);
-    if (next.length === 4) {
-      const ok = next === VAULT_CODE && canType;
-      if (!ok) { setErr(true); setTimeout(() => setPin(''), 600); return; }
-      setTurning(true);
-      setTimeout(async () => {
-        if (witnessMode) {
-          const nm = wname.trim();
-          try { await vaultWitness(nm, next); } catch { /* non-fatal */ }
-          setAccess({ mode: 'witness', name: nm.charAt(0).toUpperCase() + nm.slice(1).toLowerCase() });
-        } else {
-          setAccess({ mode: 'party', role: role! });
-        }
-      }, 1250);
-    }
+    if (next.length === CODE_LEN) complete(next);
   }
 
   if (!access) {
@@ -85,39 +85,20 @@ export function KeyVault() {
             </div>
             <div className="v-eyebrow" style={{ color: 'var(--v-violet)' }}>FlowScrow · Sealed Vault</div>
             <h1 className="v-h1" style={{ fontSize: 'clamp(26px,6vw,40px)' }}>
-              {turning ? <span className="v-grad">Opening…</span> : 'Turn the key'}
+              {turning ? <span className="v-grad">Opening…</span> : 'Enter your code'}
             </h1>
             <p className="v-lead" style={{ fontSize: 14, margin: '0 0 18px' }}>
-              {turning ? 'Welcome.' : witnessMode
-                ? 'Enter your name and the 4-digit code to witness.'
-                : 'Choose who you are, then enter your 4-digit code to open the vault.'}
+              {turning ? 'Welcome.' : 'Each person has a private 6-digit code. Enter yours to open the vault.'}
             </p>
 
             {!turning && (
               <>
-                {!witnessMode ? (
-                  <div className="role-pick">
-                    <button className={`role-btn ${role === 'steph' ? 'sel' : ''}`} onClick={() => setRole('steph')}>
-                      Steph <small>Estefanía Ferrera</small>
-                    </button>
-                    <button className={`role-btn ${role === 'russell' ? 'sel' : ''}`} onClick={() => setRole('russell')}>
-                      Russell <small>Early Co-founder</small>
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    className="field" placeholder="Your name" value={wname} autoFocus
-                    onChange={(e) => setWname(e.target.value)} aria-label="Witness name"
-                    style={{ textAlign: 'center', margin: '2px 0 4px' }}
-                  />
-                )}
-
                 <div className="pin-dots">
-                  {[0, 1, 2, 3].map((i) => (
+                  {Array.from({ length: CODE_LEN }).map((_, i) => (
                     <span key={i} className={`pin-dot ${err ? 'err' : pin.length > i ? 'on' : ''}`} />
                   ))}
                 </div>
-                <div className="keypad" style={{ opacity: canType ? 1 : 0.4, pointerEvents: canType ? 'auto' : 'none' }}>
+                <div className="keypad">
                   {['1','2','3','4','5','6','7','8','9'].map((d) => (
                     <button key={d} className="key" onClick={() => press(d)}>{d}</button>
                   ))}
@@ -125,13 +106,9 @@ export function KeyVault() {
                   <button className="key" onClick={() => press('0')}>0</button>
                   <button className="key" onClick={() => setPin(pin.slice(0, -1))} aria-label="delete">⌫</button>
                 </div>
-
-                <button
-                  onClick={() => { setWitnessMode(!witnessMode); setRole(null); setWname(''); setPin(''); setErr(false); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--v-dim)', fontSize: 12, marginTop: 14, cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  {witnessMode ? '← Back to signing in' : 'Attending as a witness?'}
-                </button>
+                <p style={{ fontSize: 12, color: 'var(--v-dim)', marginTop: 14 }}>
+                  Signers (Estefanía, Russell) verify with FBID to sign &amp; download. Witnesses view only.
+                </p>
               </>
             )}
           </div>
@@ -143,7 +120,7 @@ export function KeyVault() {
   return (
     <div className="vault-root">
       <InfinityField />
-      <Reveal access={access} />
+      <Reveal code={access.code} r={access.r} />
     </div>
   );
 }
@@ -156,8 +133,8 @@ function StandingPanel() {
       <div className="v-eyebrow">Where we stand today</div>
       <h2 className="v-h2">The standing, in plain terms</h2>
       <p className="v-lead" style={{ margin: '4px 0 12px' }}>
-        Nothing hidden. This is exactly where we stand as of today — the same facts the cryptographic
-        record, the witnesses, and the audit trail attest to.
+        Nothing hidden. This is exactly where we stand as of today — the same facts the cryptographic record,
+        the witnesses, and the audit trail attest to.
       </p>
       <div className="v-card" style={{ display: 'grid', gap: 0 }}>
         {STANDING.map((s, i) => (
@@ -171,23 +148,65 @@ function StandingPanel() {
   );
 }
 
+/* ── FBID verification gate for signers (email → magic link) ── */
+function FbidGate({ name }: { name: string }) {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function go(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true); setErr(null);
+    const { error } = await sendMagicLink(email, '/');
+    setBusy(false);
+    if (error) setErr(error.message); else setSent(true);
+  }
+  return (
+    <div className="v-card v-noprint" style={{ borderColor: 'rgba(245,215,122,.45)', marginBottom: 18 }}>
+      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Verify with FBID to sign &amp; download</div>
+      <p className="v-lead" style={{ fontSize: 13.5, margin: '6px 0 10px' }}>
+        Your code opens the vault to read. To <b style={{ color: 'var(--v-ink)' }}>sign or download</b> as {name},
+        verify with your FBID — the login email must match you. {name === 'Estefanía Ferrera' ? 'Yours is your cryptocoatl email.' : ''}
+      </p>
+      {sent ? (
+        <p style={{ color: 'var(--v-gold)', fontSize: 14 }}>Magic link sent to <b>{email}</b>. Open it on this device — you’ll return here verified.</p>
+      ) : (
+        <form onSubmit={go} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <input className="field" type="email" required placeholder="your FBID email" value={email}
+            onChange={(e) => setEmail(e.target.value)} style={{ flex: 1, minWidth: 220 }} />
+          <button className="vbtn vbtn-gold" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send magic link'}</button>
+        </form>
+      )}
+      {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 8 }}>{err}</p>}
+    </div>
+  );
+}
+
 /* ─────────────────────────── the opened vault ─────────────────────────── */
-function Reveal({ access }: { access: Access }) {
+function Reveal({ code, r }: { code: string; r: Resolved }) {
   const [sigs, setSigs] = useState<Signature[]>([]);
   const [wits, setWits] = useState<Witness[]>([]);
-  const readOnly = access.mode === 'witness';
-  const role = access.mode === 'party' ? access.role : null;
-  const who = access.mode === 'party' ? PARTIES[access.role].short : access.name;
+  const [authorized, setAuthorized] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const isSigner = r.kind === 'signer';
+  const role = r.party_role;
+  const who = r.display_name;
+  const canAct = isSigner && authorized; // may sign + download
 
   useEffect(() => {
     vaultSignatures().then(setSigs).catch(() => {});
     vaultWitnesses().then(setWits).catch(() => {});
-  }, []);
+    if (isSigner) {
+      vaultAuthorized(code).then(setAuthorized).catch(() => {});
+      sessionEmail().then(setEmail).catch(() => {});
+    }
+  }, [code, isSigner]);
   const refresh = () => { vaultSignatures().then(setSigs).catch(() => {}); };
 
   return (
     <div className="reveal enter">
-      {readOnly && (
+      {!isSigner && (
         <div className="v-card v-noprint" style={{ marginBottom: 18, borderColor: 'rgba(245,215,122,.4)', textAlign: 'center' }}>
           <b className="gold">Witness · view only</b> — welcome, {who}. You may read and verify these documents.
           Witnesses do not download or sign. Your attendance is recorded on the audit trail.
@@ -198,11 +217,12 @@ function Reveal({ access }: { access: Access }) {
         <div className="v-eyebrow">Recognition, signed honestly</div>
         <h1 className="v-h1">The work, <span className="v-grad">named to the record.</span></h1>
         <p className="v-lead" style={{ maxWidth: 660, margin: '6px auto 0' }}>
-          Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Separation Agreement
-          and the Acknowledgment of Contribution — recognizing <b style={{ color: 'var(--v-ink)' }}>Russell</b> as
-          an <b className="gold">Early Co-founder</b> of DANZ &amp; FlowB and acknowledging <b style={{ color: 'var(--v-ink)' }}>Deven</b> —
+          Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Separation Agreement and the
+          Acknowledgment of Contribution — recognizing <b style={{ color: 'var(--v-ink)' }}>Russell</b> as an{' '}
+          <b className="gold">Early Co-founder</b> of DANZ &amp; FlowB and acknowledging <b style={{ color: 'var(--v-ink)' }}>Deven</b> —
           alongside the real numbers, validated by cryptography and witnessed on the record.
         </p>
+        {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>
 
       <StandingPanel />
@@ -212,9 +232,7 @@ function Reveal({ access }: { access: Access }) {
         <h2 className="v-h2">We found the honest name: Early Co-founder</h2>
         <div className="v-card" style={{ marginTop: 12 }}>
           <p style={{ color: 'var(--v-ink)', fontWeight: 600, margin: '0 0 10px' }}>Russell,</p>
-          {MESSAGE.paragraphs.map((p, i) => (
-            <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>
-          ))}
+          {MESSAGE.paragraphs.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>)}
           <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>
         </div>
       </section>
@@ -223,10 +241,10 @@ function Reveal({ access }: { access: Access }) {
         <div className="v-eyebrow">2 · The record</div>
         <h2 className="v-h2">Proposed credit vs. what the record shows</h2>
         <div className="v-card" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-          {RECORD_ROWS.map((r, i) => (
+          {RECORD_ROWS.map((r2, i) => (
             <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, alignItems: 'start', paddingBottom: 10, borderBottom: i < RECORD_ROWS.length - 1 ? '1px solid rgba(179,136,255,.14)' : 'none' }}>
-              <div style={{ color: 'var(--v-magenta)', fontWeight: 600, fontSize: 14 }}>{r.implies}</div>
-              <div className="v-lead" style={{ fontSize: 14 }}>{r.shows}</div>
+              <div style={{ color: 'var(--v-magenta)', fontWeight: 600, fontSize: 14 }}>{r2.implies}</div>
+              <div className="v-lead" style={{ fontSize: 14 }}>{r2.shows}</div>
             </div>
           ))}
         </div>
@@ -235,13 +253,9 @@ function Reveal({ access }: { access: Access }) {
       <section style={{ marginBottom: 28 }}>
         <div className="v-eyebrow">3 · The reality</div>
         <h2 className="v-h2">What FlowBond actually is, in numbers</h2>
-        <p className="v-lead" style={{ margin: '4px 0 14px' }}>
-          From the live org audit (GitHub org API, 2026-06-24). The same figures any investor sees.
-        </p>
+        <p className="v-lead" style={{ margin: '4px 0 14px' }}>From the live org audit (GitHub org API, 2026-06-24). The same figures any investor sees.</p>
         <div className="stat-grid">
-          {REALITY_STATS.map((s, i) => (
-            <div className="stat" key={i}><div className="n">{s.value}</div><div className="l">{s.label}</div><div className="s">{s.sub}</div></div>
-          ))}
+          {REALITY_STATS.map((s, i) => (<div className="stat" key={i}><div className="n">{s.value}</div><div className="l">{s.label}</div><div className="s">{s.sub}</div></div>))}
         </div>
         <div className="v-card" style={{ marginTop: 14, display: 'grid', gap: 10 }}>
           {VALUE_BANDS.map((b, i) => (
@@ -265,44 +279,45 @@ function Reveal({ access }: { access: Access }) {
           ))}
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-gold)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Monetizable rails (the moat)</div>
-            <div className="tech-row">{RAILS.map((r) => <span className="chip" key={r.name} title={r.what} style={{ borderColor: 'rgba(245,215,122,.35)' }}>{r.name} · {r.ready}</span>)}</div>
+            <div className="tech-row">{RAILS.map((r2) => <span className="chip" key={r2.name} title={r2.what} style={{ borderColor: 'rgba(245,215,122,.35)' }}>{r2.name} · {r2.ready}</span>)}</div>
           </div>
         </div>
       </section>
 
       <section id="sign">
         <div className="v-eyebrow">5 · The documents</div>
-        <h2 className="v-h2">{readOnly ? 'Read & verify' : 'Read, download & sign'}</h2>
+        <h2 className="v-h2">{canAct ? 'Read, download & sign' : isSigner ? 'Read — verify with FBID to sign' : 'Read & verify'}</h2>
         <p className="v-lead" style={{ margin: '4px 0 16px' }}>
           Two documents sit in escrow: the <b style={{ color: 'var(--v-ink)' }}>Separation &amp; Transition Agreement</b> and
           the <b style={{ color: 'var(--v-ink)' }}>Acknowledgment of Contribution</b> (Exhibit 5). Only Estefanía and
-          Russell sign; the named witnesses verify.
+          Russell sign — with FBID — and the named witnesses verify.
         </p>
 
+        {isSigner && !authorized && <FbidGate name={who} />}
+
         <div className="v-eyebrow" style={{ marginBottom: 8 }}>Document 1 — Separation Agreement</div>
-        <AgreementPaper role={role} code={VAULT_CODE} readOnly={readOnly} sigs={sigs} wits={wits} onSigned={refresh} />
+        <AgreementPaper role={role} code={code} canAct={canAct} sigs={sigs} wits={wits} onSigned={refresh} />
 
         <div className="v-eyebrow" style={{ margin: '28px 0 8px' }}>Document 2 — Acknowledgment of Contribution (Exhibit 5)</div>
-        <Acknowledgment role={role} code={VAULT_CODE} readOnly={readOnly} sigs={sigs} onSigned={refresh} />
+        <Acknowledgment role={role} code={code} canAct={canAct} sigs={sigs} onSigned={refresh} />
       </section>
 
       <p style={{ textAlign: 'center', marginTop: 40, fontSize: 12.5, color: 'var(--v-dim)' }} className="v-noprint">
-        FlowScrow coordinates and records this closing and conditionally releases documents once each task is
-        verified. Binding signatures are executed via DocuSign and confirmed by counsel; any on-chain record is a
-        tamper-evident timestamp, not a legal signature. This tool does not provide legal advice.
+        FlowScrow coordinates and records this closing and conditionally releases documents once each task is verified.
+        Binding signatures are executed via DocuSign and confirmed by counsel; any on-chain record is a tamper-evident
+        timestamp, not a legal signature. This tool does not provide legal advice.
       </p>
     </div>
   );
 }
 
-/* ── shared sign + download controls (party only) ── */
+/* ── shared sign + download controls (FBID-verified signers only) ── */
 function SignControls({
   role, code, document, sigs, onSigned, buildText, filename, showDocuSign,
 }: {
   role: VaultRole; code: string; document: 'agreement' | 'acknowledgment';
   sigs: Signature[]; onSigned: () => void; buildText: () => string; filename: string; showDocuSign?: boolean;
 }) {
-  const [name, setName] = useState(PARTIES[role].full);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ds, setDs] = useState<string | null>(null);
@@ -310,7 +325,7 @@ function SignControls({
 
   async function sign() {
     setBusy(true); setErr(null);
-    try { await vaultSign(role, code, name, document); onSigned(); }
+    try { await vaultSign(code, document); onSigned(); }
     catch (e) { setErr((e as Error).message); }
     finally { setBusy(false); }
   }
@@ -333,15 +348,9 @@ function SignControls({
   return (
     <div className="v-card v-noprint" style={{ marginTop: 14 }}>
       {mySig ? (
-        <div style={{ color: 'var(--v-gold)', fontWeight: 700 }}>
-          ✓ Signed as {mySig.signer_name} · {new Date(mySig.signed_at).toLocaleString()}
-        </div>
+        <div style={{ color: 'var(--v-gold)', fontWeight: 700 }}>✓ Signed as {mySig.signer_name} · {new Date(mySig.signed_at).toLocaleString()}</div>
       ) : (
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name"
-            style={{ flex: 1, minWidth: 200, background: 'rgba(0,0,0,.25)', border: '1px solid rgba(179,136,255,.3)', borderRadius: 10, padding: '11px 13px', color: 'var(--v-ink)', fontSize: 15 }} />
-          <button className="vbtn vbtn-gold" disabled={busy} onClick={sign}>{busy ? 'Signing…' : `Sign as ${PARTIES[role].short}`}</button>
-        </div>
+        <button className="vbtn vbtn-gold" disabled={busy} onClick={sign}>{busy ? 'Signing…' : `Sign as ${PARTIES[role].short}`}</button>
       )}
       <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
         <button className="vbtn vbtn-ghost" onClick={download}>⬇ Download (.txt)</button>
@@ -354,17 +363,21 @@ function SignControls({
   );
 }
 
-function WitnessOnly() {
+function LockedNote({ signer }: { signer: boolean }) {
   return (
     <div className="v-card v-noprint" style={{ marginTop: 14 }}>
-      <span className="pill" style={{ color: 'var(--v-gold)' }}>witness · view only</span>
-      <p style={{ fontSize: 12.5, color: 'var(--v-dim)', margin: '8px 0 0' }}>You are recorded as a witness. Witnesses verify but do not download or sign.</p>
+      <span className="pill" style={{ color: 'var(--v-gold)' }}>{signer ? 'verify FBID to sign / download' : 'witness · view only'}</span>
+      <p style={{ fontSize: 12.5, color: 'var(--v-dim)', margin: '8px 0 0' }}>
+        {signer
+          ? 'Verify with FBID above (your login email must match you) to enable signing and download.'
+          : 'You are recorded as a witness. Witnesses verify but do not download or sign.'}
+      </p>
     </div>
   );
 }
 
 /* ── the Separation & Transition Agreement paper ── */
-function AgreementPaper({ role, code, readOnly, sigs, wits, onSigned }: { role: VaultRole | null; code: string; readOnly: boolean; sigs: Signature[]; wits: Witness[]; onSigned: () => void }) {
+function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: VaultRole | null; code: string; canAct: boolean; sigs: Signature[]; wits: Witness[]; onSigned: () => void }) {
   const g = AGREEMENT;
   const stephSigned = sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement');
   const russellSigned = sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
@@ -378,7 +391,7 @@ function AgreementPaper({ role, code, readOnly, sigs, wits, onSigned }: { role: 
       'Estefanía Ferrera (Company) — ______________________   Date: __________', '',
       'Russell Herod (Early Co-founder) — ______________________   Date: __________', '',
       'Witnesses (view-only): ' + WITNESSES.join(', '),
-      ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[electronically signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
+      ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[electronically signed in vault, FBID-verified] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
     ].join('\n');
   const fingerprint = useMemo(() => keccak256(toHex(buildText())), [sigs]);
 
@@ -418,40 +431,33 @@ function AgreementPaper({ role, code, readOnly, sigs, wits, onSigned }: { role: 
           can verify — not on any one advisor’s word. This is the seal of the exact text above; change a single
           character and it changes.
         </p>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '10px 12px', borderRadius: 10 }}>
-          keccak256 · {fingerprint}
-        </div>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '10px 12px', borderRadius: 10 }}>keccak256 · {fingerprint}</div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 10, fontSize: 12.5, color: 'var(--v-dim)' }}>
-          <span>🔒 Immutable audit trail</span><span>⛓ Anchorable on Base</span><span>✍️ Binding e-signature (ESIGN/UETA)</span><span>👁 Witnessed</span>
+          <span>🔒 Immutable audit trail</span><span>⛓ Anchorable on Base</span><span>🆔 FBID-verified e-signature (ESIGN/UETA)</span><span>👁 Witnessed</span>
         </div>
       </div>
 
-      {readOnly || !role
-        ? <WitnessOnly />
-        : <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Separation-Agreement.txt" showDocuSign />}
+      {canAct && role
+        ? <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Separation-Agreement.txt" showDocuSign />
+        : <LockedNote signer={!!role} />}
     </>
   );
 }
 
 /* ── the signable Acknowledgment paper ── */
-function Acknowledgment({ role, code, readOnly, sigs, onSigned }: { role: VaultRole | null; code: string; readOnly: boolean; sigs: Signature[]; onSigned: () => void }) {
+function Acknowledgment({ role, code, canAct, sigs, onSigned }: { role: VaultRole | null; code: string; canAct: boolean; sigs: Signature[]; onSigned: () => void }) {
   const a = ACKNOWLEDGMENT;
   const buildText = () =>
     [
-      a.title, '',
-      `Issued by: ${a.issuedBy}`,
-      `In recognition of: ${a.recognitionOf}`,
-      `Role: ${a.role}`,
-      `Period: ${a.period.replace(/\*/g, '')}`, '',
-      'Scope of contribution:',
+      a.title, '', `Issued by: ${a.issuedBy}`, `In recognition of: ${a.recognitionOf}`, `Role: ${a.role}`,
+      `Period: ${a.period.replace(/\*/g, '')}`, '', 'Scope of contribution:',
       ...a.scope.map((s) => ' - ' + s.replace(/\*/g, '')), '',
       'Acknowledgment. ' + a.acknowledgment, '',
       `Also acknowledged — ${a.deven.name} (${a.deven.role.replace(/\*/g, '')}): ${a.deven.text.replace(/\*/g, '')}`, '',
       'Scope & clarity. ' + a.scopeClarity, '',
-      'Acknowledged and agreed:', '',
-      'Estefanía Ferrera — ______________________   Date: __________', '',
+      'Acknowledged and agreed:', '', 'Estefanía Ferrera — ______________________   Date: __________', '',
       'Russell Herod — ______________________   Date: __________',
-      ...sigs.filter((s) => s.document === 'acknowledgment').map((s) => `\n[signed in vault] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
+      ...sigs.filter((s) => s.document === 'acknowledgment').map((s) => `\n[signed in vault, FBID-verified] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
     ].join('\n');
 
   return (
@@ -474,9 +480,9 @@ function Acknowledgment({ role, code, readOnly, sigs, onSigned }: { role: VaultR
           <span><b>Russell Herod</b> {sigs.find((s) => s.party_role === 'russell' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>
         </div>
       </div>
-      {readOnly || !role
-        ? <WitnessOnly />
-        : <SignControls role={role} code={code} document="acknowledgment" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Acknowledgment-of-Contribution.txt" />}
+      {canAct && role
+        ? <SignControls role={role} code={code} document="acknowledgment" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Acknowledgment-of-Contribution.txt" />
+        : <LockedNote signer={!!role} />}
     </>
   );
 }
