@@ -53,6 +53,8 @@ export class ClaudiaVault {
   private threadId!: string;
   private identity: GZ.IdentityKeyPair | null = null;
   private roomKeys = new Map<string, Uint8Array>();
+  // Distinct factor proofs gathered this session — rotation needs ≥2 (2FA step-up).
+  private proofs = new Set<ZK.FactorId | 'email'>();
 
   // ── identity ────────────────────────────────────────────────────────────
   private async requireUser(): Promise<string> {
@@ -119,6 +121,7 @@ export class ClaudiaVault {
     const credentialId = localStorage.getItem(CRED_KEY(this.uid)) ?? undefined;
     const key = await ZK.passkeyFactorKey(credentialId);
     this.ms = ZK.unlockMS(sealed, key);
+    this.proofs.add('passkey'); // unlocking proves one factor (for rotation step-up)
     await this.openSession();
   }
 
@@ -131,6 +134,7 @@ export class ClaudiaVault {
     const sealed = shares.get('recovery');
     if (!sealed) throw new Error('no-recovery-factor');
     this.ms = ZK.unlockMS(sealed, ZK.recoveryFactorKey(mnemonic));
+    this.proofs.add('recovery');
     await this.openSession();
   }
 
@@ -627,6 +631,111 @@ export class ClaudiaVault {
   async can(feature: Feature, appSlug = '*'): Promise<boolean> {
     const ent = appSlug === '*' && this.entitlement ? this.entitlement : await this.myEntitlement(appSlug);
     return tierHas(ent, feature);
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  Private-key ROTATION — re-key the vault when a recovery phrase may have
+  //  leaked. Gated by a 2-of-N step-up (any two of passkey / current phrase /
+  //  email code) so a leaked phrase ALONE can never rotate or lock you out.
+  //  Re-keys the master secret + issues a fresh phrase, re-wraps every DEK and
+  //  re-seals the identity key under the new KEK, and commits atomically. Old
+  //  phrase opens nothing afterward; content/DEKs/rooms are preserved.
+  // ════════════════════════════════════════════════════════════════════════
+
+  /** Which factors have been proven this session (drives the step-up UI). */
+  provenFactors(): string[] { return Array.from(this.proofs); }
+  rotationReady(): boolean { return this.proofs.size >= 2; }
+
+  /** Prove the passkey factor (a second factor for step-up). */
+  async provePasskey(): Promise<boolean> {
+    try {
+      const sealed = (await this.loadShares()).get('passkey');
+      if (!sealed) return false;
+      const key = await ZK.passkeyFactorKey(localStorage.getItem(CRED_KEY(this.uid)) ?? undefined);
+      ZK.unlockMS(sealed, key); // throws on wrong passkey
+      this.proofs.add('passkey');
+      return true;
+    } catch { return false; }
+  }
+
+  /** Prove the current recovery phrase (without using it to unlock). */
+  async proveRecovery(mnemonic: string): Promise<boolean> {
+    try {
+      if (!ZK.isValidMnemonic(mnemonic)) return false;
+      const sealed = (await this.loadShares()).get('recovery');
+      if (!sealed) return false;
+      ZK.unlockMS(sealed, ZK.recoveryFactorKey(mnemonic)); // throws if wrong
+      this.proofs.add('recovery');
+      return true;
+    } catch { return false; }
+  }
+
+  /** Send an email one-time code to the account address (a second factor). */
+  async sendRotationOtp(): Promise<void> {
+    const { data } = await this.sb.auth.getUser();
+    const email = data.user?.email;
+    if (!email) throw new Error('no-account-email');
+    const { error } = await this.sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+    if (error) throw error;
+  }
+
+  /** Verify the emailed code → proves the email factor. */
+  async verifyRotationOtp(code: string): Promise<boolean> {
+    const { data } = await this.sb.auth.getUser();
+    const email = data.user?.email;
+    if (!email) return false;
+    const { error } = await this.sb.auth.verifyOtp({ email, token: code.trim(), type: 'email' });
+    if (error) return false;
+    this.proofs.add('email');
+    return true;
+  }
+
+  /**
+   * Re-key the vault. Requires the vault unlocked (old MS in memory) and ≥2
+   * proven factors. Returns the NEW recovery phrase to show ONCE. Lockout-safe:
+   * everything is re-wrapped in memory and validated BEFORE the atomic commit,
+   * so a failure leaves the old keys fully intact.
+   */
+  async rotateRecoveryKey(): Promise<{ recoveryPhrase: string }> {
+    if (!this.ms || !this.kek) throw new Error('vault-locked');
+    if (this.proofs.size < 2) throw new Error('need-two-factors');
+
+    // 1. unwrap ALL DEKs with the OLD KEK first — if any fails we abort here,
+    //    before touching the server, so nothing is lost.
+    const rows = await this.rpc<{ id: string; conversation_id: string; wrapped_dek: string }[]>('claudia_all_wrapped_deks');
+    const plainDeks = (rows ?? []).map((d) => ({ conversation_id: d.conversation_id, dek: ZK.unwrapDEK(d.wrapped_dek, this.kek) }));
+
+    // 2. new master secret + KEK + recovery phrase
+    const newMs = ZK.generateMasterSecret();
+    const newKek = ZK.deriveKEK(newMs);
+    const recoveryPhrase = ZK.generateRecoveryMnemonic();
+    const factorKeys: Partial<Record<ZK.FactorId, Uint8Array>> = { recovery: ZK.recoveryFactorKey(recoveryPhrase) };
+
+    // keep the passkey factor if one is enrolled and reachable on this device
+    if ((await this.loadShares()).has('passkey')) {
+      try { factorKeys.passkey = await ZK.passkeyFactorKey(localStorage.getItem(CRED_KEY(this.uid)) ?? undefined); }
+      catch { /* passkey unreachable now — the new phrase still seals the vault */ }
+    }
+    const shares = ZK.enrollSealMS(newMs, factorKeys); // ≥1 seal guaranteed (recovery)
+
+    // 3. re-wrap DEKs under the new KEK (DEKs unchanged → content untouched)
+    const wrapped = plainDeks.map((d) => ({ conversation_id: d.conversation_id, wrapped_dek: ZK.wrapDEK(d.dek, newKek) }));
+
+    // 4. re-seal the identity private key under the new KEK
+    let identity: { sealed_private: string; sealed_nonce: string } | null = null;
+    if (this.identity) {
+      const sealed = ZK.encryptContent(ZK.toB64(this.identity.privatePkcs8), newKek);
+      identity = { sealed_private: sealed.ciphertext, sealed_nonce: sealed.nonce };
+    }
+
+    // 5. atomic commit — all-or-nothing on the server
+    await this.rpc('claudia_rotate_keys', { p_shares: shares, p_wrapped: wrapped, p_identity: identity });
+
+    // 6. swap in the new keys for the live session (DEK/identity/room caches stay valid)
+    this.ms = newMs;
+    this.kek = newKek;
+    this.proofs.clear(); // a fresh rotation needs a fresh step-up
+    return { recoveryPhrase };
   }
 }
 
