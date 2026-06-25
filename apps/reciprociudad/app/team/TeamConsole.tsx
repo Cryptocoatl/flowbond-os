@@ -6,7 +6,9 @@ import { saniClient, saniConfigured } from '@/lib/sani/client';
 /* ── types (RPCs return jsonb) ─────────────────────────────────────────────── */
 type Role = 'super_admin' | 'admin' | 'member';
 type Status = 'invited' | 'active' | 'suspended';
-type Feature = 'bookings' | 'audit';
+type Feature = 'bookings' | 'audit' | 'logistics';
+type NodeStatus = 'active' | 'paused' | 'retired';
+type PickupStatus = 'requested' | 'scheduled' | 'picked_up' | 'dropped_off' | 'done' | 'canceled';
 type BookingStatus = 'lead' | 'quoted' | 'confirmed' | 'deployed' | 'closed' | 'lost';
 
 interface Me {
@@ -27,10 +29,34 @@ interface Booking {
   created_at: string; updated_at: string;
 }
 interface AuditRow { id: string; actor_email: string | null; action: string; target: string | null; detail: Record<string, unknown>; created_at: string }
+interface Node {
+  id: string; name: string; address: string | null; lat: number | null; lng: number | null;
+  units: number; buckets_capacity: number; status: NodeStatus; notes: string | null;
+  created_at: string; open_pickups: number;
+}
+interface Pickup {
+  id: string; node_id: string; node_name: string; node_address: string | null;
+  buckets: number; status: PickupStatus; dropoff_label: string | null; dropoff_address: string | null;
+  refirides_job_id: string | null; assigned_name: string | null; created_at: string; updated_at: string;
+}
 
 const FEATURES: { key: Feature; label: string }[] = [
   { key: 'bookings', label: 'Reservas' },
+  { key: 'logistics', label: 'Logística' },
   { key: 'audit', label: 'Bitácora' },
+];
+const NODE_STATUSES: { key: NodeStatus; label: string }[] = [
+  { key: 'active', label: 'Activo' },
+  { key: 'paused', label: 'Pausado' },
+  { key: 'retired', label: 'Retirado' },
+];
+const PICKUP_STATUSES: { key: PickupStatus; label: string }[] = [
+  { key: 'requested', label: 'Solicitada' },
+  { key: 'scheduled', label: 'Agendada' },
+  { key: 'picked_up', label: 'Recogida' },
+  { key: 'dropped_off', label: 'Entregada' },
+  { key: 'done', label: 'Completada' },
+  { key: 'canceled', label: 'Cancelada' },
 ];
 const BOOKING_STATUSES: { key: BookingStatus; label: string }[] = [
   { key: 'lead', label: 'Lead' },
@@ -50,7 +76,9 @@ export default function TeamConsole() {
   const [members, setMembers] = useState<Member[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
-  const [tab, setTab] = useState<'inicio' | 'bookings' | 'team' | 'audit'>('inicio');
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [pickups, setPickups] = useState<Pickup[]>([]);
+  const [tab, setTab] = useState<'inicio' | 'bookings' | 'logistics' | 'team' | 'audit'>('inicio');
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
 
   const flash = useCallback((kind: 'ok' | 'err', msg: string) => {
@@ -69,6 +97,11 @@ export default function TeamConsole() {
     if (m.can_manage_team) {
       const { data } = await c.rpc('list_members');
       if (data) setMembers(data as Member[]);
+    }
+    if (m.features.includes('logistics') || m.can_manage_team) {
+      const [n, p] = await Promise.all([c.rpc('list_nodes'), c.rpc('list_pickups')]);
+      if (n.data) setNodes(n.data as Node[]);
+      if (p.data) setPickups(p.data as Pickup[]);
     }
     if (m.features.includes('audit')) {
       const { data } = await c.rpc('list_audit', { p_limit: 200 });
@@ -124,9 +157,10 @@ export default function TeamConsole() {
         onSignOut={signOut} />}
       {phase === 'ready' && me?.member && (
         <Console
-          me={me} members={members} bookings={bookings} audit={audit}
+          me={me} members={members} bookings={bookings} audit={audit} nodes={nodes} pickups={pickups}
           tab={tab} setTab={setTab}
           setMembers={setMembers} setBookings={setBookings} setAudit={setAudit}
+          setNodes={setNodes} setPickups={setPickups}
           flash={flash} signOut={signOut}
         />
       )}
@@ -195,18 +229,21 @@ function Login() {
 
 /* ── console shell ─────────────────────────────────────────────────────────── */
 function Console(props: {
-  me: Me; members: Member[]; bookings: Booking[]; audit: AuditRow[];
-  tab: 'inicio' | 'bookings' | 'team' | 'audit';
-  setTab: (t: 'inicio' | 'bookings' | 'team' | 'audit') => void;
+  me: Me; members: Member[]; bookings: Booking[]; audit: AuditRow[]; nodes: Node[]; pickups: Pickup[];
+  tab: 'inicio' | 'bookings' | 'logistics' | 'team' | 'audit';
+  setTab: (t: 'inicio' | 'bookings' | 'logistics' | 'team' | 'audit') => void;
   setMembers: (m: Member[]) => void; setBookings: (b: Booking[]) => void; setAudit: (a: AuditRow[]) => void;
+  setNodes: (n: Node[]) => void; setPickups: (p: Pickup[]) => void;
   flash: (k: 'ok' | 'err', m: string) => void; signOut: () => void;
 }) {
-  const { me, members, bookings, audit, tab, setTab, setMembers, setBookings, setAudit, flash, signOut } = props;
+  const { me, members, bookings, audit, nodes, pickups, tab, setTab, setMembers, setBookings, setAudit, setNodes, setPickups, flash, signOut } = props;
   const canBookings = me.features.includes('bookings') || me.can_manage_team;
+  const canLogistics = me.features.includes('logistics') || me.can_manage_team;
   const canAudit = me.features.includes('audit');
   const nav: { key: typeof tab; label: string; show: boolean }[] = [
     { key: 'inicio', label: 'Inicio', show: true },
     { key: 'bookings', label: 'Reservas', show: canBookings },
+    { key: 'logistics', label: 'Nodos & cubetas', show: canLogistics },
     { key: 'team', label: 'Equipo', show: me.can_manage_team },
     { key: 'audit', label: 'Bitácora', show: canAudit },
   ];
@@ -231,6 +268,7 @@ function Console(props: {
       <main className="st-main">
         {tab === 'inicio' && <Overview me={me} members={members} bookings={bookings} />}
         {tab === 'bookings' && canBookings && <Bookings me={me} bookings={bookings} members={members} setBookings={setBookings} flash={flash} />}
+        {tab === 'logistics' && canLogistics && <Logistics nodes={nodes} pickups={pickups} setNodes={setNodes} setPickups={setPickups} flash={flash} />}
         {tab === 'team' && me.can_manage_team && <Team me={me} members={members} setMembers={setMembers} flash={flash} />}
         {tab === 'audit' && canAudit && <Audit audit={audit} setAudit={setAudit} flash={flash} />}
       </main>
@@ -508,6 +546,204 @@ function Team({ me, members, setMembers, flash }: {
   );
 }
 
+/* ── logistics: fixed nodes + cubeta pickups (RefiRides) ─────────────────────── */
+function Logistics({ nodes, pickups, setNodes, setPickups, flash }: {
+  nodes: Node[]; pickups: Pickup[]; setNodes: (n: Node[]) => void; setPickups: (p: Pickup[]) => void;
+  flash: (k: 'ok' | 'err', m: string) => void;
+}) {
+  const [nodeModal, setNodeModal] = useState<Node | 'new' | null>(null);
+  const [pickupNode, setPickupNode] = useState<Node | null>(null);
+
+  async function setPickupStatus(id: string, status: PickupStatus) {
+    const { data, error } = await saniClient().rpc('update_pickup_status', { p_id: id, p_status: status });
+    if (error) { flash('err', error.message); return; }
+    setPickups(data as Pickup[]); flash('ok', 'Recolección actualizada.');
+  }
+
+  return (
+    <section>
+      <div className="st-rowhead">
+        <h1 className="st-h1">Nodos & cubetas</h1>
+        <button className="st-btn gold sm" onClick={() => setNodeModal('new')}>+ Crear nodo fijo</button>
+      </div>
+      <p className="st-muted">Estaciones permanentes de Sani Templo y la recolección de cubetas llenas vía RefiRides.</p>
+
+      {nodes.length === 0 ? <p className="st-empty">Aún no hay nodos fijos. Crea el primero.</p> : (
+        <div className="st-list" style={{ marginTop: 16 }}>
+          {nodes.map((n) => (
+            <div key={n.id} className="st-mcard">
+              <div className="st-mhead">
+                <div>
+                  <span className="st-mname">{n.name}</span>
+                  <span className="st-memail">{n.address || 'sin dirección'}</span>
+                </div>
+                <div className="st-mtags">
+                  <span className="st-status">{NODE_STATUSES.find((s) => s.key === n.status)?.label}</span>
+                  {n.open_pickups > 0 && <span className="st-statuschip invited">{n.open_pickups} en curso</span>}
+                </div>
+              </div>
+              <div className="st-mctrl">
+                <span className="st-inline"><span>Unidades</span>&nbsp;{n.units}</span>
+                <span className="st-inline"><span>Cubetas</span>&nbsp;{n.buckets_capacity}</span>
+                <button className="st-btn gold xs" onClick={() => setPickupNode(n)}>Solicitar recolección</button>
+                <button className="st-btn ghost xs" onClick={() => setNodeModal(n)}>Editar</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2 className="st-h2" style={{ marginTop: 30 }}>Recolecciones</h2>
+      {pickups.length === 0 ? <p className="st-empty">Sin recolecciones todavía.</p> : (
+        <div className="st-list" style={{ marginTop: 12 }}>
+          {pickups.map((p) => (
+            <div key={p.id} className="st-bcard" style={{ cursor: 'default' }}>
+              <div className="st-bmain">
+                <span className="st-bname">{p.node_name} · {p.buckets} cubeta{p.buckets > 1 ? 's' : ''}</span>
+                <span className="st-bmeta">
+                  → {p.dropoff_label || p.dropoff_address || 'compostaje'}
+                  {p.refirides_job_id ? ` · RefiRides ${p.refirides_job_id.slice(0, 8)}` : ''}
+                </span>
+              </div>
+              <div className="st-bside">
+                <select className="st-pickstatus" value={p.status}
+                  onChange={(e) => setPickupStatus(p.id, e.target.value as PickupStatus)}>
+                  {PICKUP_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                </select>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {nodeModal && (
+        <NodeModal node={nodeModal === 'new' ? null : nodeModal}
+          onClose={() => setNodeModal(null)}
+          onSaved={(list) => { setNodes(list); setNodeModal(null); flash('ok', 'Nodo guardado.'); }}
+          flash={flash} />
+      )}
+      {pickupNode && (
+        <PickupModal node={pickupNode}
+          onClose={() => setPickupNode(null)}
+          onDone={(list, msg, kind) => { setPickups(list); setPickupNode(null); flash(kind, msg); }}
+          flash={flash} />
+      )}
+    </section>
+  );
+}
+
+function NodeModal({ node, onClose, onSaved, flash }: {
+  node: Node | null; onClose: () => void; onSaved: (n: Node[]) => void; flash: (k: 'ok' | 'err', m: string) => void;
+}) {
+  const [f, setF] = useState({
+    name: node?.name ?? '', address: node?.address ?? '',
+    lat: node?.lat?.toString() ?? '', lng: node?.lng?.toString() ?? '',
+    units: node?.units?.toString() ?? '1', buckets_capacity: node?.buckets_capacity?.toString() ?? '0',
+    status: node?.status ?? 'active', notes: node?.notes ?? '',
+  });
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+
+  async function save() {
+    if (!f.name.trim()) { flash('err', 'El nombre del nodo es obligatorio.'); return; }
+    setBusy(true);
+    const c = saniClient();
+    const { data, error } = node
+      ? await c.rpc('update_node', { p_id: node.id, p: f })
+      : await c.rpc('create_node', { p: f });
+    setBusy(false);
+    if (error) { flash('err', error.message); return; }
+    onSaved(data as Node[]);
+  }
+
+  return (
+    <div className="st-modal" onClick={onClose}>
+      <div className="st-modalcard" onClick={(e) => e.stopPropagation()}>
+        <div className="st-rowhead">
+          <h2 className="st-h2">{node ? f.name || 'Nodo' : 'Crear nodo fijo'}</h2>
+          <button className="st-link" onClick={onClose}>Cerrar</button>
+        </div>
+        <div className="st-grid2">
+          <Fld label="Nombre *"><input value={f.name} onChange={(e) => set('name', e.target.value)} /></Fld>
+          <Fld label="Estado">
+            <select value={f.status} onChange={(e) => set('status', e.target.value)}>
+              {NODE_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+          </Fld>
+        </div>
+        <Fld label="Dirección"><input value={f.address} placeholder="Calle, colonia, ciudad" onChange={(e) => set('address', e.target.value)} /></Fld>
+        <div className="st-grid2">
+          <Fld label="Lat (opcional)"><input inputMode="decimal" value={f.lat} onChange={(e) => set('lat', e.target.value.replace(/[^\d.-]/g, ''))} /></Fld>
+          <Fld label="Lng (opcional)"><input inputMode="decimal" value={f.lng} onChange={(e) => set('lng', e.target.value.replace(/[^\d.-]/g, ''))} /></Fld>
+          <Fld label="Unidades (baños)"><input inputMode="numeric" value={f.units} onChange={(e) => set('units', e.target.value.replace(/\D/g, ''))} /></Fld>
+          <Fld label="Cubetas en servicio"><input inputMode="numeric" value={f.buckets_capacity} onChange={(e) => set('buckets_capacity', e.target.value.replace(/\D/g, ''))} /></Fld>
+        </div>
+        <Fld label="Notas"><textarea rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} /></Fld>
+        <div className="st-rowend" style={{ marginTop: 16 }}>
+          <button className="st-btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="st-btn gold" disabled={busy} onClick={save}>{busy ? 'Guardando…' : 'Guardar'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PickupModal({ node, onClose, onDone, flash }: {
+  node: Node; onClose: () => void;
+  onDone: (p: Pickup[], msg: string, kind: 'ok' | 'err') => void; flash: (k: 'ok' | 'err', m: string) => void;
+}) {
+  const [buckets, setBuckets] = useState('1');
+  const [dropoffLabel, setDropoffLabel] = useState('');
+  const [dropoffAddress, setDropoffAddress] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function dispatch() {
+    setBusy(true);
+    try {
+      const res = await fetch('/api/sani/pickup', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          node_id: node.id, buckets: Number(buckets) || 1,
+          dropoff_label: dropoffLabel.trim() || null, dropoff_address: dropoffAddress.trim() || null,
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok) { flash('err', j?.error || 'No se pudo crear la recolección.'); setBusy(false); return; }
+      const msg = j.dispatched
+        ? 'Recolección enviada a RefiRides.'
+        : j.reason === 'dropoff_required' ? 'Recolección registrada (agrega un destino para enviarla a RefiRides).'
+        : j.reason === 'node_missing_location' ? 'Recolección registrada (el nodo necesita dirección para RefiRides).'
+        : 'Recolección registrada (RefiRides reintentará).';
+      onDone((j.pickups as Pickup[]) ?? [], msg, 'ok');
+    } catch (e) {
+      flash('err', String((e as Error)?.message ?? e)); setBusy(false);
+    }
+  }
+
+  return (
+    <div className="st-modal" onClick={onClose}>
+      <div className="st-modalcard" onClick={(e) => e.stopPropagation()}>
+        <div className="st-rowhead">
+          <h2 className="st-h2">Recoger cubetas · {node.name}</h2>
+          <button className="st-link" onClick={onClose}>Cerrar</button>
+        </div>
+        <p className="st-muted" style={{ fontSize: 13 }}>
+          Pickup en <strong style={{ color: 'var(--cream)' }}>{node.address || 'el nodo'}</strong> → destino de compostaje, vía RefiRides.
+        </p>
+        <div className="st-grid2">
+          <Fld label="Cubetas llenas"><input inputMode="numeric" value={buckets} onChange={(e) => setBuckets(e.target.value.replace(/\D/g, ''))} /></Fld>
+          <Fld label="Sitio de compostaje"><input value={dropoffLabel} placeholder="p.ej. Composta CDMX" onChange={(e) => setDropoffLabel(e.target.value)} /></Fld>
+        </div>
+        <Fld label="Dirección de entrega"><input value={dropoffAddress} placeholder="Dirección del sitio de compostaje" onChange={(e) => setDropoffAddress(e.target.value)} /></Fld>
+        <div className="st-rowend" style={{ marginTop: 16 }}>
+          <button className="st-btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="st-btn gold" disabled={busy} onClick={dispatch}>{busy ? 'Enviando…' : 'Solicitar recolección'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── audit ─────────────────────────────────────────────────────────────────── */
 function Audit({ audit, setAudit, flash }: {
   audit: AuditRow[]; setAudit: (a: AuditRow[]) => void; flash: (k: 'ok' | 'err', m: string) => void;
@@ -622,6 +858,7 @@ const CSS = `
 .st-status.lead{color:#cfe6b8;border-color:rgba(127,174,94,.4)}.st-status.quoted{color:var(--gold);border-color:var(--gold-line)}
 .st-status.confirmed,.st-status.deployed{color:#1a140a;background:var(--gold);border-color:var(--gold)}
 .st-status.closed{color:var(--mut)}.st-status.lost{color:#ffc7bf;border-color:rgba(255,111,94,.4)}
+.st-pickstatus{background:rgba(8,6,4,.6);border:1px solid var(--gold-line);border-radius:6px;color:var(--cream);padding:6px 9px;font-family:inherit;font-size:12.5px}
 /* member cards */
 .st-mcard{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--gold-line);border-radius:10px;padding:16px}
 .st-mcard.suspended{opacity:.6}
