@@ -33,7 +33,11 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://flowbond.life', path: '/separationagreement/auth/callback' },      // flowscrow vault (path-mounted)
   { origin: 'https://www.flowbond.life', path: '/separationagreement/auth/callback' },  // flowscrow vault (www)
   { origin: 'https://flowscrow-flowbond.vercel.app', path: '/separationagreement/auth/callback' }, // flowscrow (direct)
+  { origin: 'https://brandmark.click', path: '/proveedores/callback' },       // brandmark supplier portal
+  { origin: 'https://www.brandmark.click', path: '/proveedores/callback' },   // brandmark (www)
   // ---- local development ----
+  { origin: 'http://localhost:5173', path: '/proveedores/callback' }, // brandmark-web (vite dev)
+  { origin: 'http://localhost:8080', path: '/proveedores/callback' }, // brandmark-web (vite dev alt)
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
   { origin: 'http://localhost:3002', path: '/auth/callback' },     // flowgarden
