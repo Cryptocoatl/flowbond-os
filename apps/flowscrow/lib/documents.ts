@@ -29,33 +29,32 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
     title: 'Roman — you were there at the origin',
     paras: [
       'Roman, you’re my original early co-founder, and I’m putting that on the record where it belongs. You may not have had time to build a lot, but what you did mattered: the BLE and movement-tracking for the smart-watch integration, and standing with us at the very first DANZ event in Argentina — DanzConnect — with 100+ people in the room.',
-      'You’re here as a witness to this closing with Russell. And once that signature is done, I want us to sit down — just you and me — and really talk about the possibilities and next steps for you on FlowBond. I think there’s something here for us; let’s find it together.',
+      'You’re here as a witness to this closing with Russell. And once that signature is done, I want us to sit down — just you and me — and talk about our next step: whether you want to step into active development in FlowBond, or what position feels right for you. I love you so, so, so much, and I want the future of this built with you in it.',
     ],
   },
   anup: {
-    title: 'Anup — thank you, truly',
+    title: 'Anup — a stand of harmony in the chaos',
     paras: [
-      'Anup, thank you for the Harmonik support — it meant more than you know. You’re here as a witness to this closing, and I’m grateful to have you in the room for it.',
+      'Anup, thank you for being a stand of harmony in all this chaos. I’m here to support any Harmonik needs you have, always. I love you — and I’d love for you to witness this, and to experience the tech I built for us to carry forward: real contracts and agreements for the community.',
     ],
   },
   jackson: {
     title: 'Jackson — there’s a whole world for your land',
     paras: [
-      'Jackson, your community building, your gardens, the honey — and so much more — are exactly the kind of real, rooted work I want to build with. There’s a whole world I’d love to integrate into your land, and I want to put FBID into the hands of your community so it’s truly theirs.',
+      'Jackson, your community building, your gardens, the honey, the community astrologic mapping — and so much more — are exactly the kind of real, rooted work I want to build with. There’s a whole world I’d love to integrate into your land, and I want to put FBID into the hands of your community so it’s truly theirs.',
       'You’re here as a witness to this closing, and I see you as a big part of where this goes next. Let’s keep dreaming it out loud.',
     ],
   },
   jeff: {
-    title: 'Jeff — glad you’re here',
+    title: 'Jeff — advisor, and a real conversation ahead',
     paras: [
-      'Jeff, thank you for standing as a witness to this. Your presence and trust mean a lot to me, and I’m grateful to have you alongside as this chapter closes and the next one opens.',
+      'Jeff, you’ve been a great advisor and a real support through this whole process — thank you. I also want you to truly see FlowScrow, the escrow I built (this is it), and to have a serious conversation about how you flow into my world. You’re here as a witness to this closing.',
     ],
   },
   ryan: {
-    title: 'Ryan — peace, and what’s ahead',
+    title: 'Ryan — out of our fields, into what we build',
     paras: [
-      'Ryan, there’s a real peace between us — the kind that’s both genuine friendship and clear, honest professional discernment — and I value it deeply. You’re here as a witness to this closing.',
-      'And I’m genuinely excited about where we could go together: the vehicles on refirides.com, the modal integration, and whatever development that takes to make it real. Let’s explore it.',
+      'Ryan, we have a special relationship — and I want this situation to stay completely out of our fields, so it never touches what matters between us. What I care about is keeping our focus on what we can actually build together. You’re here as a witness to this closing, and I’m grateful for you.',
     ],
   },
 };
@@ -69,9 +68,10 @@ export const MESSAGE = {
     'Why this is the wording I’ll defend anywhere. It’s true, it’s generous, and it survives any diligence. “Early Co-founder” says plainly that you were there at the beginning and you built real things — without claiming an ownership stake that was never agreed. That protects both of us: you never have to walk back a word, and I can stand behind every part of it to investors, partners, or anyone who asks.',
     'And I’m naming Deven too. His contribution belongs on the record, and it is — acknowledged alongside yours in the documents in this vault.',
     'The standing and the numbers below are the same ones any investor sees. They’re not here to diminish you — they’re here so the recognition rests on the truth, which is the only kind of credit that lasts.',
+    'And I want to name the spirit of this plainly: it isn’t about fighting. It’s about facts and actions, and being transparent with each other. The health of a community starts in healthy personal relationships — so I want to close this between us cleanly and purely, with respect intact on both sides.',
     'Everything here is validated by cryptography and witnessed on the record, and it’s ready to sign. Read it — if a detail of your contribution is captured wrong or sells you short, tell me and I’ll fix it. Then let’s sign it together.',
   ],
-  signoff: 'With genuine respect and thanks,\nEstefanía Ferrera',
+  signoff: 'With love,\nStep by Steph',
 };
 
 // Russell's clear path to finalize, every step.

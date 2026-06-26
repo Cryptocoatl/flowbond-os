@@ -358,7 +358,7 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
           <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>A personal note for you</div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 22, margin: '6px 0 8px', color: 'var(--v-ink)' }}>{note.title}</h3>
           {note.paras.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 10px' }}>{p}</p>)}
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--v-dim)' }}>— Estefanía</p>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--v-gold)' }}>— Step by Steph, with love</p>
         </div>
       )}
       {!isSigner && (
