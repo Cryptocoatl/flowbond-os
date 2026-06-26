@@ -32,6 +32,9 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://claudia-grants.vercel.app', path: '/auth/callback' },   // grantflow (vercel)
   { origin: 'https://reciprociudad.lat', path: '/auth/callback' },           // reciprociudad (+ /team console)
   { origin: 'https://www.reciprociudad.lat', path: '/auth/callback' },       // reciprociudad (www)
+  { origin: 'https://flowbond.life', path: '/separationagreement/auth/callback' },      // flowscrow vault (path-mounted)
+  { origin: 'https://www.flowbond.life', path: '/separationagreement/auth/callback' },  // flowscrow vault (www)
+  { origin: 'https://flowscrow-flowbond.vercel.app', path: '/separationagreement/auth/callback' }, // flowscrow (direct)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
