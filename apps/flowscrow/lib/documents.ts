@@ -9,7 +9,7 @@ export const PARTIES = {
 };
 
 // View-only witnesses (each has a private code; never sign/download).
-export const WITNESSES = ['Anup', 'Jackson', 'Jeff', 'Ryan', 'Roman'];
+export const WITNESSES = ['Anup', 'Jackson', 'Jeff', 'Ryan', 'Roman', 'Nia'];
 
 // A personal note shown to each person when they open the vault (keyed by person_key).
 export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
@@ -49,6 +49,12 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
     title: 'Jeff — advisor, and a real conversation ahead',
     paras: [
       'Jeff, you’ve been a great advisor and a real support through this whole process — thank you. I also want you to truly see FlowScrow, the escrow I built (this is it), and to have a serious conversation about how you flow into my world. You’re here as a witness to this closing.',
+    ],
+  },
+  nia: {
+    title: 'Nia — my goddess guardian',
+    paras: [
+      'Nia, my goddess guardian — my partner and my spiritual support through all of this. Having you witness this means everything to me; your presence blesses the whole closing. Thank you for holding the sacred while I hold the structure. I love you, deeply.',
     ],
   },
   ryan: {
