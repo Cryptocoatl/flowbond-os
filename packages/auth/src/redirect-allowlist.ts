@@ -30,6 +30,9 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://www.claudiaflow.life', path: '/auth/callback' },        // claudia (www)
   { origin: 'https://grants.claudiaflow.life', path: '/auth/callback' },     // grantflow (custom domain)
   { origin: 'https://claudia-grants.vercel.app', path: '/auth/callback' },   // grantflow (vercel)
+  { origin: 'https://flowbond.life', path: '/separationagreement/auth/callback' },      // flowscrow vault (path-mounted)
+  { origin: 'https://www.flowbond.life', path: '/separationagreement/auth/callback' },  // flowscrow vault (www)
+  { origin: 'https://flowscrow-flowbond.vercel.app', path: '/separationagreement/auth/callback' }, // flowscrow (direct)
   // ---- local development ----
   { origin: 'http://localhost:3011', path: '/auth/callback' },     // astroflow
   { origin: 'http://localhost:3020', path: '/auth/callback' },     // fbid hub itself
@@ -38,6 +41,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3003', path: '/auth/callback' },     // ops
   { origin: 'http://localhost:3030', path: '/auth/callback' },     // danz
   { origin: 'http://localhost:3013', path: '/auth/callback' },     // flow3
+  { origin: 'http://localhost:3014', path: '/auth/callback' },     // flowstudio
   { origin: 'http://localhost:3021', path: '/auth/callback' },     // claudia (La Guardiana)
   { origin: 'http://localhost:3000', path: '/auth/callback' },     // flowme profiles
   { origin: 'http://localhost:3012', path: '/auth/callback' },     // grantflow
