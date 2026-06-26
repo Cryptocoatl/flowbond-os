@@ -8,7 +8,7 @@ import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
   type VaultRole, type Signature, type Witness, type Resolved,
 } from '@/lib/vault';
-import { sendMagicLink } from '@/lib/fbid';
+import { hubRedirect } from '@flowbond/auth';
 import { apiUrl } from '@/lib/path';
 
 const CODE_LEN = 6;
@@ -219,34 +219,22 @@ function GuideChat() {
 
 /* ── FBID verification gate for signers (email → magic link) ── */
 function FbidGate({ name }: { name: string }) {
-  const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  async function go(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true); setErr(null);
-    const { error } = await sendMagicLink(email, '/');
-    setBusy(false);
-    if (error) setErr(error.message); else setSent(true);
+  function go() {
+    const cb = `${window.location.origin}/separationagreement/auth/callback`;
+    window.location.href = hubRedirect('flowscrow', cb, '/');
   }
+  const hint =
+    name === 'Estefanía Ferrera' ? 'Yours is your cryptocoatl email.' :
+    name === 'Russell Herod' ? 'Yours is your cryptokoh email.' : '';
   return (
     <div className="v-card v-noprint" style={{ borderColor: 'rgba(245,215,122,.45)', marginBottom: 18 }}>
       <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Verify with FBID to sign &amp; download</div>
-      <p className="v-lead" style={{ fontSize: 13.5, margin: '6px 0 10px' }}>
+      <p className="v-lead" style={{ fontSize: 13.5, margin: '6px 0 12px' }}>
         Your code opens the vault to read. To <b style={{ color: 'var(--v-ink)' }}>sign or download</b> as {name},
-        verify with your FBID — the login email must match you. {name === 'Estefanía Ferrera' ? 'Yours is your cryptocoatl email.' : ''}
+        log in with your FBID — your email must match you. {hint} You’ll log in at FBID and come straight back here,
+        verified, on the signature.
       </p>
-      {sent ? (
-        <p style={{ color: 'var(--v-gold)', fontSize: 14 }}>Magic link sent to <b>{email}</b>. Open it on this device — you’ll return here verified.</p>
-      ) : (
-        <form onSubmit={go} style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input className="field" type="email" required placeholder="your FBID email" value={email}
-            onChange={(e) => setEmail(e.target.value)} style={{ flex: 1, minWidth: 220 }} />
-          <button className="vbtn vbtn-gold" type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send magic link'}</button>
-        </form>
-      )}
-      {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 8 }}>{err}</p>}
+      <button className="vbtn vbtn-gold" onClick={go}>Verify with FBID →</button>
     </div>
   );
 }
