@@ -17,10 +17,23 @@ interface Me {
   can_manage_team: boolean;
   is_super: boolean;
 }
+interface TeamProfile {
+  name?: string; phone?: string; city?: string; areas?: string[]; availability?: string;
+  vehicle?: string; license?: string; experience?: string; motivation?: string;
+}
 interface Member {
   id: string; email: string; name: string | null; role: Role; status: Status;
   features: Feature[]; created_at: string; activated_at: string | null; invited_by_email: string | null;
+  profile?: TeamProfile; suggested_role?: string | null; suggested_features?: Feature[]; applied_at?: string | null; is_applicant?: boolean;
 }
+const AREA_LABELS: Record<string, string> = {
+  operacion: 'Operación', recoleccion: 'Recolección', ventas: 'Ventas/eventos',
+  mantenimiento: 'Mantenimiento', comunidad: 'Comunidad', coordinacion: 'Coordinación',
+};
+const AVAIL_LABELS: Record<string, string> = {
+  por_evento: 'Por evento', fines_de_semana: 'Fines de semana',
+  entre_semana: 'Entre semana', tiempo_completo: 'Tiempo completo',
+};
 interface Booking {
   id: string; event_name: string; contact_name: string | null; contact_email: string | null;
   contact_phone: string | null; event_date: string | null; location: string | null;
@@ -455,11 +468,56 @@ function Team({ me, members, setMembers, flash }: {
     setBusy(false);
     if (ok) setInv({ email: '', name: '', role: 'member' });
   }
+  async function approve(m: Member) {
+    const role = m.suggested_role === 'admin' && me.is_super ? 'admin' : 'member';
+    await call('approve_applicant', { p_member_id: m.id, p_role: role, p_features: m.suggested_features ?? [] }, 'Miembro aprobado.');
+  }
+  const applicants = members.filter((m) => m.is_applicant);
+  const roster = members.filter((m) => !m.is_applicant);
 
   return (
     <section>
       <h1 className="st-h1">Equipo</h1>
       <p className="st-muted">Invita personas y define exactamente a qué tiene acceso cada quien.</p>
+
+      {applicants.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <div className="st-eyebrow">Solicitudes por revisar ({applicants.length})</div>
+          <div className="st-list" style={{ marginTop: 10 }}>
+            {applicants.map((m) => {
+              const role: Role = m.suggested_role === 'admin' && me.is_super ? 'admin' : 'member';
+              return (
+                <div key={m.id} className="st-mcard invited">
+                  <div className="st-mhead">
+                    <div>
+                      <span className="st-mname">{m.profile?.name || m.name || m.email}</span>
+                      <span className="st-memail">{m.email}{m.profile?.phone ? ` · ${m.profile.phone}` : ''}{m.profile?.city ? ` · ${m.profile.city}` : ''}</span>
+                    </div>
+                    <span className="st-statuschip invited">Solicitud</span>
+                  </div>
+                  <div className="st-applicant">
+                    {m.profile?.areas?.length ? <p><b>Áreas:</b> {m.profile.areas.map((a) => AREA_LABELS[a] || a).join(', ')}</p> : null}
+                    {m.profile?.availability ? <p><b>Disponibilidad:</b> {AVAIL_LABELS[m.profile.availability] || m.profile.availability}</p> : null}
+                    {m.profile?.vehicle ? <p><b>Vehículo:</b> {m.profile.vehicle}{m.profile?.license ? ` · Licencia: ${m.profile.license}` : ''}</p> : null}
+                    {m.profile?.experience ? <p><b>Experiencia:</b> {m.profile.experience}</p> : null}
+                    {m.profile?.motivation ? <p><b>Motivación:</b> {m.profile.motivation}</p> : null}
+                  </div>
+                  <div className="st-mctrl">
+                    <span className="st-inline"><span>Sugerido</span>
+                      <span className={`st-rolechip ${role}`}>{ROLE_LABEL[role]}</span>
+                      {(m.suggested_features ?? []).map((fk) => (
+                        <span key={fk} className="st-chip on">{FEATURES.find((x) => x.key === fk)?.label || fk}</span>
+                      ))}
+                    </span>
+                    <button className="st-btn gold xs" onClick={() => approve(m)}>Aprobar</button>
+                    <button className="st-btn ghost xs" onClick={() => call('set_status', { p_member_id: m.id, p_status: 'suspended' }, 'Solicitud archivada.')}>Archivar</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="st-card" style={{ marginTop: 18 }}>
         <div className="st-eyebrow">Invitar al equipo</div>
@@ -479,7 +537,7 @@ function Team({ me, members, setMembers, flash }: {
       </div>
 
       <div className="st-list" style={{ marginTop: 18 }}>
-        {members.map((m) => {
+        {roster.map((m) => {
           const isSelf = m.id === me.member!.id;
           const elevated = m.role === 'admin' || m.role === 'super_admin';
           return (
@@ -870,6 +928,8 @@ const CSS = `
 .st-mctrl{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(207,168,90,.12)}
 .st-inline{display:flex;align-items:center;gap:9px}.st-inline>span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .st-allaccess{font-size:12.5px;color:var(--gold)}
+.st-applicant{margin-top:12px;font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.st-applicant b{color:var(--cream);font-weight:500}.st-applicant p{margin:0}
 .st-invrow{display:grid;grid-template-columns:1.4fr 1fr .8fr auto;gap:10px;margin-top:12px}
 .st-invrow input,.st-invrow select{background:rgba(8,6,4,.6);border:1px solid var(--gold-line);border-radius:7px;color:var(--cream);padding:10px 12px;font-family:inherit;font-size:14px}
 /* audit */
