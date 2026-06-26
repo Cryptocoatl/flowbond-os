@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { keccak256, toHex } from 'viem';
-import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES } from '@/lib/documents';
+import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES, FINALIZE_STEPS, GUIDE_FAQ } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
@@ -49,9 +49,10 @@ export function KeyVault() {
   const [turning, setTurning] = useState(false);
   const [access, setAccess] = useState<{ code: string; r: Resolved } | null>(null);
 
-  // Resume after an FBID login round-trip (code persisted in sessionStorage).
+  // Resume after an FBID login round-trip. localStorage (not sessionStorage) so the
+  // code survives the magic-link opening in a new tab — you land back signed-in.
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? sessionStorage.getItem(SS_KEY) : null;
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(SS_KEY) : null;
     if (!saved) return;
     vaultResolve(saved).then((r) => { if (r) setAccess({ code: saved, r }); }).catch(() => {});
   }, []);
@@ -62,7 +63,7 @@ export function KeyVault() {
     try { r = await vaultResolve(code); } catch { /* ignore */ }
     if (!r) { setTurning(false); setErr(true); setTimeout(() => setPin(''), 600); return; }
     if (r.kind === 'witness') { try { await vaultWitness(code); } catch { /* non-fatal */ } }
-    sessionStorage.setItem(SS_KEY, code);
+    localStorage.setItem(SS_KEY, code);
     setTimeout(() => setAccess({ code, r: r! }), 1100);
   }
 
@@ -148,6 +149,74 @@ function StandingPanel() {
   );
 }
 
+/* ── Russell's step-by-step finalize guide + ClaudIA chat ── */
+function RussellGuide({ sigs, authorized }: { sigs: Signature[]; authorized: boolean }) {
+  const done = (key: string) => {
+    if (key === 'fbid') return authorized;
+    if (key === 'sign-agreement') return !!sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
+    if (key === 'sign-ack') return !!sigs.find((s) => s.party_role === 'russell' && s.document === 'acknowledgment');
+    return false;
+  };
+  return (
+    <section style={{ marginBottom: 28 }}>
+      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Your guide · finalize every step</div>
+      <h2 className="v-h2">Russell — here’s exactly how to close, step by step</h2>
+      <div className="v-card" style={{ display: 'grid', gap: 0, marginTop: 12 }}>
+        {FINALIZE_STEPS.map((s, i) => {
+          const d = done(s.key);
+          return (
+            <div key={s.n} style={{ display: 'flex', gap: 14, padding: '14px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none' }}>
+              <div style={{ width: 30, height: 30, flexShrink: 0, borderRadius: '50%', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 14, background: d ? '#8FA98F' : 'rgba(124,77,255,.18)', color: d ? '#14241a' : 'var(--v-violet)', border: d ? 'none' : '1px solid rgba(179,136,255,.4)' }}>{d ? '✓' : s.n}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{s.title}</div>
+                <p className="v-lead" style={{ margin: '3px 0 0', fontSize: 13.5 }}>{s.detail}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <GuideChat />
+    </section>
+  );
+}
+
+function GuideChat() {
+  const [msgs, setMsgs] = useState<{ who: 'guide' | 'you'; text: string }[]>([
+    { who: 'guide', text: 'Hi Russell — I’m ClaudIA, your guide for this. Ask me anything about finalizing, or tap a question below.' },
+  ]);
+  const [input, setInput] = useState('');
+  function answer(text: string) {
+    const t = text.toLowerCase();
+    const hit = GUIDE_FAQ.find((f) => f.keys.some((k) => t.includes(k)));
+    return hit ? hit.a : 'I can help with: verifying FBID, signing, the transfers (Exhibit 3), what “Early Co-founder” means, why there’s no lawyer, and what happens after you sign. Tap a question below.';
+  }
+  function send(text: string) {
+    const q = text.trim();
+    if (!q) return;
+    setMsgs((m) => [...m, { who: 'you', text: q }, { who: 'guide', text: answer(q) }]);
+    setInput('');
+  }
+  return (
+    <div className="v-card v-noprint" style={{ marginTop: 14 }}>
+      <div className="v-eyebrow" style={{ color: 'var(--v-violet)' }}>Ask ClaudIA · your guide</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '10px 0', maxHeight: 280, overflowY: 'auto' }}>
+        {msgs.map((m, i) => (
+          <div key={i} style={{ alignSelf: m.who === 'you' ? 'flex-end' : 'flex-start', maxWidth: '85%', padding: '9px 12px', borderRadius: 12, fontSize: 13.5, lineHeight: 1.5, background: m.who === 'you' ? 'rgba(245,215,122,.16)' : 'rgba(124,77,255,.14)', border: '1px solid rgba(179,136,255,.2)' }}>{m.text}</div>
+        ))}
+      </div>
+      <div className="tech-row">
+        {GUIDE_FAQ.map((f) => (
+          <button key={f.q} className="chip" style={{ cursor: 'pointer' }} onClick={() => send(f.q)}>{f.q}</button>
+        ))}
+      </div>
+      <form onSubmit={(e) => { e.preventDefault(); send(input); }} style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <input className="field" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your question…" style={{ flex: 1 }} />
+        <button className="vbtn vbtn-ghost" type="submit">Send</button>
+      </form>
+    </div>
+  );
+}
+
 /* ── FBID verification gate for signers (email → magic link) ── */
 function FbidGate({ name }: { name: string }) {
   const [email, setEmail] = useState('');
@@ -202,6 +271,13 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
       sessionEmail().then(setEmail).catch(() => {});
     }
   }, [code, isSigner]);
+  // Once verified (e.g. returning from FBID login), land on the agreement signature.
+  useEffect(() => {
+    if (isSigner && authorized) {
+      const t = setTimeout(() => document.getElementById('sign')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+      return () => clearTimeout(t);
+    }
+  }, [isSigner, authorized]);
   const refresh = () => { vaultSignatures().then(setSigs).catch(() => {}); };
 
   const note = r.person_key ? PERSONAL[r.person_key] : null;
@@ -234,6 +310,8 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         </p>
         {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>
+
+      {r.person_key === 'russell' && <RussellGuide sigs={sigs} authorized={authorized} />}
 
       <StandingPanel />
 

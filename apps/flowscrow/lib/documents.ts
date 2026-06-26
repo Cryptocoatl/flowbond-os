@@ -74,14 +74,33 @@ export const MESSAGE = {
   signoff: 'With genuine respect and thanks,\nEstefanía Ferrera',
 };
 
+// Russell's clear path to finalize, every step.
+export const FINALIZE_STEPS = [
+  { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” enter cryptokoh@gmail.com, and open the magic link from your inbox. You’ll return here verified — that’s what unlocks signing and download. No password, ever.' },
+  { n: 2, key: 'read', title: 'Read your recognition & the Agreement', detail: 'Read your note, your Early Co-founder recognition (DANZ & FlowB), and the full Separation Agreement. If any detail is wrong or sells you short, tell Estefanía before you sign — she’ll fix it.' },
+  { n: 3, key: 'sign-agreement', title: 'Sign the Separation Agreement', detail: 'Once verified, press “Sign as Russell” on Document 1. Your signature is recorded with a cryptographic fingerprint and a timestamp on the audit trail.' },
+  { n: 4, key: 'sign-ack', title: 'Sign the Acknowledgment (Exhibit 5)', detail: 'Sign Document 2 — your Early Co-founder Acknowledgment, yours to use on your CV, LinkedIn, anywhere.' },
+  { n: 5, key: 'transfer', title: 'Hand over the transfers (Exhibit 3)', detail: 'Complete each handover so Estefanía can verify it: the domains (flowbond.tech, danz.now, flowb.me, pee.network); all repos & credentials; Telegram/Base/Farcaster; Web3 keys (secure channel, off-platform); company crypto to the Company wallet; Mercury; Stripe; Coinbase; Supabase/Vercel/Apple/Google/DNS/secrets; and social de-identification.' },
+  { n: 6, key: 'done', title: 'Closing completes — and we talk next steps', detail: 'Estefanía verifies each transfer. When everything is confirmed and both documents are signed, the closing completes and your recognition is released. Then she’ll reach out about your possibilities on FlowBond.' },
+];
+
+export const GUIDE_FAQ = [
+  { q: 'What do I do first?', a: 'Verify with FBID using cryptokoh@gmail.com (step 1). That single login unlocks signing and download.', keys: ['first', 'start', 'begin', 'fbid', 'login', 'verify'] },
+  { q: 'Is this legally binding?', a: 'Yes — the electronic signatures are binding under the U.S. ESIGN Act and UETA. The document is sealed with a cryptographic fingerprint (Article 11), and binding execution can also run through DocuSign.', keys: ['binding', 'legal', 'valid', 'enforce', 'law'] },
+  { q: 'Do I get equity?', a: '“Early Co-founder” is honorary recognition of your real early contribution to DANZ & FlowB. It confers no equity, ownership, or continuing claim (Article 4) — it’s a true title you can use anywhere, one that survives any scrutiny.', keys: ['equity', 'ownership', 'stake', 'shares', 'cofounder', 'co-founder', 'own'] },
+  { q: 'Why no lawyer?', a: 'Counsel was offered and declined, so instead of any one advisor’s word the agreement stands on objective proof anyone can verify — a cryptographic fingerprint, an immutable audit trail, an on-chain anchor, and named witnesses (Article 11). It’s math, not opinion.', keys: ['lawyer', 'counsel', 'attorney', 'fake', 'mexican'] },
+  { q: 'What are the transfers?', a: 'Step 5: hand over domains, repos & credentials, comms accounts, Web3 keys (secure channel), company crypto, Mercury, Stripe, Coinbase, infrastructure, and social de-identification. Estefanía verifies each before the closing completes.', keys: ['transfer', 'domain', 'repo', 'keys', 'crypto', 'mercury', 'stripe', 'coinbase', 'handover', 'exhibit', 'asset'] },
+  { q: 'What happens after I sign?', a: 'Estefanía verifies the transfers; when everything’s confirmed, your recognition is released and she reaches out about next steps on FlowBond.', keys: ['after', 'next', 'then', 'finish', 'done', 'release', 'complete'] },
+];
+
 // Part 0 — the full, official Separation & Transition Agreement (primary document).
 // Complete framework, NOT legal advice — review with counsel. Crypto-validated.
 export const AGREEMENT = {
   title: 'Separation & Transition Agreement',
   subtitle: 'FlowBond / FlowBond Tech',
-  effective: '____________  *(EDITABLE — effective date)*',
+  effective: 'the date of last electronic signature',
   parties:
-    'This Separation & Transition Agreement (the “Agreement”) is made and entered into as of the Effective Date by and between Estefanía Ferrera, an individual, in her personal capacity and on behalf of FlowBond / FlowBond Tech and its products and affiliates (collectively, the “Company”), and Russell Herod, an individual, recognized herein as an Early Co-founder of the DANZ and FlowB workstreams (the “Contributor”). The Company and the Contributor are each a “Party” and together the “Parties.”',
+    'This Separation & Transition Agreement (the “Agreement”) is made and entered into as of the Effective Date by and between Estefanía Ferrera, an individual, in her personal capacity and on behalf of FlowBond / FlowBond Tech, a Texas C corporation, and its products and affiliates (collectively, the “Company”), and Russell Herod, an individual, recognized herein as an Early Co-founder of the DANZ and FlowB workstreams (the “Contributor”). The Company and the Contributor are each a “Party” and together the “Parties.”',
   recitals: [
     'WHEREAS, the Company operates the FlowBond ecosystem, which was founded, owned, and principally built by Estefanía Ferrera;',
     'WHEREAS, the Contributor made a real, early contribution to the Company, principally on the DANZ and FlowB (FlowBondTech) workstreams, and the Company recognizes him as an “Early Co-founder” of those workstreams in honorary and historical acknowledgment of that contribution;',
@@ -195,7 +214,7 @@ export const AGREEMENT = {
     {
       n: '13', t: 'Governing Law; Dispute Resolution',
       paras: [
-        '13.1  This Agreement is governed by, and construed in accordance with, the laws of [____________ *(EDITABLE — jurisdiction)*], without regard to conflict-of-laws rules.',
+        '13.1  This Agreement is governed by, and construed in accordance with, the laws of the State of Texas, United States (where the Company is incorporated as a C corporation), without regard to conflict-of-laws rules.',
         '13.2  The Parties shall first attempt to resolve any dispute in good faith. Any unresolved dispute shall be submitted to the courts or arbitral forum of the governing jurisdiction, and the cryptographic, on-chain, and witnessed records described in Article 11 shall be admissible as evidence of the document’s integrity and the Parties’ actions.',
       ],
     },
@@ -230,7 +249,7 @@ export const ACKNOWLEDGMENT = {
   issuedBy: 'Estefanía Ferrera, on behalf of FlowBond / FlowBond Tech',
   recognitionOf: 'Russell Herod',
   role: 'Early Co-founder — DANZ & FlowB',
-  period: '2025-09 → 2026  *(EDITABLE — confirm exact dates)*',
+  period: 'August 13, 2025 → March 30, 2026',
   scope: [
     'Recognized as an Early Co-founder of the DANZ and FlowB (FlowBondTech) workstreams, for his real, early contribution at the start of that work.',
     'Contributed time, skill and engineering effort — including the move-to-earn (DANZ) stack and the early FlowB agent service. *(EDITABLE — add or refine specific items.)*',
@@ -247,9 +266,9 @@ export const ACKNOWLEDGMENT = {
     },
     {
       name: 'Deven',
-      role: 'Contributor *(EDITABLE — Deven’s role)*',
+      role: 'Contributor · September 3, 2025 → November 3, 2025 *(EDITABLE — confirm start day)*',
       text:
-        'The Company also gratefully acknowledges the contribution of Deven to FlowBond. *(EDITABLE — add Deven’s specific contribution and dates.)* Deven is free to reference this acknowledgment in his professional materials.',
+        'The Company also gratefully acknowledges the contribution of Deven to FlowBond during September 3, 2025 – November 3, 2025. *(EDITABLE — add Deven’s specific contribution.)* Deven is free to reference this acknowledgment in his professional materials.',
     },
   ],
   scopeClarity:
