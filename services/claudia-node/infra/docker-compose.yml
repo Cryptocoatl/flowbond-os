@@ -1,0 +1,58 @@
+# ════════════════════════════════════════════════════════════════════════
+#  ClaudIA hub — Matrix homeserver + bridges + the always-on node.
+#  Single-box deploy (e.g. a Hetzner VPS). For Fly.io, run conduwuit + bridges
+#  as their own apps/machines and deploy the node from its Dockerfile.
+#
+#  This is a STARTING POINT: the bridges need their registration files generated
+#  on first run and referenced by the homeserver (see CLAUDIA-NODE.md §4).
+# ════════════════════════════════════════════════════════════════════════
+version: "3.8"
+
+services:
+  # ── Matrix homeserver (lightweight Rust single-binary) ──────────────────
+  conduwuit:
+    image: ghcr.io/girlbossceo/conduwuit:latest
+    restart: unless-stopped
+    environment:
+      CONDUWUIT_SERVER_NAME: "${MATRIX_SERVER_NAME}"      # e.g. matrix.your-domain.tld
+      CONDUWUIT_ALLOW_REGISTRATION: "false"
+      CONDUWUIT_PORT: "6167"
+      CONDUWUIT_DATABASE_BACKEND: "rocksdb"
+    volumes:
+      - conduwuit_data:/var/lib/conduwuit
+      - ./registrations:/registrations:ro                 # bridge appservice registrations
+    ports:
+      - "127.0.0.1:6167:6167"                             # put a TLS reverse-proxy (Caddy) in front
+
+  # ── WhatsApp bridge ─────────────────────────────────────────────────────
+  mautrix-whatsapp:
+    image: dock.mau.dev/mautrix/whatsapp:latest
+    restart: unless-stopped
+    depends_on: [conduwuit]
+    volumes:
+      - whatsapp_data:/data
+      - ./registrations:/registrations
+
+  # ── Telegram bridge ─────────────────────────────────────────────────────
+  mautrix-telegram:
+    image: dock.mau.dev/mautrix/telegram:latest
+    restart: unless-stopped
+    depends_on: [conduwuit]
+    volumes:
+      - telegram_data:/data
+      - ./registrations:/registrations
+
+  # ── ClaudIA — the always-on agent ───────────────────────────────────────
+  claudia-node:
+    build: ..
+    restart: unless-stopped
+    depends_on: [conduwuit]
+    env_file: ../.env
+    volumes:
+      - claudia_data:/app/data
+
+volumes:
+  conduwuit_data:
+  whatsapp_data:
+  telegram_data:
+  claudia_data:

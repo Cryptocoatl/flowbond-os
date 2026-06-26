@@ -2,3 +2,6 @@ packages:
   - "apps/*"
   - "services/*"
   - "packages/*"
+  # claudia-node deploys as its own Docker image (own npm install) — keep it OUT
+  # of the workspace so its deps never touch the monorepo lockfile / Vercel build.
+  - "!services/claudia-node"

@@ -1,0 +1,25 @@
+# Fly.io — ClaudIA always-on node. A single persistent machine that holds the
+# Matrix connection and serves the membership. No public HTTP service (the bot
+# is an outbound long-lived client), so no [http_service] block — just keep one
+# machine always running with a volume for its sync/device state.
+
+app = "claudia-node"
+primary_region = "qro"   # Querétaro (MX) — close to the membership; pick yours
+
+[build]
+  dockerfile = "Dockerfile"
+
+[mounts]
+  source = "claudia_data"
+  destination = "/app/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Keep exactly one instance always on (never scale to zero — she must stay awake).
+[deploy]
+  strategy = "immediate"
+
+[experimental]
+  auto_rollback = true
