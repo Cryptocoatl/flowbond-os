@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { keccak256, toHex } from 'viem';
 import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES, FINALIZE_STEPS, GUIDE_FAQ } from '@/lib/documents';
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
@@ -41,6 +41,87 @@ function richText(s: string) {
     if (p.startsWith('*') && p.endsWith('*')) return <em key={i}>{p.slice(1, -1)}</em>;
     return <span key={i}>{p}</span>;
   });
+}
+
+/* ── living cryptographic Proof Seal — a unique animated sigil derived from the
+   document's keccak256 fingerprint. The hash made visible. Pure canvas, no deps. ── */
+function ProofSeal({ hash, size = 220, sealed = false }: { hash: string; size?: number; sealed?: boolean }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    ctx.scale(dpr, dpr);
+    const hex = hash.replace(/^0x/, '');
+    const b: number[] = [];
+    for (let i = 0; i < hex.length; i += 2) b.push(parseInt(hex.substr(i, 2), 16) || 0);
+    const cx = size / 2;
+    const cy = size / 2;
+    const rings = 4 + (b[0] % 4);
+    let t = 0;
+    let raf = 0;
+    const draw = () => {
+      t += 0.006;
+      ctx.clearRect(0, 0, size, size);
+      // soft core glow
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 0.5);
+      g.addColorStop(0, sealed ? 'rgba(245,215,122,0.16)' : 'rgba(124,77,255,0.16)');
+      g.addColorStop(1, 'rgba(10,4,24,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      for (let r = 0; r < rings; r++) {
+        const radius = size * 0.1 + r * ((size * 0.36) / rings);
+        const nodes = 6 + (b[(r + 1) % b.length] % 11);
+        const rot = t * (r % 2 ? -1 : 1) * (0.35 + (b[(r + 2) % b.length] % 5) * 0.08);
+        const hue = sealed ? 44 + (b[r % b.length] % 14) : 262 + (b[r % b.length] % 64);
+        // ring path with wobble
+        ctx.beginPath();
+        for (let n = 0; n <= nodes; n++) {
+          const a = rot + (n / nodes) * Math.PI * 2;
+          const rr = radius + Math.sin(t * 2 + n * 1.3 + r) * size * 0.013;
+          const x = cx + Math.cos(a) * rr;
+          const y = cy + Math.sin(a) * rr;
+          n === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = `hsla(${hue},90%,72%,${0.55 - r * 0.05})`;
+        ctx.lineWidth = 1.1;
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = `hsla(${hue},90%,68%,0.85)`;
+        ctx.stroke();
+        // nodes + radial spokes
+        for (let n = 0; n < nodes; n++) {
+          const a = rot + (n / nodes) * Math.PI * 2;
+          const x = cx + Math.cos(a) * radius;
+          const y = cy + Math.sin(a) * radius;
+          const pulse = 1.4 + Math.sin(t * 3 + n + r) * 1;
+          const gold = b[(r * 3 + n) % b.length] % 5 === 0;
+          ctx.beginPath();
+          ctx.arc(x, y, (b[(r + n) % b.length] % 2) + pulse, 0, Math.PI * 2);
+          ctx.fillStyle = gold ? '#f5d77a' : `hsla(${hue},92%,76%,0.95)`;
+          ctx.fill();
+        }
+      }
+      // center infinity, breathing
+      ctx.shadowBlur = 22;
+      ctx.shadowColor = sealed ? '#f5d77a' : '#b388ff';
+      ctx.fillStyle = sealed ? '#f5d77a' : '#cdb4ff';
+      ctx.font = `${size * 0.15}px Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha = 0.75 + Math.sin(t * 2) * 0.22;
+      ctx.fillText('∞', cx, cy);
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, [hash, size, sealed]);
+  return <canvas ref={ref} style={{ width: size, height: size, display: 'block', margin: '0 auto' }} aria-hidden />;
 }
 
 export function KeyVault() {
@@ -507,6 +588,12 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
           can verify — not on any one advisor’s word. This is the seal of the exact text above; change a single
           character and it changes.
         </p>
+        <div style={{ textAlign: 'center', margin: '8px 0 4px' }}>
+          <ProofSeal hash={fingerprint} size={236} sealed={!!stephSigned && !!russellSigned} />
+          <div style={{ fontSize: 12.5, color: stephSigned && russellSigned ? 'var(--v-gold)' : 'var(--v-dim)', marginTop: 2 }}>
+            {stephSigned && russellSigned ? '✦ Sealed — both parties signed' : 'Your agreement, made visible — a living sigil from its fingerprint. No two are alike.'}
+          </div>
+        </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '10px 12px', borderRadius: 10 }}>keccak256 · {fingerprint}</div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 10, fontSize: 12.5, color: 'var(--v-dim)' }}>
           <span>🔒 Immutable audit trail</span><span>⛓ Anchorable on Base</span><span>🆔 FBID-verified e-signature (ESIGN/UETA)</span><span>👁 Witnessed</span>
