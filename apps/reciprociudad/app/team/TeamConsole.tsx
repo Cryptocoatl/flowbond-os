@@ -12,11 +12,42 @@ type PickupStatus = 'requested' | 'scheduled' | 'picked_up' | 'dropped_off' | 'd
 type BookingStatus = 'lead' | 'quoted' | 'confirmed' | 'deployed' | 'closed' | 'lost';
 
 interface Me {
-  member: { id: string; email: string; name: string | null; role: Role; status: Status; activated_at: string | null } | null;
+  member: { id: string; email: string; name: string | null; role: Role; status: Status; activated_at: string | null; xp?: number; skills?: string[] } | null;
   features: Feature[];
   can_manage_team: boolean;
   is_super: boolean;
 }
+type MissionStatus = 'open' | 'claimed' | 'in_progress' | 'submitted' | 'validated' | 'done' | 'canceled';
+interface Mission {
+  id: string; title: string; description: string | null; kind: string; node_id: string | null; node_name: string | null;
+  required_skills: string[]; assigned_to: string | null; assigned_name: string | null; status: MissionStatus;
+  reward_xp: number; due_at: string | null; created_at: string; is_mine: boolean; skill_match: boolean;
+}
+interface Signal {
+  id: string; kind: string; ref_type: string | null; payload: Record<string, unknown>;
+  requires_validation: boolean; required_parties: number; validation_state: string;
+  created_at: string; node_name: string | null; actor_name: string | null; confirms: number;
+}
+interface PendingSignal {
+  id: string; kind: string; ref_type: string | null; ref_id: string | null; payload: Record<string, unknown>; required_parties: number;
+  created_at: string; node_name: string | null; confirmed_parties: string[]; confirms: number;
+}
+const MISSION_KINDS: { key: string; label: string }[] = [
+  { key: 'recoleccion', label: 'Recolección' }, { key: 'montaje', label: 'Montaje' },
+  { key: 'mantenimiento', label: 'Mantenimiento' }, { key: 'ventas', label: 'Ventas' },
+  { key: 'comunidad', label: 'Comunidad' }, { key: 'custom', label: 'Otra' },
+];
+const MISSION_STATUS_LABEL: Record<string, string> = {
+  open: 'Abierta', claimed: 'Tomada', in_progress: 'En curso', submitted: 'En validación',
+  validated: 'Validada', done: 'Completada', canceled: 'Cancelada',
+};
+const SIGNAL_LABELS: Record<string, string> = {
+  pickup_requested: 'Recolección solicitada', pickup_dispatched: 'Enviada a RefiRides',
+  pickup_picked_up: 'Cubetas recogidas', pickup_dropped_off: 'Cubetas entregadas', pickup_done: 'Recolección cerrada',
+  compost_received: '♻️ Compostaje recibido → FlowGarden',
+  mission_created: 'Misión creada', mission_assigned: 'Misión asignada', mission_claimed: 'Misión tomada',
+  mission_submitted: 'Misión enviada a validar', mission_done: 'Misión completada',
+};
 interface TeamProfile {
   name?: string; phone?: string; city?: string; areas?: string[]; availability?: string;
   vehicle?: string; license?: string; experience?: string; motivation?: string;
@@ -91,7 +122,10 @@ export default function TeamConsole() {
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [pickups, setPickups] = useState<Pickup[]>([]);
-  const [tab, setTab] = useState<'inicio' | 'bookings' | 'logistics' | 'team' | 'audit'>('inicio');
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [pending, setPending] = useState<PendingSignal[]>([]);
+  const [tab, setTab] = useState<'inicio' | 'micelio' | 'bookings' | 'logistics' | 'team' | 'audit'>('inicio');
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; msg: string } | null>(null);
 
   const flash = useCallback((kind: 'ok' | 'err', msg: string) => {
@@ -120,6 +154,13 @@ export default function TeamConsole() {
       const { data } = await c.rpc('list_audit', { p_limit: 200 });
       if (data) setAudit(data as AuditRow[]);
     }
+    // MiCelio: the comms+coordination mesh is visible to every active member
+    const [feed, mis, pend] = await Promise.all([
+      c.rpc('micelio_feed', { p_limit: 80 }), c.rpc('list_missions'), c.rpc('micelio_pending'),
+    ]);
+    if (feed.data) setSignals(feed.data as Signal[]);
+    if (mis.data) setMissions(mis.data as Mission[]);
+    if (pend.data) setPending(pend.data as PendingSignal[]);
   }, [sb]);
 
   const bootstrap = useCallback(async () => {
@@ -171,9 +212,11 @@ export default function TeamConsole() {
       {phase === 'ready' && me?.member && (
         <Console
           me={me} members={members} bookings={bookings} audit={audit} nodes={nodes} pickups={pickups}
+          missions={missions} signals={signals} pending={pending}
           tab={tab} setTab={setTab}
           setMembers={setMembers} setBookings={setBookings} setAudit={setAudit}
           setNodes={setNodes} setPickups={setPickups}
+          setMissions={setMissions} setSignals={setSignals} setPending={setPending}
           flash={flash} signOut={signOut}
         />
       )}
@@ -243,18 +286,21 @@ function Login() {
 /* ── console shell ─────────────────────────────────────────────────────────── */
 function Console(props: {
   me: Me; members: Member[]; bookings: Booking[]; audit: AuditRow[]; nodes: Node[]; pickups: Pickup[];
-  tab: 'inicio' | 'bookings' | 'logistics' | 'team' | 'audit';
-  setTab: (t: 'inicio' | 'bookings' | 'logistics' | 'team' | 'audit') => void;
+  missions: Mission[]; signals: Signal[]; pending: PendingSignal[];
+  tab: 'inicio' | 'micelio' | 'bookings' | 'logistics' | 'team' | 'audit';
+  setTab: (t: 'inicio' | 'micelio' | 'bookings' | 'logistics' | 'team' | 'audit') => void;
   setMembers: (m: Member[]) => void; setBookings: (b: Booking[]) => void; setAudit: (a: AuditRow[]) => void;
   setNodes: (n: Node[]) => void; setPickups: (p: Pickup[]) => void;
+  setMissions: (m: Mission[]) => void; setSignals: (s: Signal[]) => void; setPending: (p: PendingSignal[]) => void;
   flash: (k: 'ok' | 'err', m: string) => void; signOut: () => void;
 }) {
-  const { me, members, bookings, audit, nodes, pickups, tab, setTab, setMembers, setBookings, setAudit, setNodes, setPickups, flash, signOut } = props;
+  const { me, members, bookings, audit, nodes, pickups, missions, signals, pending, tab, setTab, setMembers, setBookings, setAudit, setNodes, setPickups, setMissions, setSignals, setPending, flash, signOut } = props;
   const canBookings = me.features.includes('bookings') || me.can_manage_team;
   const canLogistics = me.features.includes('logistics') || me.can_manage_team;
   const canAudit = me.features.includes('audit');
   const nav: { key: typeof tab; label: string; show: boolean }[] = [
     { key: 'inicio', label: 'Inicio', show: true },
+    { key: 'micelio', label: 'MiCelio', show: true },
     { key: 'bookings', label: 'Reservas', show: canBookings },
     { key: 'logistics', label: 'Nodos & cubetas', show: canLogistics },
     { key: 'team', label: 'Equipo', show: me.can_manage_team },
@@ -280,6 +326,8 @@ function Console(props: {
 
       <main className="st-main">
         {tab === 'inicio' && <Overview me={me} members={members} bookings={bookings} />}
+        {tab === 'micelio' && <MiCelio me={me} missions={missions} signals={signals} pending={pending} nodes={nodes} members={members}
+          setMissions={setMissions} setSignals={setSignals} setPending={setPending} flash={flash} />}
         {tab === 'bookings' && canBookings && <Bookings me={me} bookings={bookings} members={members} setBookings={setBookings} flash={flash} />}
         {tab === 'logistics' && canLogistics && <Logistics nodes={nodes} pickups={pickups} setNodes={setNodes} setPickups={setPickups} flash={flash} />}
         {tab === 'team' && me.can_manage_team && <Team me={me} members={members} setMembers={setMembers} flash={flash} />}
@@ -604,6 +652,210 @@ function Team({ me, members, setMembers, flash }: {
   );
 }
 
+/* ── MiCelio: missions + two-party validation + the living feed ──────────────── */
+function MiCelio({ me, missions, signals, pending, nodes, members, setMissions, setSignals, setPending, flash }: {
+  me: Me; missions: Mission[]; signals: Signal[]; pending: PendingSignal[]; nodes: Node[]; members: Member[];
+  setMissions: (m: Mission[]) => void; setSignals: (s: Signal[]) => void; setPending: (p: PendingSignal[]) => void;
+  flash: (k: 'ok' | 'err', m: string) => void;
+}) {
+  const [view, setView] = useState<'misiones' | 'validar' | 'red'>('misiones');
+  const [creating, setCreating] = useState(false);
+
+  async function refreshAll() {
+    const c = saniClient();
+    const [mis, feed, pend] = await Promise.all([c.rpc('list_missions'), c.rpc('micelio_feed', { p_limit: 80 }), c.rpc('micelio_pending')]);
+    if (mis.data) setMissions(mis.data as Mission[]);
+    if (feed.data) setSignals(feed.data as Signal[]);
+    if (pend.data) setPending(pend.data as PendingSignal[]);
+  }
+  async function act(fn: string, args: Record<string, unknown>, ok: string) {
+    const { error } = await saniClient().rpc(fn, args);
+    if (error) { flash('err', error.message); return; }
+    await refreshAll(); flash('ok', ok);
+  }
+  async function submitMission(m: Mission) {
+    const note = window.prompt('Nota de entrega (opcional):') ?? '';
+    await act('submit_mission', { p_id: m.id, p_note: note || null }, 'Misión enviada a validar.');
+  }
+
+  const open = missions.filter((m) => m.status === 'open');
+  const mine = missions.filter((m) => m.is_mine && !['done', 'canceled'].includes(m.status));
+
+  return (
+    <section>
+      <div className="st-rowhead">
+        <h1 className="st-h1">MiCelio</h1>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span className="st-xp">✦ {me.member?.xp ?? 0} XP</span>
+          {me.can_manage_team && <button className="st-btn gold sm" onClick={() => setCreating(true)}>+ Nueva misión</button>}
+        </div>
+      </div>
+      <p className="st-muted">La red viva del equipo: misiones, validación de dos partes y trazabilidad del ciclo.</p>
+
+      <div className="st-filters">
+        <button className={`st-pill ${view === 'misiones' ? 'on' : ''}`} onClick={() => setView('misiones')}>Misiones ({open.length + mine.length})</button>
+        <button className={`st-pill ${view === 'validar' ? 'on' : ''}`} onClick={() => setView('validar')}>Por validar ({pending.length})</button>
+        <button className={`st-pill ${view === 'red' ? 'on' : ''}`} onClick={() => setView('red')}>Red viva</button>
+      </div>
+
+      {view === 'misiones' && (
+        missions.length === 0 ? <p className="st-empty">Sin misiones todavía.</p> : (
+          <div className="st-list">
+            {missions.map((m) => (
+              <div key={m.id} className={`st-mcard ${m.status === 'done' ? 'suspended' : ''}`}>
+                <div className="st-mhead">
+                  <div>
+                    <span className="st-mname">{m.title}</span>
+                    <span className="st-memail">
+                      {MISSION_KINDS.find((k) => k.key === m.kind)?.label || m.kind}
+                      {m.node_name ? ` · ${m.node_name}` : ''}{m.assigned_name ? ` · ${m.assigned_name}` : ''}
+                      {m.reward_xp > 0 ? ` · ✦${m.reward_xp}` : ''}
+                    </span>
+                  </div>
+                  <span className={`st-status ${m.status === 'done' ? 'confirmed' : ''}`}>{MISSION_STATUS_LABEL[m.status] || m.status}</span>
+                </div>
+                {(m.required_skills.length > 0 || m.description) && (
+                  <div className="st-applicant">
+                    {m.description ? <p>{m.description}</p> : null}
+                    {m.required_skills.length > 0 ? (
+                      <p><b>Habilidades:</b> {m.required_skills.map((s) => AREA_LABELS[s] || s).join(', ')}{m.skill_match ? ' · ✓ encajas' : ''}</p>
+                    ) : null}
+                  </div>
+                )}
+                <div className="st-mctrl">
+                  {m.status === 'open' && <button className="st-btn gold xs" onClick={() => act('claim_mission', { p_id: m.id }, 'Misión tomada.')}>Tomar</button>}
+                  {m.is_mine && (m.status === 'claimed' || m.status === 'in_progress') && <button className="st-btn gold xs" onClick={() => submitMission(m)}>Entregar</button>}
+                  {m.status === 'submitted' && (me.can_manage_team
+                    ? <button className="st-btn gold xs" onClick={() => act('validate_mission', { p_id: m.id }, 'Misión validada.')}>Validar ✓</button>
+                    : <span className="st-allaccess">En validación…</span>)}
+                  {m.status === 'done' && <span className="st-allaccess">✓ Completada</span>}
+                  {me.can_manage_team && !['done', 'canceled'].includes(m.status) && (
+                    <button className="st-btn ghost xs" onClick={() => act('cancel_mission', { p_id: m.id }, 'Misión cancelada.')}>Cancelar</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {view === 'validar' && (
+        pending.length === 0 ? <p className="st-empty">Nada por validar. Todo en flujo. 🍄</p> : (
+          <div className="st-list">
+            {pending.map((p) => (
+              <div key={p.id} className="st-bcard" style={{ cursor: 'default' }}>
+                <div className="st-bmain">
+                  <span className="st-bname">{SIGNAL_LABELS[p.kind] || p.kind}</span>
+                  <span className="st-bmeta">
+                    {p.node_name ? `${p.node_name} · ` : ''}{(p.payload?.title as string) || ''} · {p.confirms}/{p.required_parties} confirmaciones
+                  </span>
+                </div>
+                <div className="st-bside">
+                  {p.ref_type === 'mission' && me.can_manage_team
+                    ? <button className="st-btn gold xs" onClick={() => act('validate_mission', { p_id: p.ref_id || '' }, 'Validada.')} disabled={!p.ref_id}>Validar misión</button>
+                    : <button className="st-btn gold xs" onClick={() => act('confirm_signal', { p_signal_id: p.id, p_party: 'validator' }, 'Confirmado.')}>Confirmar mi parte</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {view === 'red' && (
+        signals.length === 0 ? <p className="st-empty">La red despierta con la primera acción.</p> : (
+          <div className="st-audit">
+            {signals.map((s) => (
+              <div key={s.id} className="st-arow">
+                <span className="st-adot" style={{ background: s.kind === 'compost_received' ? '#9fd356' : 'var(--gold)' }} />
+                <div className="st-amain">
+                  <span className="st-aact">{SIGNAL_LABELS[s.kind] || s.kind}</span>
+                  <span className="st-ameta">
+                    {s.actor_name || 'sistema'}{s.node_name ? ` · ${s.node_name}` : ''}
+                    {s.payload?.buckets ? ` · ${s.payload.buckets} cubetas` : ''}
+                    {s.requires_validation ? ` · ${s.validation_state === 'validated' ? '✓ validado' : `${s.confirms}/${s.required_parties}`}` : ''}
+                  </span>
+                </div>
+                <time className="st-atime">{new Date(s.created_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}</time>
+              </div>
+            ))}
+          </div>
+        )
+      )}
+
+      {creating && <MissionModal nodes={nodes} members={members} me={me}
+        onClose={() => setCreating(false)}
+        onSaved={(list) => { setMissions(list); setCreating(false); refreshAll(); flash('ok', 'Misión creada.'); }}
+        flash={flash} />}
+    </section>
+  );
+}
+
+function MissionModal({ nodes, members, me, onClose, onSaved, flash }: {
+  nodes: Node[]; members: Member[]; me: Me; onClose: () => void; onSaved: (m: Mission[]) => void; flash: (k: 'ok' | 'err', m: string) => void;
+}) {
+  const [f, setF] = useState({ title: '', description: '', kind: 'recoleccion', node_id: '', assigned_to: '', reward_xp: '10' });
+  const [skills, setSkills] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof f, v: string) => setF((p) => ({ ...p, [k]: v }));
+  const toggleSkill = (k: string) => setSkills((p) => (p.includes(k) ? p.filter((x) => x !== k) : [...p, k]));
+  void me;
+
+  async function save() {
+    if (!f.title.trim()) { flash('err', 'El título es obligatorio.'); return; }
+    setBusy(true);
+    const { data, error } = await saniClient().rpc('create_mission', {
+      p: { title: f.title.trim(), description: f.description.trim(), kind: f.kind, node_id: f.node_id || null,
+        assigned_to: f.assigned_to || null, reward_xp: f.reward_xp || '0', required_skills: skills },
+    });
+    setBusy(false);
+    if (error) { flash('err', error.message); return; }
+    onSaved(data as Mission[]);
+  }
+
+  const assignable = members.filter((m) => m.status === 'active');
+  return (
+    <div className="st-modal" onClick={onClose}>
+      <div className="st-modalcard" onClick={(e) => e.stopPropagation()}>
+        <div className="st-rowhead"><h2 className="st-h2">Nueva misión</h2><button className="st-link" onClick={onClose}>Cerrar</button></div>
+        <Fld label="Título *"><input value={f.title} onChange={(e) => set('title', e.target.value)} /></Fld>
+        <Fld label="Descripción"><textarea rows={2} value={f.description} onChange={(e) => set('description', e.target.value)} /></Fld>
+        <div className="st-grid2">
+          <Fld label="Tipo">
+            <select value={f.kind} onChange={(e) => set('kind', e.target.value)}>
+              {MISSION_KINDS.map((k) => <option key={k.key} value={k.key}>{k.label}</option>)}
+            </select>
+          </Fld>
+          <Fld label="Nodo (opcional)">
+            <select value={f.node_id} onChange={(e) => set('node_id', e.target.value)}>
+              <option value="">— Ninguno —</option>
+              {nodes.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
+            </select>
+          </Fld>
+          <Fld label="Asignar a (opcional)">
+            <select value={f.assigned_to} onChange={(e) => set('assigned_to', e.target.value)}>
+              <option value="">— Abierta a quien la tome —</option>
+              {assignable.map((m) => <option key={m.id} value={m.id}>{m.name || m.email}</option>)}
+            </select>
+          </Fld>
+          <Fld label="Recompensa XP"><input inputMode="numeric" value={f.reward_xp} onChange={(e) => set('reward_xp', e.target.value.replace(/\D/g, ''))} /></Fld>
+        </div>
+        <div className="st-field">
+          <label>Habilidades requeridas</label>
+          <div className="st-chips">
+            {Object.entries(AREA_LABELS).map(([k, label]) => (
+              <button key={k} type="button" className={`st-chip ${skills.includes(k) ? 'on' : ''}`} onClick={() => toggleSkill(k)}>{skills.includes(k) ? '✓ ' : ''}{label}</button>
+            ))}
+          </div>
+        </div>
+        <div className="st-rowend" style={{ marginTop: 16 }}>
+          <button className="st-btn ghost" onClick={onClose}>Cancelar</button>
+          <button className="st-btn gold" disabled={busy} onClick={save}>{busy ? 'Creando…' : 'Crear misión'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── logistics: fixed nodes + cubeta pickups (RefiRides) ─────────────────────── */
 function Logistics({ nodes, pickups, setNodes, setPickups, flash }: {
   nodes: Node[]; pickups: Pickup[]; setNodes: (n: Node[]) => void; setPickups: (p: Pickup[]) => void;
@@ -917,6 +1169,7 @@ const CSS = `
 .st-status.confirmed,.st-status.deployed{color:#1a140a;background:var(--gold);border-color:var(--gold)}
 .st-status.closed{color:var(--mut)}.st-status.lost{color:#ffc7bf;border-color:rgba(255,111,94,.4)}
 .st-pickstatus{background:rgba(8,6,4,.6);border:1px solid var(--gold-line);border-radius:6px;color:var(--cream);padding:6px 9px;font-family:inherit;font-size:12.5px}
+.st-xp{font-size:12.5px;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:4px 12px;background:rgba(207,168,90,.12)}
 /* member cards */
 .st-mcard{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--gold-line);border-radius:10px;padding:16px}
 .st-mcard.suspended{opacity:.6}
