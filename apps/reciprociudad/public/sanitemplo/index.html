@@ -61,7 +61,9 @@ h1,h2,h3,.disp{font-family:'Cinzel',serif;font-weight:500;line-height:1.12}
 
 /* cold open */
 .open .inner{text-align:center}
-.open .title{font-size:clamp(44px,11vw,120px);letter-spacing:.18em;color:#f6eeda}
+.open .title{font-size:clamp(42px,12vw,120px);letter-spacing:.16em;color:#f6eeda;
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:0 .34em;line-height:1.04}
+.open .title .word{display:inline-flex;white-space:nowrap}
 .open .title span{display:inline-block;opacity:0;transform:translateY(20px) rotateX(40deg);
   animation:letterIn .9s cubic-bezier(.2,.7,.2,1) forwards}
 @keyframes letterIn{to{opacity:1;transform:none}}
@@ -124,6 +126,24 @@ h1,h2,h3,.disp{font-family:'Cinzel',serif;font-weight:500;line-height:1.12}
 @media(max-width:820px){
   .object .inner{grid-template-columns:1fr;gap:36px}
   .metrics{gap:30px}
+}
+@media(max-width:600px){
+  .chrome{padding:15px 18px;mix-blend-mode:normal}
+  .chrome .bm{font-size:13px;letter-spacing:.2em}
+  .chrome .rt{display:none}
+  .scene{padding:0 22px}
+  .open .title{letter-spacing:.07em}
+  .open .tag{margin-top:16px;letter-spacing:.3em}
+  .open .cue{bottom:26px}
+  .hero .lede,.big p,.ritual li p{font-size:15px}
+  .ritual li{gap:14px;padding:15px 0}
+  .ritual li::before{min-width:30px;font-size:15px}
+  .ritual h2{margin-bottom:24px}
+  .metrics{gap:22px 30px}
+  #stage3d{aspect-ratio:4/5}
+  .cta .row{flex-direction:column;gap:12px}
+  .cta .btn{width:100%;text-align:center}
+  .sound{bottom:18px;right:18px;width:38px;height:38px}
 }
 @media(prefers-reduced-motion:reduce){
   .bg.active.kb{animation:none}.open .title span{animation-duration:.01s}
@@ -237,9 +257,11 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* cold-open letters */
 (function(){
-  const t=document.getElementById('coldTitle'); const w='SANI\u00A0TEMPLO';
-  [...w].forEach((c,i)=>{const s=document.createElement('span');s.textContent=c;
-    s.style.animationDelay=(0.25+i*0.06)+'s';t.appendChild(s);});
+  const t=document.getElementById('coldTitle'); const words=['SANI','TEMPLO']; let i=0;
+  words.forEach((wd)=>{const wrap=document.createElement('span');wrap.className='word';
+    [...wd].forEach((c)=>{const s=document.createElement('span');s.textContent=c;
+      s.style.animationDelay=(0.25+i*0.06)+'s';wrap.appendChild(s);i++;});
+    t.appendChild(wrap);});
 })();
 
 /* progressively enhance scene backdrops with generated photos */
