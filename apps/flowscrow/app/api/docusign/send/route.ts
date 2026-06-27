@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createEnvelope, isDocusignConfigured } from '@/lib/server/docusign';
 import { AGREEMENT_DOCX_B64 } from '@/lib/agreementDocx';
+import { authClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,13 @@ const SIGNERS = [
 ];
 
 export async function POST() {
+  // Safety gate: only an FBID-verified signer (their login email matches a signer)
+  // may ever create an envelope. No anonymous sends.
+  const sb = await authClient();
+  const { data: isSigner } = await sb.rpc('flowscrow_is_signer');
+  if (isSigner !== true) {
+    return NextResponse.json({ error: 'FBID-verified signer required' }, { status: 403 });
+  }
   if (!isDocusignConfigured()) {
     return NextResponse.json(
       { error: 'not configured — DocuSign env vars missing (integration key / private key)' },
