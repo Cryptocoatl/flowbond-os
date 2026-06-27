@@ -538,15 +538,15 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
   const g = AGREEMENT;
   const stephSigned = sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement');
   const russellSigned = sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
+  const isHeading = (s: string) =>
+    /^\d+\.\s/.test(s) || s === 'Recitals' || s.startsWith('Exhibit A') || s.startsWith('IN WITNESS') ||
+    ['Domains', 'Payment & Financial Accounts (FlowBond-linked)', 'Repositories', 'Web3, Communication & Social Accounts (FlowBond-linked)', 'Catch-All (Company property only)'].includes(s);
   const buildText = () =>
     [
-      g.title.toUpperCase(), g.subtitle, '', `Effective Date: ${g.effective.replace(/\*/g, '')}`, '',
-      g.parties, '', 'RECITALS', ...g.recitals.map((r) => '  ' + r), '',
-      ...g.articles.flatMap((a) => [`ARTICLE ${a.n} — ${a.t.toUpperCase()}`, ...a.paras.map((p) => '  ' + p.replace(/\*/g, '')), '']),
-      'EXHIBITS', ...g.exhibits.map((e) => '  ' + e), '',
-      'IN WITNESS WHEREOF, the Parties execute this Agreement as of the Effective Date.', '',
-      'Estefanía Ferrera (Company) — ______________________   Date: __________', '',
-      'Russell Herod (Early Co-founder) — ______________________   Date: __________', '',
+      g.title.toUpperCase(), g.subtitle, '', `Effective Date: ${g.effective}`, '',
+      ...g.body, '',
+      'Estefanía Ferrera — ______________________   Date: __________',
+      'Russell Herod — ______________________   Date: __________', '',
       'Witnesses (view-only): ' + WITNESSES.join(', '),
       ...sigs.filter((s) => s.document === 'agreement').map((s) => `\n[electronically signed in vault, FBID-verified] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
     ].join('\n');
@@ -556,21 +556,15 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
     <>
       <div className="doc-paper" style={{ marginTop: 12 }}>
         <h3>{g.title}</h3>
-        <div className="meta">{g.subtitle} · Effective Date {richText(g.effective)}</div>
-        <p style={{ margin: '14px 0' }}>{g.parties}</p>
-        <p style={{ margin: '14px 0 6px', fontWeight: 700, letterSpacing: '.04em' }}>RECITALS</p>
-        {g.recitals.map((r, i) => <p key={i} style={{ margin: '6px 0', fontSize: 14 }}>{r}</p>)}
-        {g.articles.map((a) => (
-          <div key={a.n} style={{ marginTop: 14 }}>
-            <p style={{ margin: '0 0 4px', fontWeight: 700 }}>ARTICLE {a.n} — {a.t}</p>
-            {a.paras.map((p, j) => <p key={j} style={{ margin: '6px 0', fontSize: 14 }}>{richText(p)}</p>)}
-          </div>
-        ))}
-        <p style={{ margin: '14px 0 4px', fontWeight: 700 }}>EXHIBITS</p>
-        <ul style={{ margin: '0', paddingLeft: 20 }}>{g.exhibits.map((e, i) => <li key={i} style={{ margin: '4px 0' }}>{e}</li>)}</ul>
+        <div className="meta">{g.subtitle} · Effective {g.effective}</div>
+        {g.body.map((line, i) =>
+          isHeading(line)
+            ? <p key={i} style={{ margin: '16px 0 4px', fontWeight: 700 }}>{line}</p>
+            : <p key={i} style={{ margin: '6px 0', fontSize: 14 }}>{line}</p>,
+        )}
         <div className="sig-line">
-          <span><b>Estefanía Ferrera</b> (Company) {stephSigned ? '✓ signed' : '— ____________'}</span>
-          <span><b>Russell Herod</b> (Early Co-founder) {russellSigned ? '✓ signed' : '— ____________'}</span>
+          <span><b>Estefanía Ferrera</b> {stephSigned ? '✓ signed' : '— ____________'}</span>
+          <span><b>Russell Herod</b> {russellSigned ? '✓ signed' : '— ____________'}</span>
         </div>
         <div style={{ marginTop: 14, fontSize: 12.5, color: '#4a3a6c' }}>
           <b>Witnesses (view-only):</b>{' '}
@@ -582,11 +576,10 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
       </div>
 
       <div className="v-card" style={{ marginTop: 14, borderColor: 'rgba(245,215,122,.4)' }}>
-        <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Cryptographic validation · Article 11</div>
+        <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Cryptographic seal</div>
         <p className="v-lead" style={{ fontSize: 13.5, margin: '6px 0 10px' }}>
-          Counsel was offered and declined. This Agreement instead stands on objective, tamper-evident proof anyone
-          can verify — not on any one advisor’s word. This is the seal of the exact text above; change a single
-          character and it changes.
+          This is the seal of the exact agreement text above — objective, tamper-evident proof anyone can verify.
+          Change a single character and it changes. Binding execution is via DocuSign under Texas law (Sections 18–19).
         </p>
         <div style={{ textAlign: 'center', margin: '8px 0 4px' }}>
           <ProofSeal hash={fingerprint} size={236} sealed={!!stephSigned && !!russellSigned} />

@@ -1,11 +1,11 @@
-// The documents in the vault. Specifics filled from what's known; a few spots are
-// marked EDITABLE so they can be tuned before signing.
+// The documents in the vault. The Separation & Asset Transfer Agreement is the
+// real, revised .docx (June 26 2026) — the exact text signed via DocuSign.
 
 export const PARTIES = {
-  steph: { full: 'Estefanía Ferrera', short: 'Steph', role: 'Founder & principal builder' },
+  steph: { full: 'Estefanía Ferrera', short: 'Steph', role: 'Founder & CEO, FlowBond Tech Inc.' },
   russell: { full: 'Russell Herod', short: 'Russell', role: 'Early Co-founder — DANZ & FlowB' },
   deven: { full: 'Deven', short: 'Deven', role: 'Contributor' },
-  entity: 'FlowBond / FlowBond Tech',
+  entity: 'FlowBond Tech Inc.',
 };
 
 // View-only witnesses (each has a private code; never sign/download).
@@ -16,13 +16,13 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
   steph: {
     title: 'This closing is yours, Estefanía',
     paras: [
-      'This is your vault — you are the founder and sole owner of FlowBond. Verify with your cryptocoatl FBID to sign and release. Everything here is yours to issue.',
+      'This is your vault — you are the founder and sole owner of FlowBond Tech Inc. Verify with your cryptocoatl FBID to sign and release. Everything here is yours to issue.',
     ],
   },
   russell: {
-    title: 'Russell — your note and your recognition are below',
+    title: 'Russell — your cover note and the agreement are below',
     paras: [
-      'Welcome, Russell. Your full note, your Early Co-founder recognition, and both documents are below. When you’re ready, verify with FBID and we sign together.',
+      'Welcome, Russell. The cover note (my email), the revised Separation & Asset Transfer Agreement, and your Early Co-founder recognition are all below. Read it, and when you’re ready, verify with FBID and we sign together.',
     ],
   },
   roman: {
@@ -51,244 +51,161 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
       'Jeff, you’ve been a great advisor and a real support through this whole process — thank you. I also want you to truly see FlowScrow, the escrow I built (this is it), and to have a serious conversation about how you flow into my world. You’re here as a witness to this closing.',
     ],
   },
-  nia: {
-    title: 'Nia — my goddess guardian',
-    paras: [
-      'Nia, my goddess guardian — my partner and my spiritual support through all of this. Having you witness this means everything to me; your presence blesses the whole closing. Thank you for holding the sacred while I hold the structure. I love you, deeply.',
-    ],
-  },
   ryan: {
     title: 'Ryan — out of our fields, into what we build',
     paras: [
       'Ryan, we have a special relationship — and I want this situation to stay completely out of our fields, so it never touches what matters between us. What I care about is keeping our focus on what we can actually build together. You’re here as a witness to this closing, and I’m grateful for you.',
     ],
   },
+  nia: {
+    title: 'Nia — my goddess guardian',
+    paras: [
+      'Nia, my goddess guardian — my partner and my spiritual support through all of this. Having you witness this means everything to me; your presence blesses the whole closing. Thank you for holding the sacred while I hold the structure. I love you, deeply.',
+    ],
+  },
 };
 
-// Part 1 — the framing message (now resolved on "Early Co-founder").
+// Part 1 — the cover note (the email to Russell), shown before the agreement.
 export const MESSAGE = {
   to: 'Russell',
   paragraphs: [
-    'Thank you for being direct about how you’d like your time on FlowBond recognized. You’re right to raise it — your work mattered, and it deserves to be named clearly rather than left vague.',
-    'We found the honest name for it. You asked to be recognized as a co-founder. I won’t sign a claim that’s bigger than the record — but I also refuse to undersell what you actually did. So here’s where we land, and I’m genuinely glad about it: **Early Co-founder**, for your real, early contribution to DANZ and FlowB.',
-    'Why this is the wording I’ll defend anywhere. It’s true, it’s generous, and it survives any diligence. “Early Co-founder” says plainly that you were there at the beginning and you built real things — without claiming an ownership stake that was never agreed. That protects both of us: you never have to walk back a word, and I can stand behind every part of it to investors, partners, or anyone who asks.',
-    'And I’m naming Deven too. His contribution belongs on the record, and it is — acknowledged alongside yours in the documents in this vault.',
-    'The standing and the numbers below are the same ones any investor sees. They’re not here to diminish you — they’re here so the recognition rests on the truth, which is the only kind of credit that lasts.',
-    'And I want to name the spirit of this plainly: it isn’t about fighting. It’s about facts and actions, and being transparent with each other. The health of a community starts in healthy personal relationships — so I want to close this between us cleanly and purely, with respect intact on both sides.',
-    'Everything here is validated by cryptography and witnessed on the record, and it’s ready to sign. Read it — if a detail of your contribution is captured wrong or sells you short, tell me and I’ll fix it. Then let’s sign it together.',
+    'Thank you for the detailed response. I’ve taken your points seriously and revised the agreement accordingly. The updated version is the one in this vault, ready to read and sign.',
+    'What I incorporated from your markup: scope limited to FlowBond / DANZ / FlowB only, with Harmonik Habitats expressly excluded; the agreement is executed and delivered by both of us *before* any transfer occurs (Section 4); broad asset categories replaced with a precise, Company-only list in Exhibit A that doesn’t reach your personal assets; the personal language regarding counsel and nationality removed; mutual non-disparagement and mutual no-reference / no-endorsement clauses; no ongoing work obligation beyond the listed Closing deliverables; and Cryptocoatl recognized as mine and not part of any transfer.',
+    'On recognition (Section 2), the language reflects your contributions to the initial infrastructure of the DANZ and FlowB workstreams, stated without any disparagement. That’s the characterization I can stand behind, and I’m open to your review of the exact wording.',
+    'Wallet seeds and private keys are intentionally kept out of the document and delivered through a secure channel, as before.',
+    'And I want to name the spirit of this plainly: it isn’t about fighting. It’s about facts and actions, and being transparent with each other. The health of a community starts in healthy personal relationships — so I want to close this cleanly and purely, with respect intact on both sides.',
+    'Looking ahead: FBID — the identity powering this vault — will be a free API anyone can integrate into their own websites. I’d be especially happy to see it used for public goods and genuine social-regeneration projects. If that calls you, there’s room to build.',
+    'Please review. I’d like to close this cleanly and promptly.',
   ],
   signoff: 'With love,\nStep by Steph',
 };
 
 // Russell's clear path to finalize, every step.
 export const FINALIZE_STEPS = [
-  { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” enter cryptokoh@gmail.com, and open the magic link from your inbox. You’ll return here verified — that’s what unlocks signing and download. No password, ever.' },
-  { n: 2, key: 'read', title: 'Read your recognition & the Agreement', detail: 'Read your note, your Early Co-founder recognition (DANZ & FlowB), and the full Separation Agreement. If any detail is wrong or sells you short, tell Estefanía before you sign — she’ll fix it.' },
-  { n: 3, key: 'sign-agreement', title: 'Sign the Separation Agreement', detail: 'Once verified, press “Sign as Russell” on Document 1. Your signature is recorded with a cryptographic fingerprint and a timestamp on the audit trail.' },
-  { n: 4, key: 'sign-ack', title: 'Sign the Acknowledgment (Exhibit 5)', detail: 'Sign Document 2 — your Early Co-founder Acknowledgment, yours to use on your CV, LinkedIn, anywhere.' },
-  { n: 5, key: 'transfer', title: 'Hand over the transfers (Exhibit 3)', detail: 'Complete each handover so Estefanía can verify it: the domains (flowbond.tech, danz.now, flowb.me, pee.network); all repos & credentials; Telegram/Base/Farcaster; Web3 keys (secure channel, off-platform); company crypto to the Company wallet; Mercury; Stripe; Coinbase; Supabase/Vercel/Apple/Google/DNS/secrets; and social de-identification.' },
-  { n: 6, key: 'done', title: 'Closing completes — and we talk next steps', detail: 'Estefanía verifies each transfer. When everything is confirmed and both documents are signed, the closing completes and your recognition is released. Then she’ll reach out about your possibilities on FlowBond.' },
+  { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” log in with cryptokoh@gmail.com, and you’ll return here verified — that’s what unlocks signing. No password, ever.' },
+  { n: 2, key: 'read', title: 'Read the cover note & the Agreement', detail: 'Read the cover note and the full Co-Founder Separation & Asset Transfer Agreement, including Exhibit A. If any detail is wrong, tell Estefanía before you sign — she’s open to your review of the wording.' },
+  { n: 3, key: 'sign-agreement', title: 'Sign the Agreement (DocuSign)', detail: 'Once verified, sign the Agreement. The agreement is executed and delivered by both Parties before any transfer occurs (Section 4) — your transfer obligations only arise after full execution.' },
+  { n: 4, key: 'sign-ack', title: 'Receive your Early Co-founder recognition', detail: 'Section 2 recognizes you as an early co-founder of DANZ and FlowB, without disparagement — yours to reference anywhere. The Acknowledgment letter (Document 2) restates it for your records.' },
+  { n: 5, key: 'transfer', title: 'Complete the Exhibit A transfers (at Closing)', detail: 'Only the Company-only items in Exhibit A: domains (flowbond.tech, danz.now) to your Namecheap “stepbysteph”; Mercury, Stripe, Coinbase; FlowBond Tech GitHub repos; Telegram/Base/Farcaster; FlowBond social profiles. Wallet seeds & keys via secure channel only. Nothing personal, nothing outside scope.' },
+  { n: 6, key: 'done', title: 'Closing completes', detail: 'When both signatures are in and the Exhibit A items are delivered and verified, the closing completes and the mutual release takes effect. Then we talk about what’s next.' },
 ];
 
 export const GUIDE_FAQ = [
-  { q: 'What do I do first?', a: 'Verify with FBID using cryptokoh@gmail.com (step 1). That single login unlocks signing and download.', keys: ['first', 'start', 'begin', 'fbid', 'login', 'verify'] },
-  { q: 'Is this legally binding?', a: 'Yes — the electronic signatures are binding under the U.S. ESIGN Act and UETA. The document is sealed with a cryptographic fingerprint (Article 11), and binding execution can also run through DocuSign.', keys: ['binding', 'legal', 'valid', 'enforce', 'law'] },
-  { q: 'Do I get equity?', a: '“Early Co-founder” is honorary recognition of your real early contribution to DANZ & FlowB. It confers no equity, ownership, or continuing claim (Article 4) — it’s a true title you can use anywhere, one that survives any scrutiny.', keys: ['equity', 'ownership', 'stake', 'shares', 'cofounder', 'co-founder', 'own'] },
-  { q: 'Why no lawyer?', a: 'Counsel was offered and declined, so instead of any one advisor’s word the agreement stands on objective proof anyone can verify — a cryptographic fingerprint, an immutable audit trail, an on-chain anchor, and named witnesses (Article 11). It’s math, not opinion.', keys: ['lawyer', 'counsel', 'attorney', 'fake', 'mexican'] },
-  { q: 'What are the transfers?', a: 'Step 5: hand over domains, repos & credentials, comms accounts, Web3 keys (secure channel), company crypto, Mercury, Stripe, Coinbase, infrastructure, and social de-identification. Estefanía verifies each before the closing completes.', keys: ['transfer', 'domain', 'repo', 'keys', 'crypto', 'mercury', 'stripe', 'coinbase', 'handover', 'exhibit', 'asset'] },
-  { q: 'What happens after I sign?', a: 'Estefanía verifies the transfers; when everything’s confirmed, your recognition is released and she reaches out about next steps on FlowBond.', keys: ['after', 'next', 'then', 'finish', 'done', 'release', 'complete'] },
+  { q: 'What do I do first?', a: 'Verify with FBID using cryptokoh@gmail.com (step 1). That single login unlocks signing.', keys: ['first', 'start', 'begin', 'fbid', 'login', 'verify'] },
+  { q: 'Is this legally binding?', a: 'Yes — Section 19 allows electronic signature, binding under the U.S. ESIGN Act and UETA; it’s governed by Texas law (Section 18). DocuSign executes it, and a cryptographic fingerprint seals the exact text.', keys: ['binding', 'legal', 'valid', 'enforce', 'law', 'texas'] },
+  { q: 'Do I have to transfer before signing?', a: 'No. Section 4 is explicit: the agreement is executed and delivered by both Parties before any transfer occurs. Your transfer obligations only arise after full execution.', keys: ['before', 'transfer first', 'condition', 'execute', 'order'] },
+  { q: 'What exactly transfers?', a: 'Only the Company-only items in Exhibit A: the FlowBond/DANZ/FlowB domains, Mercury/Stripe/Coinbase, the FlowBond Tech GitHub repos, and the FlowBond comms/social accounts. Nothing personal, nothing outside scope — Harmonik and Cryptocoatl are expressly excluded.', keys: ['transfer', 'domain', 'repo', 'keys', 'crypto', 'mercury', 'stripe', 'coinbase', 'exhibit', 'asset', 'harmonik', 'cryptocoatl', 'personal'] },
+  { q: 'What about wallet keys?', a: 'Seed phrases and private keys are never written in the agreement — they’re delivered only through a secure channel, as before.', keys: ['wallet', 'seed', 'private key', 'secure'] },
+  { q: 'What happens after I sign?', a: 'It’s held signed in escrow; you complete the Exhibit A deliverables; Estefanía verifies each; then the mutual release takes effect and the closing completes.', keys: ['after', 'next', 'then', 'finish', 'done', 'release', 'complete', 'escrow'] },
 ];
 
-// Part 0 — the full, official Separation & Transition Agreement (primary document).
-// Complete framework, NOT legal advice — review with counsel. Crypto-validated.
+// Part 0 — the real Co-Founder Separation & Asset Transfer Agreement (the .docx).
+// `body` is the exact document text; lines that are headings are detected at render.
 export const AGREEMENT = {
-  title: 'Separation & Transition Agreement',
-  subtitle: 'FlowBond / FlowBond Tech',
-  effective: 'the date of last electronic signature',
-  parties:
-    'This Separation & Transition Agreement (the “Agreement”) is made and entered into as of the Effective Date by and between Estefanía Ferrera, an individual, in her personal capacity and on behalf of FlowBond / FlowBond Tech, a Texas C corporation, and its products and affiliates (collectively, the “Company”), and Russell Herod, an individual, recognized herein as an Early Co-founder of the DANZ and FlowB workstreams (the “Contributor”). The Company and the Contributor are each a “Party” and together the “Parties.”',
-  recitals: [
-    'WHEREAS, the Company operates the FlowBond ecosystem, which was founded, owned, and principally built by Estefanía Ferrera;',
-    'WHEREAS, the Contributor made a real, early contribution to the Company, principally on the DANZ and FlowB (FlowBondTech) workstreams, and the Company recognizes him as an “Early Co-founder” of those workstreams in honorary and historical acknowledgment of that contribution;',
-    'WHEREAS, the Company further recognizes Roman as an original Early Co-founder, and acknowledges the contribution of Deven, each as recorded in the Acknowledgment (Exhibit 5);',
-    'WHEREAS, notwithstanding such recognition, no equity, ownership interest, option, token allocation, partnership, joint venture, or continuing-compensation arrangement was ever granted to or agreed with the Contributor or any other contributor;',
-    'WHEREAS, the Parties wish to formalize the conclusion of the Contributor’s involvement, effect the orderly and verified transfer of all Company access and assets, fully and finally resolve all claims between them, and record an accurate Acknowledgment of Contribution (Exhibit 5);',
-    'WHEREAS, the Company offered to involve its legal counsel to ensure fairness to both Parties, and the Contributor declined that counsel; the Parties therefore adopt the objective, independently-verifiable methods of validation set forth in Article 11, attested by the witnesses named in the execution block;',
-    'NOW, THEREFORE, in consideration of the mutual covenants and promises herein, and for other good and valuable consideration, the receipt and sufficiency of which are acknowledged, the Parties agree as follows:',
-  ],
-  articles: [
-    {
-      n: '1', t: 'Definitions',
-      paras: [
-        '“Company Assets” means all domains, repositories, source code, credentials, keys, accounts, wallets, balances, infrastructure, data, brand and social assets used in or relating to the Company, including those listed in Exhibit 3.',
-        '“Closing” means the point at which every item in Exhibit 3 has been completed and independently verified through the FlowScrow conditional-release system.',
-        '“Effective Date” means the date this Agreement is last signed by a Party.',
-      ],
-    },
-    {
-      n: '2', t: 'Separation',
-      paras: [
-        '2.1  The Contributor’s active involvement with the Company is concluded. As of the Effective Date the Contributor holds no title, office, operational role, authority, mandate, or responsibility with the Company, save the honorary recognition in Article 4.',
-        '2.2  The Contributor shall not, after the Effective Date, hold himself out as an owner, officer, employee, partner, or agent of the Company, or bind the Company in any way. He may truthfully describe himself as an Early Co-founder of the DANZ and FlowB workstreams, consistent with Article 4 and Exhibit 5.',
-      ],
-    },
-    {
-      n: '3', t: 'Transition of Access and Assets (Exhibit 3)',
-      paras: [
-        '3.1  The Contributor shall transfer to the Company sole ownership and control of all Company Assets and irrevocably remove himself from all Company accounts, in accordance with the Closing Tasks Schedule (Exhibit 3), including, without limitation:',
-        '(a) Domains — flowbond.tech, danz.now, flowb.me, and pee.network — placed under the Company’s registrar control with the Contributor removed as registrant/contact;',
-        '(b) Repositories and credentials — all source-code repositories, API keys, and secrets, with the Company granted full ownership/admin and the Contributor removed;',
-        '(c) Communication accounts — Telegram, Base, and Farcaster — owner/admin and recovery transferred to the Company and the Contributor removed;',
-        '(d) Web3 keys — delivered to the Company via a secure off-platform channel, with the Company confirming control in writing; no key material is stored in this system;',
-        '(e) Company crypto — all balances moved to the Company’s wallet, matching pre-verified amounts;',
-        '(f) Financial accounts — Mercury, Stripe, and Coinbase — with the Company as sole owner/representative and the Contributor and his cards removed;',
-        '(g) Infrastructure — Supabase, Vercel, Apple/Google, DNS, and secrets transferred to the Company; and',
-        '(h) Social de-identification — profiles no longer present the Contributor as operating the Company.',
-        '3.2  Each item is independently verified by the receiving Party before the Closing completes. The Contributor shall execute any further documents reasonably necessary to perfect the transfers.',
-      ],
-    },
-    {
-      n: '4', t: 'Honorary Recognition; No Equity or Ownership',
-      paras: [
-        '4.1  The Company recognizes the Contributor as an “Early Co-founder” of the DANZ and FlowB workstreams, in honorary and historical recognition of his real, early contribution. This is a title of acknowledgment, freely usable by the Contributor in his professional materials.',
-        '4.2  Such recognition does not constitute or confer any equity, ownership interest, share, option, warrant, token allocation, profit or revenue interest, voting or control right, or any continuing claim, role, compensation, or liability. The Contributor holds, and has at all times held, none of the foregoing, and none was ever granted, promised, or agreed.',
-        '4.3  The Company remains solely owned and controlled by Estefanía Ferrera.',
-      ],
-    },
-    {
-      n: '5', t: 'Intellectual Property',
-      paras: [
-        '5.1  To the extent the Contributor contributed any work product, code, or materials to the Company, he hereby irrevocably assigns to the Company all right, title, and interest, including all intellectual-property rights, in and to such work product, and waives any moral rights therein.',
-        '5.2  The Contributor retains no license to, and shall not use, the Company’s intellectual property after the Closing, except as expressly permitted by the Acknowledgment (Exhibit 5).',
-      ],
-    },
-    {
-      n: '6', t: 'Consideration and Recognition',
-      paras: [
-        '6.1  In consideration of the covenants herein, the Company shall issue the Acknowledgment of Contribution (Exhibit 5), accurately recognizing the Contributor as an Early Co-founder of DANZ and FlowB, recognizing Roman as an original Early Co-founder, and acknowledging the contribution of Deven.',
-        '6.2  The Acknowledgment is released to the Contributor upon the Closing and the Company’s approval, stands alongside this Agreement, and does not alter it.',
-      ],
-    },
-    {
-      n: '7', t: 'Mutual General Release of Claims',
-      paras: [
-        '7.1  Each Party, on behalf of itself and its heirs, successors, and assigns, hereby fully and forever releases and discharges the other Party from any and all claims, demands, causes of action, obligations, damages, and liabilities of any kind, whether known or unknown, suspected or unsuspected, arising from or relating to the Contributor’s involvement and the relationship between the Parties up to the Effective Date.',
-        '7.2  This release does not extend to the obligations created by this Agreement itself. Each Party knowingly and voluntarily waives any statutory or common-law protection that would otherwise limit a release of unknown claims.',
-      ],
-    },
-    {
-      n: '8', t: 'Confidentiality and Return of Materials',
-      paras: [
-        '8.1  The Contributor shall hold the Company’s non-public information in strict confidence and shall not use or disclose it.',
-        '8.2  The Contributor shall not retain, copy, or use any Company code, credentials, data, or materials after completion of the transfers in Article 3, and shall destroy or return any remaining copies.',
-        '8.3  The terms of this Agreement are confidential, save as required to enforce it or by law.',
-      ],
-    },
-    {
-      n: '9', t: 'Non-Disparagement; Truthful Description',
-      paras: [
-        '9.1  Neither Party shall make any false or disparaging statement about the other.',
-        '9.2  Both Parties may describe the Contributor’s actual contribution and his Early Co-founder recognition truthfully and consistently with Exhibit 5. Nothing herein prevents either Party from making truthful statements or from responding to lawful process.',
-      ],
-    },
-    {
-      n: '10', t: 'Independent Counsel; Record Regarding Counsel',
-      paras: [
-        '10.1  Each Party has had a full and fair opportunity to consult independent legal counsel of their own choosing before executing this Agreement and enters into it knowingly and voluntarily.',
-        '10.2  The Company offered to involve its legal counsel to ensure fairness to both Parties. The Contributor declined to engage the Company’s counsel and characterized that counsel as “fake” by reason of that counsel’s Mexican nationality. This fact is recorded here for the avoidance of doubt.',
-        '10.3  The Company affirms, without qualification, the legitimacy, competence, and good standing of its counsel and of Mexican legal professionals generally. Nationality bears no relation to legal validity or professional standing, and the Company does not accept any characterization to the contrary.',
-        '10.4  Because the Contributor declined the Company’s counsel, the Parties establish the integrity and standing of this Agreement through the objective, independently-verifiable technological methods set forth in Article 11 and attested by the witnesses named below — methods that depend on no single advisor and are open to verification by any counsel the Contributor may choose, of any nationality.',
-      ],
-    },
-    {
-      n: '11', t: 'Method of Validation (Cryptographic and On-Chain)',
-      paras: [
-        '11.1  Cryptographic fingerprint. The canonical text of this Agreement is reduced to a unique cryptographic fingerprint (a keccak-256 hash), shown with this document. Altering a single character changes the fingerprint, making any tampering immediately detectable by anyone, anywhere.',
-        '11.2  Immutable audit trail. Every material action — opening, reading, witnessing, and signing — is written to an append-only audit log that cannot be edited or deleted, each entry bearing a trusted timestamp.',
-        '11.3  On-chain anchor. The fingerprint may be anchored to the Base (Ethereum Layer-2) public blockchain as a tamper-evident, time-stamped proof of existence that no Party controls and that anyone may independently verify, permanently.',
-        '11.4  Electronic signatures. Electronic signatures captured through this system, and via DocuSign, are valid and binding to the fullest extent permitted by applicable electronic-signature law, including the U.S. ESIGN Act and the Uniform Electronic Transactions Act (UETA) and equivalent provisions.',
-        '11.5  Neutrality. The foregoing methods are mathematics and public infrastructure — neutral, free of bias, and verifiable by any person of any nationality. They are not, and cannot be, “fake.”',
-      ],
-    },
-    {
-      n: '12', t: 'Representations and Warranties',
-      paras: [
-        '12.1  Each Party represents that it has full authority to enter into this Agreement and that doing so does not breach any other obligation.',
-        '12.2  The Contributor represents that he has disclosed all Company Assets and access in his possession or control and has not retained any undisclosed copy, credential, or claim.',
-      ],
-    },
-    {
-      n: '13', t: 'Governing Law; Dispute Resolution',
-      paras: [
-        '13.1  This Agreement is governed by, and construed in accordance with, the laws of the State of Texas, United States (where the Company is incorporated as a C corporation), without regard to conflict-of-laws rules.',
-        '13.2  The Parties shall first attempt to resolve any dispute in good faith. Any unresolved dispute shall be submitted to the courts or arbitral forum of the governing jurisdiction, and the cryptographic, on-chain, and witnessed records described in Article 11 shall be admissible as evidence of the document’s integrity and the Parties’ actions.',
-      ],
-    },
-    {
-      n: '14', t: 'Electronic Signature; Witnesses; Counterparts',
-      paras: [
-        '14.1  This Agreement may be executed electronically and in counterparts, each of which is an original and all of which together constitute one instrument.',
-        '14.2  The persons named in the execution block as Witnesses attest, on a view-only basis, that they have observed this Agreement and its cryptographic fingerprint; they are not Parties and assume no obligation or liability.',
-      ],
-    },
-    {
-      n: '15', t: 'Miscellaneous',
-      paras: [
-        '15.1  Entire Agreement. This Agreement and its Exhibits constitute the entire agreement between the Parties and supersede all prior understandings, written or oral.',
-        '15.2  Amendment. No amendment is effective unless in writing and signed (including electronically) by both Parties.',
-        '15.3  Severability. If any provision is held unenforceable, the remainder continues in full force.',
-        '15.4  No Waiver. No waiver of any provision is a waiver of any other or any subsequent breach.',
-      ],
-    },
-  ],
-  exhibits: [
-    'Exhibit 1 — Stock Power (executed, held in escrow)',
-    'Exhibit 2 — Resignation (executed, held in escrow)',
-    'Exhibit 3 — Closing Tasks Schedule (the verified transfers in Article 3)',
-    'Exhibit 5 — Acknowledgment of Contribution (Early Co-founder; Deven)',
+  title: 'Co-Founder Separation and Asset Transfer Agreement',
+  subtitle: 'FlowBond Tech Inc. — DANZ — FlowB',
+  effective: 'June 26, 2026',
+  docx: true,
+  body: [
+    'This Co-Founder Separation and Asset Transfer Agreement (the “Agreement”) is made and entered into as of June 26, 2026 (the “Effective Date”), by and between Estefanía Ferrera, Founder and Chief Executive Officer of FlowBond Tech Inc. (“Estefanía”), and Russell Alan Herod, also known as koH Russell Herod (“Russell”). Estefanía and Russell are each a “Party” and together the “Parties.”',
+    'Recitals',
+    'A. The Parties have collaborated in connection with FlowBond Tech Inc. and the DANZ and FlowB workstreams.',
+    'B. The Parties wish to effect a clean, complete, and amicable separation of Russell from the Company and the Scope, on the terms set out in this Agreement.',
+    'C. This Agreement is limited to the Scope. Harmonik Habitats and all matters unrelated to the Scope are expressly excluded and are not affected by this Agreement.',
+    'D. The GitHub organization “Cryptocoatl” is owned and controlled by Estefanía and is not subject to transfer under this Agreement.',
+    'NOW, THEREFORE, in consideration of the mutual covenants and releases below, and intending to be legally bound, the Parties agree as follows:',
+    '1. Definitions',
+    '“Company” means FlowBond Tech Inc. “Scope” means the Company and the DANZ and FlowB workstreams, and excludes all other ventures, assets, and matters. “Company Assets” means the assets identified in Exhibit A, being the assets within the Scope that are owned by or held for the benefit of the Company and that are in Russell’s possession or under his control. “Closing” means the point at which this Agreement has been executed and delivered by both Parties, as described in Section 4.',
+    '2. Recognition of Role',
+    'The Company and Estefanía recognize Russell as an early co-founder who contributed to the initial infrastructure of the DANZ and FlowB workstreams. Nothing in this Agreement shall be construed as disparaging or diminishing Russell’s contributions to those workstreams.',
+    '3. Ownership and Transfer of Interest',
+    'Effective upon Closing, Russell transfers, assigns, and conveys to Estefanía all shares and any other equity, ownership, or membership interest he holds in the Company, together with all of his right, title, and interest in and to the Company and the Scope. Prior to Closing, this Section operates as a forward commitment to transfer, and not as a representation that any such transfer has already occurred or that either Party presently holds a particular ownership percentage.',
+    '4. Condition Precedent; Execution Before Transfer',
+    'This Agreement, including the recognition in Section 2, must be executed and delivered by both Parties before any transfer, assignment, or delivery of assets contemplated by this Agreement occurs. Russell’s transfer and delivery obligations under Sections 3 and 5 arise only upon, and are expressly conditioned on, full execution and delivery of this Agreement by both Parties. Closing occurs at the moment of such full execution and delivery.',
+    '5. Transfer of Company Assets',
+    'At Closing, Russell shall transfer, assign, or deliver to Estefanía (or to the Company, as Estefanía directs) only the Company Assets expressly identified in Exhibit A. Russell shall execute such registrar transfer forms, account-transfer requests, access grants, and similar instruments as are reasonably necessary to complete the transfers listed in Exhibit A. Russell shall transfer the Company Assets free of any lien, pledge, or encumbrance created by him, and shall not retain copies of credentials to the transferred accounts after Closing. For the avoidance of doubt, no asset, account, repository, credential, domain, or interest that is not listed in Exhibit A is subject to transfer under this Agreement.',
+    '6. Excluded Assets and Matters',
+    'The following are expressly excluded from this Agreement and from any transfer obligation: (a) Harmonik Habitats; (b) the GitHub organization “Cryptocoatl,” which is owned and controlled by Estefanía; (c) Russell’s personal assets and accounts that do not belong to or were not created for the Company; and (d) any venture, asset, or matter outside the Scope.',
+    '7. No Ongoing Work Obligation',
+    'Russell has no obligation to perform any work, service, or support beyond the discrete Closing deliverables expressly listed in Exhibit A. Any additional scope of work or support shall be agreed only in a separate signed writing specifying scope and compensation, and is not required by this Agreement.',
+    '8. Mutual Non-Disparagement; No Misleading Statements',
+    'Neither Party shall make, publish, or cause to be made any defamatory, disparaging, or materially misleading statement about the other Party, in any medium, concerning the Scope or the subject matter of this Agreement.',
+    '9. Mutual No-Reference; No-Endorsement',
+    'Neither Party shall represent the other as a reference, endorser, advisor, or supporter, nor use the other’s name, likeness, or association for promotional purposes, without that Party’s prior written consent.',
+    '10. Mutual Release',
+    'Effective at Closing, each Party, on behalf of itself and its successors and assigns, irrevocably releases and discharges the other Party from any and all claims, demands, and liabilities arising out of or relating to the Scope and arising on or before the Closing, excluding (a) any claim arising from a breach of this Agreement and (b) any matter outside the Scope, including Harmonik Habitats.',
+    '11. Representations',
+    'Each Party represents that it has full authority to enter into and perform this Agreement and that this Agreement is binding upon it. Russell represents that, to his knowledge, he has the right to transfer the Company Assets listed in Exhibit A and is not aware of any third-party right that would prevent their transfer. Each Party acknowledges that it enters into this Agreement voluntarily and after having had the opportunity to review it.',
+    '12. Confidentiality',
+    'Each Party shall keep confidential the non-public terms of this Agreement and any non-public information of the other Party obtained within the Scope, except as required by law or as reasonably necessary to enforce this Agreement.',
+    '13. Further Assurances',
+    'Each Party shall, upon reasonable request, execute such further documents and take such further actions as are reasonably necessary to give effect to the transfers listed in Exhibit A.',
+    '14. Notices',
+    'Any notice under this Agreement shall be in writing and delivered by email and shall be deemed given on confirmed delivery. Estefanía’s notice address is stepbystephbtm@gmail.com. Russell’s notice address is cryptokoh@gmail.com.',
+    '15. Entire Agreement',
+    'This Agreement, together with Exhibit A, constitutes the entire agreement between the Parties regarding the Scope and supersedes all prior drafts, discussions, and understandings on that subject, whether written or oral.',
+    '16. Amendment; Waiver',
+    'This Agreement may be amended only by a writing signed by both Parties. No waiver of any provision is effective unless in writing, and no single waiver constitutes a continuing waiver.',
+    '17. Severability',
+    'If any provision of this Agreement is held unenforceable, the remaining provisions shall continue in full force, and the unenforceable provision shall be modified to the minimum extent necessary to make it enforceable while preserving the Parties’ intent.',
+    '18. Governing Law',
+    'This Agreement shall be governed by and construed under the laws of the State of Texas, without regard to its conflict-of-laws principles. The Parties submit to the exclusive jurisdiction of the state and federal courts located in Travis County, Texas.',
+    '19. Counterparts; Electronic Signature',
+    'This Agreement may be executed in counterparts, including by electronic signature, each of which is deemed an original and all of which together constitute one and the same instrument.',
+    'IN WITNESS WHEREOF, the Parties have executed this Agreement as of the Effective Date.',
+    'Exhibit A — Company Assets / Closing Deliverables',
+    'The following are the specific Company Assets Russell will transfer or deliver at Closing. Wallet seed phrases and private keys are delivered only through a secure channel and are never recorded in this Agreement.',
+    'Domains',
+    'flowbond.tech — registrar transfer to Estefanía’s Namecheap account “stepbysteph,” including auth/EPP codes and full DNS control. danz.now — same. Any other FlowBond / DANZ / FlowB domain held by Russell — transferred to the same account.',
+    'Payment & Financial Accounts (FlowBond-linked)',
+    'Mercury — Russell removed; Estefanía as sole owner/administrator. Stripe — ownership/administration transferred to Estefanía; Russell removed. Coinbase — Russell removed; ownership and keys transferred to Estefanía (keys via secure channel only).',
+    'Repositories',
+    'All repositories under the FlowBond Tech GitHub organization — transfer of ownership/admin to Estefanía. (The Cryptocoatl organization is already owned by Estefanía and is not transferred under this Agreement.)',
+    'Web3, Communication & Social Accounts (FlowBond-linked)',
+    'Telegram, Base App, and Farcaster (FlowBond / DANZ / FlowB) — transfer of ownership/admin and credentials to Estefanía; any associated wallet seeds or keys delivered via secure channel only. FlowBond / DANZ / FlowB social profiles held by Russell — transfer or de-identification.',
+    'Catch-All (Company property only)',
+    'Any other asset, account, credential, or interest that belongs to or was created for the Company within the Scope and that is in Russell’s possession or control — transferred or returned to Estefanía at Closing. This Exhibit A is limited to Company property within the Scope. It does not reach Russell’s personal assets, Harmonik Habitats, or anything outside the Scope.',
   ],
 };
 
-// Part 2 — the signable Acknowledgment of Contribution (now Early Co-founder + Deven).
+// Part 2 — the Acknowledgment of Contribution (Document 2), restating Section 2.
 export const ACKNOWLEDGMENT = {
   title: 'Acknowledgment of Contribution',
-  issuedBy: 'Estefanía Ferrera, on behalf of FlowBond / FlowBond Tech',
+  issuedBy: 'Estefanía Ferrera, on behalf of FlowBond Tech Inc.',
   recognitionOf: 'Russell Herod',
   role: 'Early Co-founder — DANZ & FlowB',
   period: 'August 13, 2025 → March 30, 2026',
   scope: [
-    'Recognized as an Early Co-founder of the DANZ and FlowB (FlowBondTech) workstreams, for his real, early contribution at the start of that work.',
-    'Contributed time, skill and engineering effort — including the move-to-earn (DANZ) stack and the early FlowB agent service. *(EDITABLE — add or refine specific items.)*',
+    'Recognized as an early co-founder who contributed to the initial infrastructure of the DANZ and FlowB workstreams.',
+    'This restates the recognition in Section 2 of the Agreement, stated without any disparagement.',
   ],
   acknowledgment:
-    'Estefanía Ferrera and FlowBond gratefully recognize Russell Herod as an Early Co-founder of the DANZ and FlowB workstreams, and the time, skill, and effort he brought to that work. Russell is free to reference this Early Co-founder recognition in his professional materials.',
-  // Further recognitions — Roman (original Early Co-founder) and Deven.
+    'Estefanía Ferrera and FlowBond Tech Inc. recognize Russell Herod as an early co-founder of the DANZ and FlowB workstreams, and the contribution he made to their initial infrastructure. Russell is free to reference this recognition in his professional materials.',
   also: [
     {
       name: 'Roman',
       role: 'Original Early Co-founder',
       text:
-        'The Company recognizes Roman as an original Early Co-founder of FlowBond / DANZ. Roman contributed early work on BLE and movement-tracking for smart-watch integration, and supported the first DANZ event in Argentina — DanzConnect (100+ attendees). *(EDITABLE — refine dates/scope.)* Roman is free to reference this recognition in his professional materials.',
+        'The Company recognizes Roman as an original Early Co-founder of FlowBond / DANZ — early work on BLE and movement-tracking for smart-watch integration, and support of the first DANZ event in Argentina, DanzConnect (100+ attendees).',
     },
     {
       name: 'Deven',
-      role: 'Contributor · September 3, 2025 → November 3, 2025 *(EDITABLE — confirm start day)*',
-      text:
-        'The Company also gratefully acknowledges the contribution of Deven to FlowBond during September 3, 2025 – November 3, 2025. *(EDITABLE — add Deven’s specific contribution.)* Deven is free to reference this acknowledgment in his professional materials.',
+      role: 'Contributor · September 3 – November 3, 2025 *(EDITABLE)*',
+      text: 'The Company also gratefully acknowledges the contribution of Deven to FlowBond.',
     },
   ],
   scopeClarity:
-    'This is an acknowledgment of contribution and honorary recognition only. The “Early Co-founder” recognition does not constitute or imply equity, ownership, options, tokens, control, or any continuing claim, role, or compensation, and no such agreement was ever in place. It stands alongside, and does not alter, the Separation Agreement between the parties.',
+    'This acknowledgment restates the recognition in Section 2 and does not alter the Agreement. It confers no equity, ownership, or continuing claim beyond the terms of the Agreement.',
 };
 
-// "Where we stand today" — the transparent factual standing.
+// "Where we stand today" — the transparent factual standing (per the real agreement).
 export const STANDING = [
-  { k: 'Recognition — Russell', v: 'Early Co-founder (honorary) · DANZ & FlowB', tone: 'good' as const },
-  { k: 'Recognition — Deven', v: 'Contributor — acknowledged', tone: 'good' as const },
-  { k: 'Equity / ownership held by Contributor', v: '0% — none, never granted', tone: 'fact' as const },
-  { k: 'Company ownership & control', v: '100% Estefanía Ferrera', tone: 'fact' as const },
-  { k: 'Asset & access transfers (Exhibit 3)', v: 'Pending — verified item-by-item through Closing', tone: 'pending' as const },
-  { k: 'Mutual release of claims', v: 'Offered — effective upon signature', tone: 'pending' as const },
-  { k: 'Company counsel', v: 'Offered by Company; declined by Contributor', tone: 'fact' as const },
-  { k: 'Validation', v: 'keccak256 fingerprint + on-chain anchor + audit trail + witnesses', tone: 'good' as const },
+  { k: 'Recognition — Russell', v: 'Early Co-founder · DANZ & FlowB (Section 2)', tone: 'good' as const },
+  { k: 'Scope', v: 'FlowBond / DANZ / FlowB only', tone: 'fact' as const },
+  { k: 'Excluded', v: 'Harmonik Habitats + Cryptocoatl + personal assets', tone: 'fact' as const },
+  { k: 'Order', v: 'Both sign first — transfers only after (Section 4)', tone: 'good' as const },
+  { k: 'Transfers', v: 'Only the Company-only list in Exhibit A', tone: 'pending' as const },
+  { k: 'Mutual release', v: 'Effective at Closing', tone: 'pending' as const },
+  { k: 'Governing law', v: 'Texas · Travis County', tone: 'fact' as const },
+  { k: 'Execution', v: 'DocuSign + cryptographic seal + witnesses', tone: 'good' as const },
 ];
