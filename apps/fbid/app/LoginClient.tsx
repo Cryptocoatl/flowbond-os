@@ -20,6 +20,7 @@ const APP_LABELS: Record<string, string> = {
   flow3: 'FlowStudio',
   flowstudio: 'FlowStudio',
   claudia: 'ClaudIA',
+  reciprociudad: 'Reciprociudad',
 }
 
 export default function LoginClient() {

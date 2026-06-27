@@ -19,6 +19,7 @@ const APP_CALLBACKS: Record<string, string> = {
   flow3: 'https://studio.flowme.one/auth/callback',
   claudia: 'https://claudiaflow.life/auth/callback',
   grantflow: 'https://grants.claudiaflow.life/auth/callback',
+  reciprociudad: 'https://reciprociudad.lat/auth/callback',
 }
 
 /**
