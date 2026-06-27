@@ -6,7 +6,8 @@ import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PART
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
-  type VaultRole, type Signature, type Witness, type Resolved,
+  vaultComment, vaultComments,
+  type VaultRole, type Signature, type Witness, type Resolved, type VaultComment,
 } from '@/lib/vault';
 import { hubRedirect } from '@flowbond/auth';
 import { apiUrl } from '@/lib/path';
@@ -230,6 +231,51 @@ function StandingPanel() {
   );
 }
 
+/* ── discussion / request-a-modification thread ── */
+function CommentBox({ code, who }: { code: string; who: string }) {
+  const [list, setList] = useState<VaultComment[]>([]);
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { vaultComments().then(setList).catch(() => {}); }, []);
+  async function send() {
+    if (!text.trim()) return;
+    setBusy(true); setErr(null);
+    try { await vaultComment(code, text); setText(''); setList(await vaultComments()); }
+    catch (e) { setErr((e as Error).message); }
+    finally { setBusy(false); }
+  }
+  return (
+    <section id="discuss" style={{ marginTop: 30 }}>
+      <div className="v-eyebrow">Discussion · request a modification</div>
+      <h2 className="v-h2">Anything to change before signing?</h2>
+      <p className="v-lead" style={{ margin: '4px 0 12px' }}>
+        If you’d like a wording change or have a question, leave it here instead of signing — Estefanía sees it and
+        responds. Signing means you accept the agreement as written.
+      </p>
+      <div className="v-card v-noprint">
+        {list.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+            {list.map((c) => (
+              <div key={c.id} style={{ background: 'rgba(124,77,255,.1)', border: '1px solid rgba(179,136,255,.2)', borderRadius: 10, padding: '9px 12px' }}>
+                <div style={{ fontSize: 12, color: 'var(--v-gold)', fontWeight: 700 }}>{c.name} <span style={{ color: 'var(--v-dim)', fontWeight: 400 }}>· {new Date(c.created_at).toLocaleString()}</span></div>
+                <div style={{ fontSize: 13.5, marginTop: 2, whiteSpace: 'pre-wrap' }}>{c.body}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3}
+          placeholder={`Request a change or leave a comment as ${who}…`}
+          style={{ width: '100%', background: 'rgba(0,0,0,.25)', border: '1px solid rgba(179,136,255,.3)', borderRadius: 10, padding: '11px 13px', color: 'var(--v-ink)', fontSize: 14, resize: 'vertical' }} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+          <button className="vbtn vbtn-ghost" disabled={busy} onClick={send}>{busy ? 'Sending…' : 'Send comment'}</button>
+        </div>
+        {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 8 }}>{err}</p>}
+      </div>
+    </section>
+  );
+}
+
 /* ── Russell's step-by-step finalize guide + ClaudIA chat ── */
 function RussellGuide({ sigs, authorized }: { sigs: Signature[]; authorized: boolean }) {
   const done = (key: string) => {
@@ -380,6 +426,11 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>
 
+      <div className="v-card v-noprint" style={{ marginBottom: 18, textAlign: 'center', fontSize: 13, color: 'var(--v-dim)' }}>
+        📄 This is the <b style={{ color: 'var(--v-ink)' }}>revised agreement (June 26, 2026)</b>. If you opened this earlier,
+        refresh the page to load the latest before you review or sign.
+      </div>
+
       {r.person_key === 'russell' && <RussellGuide sigs={sigs} authorized={authorized} />}
 
       <StandingPanel />
@@ -458,6 +509,8 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         <div className="v-eyebrow" style={{ margin: '28px 0 8px' }}>Document 2 — Acknowledgment of Contribution (Exhibit 5)</div>
         <Acknowledgment role={role} code={code} canAct={canAct} sigs={sigs} onSigned={refresh} />
       </section>
+
+      <CommentBox code={code} who={who} />
 
       <p style={{ textAlign: 'center', marginTop: 40, fontSize: 12.5, color: 'var(--v-dim)' }} className="v-noprint">
         FlowScrow coordinates and records this closing and conditionally releases documents once each task is verified.

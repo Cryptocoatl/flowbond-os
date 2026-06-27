@@ -75,6 +75,27 @@ export async function vaultWitnesses(): Promise<Witness[]> {
   return (data as Witness[]) ?? [];
 }
 
+// ── comments / modification requests ──
+export interface VaultComment {
+  id: string;
+  person_key: string | null;
+  name: string;
+  body: string;
+  created_at: string;
+}
+export async function vaultComment(code: string, body: string): Promise<VaultComment> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_comment', { p_code: code, p_body: body });
+  if (error) throw error;
+  return data as VaultComment;
+}
+export async function vaultComments(): Promise<VaultComment[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_comments');
+  if (error) throw error;
+  return (data as VaultComment[]) ?? [];
+}
+
 /** Current FBID session email (for showing who's verified), or null. */
 export async function sessionEmail(): Promise<string | null> {
   const sb = browserClient();
