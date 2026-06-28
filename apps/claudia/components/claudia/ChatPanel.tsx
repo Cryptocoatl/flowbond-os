@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { card } from './CarePanel';
 import { NudgeBanner } from './NudgeBanner';
+import { useDictation, type DictationLang } from '../../lib/claudia/listen';
 import type { ChatMessage } from '../../lib/claudia/client';
 
 export function ChatPanel({
@@ -20,6 +21,10 @@ export function ChatPanel({
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
+
+  // ── voice input (on-device dictation) ──────────────────────────────────────
+  const [micLang, setMicLang] = useState<DictationLang>('es-MX');
+  const { supported: micSupported, listening, toggle: toggleMic } = useDictation(input, setInput, { lang: micLang });
 
   return (
     <div style={card({ flex: '1 1 380px', display: 'flex', flexDirection: 'column', minHeight: 460 })}>
@@ -70,7 +75,7 @@ export function ChatPanel({
               onSend();
             }
           }}
-          placeholder="Cuéntale a ClaudIA…  ·  what do you need?"
+          placeholder={listening ? 'Te escucho…  ·  listening…' : 'Cuéntale a ClaudIA…  ·  what do you need?'}
           style={{
             flex: 1,
             resize: 'none',
@@ -84,6 +89,49 @@ export function ChatPanel({
             lineHeight: 1.4,
           }}
         />
+        {micSupported && (
+          <button
+            onClick={() => setMicLang((l) => (l === 'es-MX' ? 'en-US' : 'es-MX'))}
+            title="Idioma de dictado · dictation language"
+            style={{
+              border: '1px solid rgba(244,241,234,.14)',
+              borderRadius: 13,
+              padding: '0 9px',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '.04em',
+              color: 'rgba(244,241,234,.62)',
+              background: 'rgba(255,255,255,.04)',
+              fontFamily: 'system-ui, sans-serif',
+            }}
+          >
+            {micLang === 'es-MX' ? 'ES' : 'EN'}
+          </button>
+        )}
+        {micSupported && (
+          <button
+            onClick={toggleMic}
+            title={listening ? 'Detener · stop' : 'Habla con ClaudIA · talk'}
+            className={listening ? 'mic-live' : undefined}
+            style={{
+              border: listening ? 'none' : '1px solid rgba(244,241,234,.14)',
+              borderRadius: 13,
+              padding: '0 14px',
+              cursor: 'pointer',
+              fontSize: 16,
+              display: 'grid',
+              placeItems: 'center',
+              color: listening ? '#fff' : 'rgba(244,241,234,.8)',
+              background: listening
+                ? 'linear-gradient(135deg, #FF6060, #FF8A6B)'
+                : 'rgba(255,255,255,.05)',
+              fontFamily: 'system-ui, sans-serif',
+            }}
+          >
+            {listening ? '◉' : '🎙️'}
+          </button>
+        )}
         <button
           onClick={onSend}
           disabled={loading || !input.trim()}

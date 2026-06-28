@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CLAUDIA_SYSTEM_PROMPT } from '../../../../lib/claudia/system-prompt';
-import { requireFeature } from '../../../../lib/claudia/entitlement-server';
+import { CLAUDIA_PERSONA_USER, CLAUDIA_PERSONA_STEWARD } from '../../../../lib/claudia/system-prompt';
+import { requireFeature, isSuperadmin } from '../../../../lib/claudia/entitlement-server';
 
 // ════════════════════════════════════════════════════════════════════════
 //  ClaudIA · BLIND RELAY  (private-cloud mode)  — master spec §5
@@ -46,6 +46,11 @@ export async function POST(req: NextRequest) {
   }
   const model = gate.ent?.tier === 'pro' ? MODEL_PRO : MODEL;
 
+  // Persona gate: ONLY the founder/superadmin gets the empire-aware steward.
+  // Everyone else gets the personal guardian who knows nothing of FlowBond.
+  // Default-deny — any uncertainty resolves to the safe user persona.
+  const system = (await isSuperadmin()) ? CLAUDIA_PERSONA_STEWARD : CLAUDIA_PERSONA_USER;
+
   let messages: Msg[];
   try {
     const body = await req.json();
@@ -69,7 +74,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model,
         max_tokens: 1000,
-        system: CLAUDIA_SYSTEM_PROMPT,
+        system,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
       }),
     });

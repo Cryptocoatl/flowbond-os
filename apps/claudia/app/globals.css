@@ -46,6 +46,12 @@ body {
   50% { box-shadow: 0 0 22px 2px rgba(255, 138, 107, 0.35); }
 }
 
+@keyframes mic-live {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 96, 96, 0.55); }
+  50% { box-shadow: 0 0 16px 3px rgba(255, 96, 96, 0.65); }
+}
+.mic-live { animation: mic-live 1.2s ease-in-out infinite; }
+
 .msg { animation: rise 0.5s ease both; }
 .orb { animation: breathe 8s ease-in-out infinite; }
 .spark { animation: drift 9s linear infinite; }
@@ -129,7 +135,60 @@ body {
 ::placeholder { color: rgba(244, 241, 234, 0.4); }
 textarea:focus { outline: none; }
 
+/* ════ ClaudIA landing — scroll cinematic ════════════════════════════════ */
+.land { position: relative; z-index: 1; }
+.land-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--night-deep); }
+.land-video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 30%;
+  animation: kenburns 34s ease-in-out infinite alternate;
+}
+/* layered veil keeps text legible over the moving film at every scroll depth */
+.land-veil {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(125% 90% at 50% 18%, transparent 26%, rgba(7,15,26,.5) 68%, rgba(7,15,26,.94) 100%),
+    linear-gradient(to bottom, rgba(7,15,26,.6) 0%, rgba(7,15,26,.18) 22%, rgba(7,15,26,.45) 58%, var(--night-deep) 100%);
+}
+.land-spark { position: absolute; width: 4px; height: 4px; border-radius: 50%; filter: blur(1px); animation: drift 11s linear infinite; }
+
+.land-section {
+  position: relative; z-index: 1; min-height: 100svh; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 13vh 22px; gap: 18px;
+}
+/* per-beat living backdrop of her — only the in-view clip plays (JS pauses the rest) */
+.land-secbg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.land-secvid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 26%; }
+.land-inner { position: relative; z-index: 1; width: 100%; max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.land-kicker { font-size: 12px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--gold); opacity: 0.85; margin: 0; }
+.land-h2 {
+  font-size: clamp(28px, 6vw, 54px); font-weight: 400; line-height: 1.06; margin: 0; letter-spacing: 0.01em;
+  background: linear-gradient(100deg, #F4F1EA, #FFD27A 45%, #FF8A6B 72%, #2FB6A8);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 6px 30px rgba(255,210,122,.18));
+}
+.land-lead { font-size: clamp(15px, 2.4vw, 19px); line-height: 1.62; max-width: 560px; color: rgba(244,241,234,.8); margin: 0; }
+.land-portrait {
+  width: min(220px, 56vw); aspect-ratio: 1; border-radius: 50%; object-fit: cover; object-position: center 26%;
+  border: 2px solid rgba(255,210,122,.45); box-shadow: 0 0 64px rgba(255,210,122,.3), 0 22px 60px rgba(0,0,0,.5);
+}
+.land-mark { width: 74px; height: 74px; object-fit: contain; filter: drop-shadow(0 0 24px rgba(255,210,122,.5)); }
+.land-chip {
+  font-size: 13px; color: rgba(244,241,234,.82); background: rgba(255,255,255,.05);
+  border: 1px solid rgba(244,241,234,.12); border-radius: 999px; padding: 7px 13px; white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+/* scroll-reveal: rise + de-blur when the element enters the viewport */
+.reveal { opacity: 0; transform: translateY(42px); filter: blur(9px); transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1), filter 1s ease; }
+.reveal.in { opacity: 1; transform: none; filter: none; }
+
+.scroll-cue { position: absolute; bottom: 26px; left: 50%; font-size: 22px; color: rgba(244,241,234,.6); animation: cue 2.2s ease-in-out infinite; }
+@keyframes cue { 0%,100% { transform: translate(-50%,0); opacity: .5; } 50% { transform: translate(-50%,9px); opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .orb, .spark, .dot, .due, .msg,
-  .cine-video, .cine-rise, .cine-cta::after { animation: none !important; }
+  .orb, .spark, .dot, .due, .msg, .land-spark, .scroll-cue,
+  .cine-video, .land-video, .cine-rise, .cine-cta::after { animation: none !important; }
+  .reveal { opacity: 1; transform: none; filter: none; transition: none; }
 }

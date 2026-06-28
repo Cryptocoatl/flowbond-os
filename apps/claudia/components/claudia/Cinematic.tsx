@@ -13,10 +13,10 @@ export function Cinematic({ children }: { children: React.ReactNode }) {
         muted
         playsInline
         preload="auto"
-        poster="/claudia-hero-poster.jpg"
+        poster="/claudia-live-poster.jpg"
         aria-hidden
       >
-        <source src="/claudia-hero.mp4" type="video/mp4" />
+        <source src="/claudia-hero-live.mp4" type="video/mp4" />
       </video>
       <div className="cine-vignette" />
       <div className="cine-scrim" />

@@ -45,3 +45,20 @@ export async function requireFeature(feature: Feature, appSlug = '*'): Promise<F
   }
   return { ok: true, userId: user.id, ent, enforced: true };
 }
+
+/**
+ * Is the current (cookie-authed) caller a global superadmin? Used to gate the
+ * empire-aware STEWARD persona. DEFAULT-DENY: any error (e.g. grant spine not
+ * deployed) returns false → the safe user persona, so a regular user is never
+ * told about FlowBond.
+ */
+export async function isSuperadmin(): Promise<boolean> {
+  try {
+    const sb = await serverClient();
+    const { data, error } = await sb.rpc('is_superadmin');
+    if (error) return false;
+    return data === true;
+  } catch {
+    return false;
+  }
+}

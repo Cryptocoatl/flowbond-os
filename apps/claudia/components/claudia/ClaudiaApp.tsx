@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Cinematic } from './Cinematic';
+import { ClaudiaLanding } from './ClaudiaLanding';
 import { ModeBadge } from './ModeBadge';
 import { ChatPanel } from './ChatPanel';
 import { MeetingPanel } from './MeetingPanel';
@@ -13,11 +14,12 @@ import { StatsRibbon } from './StatsRibbon';
 import { SuggestionsPanel } from './SuggestionsPanel';
 import { NUDGE_COPY } from './NudgeBanner';
 import { getVault, type ChatMessage, type ReadyTask } from '../../lib/claudia/client';
-import { parseReply } from '../../lib/claudia/contract';
+import { parseReply, type ClaudiaAction } from '../../lib/claudia/contract';
 import { OPENING_BY_APP } from '../../lib/claudia/system-prompt';
-import { isCommand, runCommand, myGrants, isSuperadmin, connectApp, disconnectApp, type Grant } from '../../lib/claudia/admin';
-import { EMPIRE } from '../../lib/claudia/empire';
+import { isCommand, runCommand, myGrants, isSuperadmin, connectApp, disconnectApp, grantAccess, revokeAccess, type Grant } from '../../lib/claudia/admin';
+import { EMPIRE, EMPIRE_BY_SLUG } from '../../lib/claudia/empire';
 import { platformPasskeyReady, inAppBrowser } from '../../lib/claudia/crypto';
+import { speak, stopSpeaking } from '../../lib/claudia/voice';
 import { hubRedirect } from '@flowbond/auth';
 
 type Phase = 'loading' | 'signin' | 'enroll' | 'unlock' | 'ready';
@@ -58,6 +60,9 @@ export function ClaudiaApp() {
   const [passkeyReady, setPasskeyReady] = useState(false);
   const [inApp, setInApp] = useState(false);
   const [view, setView] = useState<'chat' | 'empire' | 'meetings'>('chat');
+  // ── voice (ElevenLabs) + audio-reactive avatar level ──────────────────────
+  const [voiceOn, setVoiceOn] = useState(false);
+  const [speakLevel, setSpeakLevel] = useState(0);
 
   // ── tick for "hace Xh" + client-side care evaluation ──────────────────────
   useEffect(() => {
@@ -70,7 +75,17 @@ export function ClaudiaApp() {
   useEffect(() => {
     setInApp(inAppBrowser());
     platformPasskeyReady().then(setPasskeyReady).catch(() => setPasskeyReady(false));
+    try { setVoiceOn(localStorage.getItem('claudia.voice') === '1'); } catch { /* noop */ }
   }, []);
+
+  function toggleVoice() {
+    setVoiceOn((v) => {
+      const next = !v;
+      try { localStorage.setItem('claudia.voice', next ? '1' : '0'); } catch { /* noop */ }
+      if (!next) { stopSpeaking(); setSpeakLevel(0); }
+      return next;
+    });
+  }
 
   // ── arriving from an invite link → open the Reuniones tab so it can redeem ──
   useEffect(() => {
@@ -157,6 +172,40 @@ export function ClaudiaApp() {
     }
   }
 
+  // talk-to-act: run the actions ClaudIA proposed, returning a receipt line each.
+  // Every call hits a gated RPC, so an unauthorized request is refused server-side.
+  async function runActions(actions: ClaudiaAction[]): Promise<string[]> {
+    const name = (slug?: string) => (slug && EMPIRE_BY_SLUG[slug]?.name) || slug || '?';
+    const out: string[] = [];
+    for (const a of actions) {
+      try {
+        if (a.type === 'connect_app' && a.app) {
+          await connectApp(a.app);
+          out.push(`✓ Conecté ${name(a.app)}`);
+        } else if (a.type === 'disconnect_app' && a.app) {
+          const gid = connectedBySlug[a.app];
+          if (gid) { await disconnectApp(gid); out.push(`✓ Desconecté ${name(a.app)}`); }
+          else out.push(`· ${name(a.app)} no estaba conectado`);
+        } else if (a.type === 'grant' && a.fbid && a.app) {
+          await grantAccess(a.fbid, a.app, a.page ?? null, a.role ?? 'admin');
+          out.push(`✓ Acceso ${a.role ?? 'admin'} a ${name(a.app)}${a.page ? ` ${a.page}` : ''} para ${a.fbid.slice(0, 8)}…`);
+        } else if (a.type === 'revoke' && a.grant_id) {
+          await revokeAccess(a.grant_id);
+          out.push('✓ Acceso revocado');
+        } else if (a.type === 'complete_task' && a.task) {
+          const needle = a.task.toLowerCase();
+          const t = tasks.find((x) => x.status === 'open' && x.title.toLowerCase().includes(needle));
+          if (t) { await getVault().setTaskStatus(t.id, 'done'); out.push(`✓ Tarea hecha: ${t.title}`); }
+          else out.push(`· No encontré una tarea abierta como “${a.task}”`);
+        }
+      } catch (e) {
+        const m = (e as Error).message;
+        out.push(`✗ ${m.includes('superadmin_required') ? 'Necesitas ser super-admin (escribe /admin init)' : m}`);
+      }
+    }
+    return out;
+  }
+
   // ── care items (timing only) ──────────────────────────────────────────────
   const careItems: CareItem[] = useMemo(() => {
     return CARE_META.map((c) => {
@@ -241,9 +290,18 @@ export function ClaudiaApp() {
       const say = reply.say || '…';
       setMessages((m) => [...m, { role: 'assistant', text: say }]);
       await getVault().saveMessage('assistant', say);
+      if (voiceOn) speak(say, setSpeakLevel).catch(() => {}); // she speaks aloud
       for (const t of reply.tasks) await getVault().captureTask(t);
       if (reply.tasks.length) setTasks(await getVault().loadTasks());
       if (reply.care) setNudge(reply.care);
+      // talk-to-act: she PROPOSED actions; execute them against the gated RPCs
+      // (the DB still enforces superadmin — the LLM can't escalate).
+      if (reply.actions.length) {
+        const receipts = await runActions(reply.actions);
+        await refreshGrants();
+        setTasks(await getVault().loadTasks());
+        if (receipts.length) setMessages((m) => [...m, { role: 'assistant', text: receipts.join('\n') }]);
+      }
     } catch {
       setMessages((m) => [...m, { role: 'assistant', text: 'El flujo se interrumpió un momento. Try again — estoy aquí. 🌊' }]);
     } finally {
@@ -262,7 +320,18 @@ export function ClaudiaApp() {
     setTasks((ts) => ts.map((x) => (x.id === t.id ? { ...x, status } : x)));
   }
 
-  // ════ cinematic threshold — every pre-vault phase plays over her identity film ══
+  // ════ the welcome — a scroll-told cinematic landing over her living film ══
+  if (phase === 'signin') {
+    return (
+      <ClaudiaLanding
+        onEnter={() => {
+          window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`);
+        }}
+      />
+    );
+  }
+
+  // ════ cinematic threshold — the quick pre-vault gates over her identity film ══
   if (phase !== 'ready') {
     return (
       <Cinematic>
@@ -270,30 +339,6 @@ export function ClaudiaApp() {
           <p className="cine-rise" style={{ fontSize: 16, fontStyle: 'italic', letterSpacing: '0.06em', color: 'rgba(244,241,234,.72)' }}>
             Despertando… 🌙
           </p>
-        )}
-
-        {phase === 'signin' && (
-          <>
-            <h1 className="cine-title cine-rise" style={{ animationDelay: '.05s' }}>ClaudIA</h1>
-            <p className="cine-rise" style={{ animationDelay: '.18s', margin: 0, fontSize: 15, fontStyle: 'italic', letterSpacing: '0.08em', color: 'rgba(244,241,234,.8)' }}>
-              La Guardiana del Imperio · te tengo cubierta
-            </p>
-            <p className="cine-rise" style={{ animationDelay: '.3s', margin: '2px 0 6px', fontSize: 13.5, lineHeight: 1.6, color: 'rgba(244,241,234,.62)', maxWidth: 420 }}>
-              Te reconozco por tu FBID — una identidad, todos los mundos.
-            </p>
-            <button
-              className="cine-cta cine-rise"
-              style={{ animationDelay: '.42s' }}
-              onClick={() => {
-                window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`);
-              }}
-            >
-              Entrar al imperio ✦
-            </button>
-            <p className="cine-rise" style={{ animationDelay: '.55s', margin: '12px 0 0', fontSize: 11, letterSpacing: '0.08em', color: 'rgba(244,241,234,.4)' }}>
-              zero-knowledge by design
-            </p>
-          </>
         )}
 
         {phase === 'enroll' && !recoveryPhrase && (
@@ -387,7 +432,7 @@ export function ClaudiaApp() {
           alt="ClaudIA"
           width={58}
           height={58}
-          style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center 26%', border: '2px solid rgba(255,210,122,.5)', boxShadow: '0 0 26px rgba(255,210,122,.32)', flexShrink: 0 }}
+          style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover', objectPosition: 'center 26%', border: '2px solid rgba(255,210,122,.5)', boxShadow: `0 0 ${26 + speakLevel * 48}px rgba(255,210,122,${0.32 + speakLevel * 0.45})`, transform: `scale(${1 + speakLevel * 0.13})`, transition: 'transform .08s linear, box-shadow .08s linear', flexShrink: 0 }}
         />
         <div style={{ flex: '1 1 180px', minWidth: 140 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -404,6 +449,14 @@ export function ClaudiaApp() {
             La Guardiana del Imperio · te tengo cubierta
           </p>
         </div>
+        <button
+          onClick={toggleVoice}
+          title={voiceOn ? 'Silenciar a ClaudIA' : 'Darle voz a ClaudIA'}
+          aria-label="voz"
+          style={{ width: 38, height: 38, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, fontSize: 16, display: 'grid', placeItems: 'center', fontFamily: 'inherit', color: voiceOn ? '#0E1A2B' : 'rgba(244,241,234,.7)', background: voiceOn ? 'linear-gradient(135deg,#FFD27A,#2FB6A8)' : 'rgba(255,255,255,.05)', border: `1px solid ${voiceOn ? 'transparent' : 'rgba(244,241,234,.14)'}` }}
+        >
+          {voiceOn ? '🔊' : '🔇'}
+        </button>
         <ModeBadge />
       </header>
 
