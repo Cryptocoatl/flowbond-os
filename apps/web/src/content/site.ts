@@ -12,7 +12,6 @@ export const NAV = {
     { href: '#trinity', label: 'System' },
     { href: '#flowme', label: 'FlowMe OS' },
     { href: '#layer0', label: 'Layer 0' },
-    { href: '#pricing', label: 'Pricing' },
     { href: '#founder', label: 'Founder' },
   ],
 }
@@ -168,7 +167,6 @@ export const FOOTER = {
       links: [
         { label: 'Documentation', href: LINKS.docs },
         { label: 'Products', href: '#services' },
-        { label: 'Pricing', href: '#pricing' },
         { label: 'Deck ↗', href: LINKS.deck },
       ],
     },

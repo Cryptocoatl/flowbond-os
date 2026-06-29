@@ -5,7 +5,6 @@ import { Trinity } from '@/components/Trinity'
 import { FlowMeOS } from '@/components/FlowMeOS'
 import { Layer0 } from '@/components/Layer0'
 import { Services } from '@/components/Services'
-import { Pricing } from '@/components/Pricing'
 import { Founder } from '@/components/Founder'
 import { Engine } from '@/components/Engine'
 import { RVBL } from '@/components/RVBL'
@@ -23,7 +22,6 @@ export default function Home() {
       <FlowMeOS />
       <Layer0 />
       <Services />
-      <Pricing />
       <Founder />
       <Engine />
       <RVBL />
