@@ -26,7 +26,6 @@ export function Founder() {
           {FOUNDER.paras.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
-          <p className="gk-line">{FOUNDER.gkLine}</p>
           <blockquote className="f-quote">
             {FOUNDER.quote}
             <span className="src">{FOUNDER.quoteSrc}</span>
