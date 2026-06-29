@@ -6,6 +6,9 @@ import { SignJWT, jwtVerify } from 'jose'
 import { getDb, schema } from '@flowbond/db'
 import { eq, and }     from 'drizzle-orm'
 
+if (!process.env.FLOWEDIT_JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('[flowedit-auth] FLOWEDIT_JWT_SECRET must be set in production')
+}
 const JWT_SECRET = new TextEncoder().encode(
   process.env.FLOWEDIT_JWT_SECRET ?? 'flowedit-dev-secret-change-in-prod'
 )
