@@ -36,6 +36,7 @@ const WORLDS: World[] = [
   { slug: 'raiz', label: 'Raiz', desc: 'Language, translated', logo: '/logos/raiz.svg', tier: 'external', href: 'https://translate.flowme.one' },
   { slug: 'mountaindogs', label: 'MountainDogs', desc: 'Paseadores, on call', logo: '/logos/mountaindogs.svg', tier: 'external', href: 'https://mountaindogs.app' },
   { slug: 'reciprociudad', label: 'ReciproCiudad', desc: 'The reciprocity network', logo: '/logos/reciprociudad.png', tier: 'sso', callback: 'https://reciprociudad.lat/auth/callback' },
+  { slug: 'voces', label: 'Voces para el Alma', desc: 'Voices for the soul', logo: '/logos/voces.svg', tier: 'sso', callback: 'https://voces.flowme.one/admin' },
   { slug: 'danz', label: 'DANZ.NOW', desc: 'Coming back soon', logo: '/logos/danz.png', tier: 'soon' },
 ]
 
