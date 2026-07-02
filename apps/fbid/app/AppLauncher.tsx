@@ -49,6 +49,7 @@ interface Origin {
 
 export default function AppLauncher({ identitySeed }: { identitySeed: string }) {
   const [origin, setOrigin] = useState<Origin | null>(null)
+  const [hover, setHover] = useState<Origin | null>(null)
   const reduceMotion = !!useReducedMotion()
 
   useEffect(() => {
@@ -61,7 +62,21 @@ export default function AppLauncher({ identitySeed }: { identitySeed: string }) 
   }, [origin])
 
   function open(world: World, el: HTMLElement) {
+    setHover(null)
     setOrigin({ world, rect: el.getBoundingClientRect() })
+  }
+
+  // Tooltip is rendered once here, at the top level, positioned in viewport
+  // coordinates from the hovered node's rect — NOT nested inside the node's own
+  // rotating wrapper. Each ring node sits in its own CSS stacking context
+  // (the rotation `transform` creates one), so a tooltip rendered *inside* a
+  // node can be painted over by a neighboring node's icon despite z-index.
+  // Lifting it out here guarantees it's always on top and never clipped.
+  function hoverStart(world: World, el: HTMLElement) {
+    setHover({ world, rect: el.getBoundingClientRect() })
+  }
+  function hoverEnd() {
+    setHover(null)
   }
 
   return (
@@ -100,7 +115,14 @@ export default function AppLauncher({ identitySeed }: { identitySeed: string }) 
                     animate={reduceMotion ? undefined : { rotate: -360 }}
                     transition={reduceMotion ? undefined : { duration: RING_DURATION, repeat: Infinity, ease: 'linear' }}
                   >
-                    <WorldNode world={w} index={i} onOpen={open} reduceMotion={reduceMotion} />
+                    <WorldNode
+                      world={w}
+                      index={i}
+                      onOpen={open}
+                      onHoverStart={hoverStart}
+                      onHoverEnd={hoverEnd}
+                      reduceMotion={reduceMotion}
+                    />
                   </motion.div>
                 </div>
               )
@@ -117,9 +139,41 @@ export default function AppLauncher({ identitySeed }: { identitySeed: string }) 
       </div>
 
       <AnimatePresence>
+        {hover && !origin && <HoverTooltip world={hover.world} rect={hover.rect} />}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {origin && <Portal origin={origin} onClose={() => setOrigin(null)} reduceMotion={reduceMotion} />}
       </AnimatePresence>
     </div>
+  )
+}
+
+function HoverTooltip({ world, rect }: { world: World; rect: DOMRect }) {
+  const disabled = world.tier === 'soon'
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 4, scale: 0.9 }}
+      transition={{ duration: 0.15 }}
+      style={{
+        position: 'fixed',
+        left: rect.left + rect.width / 2,
+        top: rect.top - 10,
+        transform: 'translate(-50%, -100%)',
+      }}
+      // Top-level + high z-index + a real max-width with wrapping (not
+      // whitespace-nowrap) so long names like "ReciproCiudad" or
+      // "MountainDogs · soon" are always fully readable, never clipped.
+      className="z-[60] max-w-[11rem] text-center px-2.5 py-1.5 rounded-lg bg-black/90 border border-violet-500/30 shadow-lg pointer-events-none"
+    >
+      <ScrambleText
+        text={disabled ? `${world.label} · soon` : world.label}
+        active
+        className={`text-[11px] font-mono tracking-wide leading-snug break-words ${disabled ? 'text-zinc-500' : 'text-violet-200'}`}
+      />
+    </motion.div>
   )
 }
 
@@ -155,17 +209,20 @@ function WorldNode({
   world,
   index,
   onOpen,
+  onHoverStart,
+  onHoverEnd,
   reduceMotion,
   asCard = false,
 }: {
   world: World
   index: number
   onOpen: (world: World, el: HTMLElement) => void
+  onHoverStart?: (world: World, el: HTMLElement) => void
+  onHoverEnd?: () => void
   reduceMotion: boolean
   asCard?: boolean
 }) {
   const disabled = world.tier === 'soon'
-  const [hovered, setHovered] = useState(false)
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     if (disabled) return
@@ -202,44 +259,25 @@ function WorldNode({
   }
 
   return (
-    <div className="relative">
-      <AnimatePresence>
-        {hovered && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.9 }}
-            transition={{ duration: 0.15 }}
-            className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap px-2.5 py-1 rounded-lg bg-black/90 border border-violet-500/30 shadow-lg pointer-events-none z-10"
-          >
-            <ScrambleText
-              text={disabled ? `${world.label} · soon` : world.label}
-              active={hovered}
-              className={`text-[11px] font-mono tracking-wide ${disabled ? 'text-zinc-500' : 'text-violet-200'}`}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <motion.button
-        type="button"
-        aria-disabled={disabled}
-        onClick={handleClick}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onFocus={() => setHovered(true)}
-        onBlur={() => setHovered(false)}
-        aria-label={disabled ? `${world.label} — coming back soon` : `Open ${world.label}`}
-        initial={{ opacity: 0, scale: 0.3 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={reduceMotion ? { duration: 0.2 } : { delay: index * 0.06, type: 'spring', stiffness: 220, damping: 18 }}
-        whileHover={disabled ? undefined : { scale: 1.14 }}
-        className={`w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center backdrop-blur-sm transition-colors ${
-          disabled ? 'opacity-40 cursor-default' : 'hover:bg-white/[0.09] hover:border-violet-500/50 shadow-lg'
-        }`}
-      >
-        {logo}
-      </motion.button>
-    </div>
+    <motion.button
+      type="button"
+      aria-disabled={disabled}
+      onClick={handleClick}
+      onMouseEnter={(e) => onHoverStart?.(world, e.currentTarget)}
+      onMouseLeave={() => onHoverEnd?.()}
+      onFocus={(e) => onHoverStart?.(world, e.currentTarget)}
+      onBlur={() => onHoverEnd?.()}
+      aria-label={disabled ? `${world.label} — coming back soon` : `Open ${world.label}`}
+      initial={{ opacity: 0, scale: 0.3 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={reduceMotion ? { duration: 0.2 } : { delay: index * 0.06, type: 'spring', stiffness: 220, damping: 18 }}
+      whileHover={disabled ? undefined : { scale: 1.14 }}
+      className={`w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center backdrop-blur-sm transition-colors ${
+        disabled ? 'opacity-40 cursor-default' : 'hover:bg-white/[0.09] hover:border-violet-500/50 shadow-lg'
+      }`}
+    >
+      {logo}
+    </motion.button>
   )
 }
 

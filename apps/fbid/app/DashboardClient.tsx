@@ -110,7 +110,7 @@ export default function DashboardClient({
         <p className="text-[var(--fb-muted)] text-xs uppercase tracking-wider px-1">Security</p>
         <div className="bg-white/[0.03] border border-white/10 rounded-2xl divide-y divide-white/[0.06]">
           <a
-            href="/auth/set-password"
+            href={hasPassword ? '/auth/set-password?mode=change' : '/auth/set-password'}
             className="flex items-center justify-between p-4 hover:bg-white/[0.04] transition rounded-t-2xl"
           >
             <div>

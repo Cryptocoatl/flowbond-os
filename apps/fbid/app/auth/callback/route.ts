@@ -20,6 +20,7 @@ const APP_CALLBACKS: Record<string, string> = {
   claudia: 'https://claudiaflow.life/auth/callback',
   grantflow: 'https://grants.claudiaflow.life/auth/callback',
   reciprociudad: 'https://reciprociudad.lat/auth/callback',
+  voces: 'https://voces.flowme.one/admin',
 }
 
 /**
@@ -64,8 +65,25 @@ export async function GET(request: NextRequest) {
   // Password recovery → set a password first, still on the hub. Triggered by the
   // explicit ?next=/auth/set-password (PKCE ?code recovery) OR a token_hash of
   // type=recovery via the forwarder. Works with or without a waiting app.
+  // mode=recovery tells SetPasswordClient to skip the "current password" gate —
+  // that's the whole point of a forgot-password link.
   if (next === '/auth/set-password' || (tokenHash && type === 'recovery')) {
     const sp = new URL('/auth/set-password', url.origin)
+    sp.searchParams.set('mode', 'recovery')
+    if (app) sp.searchParams.set('app', app)
+    if (isAllowedRedirect(redirect)) sp.searchParams.set('redirect', redirect!)
+    return NextResponse.redirect(sp.toString())
+  }
+
+  // First-time nudge: a magic-link/signup/OAuth landing (not a recovery flow)
+  // with no password yet → prompt to set one before continuing, same as the
+  // confirmation-email → set-password pattern. This is the fallback that makes
+  // every FBID-wired app a one-click password login next time. Skippable on
+  // that screen ("Not now") — not a hard lock, just a strong nudge.
+  const { data: hasPwd } = await supabase.rpc('has_password')
+  if (hasPwd !== true) {
+    const sp = new URL('/auth/set-password', url.origin)
+    sp.searchParams.set('mode', 'create')
     if (app) sp.searchParams.set('app', app)
     if (isAllowedRedirect(redirect)) sp.searchParams.set('redirect', redirect!)
     return NextResponse.redirect(sp.toString())
