@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.100.14",
     "bs58": "^6.0.0",
+    "framer-motion": "^11.15.0",
     "next": "^15.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

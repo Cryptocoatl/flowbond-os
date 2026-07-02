@@ -5,41 +5,30 @@ import { useRouter } from 'next/navigation'
 import { claimHandle, handleAvailable, type FbidIdentity } from '@flowbond/auth/identity'
 import { useT } from '@flowbond/i18n'
 import { createClient } from '@/lib/supabase/client'
+import { avatarGradient, handoffHref } from '@/lib/identity-visuals'
 import ConnectedAccounts from './ConnectedAccounts'
+import AppLauncher from './AppLauncher'
 
-// FBID-integrated apps → seamless SSO via the hub handoff (one-time token, no re-login).
-const APPS: { slug: string; label: string; desc: string; callback: string; glyph: string }[] = [
-  { slug: 'flow3', label: 'FlowStudio', desc: 'The creation engine', callback: 'https://studio.flowme.one/auth/callback', glyph: '🎬' },
-  { slug: 'flowme', label: 'FlowMe', desc: 'Your living profile', callback: 'https://flowme.one/auth/callback', glyph: '🎭' },
-  { slug: 'astroflow', label: 'AstroFlow', desc: 'Your cosmic map', callback: 'https://astro.flowbond.life/auth/callback', glyph: '🪐' },
-  { slug: 'flowgarden', label: 'FlowGarden', desc: 'Garden intelligence', callback: 'https://flowgarden.life/auth/callback', glyph: '🌱' },
-  { slug: 'danz', label: 'DANZ.NOW', desc: 'Dance & connection', callback: 'https://danz-now.vercel.app/auth/callback', glyph: '💃' },
-  { slug: 'claudia', label: 'ClaudIA', desc: 'Your zero-knowledge guardian', callback: 'https://claudiaflow.life/auth/callback', glyph: '🛡️' },
-  { slug: 'flowbond', label: 'FlowBond', desc: 'Your identity home', callback: 'https://flowbond.life/api/auth/callback', glyph: '🔮' },
-]
-// Apps not yet on FBID → plain links (open their own login).
-const EXTERNAL: { label: string; desc: string; href: string; glyph: string }[] = [
-  { label: 'Xelva', desc: 'Gorillae OG', href: 'https://xelva.live', glyph: '🦍' },
-  { label: 'Deck', desc: 'The pitch', href: 'https://deck.flowbond.life', glyph: '📊' },
+// Not part of the circular launcher (not requested as a "world" tile) but still
+// live and working — kept reachable so nothing regresses.
+const MORE_LINKS = [
+  { label: 'FlowBond', href: handoffHref('flowbond', 'https://flowbond.life/api/auth/callback') },
+  { label: 'Xelva', href: 'https://xelva.live' },
+  { label: 'Deck', href: 'https://deck.flowbond.life' },
 ]
 
-function handoffHref(slug: string, callback: string) {
-  return `/api/handoff?app=${encodeURIComponent(slug)}&redirect=${encodeURIComponent(callback)}`
-}
-
-// Deterministic gradient avatar seeded by the FBID id — a unique "identity avatar".
-function avatarGradient(seed: string) {
-  let h = 0
-  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) % 360
-  const h2 = (h + 140) % 360
-  return `conic-gradient(from 210deg, hsl(${h} 80% 60%), hsl(${h2} 75% 55%), hsl(${(h + 280) % 360} 80% 60%), hsl(${h} 80% 60%))`
-}
-
-export default function DashboardClient({ identity }: { identity: FbidIdentity }) {
+export default function DashboardClient({
+  identity,
+  hasPassword,
+}: {
+  identity: FbidIdentity
+  hasPassword: boolean
+}) {
   const router = useRouter()
   const t = useT()
   const initial = (identity.display_name || identity.handle || 'F').trim().charAt(0).toUpperCase()
   const shortId = (identity.id || '').slice(0, 8)
+  const seed = identity.id || identity.handle || 'fbid'
 
   return (
     <div className="w-full max-w-2xl flex flex-col gap-8">
@@ -47,7 +36,7 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
       <div className="flex flex-col items-center gap-4 text-center">
         <div
           className="w-24 h-24 rounded-2xl flex items-center justify-center text-3xl font-bold text-white shadow-lg ring-1 ring-white/10"
-          style={{ background: avatarGradient(identity.id || identity.handle || 'fbid') }}
+          style={{ background: avatarGradient(seed) }}
           aria-hidden
         >
           {initial}
@@ -72,6 +61,24 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
         <p className="text-[var(--fb-muted)] text-[13px] leading-relaxed">{t('dash.welcome.body')}</p>
       </div>
 
+      {/* Password nudge — the fallback that makes every FBID-wired app a one-click
+          login next time, no email round-trip. Disappears once hasPassword flips true. */}
+      {!hasPassword && (
+        <a
+          href="/auth/set-password"
+          className="group flex items-center gap-4 bg-gradient-to-br from-emerald-500/15 to-violet-600/10 border border-emerald-500/30 rounded-2xl p-5 hover:border-emerald-400/60 transition"
+        >
+          <span className="text-3xl">🔑</span>
+          <div className="flex-1">
+            <p className="text-white text-sm font-semibold">Set a password</p>
+            <p className="text-[var(--fb-muted)] text-[12px] leading-tight">
+              So next time you&apos;re in instantly on any FlowBond app — no email needed.
+            </p>
+          </div>
+          <span className="text-emerald-300 text-sm font-semibold whitespace-nowrap">Set it →</span>
+        </a>
+      )}
+
       {/* Create your living profile — the front door to FlowMe */}
       <a
         href="https://flowme.one/new"
@@ -85,36 +92,15 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
         <span className="text-violet-300 text-sm font-semibold whitespace-nowrap">{t('dash.create.cta')}</span>
       </a>
 
-      {/* App launcher — your brain OS */}
-      <div className="space-y-3">
-        <p className="text-[var(--fb-muted)] text-xs uppercase tracking-wider px-1">Enter your worlds</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {APPS.map((a) => (
-            <a
-              key={a.slug}
-              href={handoffHref(a.slug, a.callback)}
-              className="group bg-white/[0.03] border border-white/10 rounded-2xl p-4 flex flex-col gap-1 hover:bg-white/[0.06] hover:border-violet-500/40 transition"
-            >
-              <span className="text-2xl">{a.glyph}</span>
-              <span className="text-white text-sm font-semibold mt-1">{a.label}</span>
-              <span className="text-[var(--fb-muted)] text-[11px] leading-tight">{a.desc}</span>
-              <span className="text-violet-400 text-[11px] mt-1 opacity-0 group-hover:opacity-100 transition">Enter →</span>
-            </a>
-          ))}
-          {EXTERNAL.map((a) => (
-            <a
-              key={a.label}
-              href={a.href}
-              className="group bg-white/[0.02] border border-white/[0.07] rounded-2xl p-4 flex flex-col gap-1 hover:bg-white/[0.05] transition"
-            >
-              <span className="text-2xl">{a.glyph}</span>
-              <span className="text-white text-sm font-semibold mt-1">{a.label}</span>
-              <span className="text-[var(--fb-muted)] text-[11px] leading-tight">{a.desc}</span>
-              <span className="text-zinc-500 text-[11px] mt-1 opacity-0 group-hover:opacity-100 transition">Open ↗</span>
-            </a>
-          ))}
-        </div>
-      </div>
+      {/* App launcher — the circular game-engine home for every world */}
+      <AppLauncher identitySeed={seed} />
+      <p className="text-center text-zinc-600 text-[11px] -mt-4">
+        Also: <a href={MORE_LINKS[0].href} className="hover:text-zinc-400 transition">FlowBond</a>
+        {' · '}
+        <a href={MORE_LINKS[1].href} className="hover:text-zinc-400 transition">Xelva</a>
+        {' · '}
+        <a href={MORE_LINKS[2].href} className="hover:text-zinc-400 transition">Deck</a>
+      </p>
 
       {/* Connected accounts — user-driven linking, permanently recorded on the FBID */}
       <ConnectedAccounts />
@@ -130,10 +116,12 @@ export default function DashboardClient({ identity }: { identity: FbidIdentity }
             <div>
               <p className="text-white text-sm font-semibold">Password</p>
               <p className="text-[var(--fb-muted)] text-[11px]">
-                Set or change the password that works across every FlowBond app.
+                {hasPassword
+                  ? 'Change the password that works across every FlowBond app.'
+                  : 'Set a password that works across every FlowBond app.'}
               </p>
             </div>
-            <span className="text-violet-400 text-xs">Manage →</span>
+            <span className="text-violet-400 text-xs">{hasPassword ? 'Manage →' : 'Set →'}</span>
           </a>
           <div className="flex items-center justify-between p-4 rounded-b-2xl">
             <div>
