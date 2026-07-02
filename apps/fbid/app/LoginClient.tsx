@@ -21,6 +21,7 @@ const APP_LABELS: Record<string, string> = {
   flowstudio: 'FlowStudio',
   claudia: 'ClaudIA',
   reciprociudad: 'Reciprociudad',
+  voces: 'Voces para el Alma',
 }
 
 export default function LoginClient() {
