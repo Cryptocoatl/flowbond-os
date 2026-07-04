@@ -27,7 +27,7 @@ export function Hero() {
           layer beneath every app you build. Technology, mastered in service of life.
         </p>
         <div className="cta-row">
-          <a href="#pricing" className="btn btn-primary" data-mag>
+          <a href="#contact" className="btn btn-primary" data-mag>
             {HERO.ctaPrimary} <span className="arr">→</span>
           </a>
           <a href={LINKS.deck} className="btn btn-ghost" data-mag>
