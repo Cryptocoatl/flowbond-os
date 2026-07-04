@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: '/sanitemplo', destination: '/sanitemplo/index.html' }];
   },
+  // Vanity alias to the Causas Globales survey (lives on flowme.one, the
+  // shared FlowMap engine) — not permanent since it's a convenience pointer,
+  // not a canonical URL move.
+  async redirects() {
+    return [
+      { source: '/causasglobalesflowmap', destination: 'https://flowme.one/causas-globales', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
