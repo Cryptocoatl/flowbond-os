@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createEnvelope, isDocusignConfigured } from '@/lib/server/docusign';
-import { AGREEMENT_DOCX_B64 } from '@/lib/agreementDocx';
+import { getAgreementDocxBase64 } from '@/lib/agreementDocx';
 import { authClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export async function POST() {
   try {
     const envelopeId = await createEnvelope({
       emailSubject: 'FlowBond Tech — Mutual Dissolution, Wind-Up and Release Agreement (signature required)',
-      documentBase64: AGREEMENT_DOCX_B64,
+      documentBase64: getAgreementDocxBase64(),
       documentName: 'Mutual Dissolution, Wind-Up and Release Agreement',
       fileExtension: 'docx',
       recipients: SIGNERS,
