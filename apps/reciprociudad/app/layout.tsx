@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Hanken_Grotesk, Space_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 
 const fraunces = Fraunces({
@@ -59,7 +60,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="es"
       className={`${fraunces.variable} ${hanken.variable} ${spaceMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src="https://flowme.one/flowmap-widget.js"
+          strategy="lazyOnload"
+          data-event="RECIPRO_CDMX"
+          data-city="Ciudad de México"
+          data-color="#1DBE8F"
+          data-label="Mapear en Reciprocidad"
+        />
+      </body>
     </html>
   );
 }
