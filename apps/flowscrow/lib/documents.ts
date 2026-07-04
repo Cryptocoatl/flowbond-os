@@ -69,16 +69,9 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
 export const MESSAGE = {
   to: 'Russell',
   paragraphs: [
-    'Thank you for the detailed response. I’ve taken your points seriously, and this version reflects where we actually landed: we’re not just separating — we’re formally dissolving FlowBond Tech Inc. and winding it up, cleanly and completely. This is the Mutual Dissolution, Wind-Up and Release Agreement, ready to read and sign.',
-    'What carries forward from your markup: scope limited to FlowBond / DANZ / FlowB only, with Harmonik Habitats expressly excluded; the agreement is executed and delivered by both of us *before* any transfer, resignation, or Dissolution filing occurs (Section 5); a precise, Company-only account and domain list in Exhibit 2 that doesn’t reach your personal assets; mutual non-disparagement and no-reference clauses; and no ongoing work obligation beyond the Closing steps in Exhibit 3.',
-    'Your recognition as an early co-founder of the DANZ and FlowB workstreams stands on its own — it lives in the separate Acknowledgment of Contribution (Document 2), unaffected by the Dissolution, stated without any disparagement.',
-    'Wallet seeds and private keys are intentionally kept out of the document and delivered through a secure channel, as before.',
-    'And I want to name the spirit of this plainly: it isn’t about fighting. It’s about facts and actions, and being transparent with each other. The health of a community starts in healthy personal relationships — so I want to close this cleanly and purely, with respect intact on both sides. Closing the company itself, not just our working relationship, is what lets both of us actually move on.',
-    'Looking ahead: FBID — the identity powering this vault — will be a free API anyone can integrate into their own websites. I’d be especially happy to see it used for public goods and genuine social-regeneration projects. If that calls you, there’s room to build.',
-    'Every phase of the wind-up — execution, transfers, and the final Dissolution filings — is tracked openly in this vault, visible to you and to the witnesses at every step. Nothing happens quietly.',
-    'Please review. I’d like to close this cleanly and promptly.',
+    'Russell — Thank you for the openness in where we landed. Dissolving the company together is the cleanest and kindest way to close this chapter. This agreement covers it: we voluntarily dissolve FlowBond Tech Inc. and wind it down properly; the FlowBond and DANZ domains, code, and names come to Estefanía to carry forward; you commit not to use the FlowBond or DANZ names going forward; and we give each other a full mutual release and close the accounts. Keys and seeds stay out of the document and are handled securely. The FlowScrow checklist below shows the order of steps so nothing is left hanging. — Estefanía',
   ],
-  signoff: 'With love,\nStep by Steph',
+  signoff: '',
 };
 
 // Russell's clear path to finalize, every step.

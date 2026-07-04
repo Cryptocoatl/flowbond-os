@@ -548,11 +548,10 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
 
       <section style={{ marginBottom: 28 }}>
         <div className="v-eyebrow">1 · The note</div>
-        <h2 className="v-h2">We found the honest name: Early Co-founder</h2>
+        <h2 className="v-h2">A note before you read the agreement</h2>
         <div className="v-card" style={{ marginTop: 12 }}>
-          <p style={{ color: 'var(--v-ink)', fontWeight: 600, margin: '0 0 10px' }}>Russell,</p>
           {MESSAGE.paragraphs.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>)}
-          <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>
+          {MESSAGE.signoff && <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>}
         </div>
       </section>
 
