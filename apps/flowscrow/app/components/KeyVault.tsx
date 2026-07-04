@@ -6,8 +6,9 @@ import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PART
 import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
 import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
-  vaultComment, vaultComments,
+  vaultComment, vaultComments, vaultTasks, vaultEvents, vaultAttest,
   type VaultRole, type Signature, type Witness, type Resolved, type VaultComment,
+  type VaultTask, type VaultEvent, type TaskPhase,
 } from '@/lib/vault';
 import { hubRedirect } from '@flowbond/auth';
 import { apiUrl } from '@/lib/path';
@@ -276,6 +277,116 @@ function CommentBox({ code, who }: { code: string; who: string }) {
   );
 }
 
+/* ── phase A/B/C closing checklist + immutable event feed + witness attestation ──
+   Read-only for everyone (no task is ever submitted/confirmed from here) — the
+   transparency guarantee is that signers and witnesses see the exact same
+   progress and the exact same event log. Only a witness code may attest. */
+function PhaseTracker({ code, isWitness, who }: { code: string; isWitness: boolean; who: string }) {
+  const [tasks, setTasks] = useState<VaultTask[]>([]);
+  const [events, setEvents] = useState<VaultEvent[]>([]);
+  const [phase, setPhase] = useState<TaskPhase>('A');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  const load = () => {
+    vaultTasks().then(setTasks).catch(() => {});
+    vaultEvents().then(setEvents).catch(() => {});
+  };
+  useEffect(load, []);
+
+  const byPhase = (p: TaskPhase) => tasks.filter((t) => t.phase === p);
+  const doneCount = tasks.filter((t) => t.status === 'confirmed').length;
+  const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const lastUpdated = events[events.length - 1]?.created_at;
+
+  async function attest() {
+    if (!note.trim()) return;
+    setBusy(true); setErr(null); setSent(false);
+    try { await vaultAttest(code, phase, note); setNote(''); setSent(true); load(); }
+    catch (e) { setErr((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  const statusColor = (s: VaultTask['status']) => (s === 'confirmed' ? '#8FA98F' : s === 'submitted' ? 'var(--v-gold)' : 'var(--v-dim)');
+
+  return (
+    <section id="phases" style={{ marginTop: 30 }}>
+      <div className="v-eyebrow">6 · Closing progress</div>
+      <h2 className="v-h2">Every phase, tracked in the open</h2>
+      <p className="v-lead" style={{ margin: '4px 0 12px' }}>
+        Signers and witnesses see the identical checklist and the identical event log — nothing here is editable from
+        this view. {lastUpdated && <>Last updated {new Date(lastUpdated).toLocaleString()}.</>}
+      </p>
+
+      <div className="v-card" style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+          <span>{doneCount} of {tasks.length} confirmed</span><span>{pct}%</span>
+        </div>
+        <div style={{ height: 8, borderRadius: 6, background: 'rgba(179,136,255,.15)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#7c4dff,#f5d77a)', transition: 'width .3s' }} />
+        </div>
+      </div>
+
+      {(['A', 'B', 'C'] as TaskPhase[]).map((p) => (
+        <div key={p} className="v-card" style={{ marginBottom: 10 }}>
+          <div className="v-eyebrow" style={{ marginBottom: 6 }}>Phase {p}</div>
+          {byPhase(p).map((t, i) => (
+            <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '8px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', flexWrap: 'wrap' }}>
+              <div>
+                <div style={{ fontSize: 13.5 }}>{t.title}</div>
+                {t.status === 'confirmed' && t.confirmed_at && (
+                  <div style={{ fontSize: 11.5, color: 'var(--v-dim)' }}>confirmed {new Date(t.confirmed_at).toLocaleDateString()} · verified by {t.verifier_label}</div>
+                )}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: statusColor(t.status), whiteSpace: 'nowrap' }}>{t.status}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      <div className="v-card v-noprint" style={{ marginBottom: 14 }}>
+        <div className="v-eyebrow" style={{ marginBottom: 8 }}>Event log</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 260, overflowY: 'auto' }}>
+          {events.map((e) => (
+            <div key={e.id} style={{ fontSize: 12.5, color: 'var(--v-dim)' }}>
+              <span style={{ color: 'var(--v-violet)' }}>{new Date(e.created_at).toLocaleString()}</span>{' '}
+              — {e.type}
+              {e.type === 'witness_attestation' && (
+                <span style={{ color: 'var(--v-ink)' }}> · {String(e.payload.witness_name)} (phase {String(e.payload.phase)}): “{String(e.payload.note)}”</span>
+              )}
+            </div>
+          ))}
+          {events.length === 0 && <div style={{ fontSize: 12.5, color: 'var(--v-dim)' }}>No events yet.</div>}
+        </div>
+      </div>
+
+      {isWitness && (
+        <div className="v-card v-noprint" style={{ borderColor: 'rgba(245,215,122,.4)' }}>
+          <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Attest as {who}</div>
+          <p className="v-lead" style={{ fontSize: 13, margin: '6px 0 10px' }}>
+            Add a timestamped note to the record — you cannot edit or confirm any task, only witness it.
+          </p>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            {(['A', 'B', 'C'] as TaskPhase[]).map((p) => (
+              <button key={p} className="chip" style={{ cursor: 'pointer', borderColor: phase === p ? 'var(--v-gold)' : undefined }} onClick={() => setPhase(p)}>Phase {p}</button>
+            ))}
+          </div>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
+            placeholder="What are you attesting to?"
+            style={{ width: '100%', background: 'rgba(0,0,0,.25)', border: '1px solid rgba(179,136,255,.3)', borderRadius: 10, padding: '11px 13px', color: 'var(--v-ink)', fontSize: 14, resize: 'vertical' }} />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <button className="vbtn vbtn-gold" disabled={busy} onClick={attest}>{busy ? 'Recording…' : 'Attest'}</button>
+          </div>
+          {sent && <p style={{ color: 'var(--v-gold)', fontSize: 13, marginTop: 8 }}>✓ Attestation recorded.</p>}
+          {err && <p style={{ color: '#ff8aa3', fontSize: 13, marginTop: 8 }}>{err}</p>}
+        </div>
+      )}
+    </section>
+  );
+}
+
 /* ── Russell's step-by-step finalize guide + ClaudIA chat ── */
 function RussellGuide({ sigs, authorized }: { sigs: Signature[]; authorized: boolean }) {
   const done = (key: string) => {
@@ -418,8 +529,8 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         <div className="v-eyebrow">Recognition, signed honestly</div>
         <h1 className="v-h1">The work, <span className="v-grad">named to the record.</span></h1>
         <p className="v-lead" style={{ maxWidth: 660, margin: '6px auto 0' }}>
-          Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Separation Agreement and the
-          Acknowledgment of Contribution — recognizing <b style={{ color: 'var(--v-ink)' }}>Russell</b> as an{' '}
+          Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Mutual Dissolution, Wind-Up and
+          Release Agreement and the Acknowledgment of Contribution — recognizing <b style={{ color: 'var(--v-ink)' }}>Russell</b> as an{' '}
           <b className="gold">Early Co-founder</b> of DANZ &amp; FlowB and acknowledging <b style={{ color: 'var(--v-ink)' }}>Deven</b> —
           alongside the real numbers, validated by cryptography and witnessed on the record.
         </p>
@@ -427,8 +538,8 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
       </div>
 
       <div className="v-card v-noprint" style={{ marginBottom: 18, textAlign: 'center', fontSize: 13, color: 'var(--v-dim)' }}>
-        📄 This is the <b style={{ color: 'var(--v-ink)' }}>revised agreement (June 26, 2026)</b>. If you opened this earlier,
-        refresh the page to load the latest before you review or sign.
+        📄 This is the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement (June 26, 2026)</b>.
+        If you opened this earlier, refresh the page to load the latest before you review or sign.
       </div>
 
       {r.person_key === 'russell' && <RussellGuide sigs={sigs} authorized={authorized} />}
@@ -496,19 +607,21 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         <div className="v-eyebrow">5 · The documents</div>
         <h2 className="v-h2">{canAct ? 'Read, download & sign' : isSigner ? 'Read — verify with FBID to sign' : 'Read & verify'}</h2>
         <p className="v-lead" style={{ margin: '4px 0 16px' }}>
-          Two documents sit in escrow: the <b style={{ color: 'var(--v-ink)' }}>Separation &amp; Transition Agreement</b> and
-          the <b style={{ color: 'var(--v-ink)' }}>Acknowledgment of Contribution</b> (Exhibit 5). Only Estefanía and
+          Two documents sit in escrow: the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement</b> and
+          the separate <b style={{ color: 'var(--v-ink)' }}>Acknowledgment of Contribution</b>. Only Estefanía and
           Russell sign — with FBID — and the named witnesses verify.
         </p>
 
         {isSigner && !authorized && <FbidGate name={who} />}
 
-        <div className="v-eyebrow" style={{ marginBottom: 8 }}>Document 1 — Separation Agreement</div>
+        <div className="v-eyebrow" style={{ marginBottom: 8 }}>Document 1 — Mutual Dissolution, Wind-Up and Release Agreement</div>
         <AgreementPaper role={role} code={code} canAct={canAct} sigs={sigs} wits={wits} onSigned={refresh} />
 
         <div className="v-eyebrow" style={{ margin: '28px 0 8px' }}>Document 2 — Acknowledgment of Contribution (Exhibit 5)</div>
         <Acknowledgment role={role} code={code} canAct={canAct} sigs={sigs} onSigned={refresh} />
       </section>
+
+      <PhaseTracker code={code} isWitness={!isSigner} who={who} />
 
       <CommentBox code={code} who={who} />
 
@@ -586,14 +699,19 @@ function LockedNote({ signer }: { signer: boolean }) {
   );
 }
 
-/* ── the Separation & Transition Agreement paper ── */
+/* ── the Mutual Dissolution, Wind-Up and Release Agreement paper ── */
 function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: VaultRole | null; code: string; canAct: boolean; sigs: Signature[]; wits: Witness[]; onSigned: () => void }) {
   const g = AGREEMENT;
   const stephSigned = sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement');
   const russellSigned = sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
   const isHeading = (s: string) =>
-    /^\d+\.\s/.test(s) || s === 'Recitals' || s.startsWith('Exhibit A') || s.startsWith('IN WITNESS') ||
-    ['Domains', 'Payment & Financial Accounts (FlowBond-linked)', 'Repositories', 'Web3, Communication & Social Accounts (FlowBond-linked)', 'Catch-All (Company property only)'].includes(s);
+    /^\d+\.\s/.test(s) || s === 'Recitals' || s === 'Witnesses' || s.startsWith('Exhibit') ||
+    s.startsWith('Phase ') || s.startsWith('IN WITNESS') ||
+    [
+      'Domains (transfer to Namecheap “stepbysteph” + auth/EPP codes)', 'GitHub',
+      'Financial Accounts (Russell removed; close or transfer as Estefanía directs)',
+      'Web3 / Communication / Social (transfer or de-identify; seeds & keys via secure channel only)',
+    ].includes(s);
   const buildText = () =>
     [
       g.title.toUpperCase(), g.subtitle, '', `Effective Date: ${g.effective}`, '',
@@ -647,7 +765,7 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
       </div>
 
       {canAct && role
-        ? <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Separation-Agreement.txt" showDocuSign />
+        ? <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Mutual-Dissolution-Agreement.txt" showDocuSign />
         : <LockedNote signer={!!role} />}
     </>
   );

@@ -102,3 +102,58 @@ export async function sessionEmail(): Promise<string | null> {
   const { data } = await sb.auth.getUser();
   return data.user?.email ?? null;
 }
+
+// ── phase A/B/C task tracker + witness attestation ──
+
+export type TaskPhase = 'A' | 'B' | 'C';
+export type TaskStatus = 'pending' | 'submitted' | 'confirmed';
+
+export interface VaultTask {
+  id: string;
+  code: string;
+  phase: TaskPhase;
+  sort_order: number;
+  title: string;
+  responsible_role: string;
+  verifier_role: string;
+  responsible_label: string | null;
+  verifier_label: string | null;
+  deliverable: string | null;
+  acceptance_criteria: string | null;
+  status: TaskStatus;
+  submitted_at: string | null;
+  confirmed_at: string | null;
+  created_at: string;
+}
+
+export interface VaultEvent {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+/** Read-only phase checklist for the vault deal. Public — same posture as
+ * vaultSignatures/vaultWitnesses (the code gate happens at the page level). */
+export async function vaultTasks(): Promise<VaultTask[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_tasks');
+  if (error) throw error;
+  return (data as VaultTask[]) ?? [];
+}
+
+/** The immutable event feed for the vault deal. */
+export async function vaultEvents(): Promise<VaultEvent[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_events');
+  if (error) throw error;
+  return (data as VaultEvent[]) ?? [];
+}
+
+/** Append a witness attestation. Only a witness-kind code is accepted server-side. */
+export async function vaultAttest(code: string, phase: TaskPhase, note: string): Promise<VaultEvent> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_attest', { p_code: code, p_phase: phase, p_note: note });
+  if (error) throw error;
+  return data as VaultEvent;
+}

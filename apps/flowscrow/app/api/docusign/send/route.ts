@@ -5,10 +5,11 @@ import { authClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-// Send the real Co-Founder Separation & Asset Transfer Agreement (.docx) for
+// Send the real Mutual Dissolution, Wind-Up and Release Agreement (.docx) for
 // signature: Estefanía first (/sig1/), then Russell (/sig2/). The .docx carries
 // the anchors, so DocuSign places each tab exactly on the right signature line.
-// Held signed in escrow until the Exhibit A closing deliverables are verified.
+// Held signed in escrow until the Exhibit 2 closing deliverables and Exhibit 3
+// Dissolution filings are verified.
 const SIGNERS = [
   { email: 'cryptocoatl101@gmail.com', name: 'Estefanía Ferrera', recipientId: '1', routingOrder: 1 },
   { email: 'cryptokoh@gmail.com', name: 'Russell Herod', recipientId: '2', routingOrder: 2 },
@@ -30,9 +31,9 @@ export async function POST() {
   }
   try {
     const envelopeId = await createEnvelope({
-      emailSubject: 'FlowBond Tech — Co-Founder Separation & Asset Transfer Agreement (signature required)',
+      emailSubject: 'FlowBond Tech — Mutual Dissolution, Wind-Up and Release Agreement (signature required)',
       documentBase64: AGREEMENT_DOCX_B64,
-      documentName: 'Co-Founder Separation and Asset Transfer Agreement',
+      documentName: 'Mutual Dissolution, Wind-Up and Release Agreement',
       fileExtension: 'docx',
       recipients: SIGNERS,
       status: 'sent',
