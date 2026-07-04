@@ -52,3 +52,29 @@ export async function myFbid(): Promise<string | null> {
   const { data } = await sb.rpc('current_fbid');
   return (data as string) ?? null;
 }
+
+// ── Privacy layers ──────────────────────────────────────────────────────────
+// can_view() (RLS) decides IF you see a profile; the share LEVEL decides HOW
+// DEEP: light = big three only, standard = full chart, deep = + shadow work &
+// patterns & other traditions, open_heart = everything (full transparency).
+export type ShareLevel = 'light' | 'standard' | 'deep' | 'open_heart';
+
+export const LEVEL_RANK: Record<ShareLevel, number> = {
+  light: 0, standard: 1, deep: 2, open_heart: 3,
+};
+
+export const atLeast = (lvl: ShareLevel | null, min: ShareLevel) =>
+  lvl !== null && LEVEL_RANK[lvl] >= LEVEL_RANK[min];
+
+/** How deep the current caller may read this profile (null = no access). */
+export async function myLevelOn(ownerFbid: string): Promise<ShareLevel | null> {
+  const sb = await serverClient();
+  const { data } = await sb.rpc('my_level_on', { owner: ownerFbid });
+  return (data as ShareLevel) ?? null;
+}
+
+/** Consent-transparency: owners see who reads their chart (and how often). */
+export async function logChartRead(ownerFbid: string, kind: 'chart' | 'reading' | 'synastry') {
+  const sb = await serverClient();
+  await sb.rpc('log_chart_read', { owner: ownerFbid, k: kind }).then(() => {}, () => {});
+}

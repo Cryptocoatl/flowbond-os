@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { AgentChat } from '@/components/garden/AgentChat'
+import { OpenChatCard } from '@/components/garden/OpenChatCard'
 import { InviteButton } from '@/components/garden/InviteButton'
 import { Greeting } from '@/components/garden/Greeting'
 import { HealthRing } from '@/components/garden/HealthRing'
@@ -134,6 +134,7 @@ export default async function DashboardPage() {
 
       {/* ── Garden pulse hero ── */}
       <div
+        data-tour="pulse"
         className="rounded-2xl p-5 md:p-6 flex items-center gap-5 relative overflow-hidden"
         style={{
           background:
@@ -157,7 +158,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Stats row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-tour="stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
             href: '/flowgarden/map',
@@ -346,7 +347,7 @@ export default async function DashboardPage() {
       )}
 
       {/* ── Garden Intelligence ── */}
-      <AgentChat gardenId={gardenId} />
+      <OpenChatCard />
     </div>
   )
 }

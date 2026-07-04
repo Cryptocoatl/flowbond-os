@@ -1,0 +1,27 @@
+{
+  "title": "Este Mundial Le Toca a México",
+  "author": "Steph Ferrera",
+  "audioUrl": "REPLACE_ME — local path or URL to the Suno track / stems (e.g. ~/FlowStudio/10_assets/tier1_cloud/este-mundial.wav)",
+  "ratio": "9:16",
+  "tier": 1,
+  "hookVariants": 3,
+  "scenes": [
+    { "id": "hook", "seconds": 2, "model": "kling", "prompt": "Low-angle slow-motion, crowd of Mexican fans erupting in Mexico City plaza at golden hour, green-white-red face paint, confetti and flares, jumping in unison, cinematic, vertical 9:16, high energy" },
+    { "id": "landmark", "seconds": 4, "model": "veo", "prompt": "Dynamic orbiting drone shot around El Ángel de la Independencia at blue hour, Mexican flags waving, warm city lights, epic atmosphere, vertical 9:16" },
+    { "id": "dance", "seconds": 4, "model": "seedance", "prompt": "Single dancer in a stadium tunnel, dramatic light shafts and fog, rhythmic movement, orbiting camera, neon green accents, vertical 9:16" },
+    { "id": "street", "seconds": 3, "model": "kling", "prompt": "Aerial night shot over a packed street party, neon and flares, green jerseys without logos, motion blur, electric atmosphere, vertical 9:16" },
+    { "id": "loop", "seconds": 2, "model": "kling", "prompt": "Slow push-in on a child holding a Mexican flag, golden hour, soft focus crowd behind, emotional, loops back to opening energy, vertical 9:16" }
+  ],
+  "captions": "burn chorus, high-contrast, large",
+  "ipGuardrails": "NO FIFA marks, NO World Cup trophy, NO official FMF/Selección crest, NO team or sponsor logos. Generic green jerseys only. Mexican flag OK.",
+  "provenance": {
+    "fbid": "REPLACE_ME — Steph Ferrera FBID",
+    "components": {
+      "lyrics_direction": "humanEdits",
+      "audio": "trainedAlgorithmicMedia (Suno)",
+      "video": "compositeWithTrainedAlgorithmicMedia (Kling/Veo/Seedance)"
+    },
+    "license": "remix-with-attribution + revenue-share",
+    "proofOfHuman": true
+  }
+}

@@ -2,7 +2,7 @@ import type { NextConfig } from 'next'
 import path from 'path'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/core', '@flowbond/db', '@flowbond/ui'],
+  transpilePackages: ['@flowbond/auth', '@flowbond/core', '@flowbond/db', '@flowbond/ui'],
   turbopack: {
     root: path.resolve(__dirname, '../..'),
     // Stub optional wagmi v3 connectors (Porto / Tempo) we don't use.

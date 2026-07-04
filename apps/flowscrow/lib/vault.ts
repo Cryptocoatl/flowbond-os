@@ -1,0 +1,159 @@
+'use client';
+
+import { browserClient } from './supabase/client';
+
+export type VaultRole = 'steph' | 'russell';
+export type VaultDoc = 'acknowledgment' | 'agreement';
+
+export interface Signature {
+  id: string;
+  party_role: VaultRole;
+  signer_name: string;
+  document: VaultDoc;
+  signed_at: string;
+}
+
+export interface Witness {
+  id: string;
+  name: string;
+  first_viewed_at: string;
+  last_viewed_at: string;
+}
+
+/** Who a code belongs to. Returned by resolve; null = invalid code. */
+export interface Resolved {
+  kind: 'signer' | 'witness';
+  party_role: VaultRole | null;
+  display_name: string;
+  person_key: string | null;
+}
+
+/** Identify a person by their unique code (no email leaked). */
+export async function vaultResolve(code: string): Promise<Resolved | null> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_resolve', { p_code: code });
+  if (error) throw error;
+  const row = (data as Resolved[])?.[0];
+  return row ?? null;
+}
+
+/** Is the current FBID session authorized to sign/download for this signer code? */
+export async function vaultAuthorized(code: string): Promise<boolean> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_authorized', { p_code: code });
+  if (error) return false;
+  return data === true;
+}
+
+/** Record a signature — requires an FBID session matching the signer. */
+export async function vaultSign(code: string, document: VaultDoc): Promise<Signature> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_sign', { p_code: code, p_document: document });
+  if (error) throw error;
+  return data as Signature;
+}
+
+/** Record a witness view (code-based; view only). */
+export async function vaultWitness(code: string): Promise<Witness> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_witness', { p_code: code });
+  if (error) throw error;
+  return data as Witness;
+}
+
+export async function vaultSignatures(): Promise<Signature[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_signatures');
+  if (error) throw error;
+  return (data as Signature[]) ?? [];
+}
+
+export async function vaultWitnesses(): Promise<Witness[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_witnesses');
+  if (error) throw error;
+  return (data as Witness[]) ?? [];
+}
+
+// ── comments / modification requests ──
+export interface VaultComment {
+  id: string;
+  person_key: string | null;
+  name: string;
+  body: string;
+  created_at: string;
+}
+export async function vaultComment(code: string, body: string): Promise<VaultComment> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_comment', { p_code: code, p_body: body });
+  if (error) throw error;
+  return data as VaultComment;
+}
+export async function vaultComments(): Promise<VaultComment[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_comments');
+  if (error) throw error;
+  return (data as VaultComment[]) ?? [];
+}
+
+/** Current FBID session email (for showing who's verified), or null. */
+export async function sessionEmail(): Promise<string | null> {
+  const sb = browserClient();
+  const { data } = await sb.auth.getUser();
+  return data.user?.email ?? null;
+}
+
+// ── phase A/B/C task tracker + witness attestation ──
+
+export type TaskPhase = 'A' | 'B' | 'C';
+export type TaskStatus = 'pending' | 'submitted' | 'confirmed';
+
+export interface VaultTask {
+  id: string;
+  code: string;
+  phase: TaskPhase;
+  sort_order: number;
+  title: string;
+  responsible_role: string;
+  verifier_role: string;
+  responsible_label: string | null;
+  verifier_label: string | null;
+  deliverable: string | null;
+  acceptance_criteria: string | null;
+  status: TaskStatus;
+  submitted_at: string | null;
+  confirmed_at: string | null;
+  created_at: string;
+}
+
+export interface VaultEvent {
+  id: string;
+  type: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+/** Read-only phase checklist for the vault deal. Public — same posture as
+ * vaultSignatures/vaultWitnesses (the code gate happens at the page level). */
+export async function vaultTasks(): Promise<VaultTask[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_tasks');
+  if (error) throw error;
+  return (data as VaultTask[]) ?? [];
+}
+
+/** The immutable event feed for the vault deal. */
+export async function vaultEvents(): Promise<VaultEvent[]> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_events');
+  if (error) throw error;
+  return (data as VaultEvent[]) ?? [];
+}
+
+/** Append a witness attestation. Only a witness-kind code is accepted server-side. */
+export async function vaultAttest(code: string, phase: TaskPhase, note: string): Promise<VaultEvent> {
+  const sb = browserClient();
+  const { data, error } = await sb.rpc('flowscrow_vault_attest', { p_code: code, p_phase: phase, p_note: note });
+  if (error) throw error;
+  return data as VaultEvent;
+}

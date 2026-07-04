@@ -1,0 +1,358 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gf-bg: #07100d;
+  --gf-bg-2: #0b1813;
+  --gf-panel: #0f1f19;
+  --gf-panel-2: #122a20;
+  --gf-border: rgba(120, 220, 170, 0.14);
+  --gf-border-strong: rgba(120, 220, 170, 0.28);
+  --gf-text: #e8f5ee;
+  --gf-muted: #8aa79a;
+  --gf-emerald: #34d399;
+  --gf-gold: #f5c451;
+}
+
+html,
+body {
+  background:
+    radial-gradient(1100px 640px at 78% -12%, rgba(52, 211, 153, 0.16), transparent 60%),
+    radial-gradient(820px 560px at 4% 108%, rgba(245, 196, 81, 0.08), transparent 60%),
+    var(--gf-bg);
+  color: var(--gf-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Layout primitives ─────────────────────────────────────────── */
+.gf-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.gf-card {
+  background: linear-gradient(180deg, var(--gf-panel), var(--gf-bg-2));
+  border: 1px solid var(--gf-border);
+  border-radius: 16px;
+  padding: 18px;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.gf-card.link:hover {
+  border-color: var(--gf-border-strong);
+  transform: translateY(-2px);
+}
+
+.gf-stat {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: #fff;
+}
+
+/* ── Badges / pills ────────────────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--gf-border);
+  color: var(--gf-muted);
+  white-space: nowrap;
+}
+.pill-web3 { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.4); background: rgba(124, 58, 237, 0.12); }
+.pill-refi { color: #6ee7b7; border-color: rgba(52, 211, 153, 0.4); background: rgba(16, 185, 129, 0.12); }
+.pill-social { color: #fcd34d; border-color: rgba(251, 191, 36, 0.4); background: rgba(245, 158, 11, 0.12); }
+.pill-cultural { color: #fda4af; border-color: rgba(251, 113, 133, 0.4); background: rgba(244, 63, 94, 0.12); }
+.pill-tech { color: #7dd3fc; border-color: rgba(56, 189, 248, 0.4); background: rgba(14, 165, 233, 0.12); }
+
+.pill-open { color: #6ee7b7; border-color: rgba(52, 211, 153, 0.5); background: rgba(16, 185, 129, 0.14); }
+.pill-rolling { color: #7dd3fc; border-color: rgba(56, 189, 248, 0.45); background: rgba(14, 165, 233, 0.12); }
+.pill-upcoming { color: #fcd34d; border-color: rgba(251, 191, 36, 0.45); background: rgba(245, 158, 11, 0.12); }
+.pill-round { color: #c4b5fd; border-color: rgba(167, 139, 250, 0.45); background: rgba(124, 58, 237, 0.12); }
+.pill-closed { color: #94a3b8; }
+
+.gf-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gf-muted);
+  border: 1px solid var(--gf-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* ── Fit meter ─────────────────────────────────────────────────── */
+.fit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--gf-gold);
+}
+.fit small { color: var(--gf-muted); font-weight: 500; }
+
+.gf-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.gf-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gf-emerald), var(--gf-gold));
+}
+
+/* ── Inputs ────────────────────────────────────────────────────── */
+.gf-input,
+.gf-select {
+  background: var(--gf-bg-2);
+  border: 1px solid var(--gf-border);
+  border-radius: 10px;
+  color: var(--gf-text);
+  padding: 9px 12px;
+  font-size: 14px;
+  outline: none;
+}
+.gf-input:focus,
+.gf-select:focus { border-color: var(--gf-border-strong); }
+
+.gf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.2), rgba(52, 211, 153, 0.08));
+  border: 1px solid var(--gf-border-strong);
+  color: var(--gf-text);
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.gf-btn:hover { border-color: var(--gf-emerald); }
+.gf-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Nav ───────────────────────────────────────────────────────── */
+.gf-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(10px);
+  background: rgba(7, 16, 13, 0.78);
+  border-bottom: 1px solid var(--gf-border);
+}
+.gf-nav a.tab {
+  color: var(--gf-muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0;
+}
+.gf-nav a.tab:hover { color: var(--gf-text); }
+
+.gf-rise { animation: gf-rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes gf-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .gf-rise { animation: none; } }
+
+/* ════════════════════════════════════════════════════════════════════
+   ClaudIA — solarpunk sunrise. Warm gold horizon meeting a deep teal
+   sky, the four-point star at the center of it. "Unalienable technology,
+   made and followed by love."
+   ════════════════════════════════════════════════════════════════════ */
+:root {
+  --cl-gold: #e7c187;
+  --cl-gold-bright: #f6dca6;
+  --cl-amber: #f0a868;
+  --cl-rose: #e8927c;
+  --cl-sky-1: #0a1410;
+  --cl-sky-2: #10201b;
+}
+
+/* The sunrise stage — a full-bleed scene that sits behind hero content */
+.cl-scene {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(140% 100% at 50% 118%, rgba(240, 168, 104, 0.30), transparent 55%),
+    radial-gradient(120% 80% at 50% 130%, rgba(232, 146, 124, 0.22), transparent 50%),
+    linear-gradient(180deg, var(--cl-sky-1) 0%, var(--cl-sky-2) 55%, #1a2a1f 100%);
+}
+/* the rising sun disc */
+.cl-sun {
+  position: absolute;
+  left: 50%;
+  bottom: -34%;
+  width: min(78vw, 680px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 220, 166, 0.95) 0%, rgba(240, 168, 104, 0.55) 38%, rgba(232, 146, 124, 0.18) 62%, transparent 72%);
+  filter: blur(2px);
+  animation: cl-sun-rise 2.4s cubic-bezier(0.16, 0.8, 0.24, 1) both;
+  z-index: -2;
+}
+@keyframes cl-sun-rise {
+  from { transform: translateX(-50%) translateY(36%) scale(0.85); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+/* slow rotating god-rays */
+.cl-rays {
+  position: absolute;
+  left: 50%;
+  bottom: -52%;
+  width: min(150vw, 1400px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg, rgba(246, 220, 166, 0.10) 6deg, transparent 12deg,
+    transparent 28deg, rgba(246, 220, 166, 0.08) 34deg, transparent 40deg,
+    transparent 58deg, rgba(240, 168, 104, 0.09) 64deg, transparent 70deg,
+    transparent 92deg, rgba(246, 220, 166, 0.07) 98deg, transparent 104deg,
+    transparent 132deg, rgba(246, 220, 166, 0.08) 138deg, transparent 144deg,
+    transparent 172deg, rgba(240, 168, 104, 0.09) 178deg, transparent 184deg,
+    transparent 212deg, rgba(246, 220, 166, 0.07) 218deg, transparent 224deg,
+    transparent 252deg, rgba(246, 220, 166, 0.08) 258deg, transparent 264deg,
+    transparent 292deg, rgba(240, 168, 104, 0.08) 298deg, transparent 304deg,
+    transparent 332deg, rgba(246, 220, 166, 0.07) 338deg, transparent 344deg,
+    transparent 360deg
+  );
+  mask-image: radial-gradient(circle, black 6%, transparent 60%);
+  -webkit-mask-image: radial-gradient(circle, black 6%, transparent 60%);
+  animation: cl-spin 90s linear infinite, cl-fade-in 3s ease 0.4s both;
+  z-index: -3;
+}
+@keyframes cl-spin { to { transform: translateX(-50%) rotate(360deg); } }
+@keyframes cl-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* drifting motes of light, solarpunk pollen */
+.cl-motes::before,
+.cl-motes::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 70%, rgba(246, 220, 166, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 68% 82%, rgba(240, 168, 104, 0.6), transparent),
+    radial-gradient(1px 1px at 42% 60%, rgba(246, 220, 166, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 85% 65%, rgba(232, 146, 124, 0.5), transparent),
+    radial-gradient(1px 1px at 12% 88%, rgba(246, 220, 166, 0.6), transparent);
+  animation: cl-drift 14s ease-in-out infinite alternate;
+}
+.cl-motes::after { animation-duration: 22s; animation-direction: alternate-reverse; opacity: 0.6; }
+@keyframes cl-drift { from { transform: translateY(6px); } to { transform: translateY(-14px); } }
+
+/* the logo lockup with a breathing halo */
+.cl-logo-halo {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.cl-logo-halo::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 220, 166, 0.28), transparent 62%);
+  animation: cl-breathe 5s ease-in-out infinite;
+  z-index: -1;
+}
+@keyframes cl-breathe { 0%,100% { opacity: 0.5; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.04); } }
+.cl-logo-img {
+  animation: cl-logo-in 1.6s cubic-bezier(0.16, 0.8, 0.24, 1) 0.2s both;
+  filter: drop-shadow(0 0 28px rgba(231, 193, 135, 0.35));
+}
+@keyframes cl-logo-in {
+  from { opacity: 0; transform: scale(0.86) translateY(10px); filter: drop-shadow(0 0 0 transparent); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* a lone twinkling star accent */
+.cl-twinkle { animation: cl-twinkle 3.5s ease-in-out infinite; }
+@keyframes cl-twinkle { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+/* staged reveal — children rise in sequence */
+.cl-stagger > * { opacity: 0; animation: gf-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cl-stagger > *:nth-child(1) { animation-delay: 0.5s; }
+.cl-stagger > *:nth-child(2) { animation-delay: 0.75s; }
+.cl-stagger > *:nth-child(3) { animation-delay: 1.0s; }
+.cl-stagger > *:nth-child(4) { animation-delay: 1.25s; }
+.cl-stagger > *:nth-child(5) { animation-delay: 1.5s; }
+
+/* gold-gradient display text */
+.cl-shine {
+  background: linear-gradient(100deg, var(--cl-gold) 0%, var(--cl-gold-bright) 30%, #fff 50%, var(--cl-gold-bright) 70%, var(--cl-amber) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cl-sheen 6s linear infinite;
+}
+@keyframes cl-sheen { to { background-position: 200% center; } }
+
+.cl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a130a;
+  background: linear-gradient(180deg, var(--cl-gold-bright), var(--cl-amber));
+  border: 1px solid rgba(246, 220, 166, 0.6);
+  box-shadow: 0 8px 30px rgba(240, 168, 104, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.cl-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 38px rgba(240, 168, 104, 0.42); }
+.cl-btn.ghost {
+  background: transparent;
+  color: var(--cl-gold-bright);
+  box-shadow: none;
+  border-color: rgba(231, 193, 135, 0.4);
+}
+
+/* CRM timeline rail */
+.cl-rail { position: relative; padding-left: 26px; }
+.cl-rail::before {
+  content: '';
+  position: absolute;
+  left: 7px; top: 4px; bottom: 4px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cl-gold), transparent);
+}
+.cl-dot {
+  position: absolute;
+  left: 0; top: 4px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--cl-sky-2);
+  border: 2px solid var(--cl-gold);
+  display: grid; place-items: center;
+  font-size: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-sun, .cl-rays, .cl-motes::before, .cl-motes::after,
+  .cl-logo-img, .cl-logo-halo::before, .cl-twinkle, .cl-shine,
+  .cl-stagger > * { animation: none !important; opacity: 1 !important; }
+}

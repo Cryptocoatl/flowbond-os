@@ -1,0 +1,23 @@
+{
+  "name": "@flowbond/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.tsx",
+  "types": "./src/index.tsx",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./dictionaries": "./src/dictionaries.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@flowbond/config": "workspace:*",
+    "@types/react": "^19",
+    "typescript": "^5.7.3"
+  }
+}

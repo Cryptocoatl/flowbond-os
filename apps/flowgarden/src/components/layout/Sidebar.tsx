@@ -178,6 +178,25 @@ export function Sidebar({
 
       {/* Footer */}
       <div className="p-4 space-y-1" style={{ borderTop: '1px solid var(--fg-sidebar-border)' }}>
+        <button
+          type="button"
+          onClick={() => startTour()}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+          style={{ color: 'var(--fg-sidebar-text)' }}
+          onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.05)'
+            e.currentTarget.style.color = 'var(--fg-sidebar-active-text)'
+          }}
+          onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.color = 'var(--fg-sidebar-text)'
+          }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a1.5 1.5 0 112.12 2.12c-.27.27-.58.46-.82.68-.27.25-.49.55-.49 1.01a.75.75 0 001.5 0c0-.02.01-.06.1-.15.07-.07.18-.15.36-.27.2-.14.46-.32.7-.56a3 3 0 10-4.24-4.24.75.75 0 001.06 1.06l.02-.02zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+          Take a tour
+        </button>
         <Link
           href="/flowgarden/settings"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all"

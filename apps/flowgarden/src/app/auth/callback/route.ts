@@ -27,23 +27,25 @@ export async function GET(request: NextRequest) {
     }
   )
 
-  // ── PKCE flow (magic link sent by this app) ──
+  // ── PKCE flow (magic link / FBID hub handoff via code) ──
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error && data?.user) {
+      await linkFbid(supabase)
       if (ref) void processReferral(data.user.id, ref)
       return NextResponse.redirect(`${origin}${next}`)
     }
     console.error('[auth/callback] PKCE exchange failed:', error?.message)
   }
 
-  // ── Implicit / token_hash flow (Supabase email templates, recovery, invite) ──
+  // ── token_hash flow (FBID hub handoff, recovery, invite, email templates) ──
   if (token_hash && type) {
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash,
       type: type as 'magiclink' | 'email' | 'recovery' | 'invite',
     })
     if (!error && data?.user) {
+      await linkFbid(supabase)
       if (ref) void processReferral(data.user.id, ref)
       return NextResponse.redirect(`${origin}${next}`)
     }
@@ -52,6 +54,17 @@ export async function GET(request: NextRequest) {
 
   // ── Nothing worked — send back to login with a clear error ──
   return NextResponse.redirect(`${origin}/auth/login?error=auth_failed`)
+}
+
+// Link the canonical FBID identity + register FlowGarden's app connection.
+// Idempotent; never block login if it fails.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function linkFbid(supabase: any) {
+  try {
+    await supabase.rpc('activate_app', { p_app_slug: 'flowgarden' })
+  } catch (err) {
+    console.error('[auth/callback] activate_app failed:', err)
+  }
 }
 
 async function processReferral(newUserId: string, referralCode: string) {
