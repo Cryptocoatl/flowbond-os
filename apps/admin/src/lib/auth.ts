@@ -1,9 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? 'mtt-admin-secret-change-in-production-2026'
-)
+if (!process.env.AUTH_SECRET) {
+  throw new Error('AUTH_SECRET env var is required — set it in Vercel before deploying')
+}
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET)
 
 const COOKIE = 'mtt_session'
 const ADMIN_USER = 'Admin'
