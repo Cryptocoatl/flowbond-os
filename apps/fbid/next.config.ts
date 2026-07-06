@@ -1,6 +1,14 @@
 import type { NextConfig } from 'next'
 import path from 'path'
 
+const securityHeaders = [
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+]
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@flowbond/auth', '@flowbond/i18n'],
   turbopack: {
@@ -20,6 +28,9 @@ const nextConfig: NextConfig = {
       accounts: false,
     }
     return config
+  },
+  async headers() {
+    return [{ source: '/(.*)', headers: securityHeaders }]
   },
 }
 

@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? 'mtt-admin-secret-change-in-production-2026'
-)
-
 const PUBLIC = ['/login', '/api/auth/login', '/api/public']
 
 export async function middleware(req: NextRequest) {
+  const authSecret = process.env.AUTH_SECRET
+  if (!authSecret) {
+    return new NextResponse('Server misconfiguration: AUTH_SECRET is not set', { status: 500 })
+  }
+  const SECRET = new TextEncoder().encode(authSecret)
+
   const { pathname } = req.nextUrl
 
   if (PUBLIC.some((p) => pathname.startsWith(p))) return NextResponse.next()
