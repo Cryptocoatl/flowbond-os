@@ -1,6 +1,0 @@
-{
-  "framework": "nextjs",
-  "buildCommand": "pnpm --filter @flowbond/flowgarden build",
-  "installCommand": "pnpm install --no-frozen-lockfile",
-  "outputDirectory": "apps/flowgarden/.next"
-}
