@@ -4,9 +4,144 @@
 
 :root {
   color-scheme: dark;
+
+  /* ── core UI palette (used across the app pages) ───────────────────────── */
+  --cta: #f43f5e;
+  --indigo: #6366f1;
+  --emerald: #10b981;
+  --muted: rgba(233, 231, 245, 0.45);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --panel: rgba(255, 255, 255, 0.035);
+  --panel-2: rgba(255, 255, 255, 0.07);
+  --card: rgba(255, 255, 255, 0.035);
+
+  /* ── FlowStudio cinematic brand ────────────────────────────────────────── */
+  --bg: #07060f;
+  --ink: #ece9ff;
+  --gold: #f5c451;
+  --rose: #f43f5e;
+  --violet: #7c5cff;
+  --cyan: #25d4e8;
+  --flow-grad: linear-gradient(110deg, var(--gold) 0%, var(--rose) 38%, var(--violet) 70%, var(--cyan) 100%);
 }
 
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
 body {
-  background: #07060f;
-  color: #e9e7f5;
+  background: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* App pages keep their centered column; the landing opts out via .bleed. */
+main:not(.bleed) {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 6rem 1.25rem 4rem;
+}
+
+.panel { background: var(--panel); border: 1px solid var(--border); }
+
+/* ── brand atoms ─────────────────────────────────────────────────────────── */
+.text-grad {
+  background: var(--flow-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.display { font-family: var(--font-display), Georgia, serif; }
+
+.btn-primary {
+  position: relative; display: inline-flex; align-items: center; gap: .5rem;
+  padding: .9rem 1.5rem; border-radius: 999px; font-weight: 600; color: #0a0810;
+  background: var(--flow-grad); background-size: 200% 100%;
+  box-shadow: 0 10px 40px -12px rgba(244, 63, 94, .6);
+  transition: transform .25s ease, background-position .6s ease, box-shadow .25s ease;
+}
+.btn-primary:hover { transform: translateY(-2px); background-position: 100% 0; box-shadow: 0 18px 50px -12px rgba(124, 92, 255, .6); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .9rem 1.4rem; border-radius: 999px; font-weight: 500; color: var(--ink);
+  border: 1px solid var(--border-strong); background: rgba(255,255,255,.03);
+  backdrop-filter: blur(8px); transition: background .25s ease, border-color .25s ease, transform .25s ease;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.32); transform: translateY(-2px); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .35rem .8rem; border-radius: 999px; font-size: 12px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+  border: 1px solid var(--border); background: rgba(255,255,255,.025);
+}
+.glass {
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+  border: 1px solid var(--border); border-radius: 1.25rem;
+  backdrop-filter: blur(10px);
+}
+
+/* ── ambient cinematic background ────────────────────────────────────────── */
+.aurora { position: absolute; inset: -20% -10% auto -10%; height: 130%; pointer-events: none; z-index: 0; filter: blur(60px); opacity: .7; }
+.aurora::before, .aurora::after {
+  content: ""; position: absolute; border-radius: 50%; mix-blend-mode: screen;
+}
+.aurora::before {
+  width: 60vw; height: 60vw; left: -10vw; top: -10vw;
+  background: radial-gradient(circle at 30% 30%, rgba(245,196,81,.5), transparent 60%),
+              radial-gradient(circle at 70% 60%, rgba(244,63,94,.5), transparent 60%);
+  animation: drift 22s ease-in-out infinite;
+}
+.aurora::after {
+  width: 55vw; height: 55vw; right: -10vw; top: 5vw;
+  background: radial-gradient(circle at 40% 40%, rgba(124,92,255,.5), transparent 60%),
+              radial-gradient(circle at 60% 70%, rgba(37,212,232,.45), transparent 60%);
+  animation: drift 26s ease-in-out infinite reverse;
+}
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(6vw,4vh) scale(1.12); }
+  66%     { transform: translate(-5vw,-3vh) scale(.95); }
+}
+
+/* film grain + vignette overlays, fixed to viewport */
+.grain::after {
+  content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(3) infinite;
+}
+@keyframes grain { 0%{transform:translate(0,0)} 50%{transform:translate(-3%,2%)} 100%{transform:translate(2%,-2%)} }
+.vignette::before {
+  content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 0%, transparent 50%, rgba(0,0,0,.55) 100%);
+}
+
+/* ── scroll reveal ───────────────────────────────────────────────────────── */
+.reveal { opacity: 0; transform: translateY(32px); filter: blur(6px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1), filter .9s ease; }
+.reveal.in { opacity: 1; transform: none; filter: none; }
+.reveal-1.in { transition-delay: .08s } .reveal-2.in { transition-delay: .16s } .reveal-3.in { transition-delay: .24s } .reveal-4.in { transition-delay: .32s }
+
+/* draw-in line for the provenance chain */
+.draw { stroke-dasharray: 1; stroke-dashoffset: 1; pathLength: 1; transition: stroke-dashoffset 1.6s ease .2s; }
+.in .draw { stroke-dashoffset: 0; }
+
+/* floating media tiles + slow spin for the circular economy */
+@keyframes float { 0%,100%{transform:translateY(0) rotate(var(--r,0deg))} 50%{transform:translateY(-14px) rotate(var(--r,0deg))} }
+.floaty { animation: float 7s ease-in-out infinite; }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+.spin-slow { animation: spinSlow 40s linear infinite; transform-origin: 50% 50%; }
+@keyframes pulseGlow { 0%,100%{opacity:.5} 50%{opacity:1} }
+.pulse { animation: pulseGlow 3.5s ease-in-out infinite; }
+
+/* marquee */
+.marquee { display: flex; gap: 3rem; width: max-content; animation: marquee 32s linear infinite; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* top scroll progress bar */
+.progress { position: fixed; left: 0; top: 0; height: 3px; z-index: 60; background: var(--flow-grad); width: var(--p, 0%); box-shadow: 0 0 16px rgba(244,63,94,.6); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .aurora::before, .aurora::after, .grain::after, .floaty, .spin-slow, .marquee, .pulse { animation: none !important; }
+  .reveal { opacity: 1; transform: none; filter: none; }
+  .draw { stroke-dashoffset: 0; }
 }

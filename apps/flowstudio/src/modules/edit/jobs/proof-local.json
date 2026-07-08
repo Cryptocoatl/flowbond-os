@@ -1,0 +1,26 @@
+{
+  "title": "FlowStudio Path Proof",
+  "author": "Steph Ferrera",
+  "audioUrl": "/Users/stephferrera/Downloads/3.-we-move-as-one 2.mp3",
+  "ratio": "9:16",
+  "tier": 1,
+  "hookVariants": 1,
+  "visibility": "unlisted",
+  "scenes": [
+    { "id": "s1", "seconds": 2, "prompt": "(local footage)", "clipPath": "/Users/stephferrera/FlowStudio/30_renders/_asm_000.mp4" },
+    { "id": "s2", "seconds": 4, "prompt": "(local footage)", "clipPath": "/Users/stephferrera/FlowStudio/30_renders/_asm_001.mp4" },
+    { "id": "s3", "seconds": 3, "prompt": "(local footage)", "clipPath": "/Users/stephferrera/FlowStudio/30_renders/_asm_002.mp4" },
+    { "id": "s4", "seconds": 4, "prompt": "(local footage)", "clipPath": "/Users/stephferrera/FlowStudio/30_renders/_asm_003.mp4" },
+    { "id": "s5", "seconds": 3, "prompt": "(local footage)", "clipPath": "/Users/stephferrera/FlowStudio/30_renders/_asm_004.mp4" }
+  ],
+  "ipGuardrails": "internal proof render — local footage only, no cloud generation",
+  "provenance": {
+    "fbid": "did:fb:steph",
+    "components": {
+      "audio": "trainedAlgorithmicMedia (Suno)",
+      "video": "realFootage"
+    },
+    "license": "internal-test",
+    "proofOfHuman": true
+  }
+}

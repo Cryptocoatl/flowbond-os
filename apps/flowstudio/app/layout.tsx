@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
+import Nav from './components/Nav';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
@@ -19,7 +20,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} dark`}>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,0 +1,37 @@
+{
+  "title": "Este Mundial Le Toca a México",
+  "author": "Steph Ferrera",
+  "audioUrl": "/Users/stephferrera/FlowStudio/10_assets/tier1_cloud/este-mundial-le-toca-a-mexico.mp3",
+  "ratio": "9:16",
+  "tier": 1,
+  "hookVariants": 1,
+  "visibility": "unlisted",
+  "register": false,
+  "snapToBeat": false,
+  "audioStartSec": 14.4,
+  "scenes": [
+    { "id": "crowd", "seconds": 4.7, "model": "kling", "prompt": "Photorealistic cinematic low-angle slow-motion shot of a massive crowd of Mexican football fans erupting in celebration in a Mexico City plaza at golden hour. Green-white-red face paint, plain solid-green jerseys, fans jumping in unison, confetti and red flares in the air, giant Mexican flags waving. Shot on ARRI Alexa, 35mm anamorphic, shallow depth of field, volumetric golden light, hyper-detailed, filmic, vertical 9:16" },
+    { "id": "celebrate", "seconds": 4.0, "model": "kling", "prompt": "Photorealistic slow-motion shot of euphoric Mexican fans roaring with fists raised, screaming in joyful triumph, draped in Mexican flags and plain green jerseys, red flares and golden sparks behind them at night. Intense raw emotion, cinematic, hyper-detailed, vertical 9:16" },
+    { "id": "tacos", "seconds": 5.4, "model": "kling", "prompt": "Photorealistic close-up macro food shot of authentic Mexican street tacos al pastor with fresh green guacamole, lime and cilantro, steam rising. Hands of fans in plain green jerseys reaching in, a warmly blurred celebrating crowd and Mexican flags in the bokeh background. Appetizing cinematic food photography, shallow depth of field, soft warm light, vertical 9:16" },
+    { "id": "sudafrica", "seconds": 3.5, "model": "kling", "prompt": "Photorealistic celebratory shot: jubilant Mexican fans in plain green jerseys cheering a victory as a large South African national flag (distinctive six-color flag with the green Y-shape, black, gold, red, blue, white) is lowered and fades into the background, a giant Mexican flag rising triumphantly in the foreground, golden confetti and red flares. Sporting rivalry, respectful, no logos, cinematic, hyper-detailed, vertical 9:16" },
+    { "id": "corea", "seconds": 3.0, "model": "kling", "prompt": "Photorealistic celebratory shot: jubilant Mexican fans in plain green jerseys cheering a victory as a large South Korean national flag (white flag with the red-and-blue Taegeuk circle and black trigrams) is lowered and fades into the background, a giant Mexican flag rising triumphantly in the foreground, golden confetti and red flares. Sporting rivalry, respectful, no logos, cinematic, hyper-detailed, vertical 9:16" },
+    { "id": "angel", "seconds": 8.0, "model": "kling", "prompt": "Epic photorealistic cinematic drone shot slowly orbiting El Ángel de la Independencia, the golden Angel of Independence monument in Mexico City, at blue hour. Thousands of jubilant fans gathered at its base waving giant Mexican flags, red flares and golden fireworks lighting the sky, warm city lights below. Grand triumphant fiesta atmosphere, hyper-detailed, 8k, cinematic, vertical 9:16" },
+    { "id": "virgen", "seconds": 7.0, "model": "kling", "prompt": "Reverent photorealistic close-up of devout hands lighting warm candles before a softly glowing image of the Virgin of Guadalupe, a small folded plain green football jersey and a Mexican flag resting nearby. Intimate emotional candlelight, shallow depth of field, warm golden tones, hopeful and respectful, cinematic, vertical 9:16" },
+    { "id": "milagro", "seconds": 8.0, "model": "kling", "prompt": "Photorealistic tender shot of a Mexican family at home watching a match, leaning forward in hope and prayer in a warm living room glowing with TV light, small Mexican flags and a green jersey draped on the couch, faces lit with anticipation of a miracle. Emotional, intimate, cinematic, shallow depth of field, vertical 9:16" },
+    { "id": "portero", "seconds": 6.0, "model": "kling", "prompt": "Photorealistic joyful slow-motion shot of a goalkeeper in a plain green kit celebrating wildly after a goal, leaping with arms wide, draped in a Mexican flag, teammates and fans rushing in behind in euphoria, red flares and confetti. Triumphant comedic energy, no logos, cinematic, hyper-detailed, vertical 9:16" },
+    { "id": "gano", "seconds": 8.0, "model": "kling", "prompt": "Photorealistic triumphant montage-style shot of Mexican fans celebrating back-to-back victories, a sea of green jerseys and Mexican flags surging through a city street at dusk, two waves of red flares and golden confetti, pure jubilation. No logos, cinematic, hyper-detailed, vertical 9:16" },
+    { "id": "inicio", "seconds": 7.0, "model": "kling", "prompt": "Photorealistic determined cinematic shot of a lone young Mexican fan standing tall draped in a giant Mexican flag at dawn, sunrise breaking over a vast stadium behind, hopeful and resolute, the beginning of something epic, golden rim light, hyper-detailed, vertical 9:16" },
+    { "id": "quetzalcoatl", "seconds": 6.0, "model": "kling", "prompt": "Epic mythical photorealistic shot: a colossal glowing ajolote (Mexican axolotl) emerges and magically transforms mid-air into Quetzalcoatl, the legendary feathered serpent god, rising majestically over ancient Mesoamerican pyramids (Teotihuacán and Chichén Itzá) at golden hour. Iridescent emerald-and-gold quetzal feathers, divine mythic scale, swirling golden fireworks and falling confetti, a vast roaring crowd of Mexican fans below waving giant Mexican flags, the rebirth of a Mesoamerican empire, awe-inspiring, hyper-detailed, cinematic, vertical 9:16" }
+  ],
+  "ipGuardrails": "NO FIFA marks, NO World Cup trophy, NO official FMF/Selección crest, NO team or sponsor logos, NO recognizable copyrighted characters. Plain solid-green jerseys only. National flags (Mexico, South Africa, South Korea), El Ángel de la Independencia, and Mesoamerican pyramids are OK. Keep rivals respectful and the Virgen de Guadalupe scene respectful.",
+  "provenance": {
+    "fbid": "",
+    "components": {
+      "lyrics_direction": "humanEdits",
+      "audio": "trainedAlgorithmicMedia (Suno)",
+      "video": "compositeWithTrainedAlgorithmicMedia (Kling)"
+    },
+    "license": "remix-with-attribution + revenue-share",
+    "proofOfHuman": true
+  }
+}
