@@ -37,6 +37,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://www.brandmark.click', path: '/proveedores/callback' },   // brandmark (www)
   { origin: 'https://reciprociudad.lat', path: '/auth/callback' },             // reciprociudad (+ /team console)
   { origin: 'https://www.reciprociudad.lat', path: '/auth/callback' },         // reciprociudad (www)
+  { origin: 'https://chords.flowme.one', path: '/' },                          // flowchords (static SPA, hash session)
   { origin: 'https://voces.flowme.one', path: '/admin' },                      // voces para el alma (static admin, hash session)
   // ---- local development ----
   { origin: 'http://localhost:5173', path: '/proveedores/callback' }, // brandmark-web (vite dev)
@@ -53,6 +54,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3000', path: '/auth/callback' },     // flowme profiles
   { origin: 'http://localhost:3012', path: '/auth/callback' },     // grantflow
   { origin: 'http://localhost:3015', path: '/auth/callback' },     // reciprociudad
+  { origin: 'http://localhost:5173', path: '/' },                  // flowchords (vite dev)
 ])
 
 /** True only if `raw` exactly matches an allowed (origin, pathname) pair. */
