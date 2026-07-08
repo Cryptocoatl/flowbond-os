@@ -9,6 +9,8 @@ import { MeetingPanel } from './MeetingPanel';
 import { CarePanel, type CareItem } from './CarePanel';
 import { TaskPanel } from './TaskPanel';
 import { EmpireGrid } from './EmpireGrid';
+import { ClaudiaDock } from './ClaudiaDock';
+import { MissionsPanel } from './MissionsPanel';
 import { FloGuardPanel } from './FloGuardPanel';
 import { StatsRibbon } from './StatsRibbon';
 import { SuggestionsPanel } from './SuggestionsPanel';
@@ -251,15 +253,18 @@ export function ClaudiaApp() {
   }
 
   // ── send turn ───────────────────────────────────────────────────────────────
-  async function send() {
-    const text = input.trim();
+  // `override` lets the voice dock send a spoken phrase without touching the
+  // typed input box; typed sends pass nothing and use `input`.
+  async function send(override?: string) {
+    const fromVoice = typeof override === 'string';
+    const text = (fromVoice ? override : input).trim();
     if (!text || sending) return;
 
     // Admin slash-commands (/admin, /whoami) run LOCALLY against the gated grant
     // RPCs — never encrypted into the vault, never sent to the relay or the LLM.
     if (isCommand(text)) {
       setMessages((m) => [...m, { role: 'user', text }]);
-      setInput('');
+      if (!fromVoice) setInput('');
       setSending(true);
       try {
         const reply = await runCommand(text);
@@ -276,7 +281,7 @@ export function ClaudiaApp() {
 
     const next: ChatMessage[] = [...messages, { role: 'user', text }];
     setMessages(next);
-    setInput('');
+    if (!fromVoice) setInput('');
     setSending(true);
     try {
       await getVault().saveMessage('user', text);
@@ -508,6 +513,12 @@ export function ClaudiaApp() {
               onConnect={handleConnect}
               onDisconnect={handleDisconnect}
             />
+            <MissionsPanel
+              connectedBySlug={connectedBySlug}
+              isRoot={isRoot}
+              onConnect={handleConnect}
+              connecting={connecting}
+            />
             <FloGuardPanel />
           </>
         ) : (
@@ -542,6 +553,16 @@ export function ClaudiaApp() {
       <p style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: 'rgba(244,241,234,.32)', letterSpacing: '0.05em', position: 'relative', zIndex: 2 }}>
         FlowMe · ClaudIA · Más Amor · zero-knowledge by design
       </p>
+
+      {/* her always-present voice bubble — hands-free, coral voice, any view */}
+      <ClaudiaDock
+        messages={messages}
+        onSend={(t) => send(t)}
+        sending={sending}
+        voiceOn={voiceOn}
+        onToggleVoice={toggleVoice}
+        speakLevel={speakLevel}
+      />
     </div>
   );
 }
