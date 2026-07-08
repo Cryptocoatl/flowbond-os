@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Fraunces, Space_Mono, Hanken_Grotesk, Caveat } from 'next/font/google'
-import { FlowEditProvider } from '@flowbond/flowedit'
 import { LivingField, MagneticCursor } from '@flowbond/ui'
 import { ScrollReveal } from '@/components/ScrollReveal'
+import { ScrollProgress } from '@/components/ScrollProgress'
 import '@flowbond/ui/tokens.css'
 import './globals.css'
 
@@ -31,27 +31,24 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 }
 
-const FLOWEDIT_API = process.env.NEXT_PUBLIC_FLOWEDIT_API_URL ?? 'http://localhost:4000'
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${fraunces.variable} ${spaceMono.variable} ${hanken.variable} ${caveat.variable}`}>
       <body>
-        <FlowEditProvider siteId="flowbond-life" apiUrl={FLOWEDIT_API}>
-          {/* Ambient background layers, ported from the prototype */}
-          <LivingField />
-          <div className="atmos" aria-hidden="true"></div>
-          <div className="vign" aria-hidden="true"></div>
-          <svg className="grain" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <filter id="grain-n">
-              <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
-            </filter>
-            <rect width="100%" height="100%" filter="url(#grain-n)" />
-          </svg>
-          <MagneticCursor />
-          <ScrollReveal />
-          {children}
-        </FlowEditProvider>
+        {/* Ambient background layers, ported from the prototype */}
+        <ScrollProgress />
+        <LivingField />
+        <div className="atmos" aria-hidden="true"></div>
+        <div className="vign" aria-hidden="true"></div>
+        <svg className="grain" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <filter id="grain-n">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#grain-n)" />
+        </svg>
+        <MagneticCursor />
+        <ScrollReveal />
+        {children}
       </body>
     </html>
   )
