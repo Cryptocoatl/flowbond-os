@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voces para el Alma · Voices for the Soul</title>
+<meta name="description" content="Conectamos voces que sanan con almas que buscan transformarse. Especialistas de alto nivel en bienestar emocional, mental y humano.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --lino:#F7F2E9;        /* off-white background */
+    --pergamino:#FCFAF4;   /* lighter card surface */
+    --oro:#B68A3E;         /* deep gold */
+    --oro-claro:#CBA15A;   /* light gold */
+    --salvia:#7E9078;      /* sage green */
+    --salvia-tenue:#E5EAE0;/* sage tint */
+    --pizarra:#4C6072;     /* soft slate blue */
+    --tinta:#2C2722;       /* warm near-black ink */
+    --tinta-60:rgba(44,39,34,.62);
+    --linea:rgba(44,39,34,.12);
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Inter',system-ui,sans-serif;
+    --r:18px;
+    --maxw:1180px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    color:var(--tinta);
+    background:var(--lino);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:400;line-height:1.08;letter-spacing:-.01em}
+  ::selection{background:var(--oro-claro);color:#fff}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--oro);font-weight:600}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:500;font-size:15px;
+       padding:14px 26px;border-radius:100px;border:1px solid transparent;cursor:pointer;transition:.25s ease;white-space:nowrap}
+  .btn-primary{background:var(--tinta);color:var(--lino)}
+  .btn-primary:hover{background:var(--oro);transform:translateY(-2px)}
+  .btn-ghost{background:transparent;color:var(--tinta);border-color:var(--linea)}
+  .btn-ghost:hover{border-color:var(--tinta);background:rgba(44,39,34,.04)}
+  :focus-visible{outline:2px solid var(--oro);outline-offset:3px;border-radius:6px}
+
+  /* ---- NAV ---- */
+  header{position:fixed;top:0;left:0;right:0;z-index:80;transition:.3s ease}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  header.scrolled{background:rgba(247,242,233,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--linea)}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:20px;letter-spacing:-.01em}
+  .brand svg{flex:none}
+  .nav-links{display:flex;align-items:center;gap:30px}
+  .nav-links a{font-size:14.5px;color:var(--tinta-60);transition:.2s;font-weight:500}
+  .nav-links a:hover{color:var(--tinta)}
+  .nav-tools{display:flex;align-items:center;gap:14px}
+  .lang{display:flex;border:1px solid var(--linea);border-radius:100px;overflow:hidden;font-size:12.5px;font-weight:600}
+  .lang button{padding:7px 13px;background:none;border:none;cursor:pointer;color:var(--tinta-60);font-family:var(--sans);font-weight:600;transition:.2s}
+  .lang button.active{background:var(--tinta);color:var(--lino)}
+  .cart-btn{position:relative;background:none;border:none;cursor:pointer;color:var(--tinta);padding:6px;display:flex}
+  .cart-count{position:absolute;top:-3px;right:-4px;background:var(--oro);color:#fff;font-size:10px;font-weight:600;
+       min-width:17px;height:17px;border-radius:100px;display:flex;align-items:center;justify-content:center;font-family:var(--sans);padding:0 4px}
+  .cart-count:empty,.cart-count[data-n="0"]{display:none}
+  .menu-toggle{display:none;background:none;border:none;cursor:pointer;color:var(--tinta);padding:6px}
+
+  /* ---- HERO ---- */
+  .hero{position:relative;min-height:100vh;display:flex;align-items:center;padding:120px 0 80px;overflow:hidden}
+  .hero-bg{position:absolute;inset:0;z-index:0;
+    background:
+      radial-gradient(120% 90% at 78% 18%, rgba(203,161,90,.20), transparent 55%),
+      radial-gradient(90% 80% at 10% 90%, rgba(126,144,120,.18), transparent 60%),
+      linear-gradient(180deg,#FBF7EF,#F4EDE0);}
+  .rings{position:absolute;right:-4%;top:50%;transform:translateY(-50%);z-index:1;width:min(720px,62vw);aspect-ratio:1;pointer-events:none;opacity:.9}
+  .rings .ring{position:absolute;inset:0;margin:auto;border-radius:50%;border:1px solid var(--oro-claro);opacity:0;
+       animation:emanate 6s ease-out infinite}
+  .rings .ring:nth-child(2){animation-delay:1.5s}
+  .rings .ring:nth-child(3){animation-delay:3s}
+  .rings .ring:nth-child(4){animation-delay:4.5s}
+  .rings .core{position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;
+       background:radial-gradient(circle,#F4E3BE,var(--oro));box-shadow:0 0 60px 18px rgba(203,161,90,.45);
+       animation:pulse 4s ease-in-out infinite}
+  @keyframes emanate{0%{width:64px;height:64px;opacity:.7}100%{width:100%;height:100%;opacity:0}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .hero-inner{position:relative;z-index:2;max-width:660px}
+  .hero h1{font-size:clamp(44px,7vw,82px);margin:22px 0 8px}
+  .hero h1 em{font-style:italic;color:var(--oro)}
+  .hero .sub-soul{display:block;font-size:clamp(15px,1.6vw,19px);letter-spacing:.32em;text-transform:uppercase;color:var(--salvia);font-family:var(--sans);font-weight:600;margin-top:6px}
+  .hero p.lead{font-size:clamp(17px,2vw,21px);color:var(--tinta-60);max-width:520px;margin:24px 0 34px;font-family:var(--serif);font-style:italic;line-height:1.45}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+
+  /* ---- SECTION SHELL ---- */
+  section{position:relative}
+  .band{padding:104px 0}
+  .band-tint{background:var(--pergamino)}
+  .band-ink{background:var(--tinta);color:var(--lino)}
+  .band-ink .eyebrow{color:var(--oro-claro)}
+  .sec-head{max-width:620px;margin-bottom:54px}
+  .sec-head h2{font-size:clamp(32px,4.4vw,50px);margin:14px 0 16px}
+  .sec-head p{color:var(--tinta-60);font-size:17px}
+  .band-ink .sec-head p{color:rgba(247,242,233,.7)}
+  .wave-divider{display:block;width:120px;height:22px;margin:0 auto 4px;overflow:visible}
+
+  /* ---- MISSION / VISION ---- */
+  .mv-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+  .mv-card{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:42px;position:relative;overflow:hidden}
+  .mv-card .ico{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       background:var(--salvia-tenue);color:var(--salvia);margin-bottom:22px}
+  .mv-card h3{font-size:27px;font-style:italic;margin-bottom:12px}
+  .mv-card p{color:var(--tinta-60);font-size:16.5px}
+  .values{display:flex;flex-wrap:wrap;gap:10px;margin-top:56px;justify-content:center}
+  .value-pill{border:1px solid var(--linea);border-radius:100px;padding:10px 20px;font-size:14px;font-weight:500;background:var(--lino);
+       display:flex;gap:8px;align-items:center}
+  .value-pill b{color:var(--oro);font-weight:600}
+
+  /* ---- CATEGORIES ---- */
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .cat{background:var(--pergamino);border:1px solid var(--linea);border-radius:var(--r);padding:30px 24px;cursor:pointer;
+       transition:.28s ease;position:relative}
+  .cat:hover{transform:translateY(-5px);border-color:var(--oro-claro);box-shadow:0 18px 40px -22px rgba(44,39,34,.35)}
+  .cat .ring-ico{width:54px;height:54px;border-radius:50%;border:1.5px solid var(--oro-claro);display:flex;align-items:center;justify-content:center;
+       color:var(--oro);margin-bottom:18px;transition:.28s}
+  .cat:hover .ring-ico{background:var(--oro);color:#fff;border-color:var(--oro)}
+  .cat h4{font-size:19px;margin-bottom:6px}
+  .cat p{font-size:13.5px;color:var(--tinta-60);line-height:1.45}
+
+  /* ---- DIRECTORY ---- */
+  .filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;align-items:center}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;background:var(--lino);border:1px solid var(--linea);
+       border-radius:100px;padding:12px 18px}
+  .search input{border:none;background:none;outline:none;font-family:var(--sans);font-size:15px;width:100%;color:var(--tinta)}
+  .select{position:relative}
+  select{appearance:none;font-family:var(--sans);font-size:14px;font-weight:500;background:var(--lino);border:1px solid var(--linea);
+       border-radius:100px;padding:12px 38px 12px 18px;cursor:pointer;color:var(--tinta)}
+  .select svg{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--tinta-60)}
+  .spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .spec{background:var(--pergamino);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden;transition:.28s ease;cursor:pointer}
+  .spec:hover{transform:translateY(-5px);box-shadow:0 22px 46px -24px rgba(44,39,34,.4)}
+  .spec-photo{height:230px;position:relative;background-size:cover;background-position:center}
+  .spec-photo .avail{position:absolute;top:14px;right:14px;background:rgba(247,242,233,.92);border-radius:100px;padding:5px 12px;
+       font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--salvia)}
+  .dot.busy{background:var(--oro-claro)}
+  .spec-body{padding:24px}
+  .spec-body .cat-tag{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--oro);font-weight:600}
+  .spec-body h4{font-size:22px;margin:7px 0 4px}
+  .spec-body .role{font-size:14px;color:var(--pizarra);font-weight:500;margin-bottom:12px}
+  .spec-body p{font-size:14px;color:var(--tinta-60);line-height:1.5}
+  .spec-langs{display:flex;gap:6px;margin-top:14px}
+  .lang-chip{font-size:11px;font-weight:600;border:1px solid var(--linea);border-radius:6px;padding:3px 8px;color:var(--tinta-60)}
+  .empty{grid-column:1/-1;text-align:center;padding:60px;color:var(--tinta-60);font-style:italic;font-family:var(--serif)}
+
+  /* ---- WORKSHOPS ---- */
+  .shop-list{display:flex;flex-direction:column;gap:16px}
+  .ws{display:grid;grid-template-columns:96px 1fr auto;gap:26px;align-items:center;background:var(--lino);border:1px solid var(--linea);
+       border-radius:var(--r);padding:24px 28px;transition:.25s}
+  .ws:hover{border-color:var(--oro-claro)}
+  .ws-date{text-align:center;border-right:1px solid var(--linea);padding-right:22px}
+  .ws-date .d{font-family:var(--serif);font-size:34px;line-height:1}
+  .ws-date .m{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-weight:600;margin-top:4px}
+  .ws-main h4{font-size:21px;margin-bottom:5px}
+  .ws-main .by{font-size:13.5px;color:var(--tinta-60)}
+  .ws-meta{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+  .badge{font-size:11.5px;font-weight:600;border-radius:100px;padding:4px 11px}
+  .badge.presencial{background:var(--salvia-tenue);color:var(--salvia)}
+  .badge.online{background:rgba(76,96,114,.12);color:var(--pizarra)}
+  .badge.hibrido{background:rgba(203,161,90,.16);color:var(--oro)}
+  .ws-action{text-align:right}
+  .ws-price{font-family:var(--serif);font-size:24px;margin-bottom:10px;display:block}
+  .ws-price small{font-family:var(--sans);font-size:12px;color:var(--tinta-60)}
+
+  /* ---- STORE ---- */
+  .store-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .prod{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+  .prod-cover{height:170px;background-size:cover;background-position:center;position:relative}
+  .prod-cover .ptype{position:absolute;top:12px;left:12px;background:rgba(44,39,34,.82);color:var(--lino);font-size:11px;font-weight:600;
+       border-radius:100px;padding:5px 12px;letter-spacing:.04em}
+  .prod-body{padding:22px;display:flex;flex-direction:column;flex:1}
+  .prod-body h4{font-size:19px;margin-bottom:6px}
+  .prod-body p{font-size:13.5px;color:var(--tinta-60);flex:1}
+  .prod-foot{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+  .prod-foot .pp{font-family:var(--serif);font-size:22px}
+  .add{background:var(--salvia-tenue);color:var(--salvia);border:none;border-radius:100px;width:42px;height:42px;cursor:pointer;
+       display:flex;align-items:center;justify-content:center;transition:.2s}
+  .add:hover{background:var(--salvia);color:#fff}
+
+  /* ---- TESTIMONIALS ---- */
+  .test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .test{background:rgba(247,242,233,.06);border:1px solid rgba(247,242,233,.14);border-radius:var(--r);padding:34px}
+  .test .q{font-family:var(--serif);font-size:20px;line-height:1.5;font-style:italic;margin-bottom:22px}
+  .test .who{display:flex;align-items:center;gap:13px}
+  .test .who .av{width:42px;height:42px;border-radius:50%;background-size:cover;background-position:center;flex:none}
+  .test .who b{display:block;font-family:var(--sans);font-size:14.5px;font-weight:600}
+  .test .who span{font-size:12.5px;color:rgba(247,242,233,.6)}
+
+  /* ---- ABOUT ---- */
+  .about-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:center}
+  .about-grid p{color:var(--tinta-60);font-size:16.5px;margin-bottom:16px}
+  .about-art{aspect-ratio:4/5;border-radius:var(--r);background:
+       radial-gradient(80% 80% at 70% 30%,rgba(203,161,90,.3),transparent),
+       linear-gradient(160deg,var(--salvia-tenue),var(--pergamino));border:1px solid var(--linea);position:relative;overflow:hidden;
+       display:flex;align-items:center;justify-content:center}
+  .about-art svg{opacity:.9}
+
+  /* ---- CONTACT ---- */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px}
+  .tabs{display:flex;gap:8px;margin-bottom:26px;border:1px solid var(--linea);border-radius:100px;padding:5px;width:fit-content}
+  .tabs button{border:none;background:none;cursor:pointer;font-family:var(--sans);font-weight:500;font-size:14px;padding:9px 20px;
+       border-radius:100px;color:var(--tinta-60);transition:.2s}
+  .tabs button.active{background:var(--tinta);color:var(--lino)}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:500;margin-bottom:7px}
+  .field input,.field textarea,.field select{width:100%;font-family:var(--sans);font-size:15px;padding:13px 16px;border:1px solid var(--linea);
+       border-radius:12px;background:var(--lino);color:var(--tinta);outline:none;transition:.2s}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--oro)}
+  .field textarea{resize:vertical;min-height:110px}
+  .contact-aside .ci{display:flex;gap:14px;align-items:flex-start;margin-bottom:24px}
+  .contact-aside .ci .ico{width:42px;height:42px;border-radius:12px;background:var(--salvia-tenue);color:var(--salvia);
+       display:flex;align-items:center;justify-content:center;flex:none}
+  .contact-aside .ci b{display:block;font-size:15px;margin-bottom:2px}
+  .contact-aside .ci span{font-size:14px;color:var(--tinta-60)}
+
+  /* ---- FOOTER ---- */
+  footer{background:var(--tinta);color:rgba(247,242,233,.7);padding:70px 0 32px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:50px}
+  footer .brand{color:var(--lino)}
+  footer h5{font-family:var(--sans);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--oro-claro);margin-bottom:18px;font-weight:600}
+  footer ul{list-style:none}
+  footer ul li{margin-bottom:11px}
+  footer ul li a{font-size:14px;color:rgba(247,242,233,.7);transition:.2s}
+  footer ul li a:hover{color:var(--lino)}
+  .foot-tag{font-family:var(--serif);font-style:italic;font-size:16px;color:rgba(247,242,233,.85);margin:14px 0 22px;max-width:300px}
+  .socials{display:flex;gap:12px}
+  .socials a{width:38px;height:38px;border-radius:50%;border:1px solid rgba(247,242,233,.2);display:flex;align-items:center;justify-content:center;
+       color:rgba(247,242,233,.7);transition:.2s}
+  .socials a:hover{background:var(--oro);border-color:var(--oro);color:#fff}
+  .foot-bottom{border-top:1px solid rgba(247,242,233,.14);padding-top:24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:13px}
+
+  /* ---- MODAL (specialist) ---- */
+  .modal-bg{position:fixed;inset:0;z-index:120;background:rgba(44,39,34,.55);backdrop-filter:blur(4px);
+       display:none;align-items:center;justify-content:center;padding:24px}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--lino);border-radius:24px;max-width:760px;width:100%;max-height:88vh;overflow:auto;position:relative;
+       display:grid;grid-template-columns:300px 1fr}
+  .modal-close{position:absolute;top:16px;right:16px;background:rgba(247,242,233,.9);border:none;border-radius:50%;width:38px;height:38px;
+       cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+  .modal-photo{background-size:cover;background-position:center;min-height:340px}
+  .modal-info{padding:38px}
+  .modal-info .cat-tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--oro);font-weight:600}
+  .modal-info h3{font-size:30px;margin:8px 0 4px}
+  .modal-info .role{color:var(--pizarra);font-weight:500;margin-bottom:18px}
+  .modal-info p{font-size:15px;color:var(--tinta-60);margin-bottom:18px}
+  .focus-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .focus-list span{font-size:12.5px;background:var(--salvia-tenue);color:var(--salvia);border-radius:100px;padding:5px 12px;font-weight:500}
+  .certs{font-size:13.5px;color:var(--tinta-60);margin-bottom:24px}
+  .certs b{color:var(--tinta);font-weight:600}
+  .contact-reveal{border:1px dashed var(--oro-claro);border-radius:14px;padding:18px;background:rgba(203,161,90,.07)}
+  .contact-reveal .note{font-size:12.5px;color:var(--tinta-60);margin-bottom:12px}
+  .contact-data{display:none;flex-direction:column;gap:9px}
+  .contact-data.show{display:flex}
+  .contact-data a{display:flex;gap:9px;align-items:center;font-size:14px;font-weight:500}
+
+  /* ---- CART DRAWER ---- */
+  .drawer-bg{position:fixed;inset:0;z-index:130;background:rgba(44,39,34,.5);display:none}
+  .drawer-bg.open{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--lino);z-index:131;
+       transform:translateX(100%);transition:.32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-20px 0 60px -30px rgba(0,0,0,.4)}
+  .drawer.open{transform:translateX(0)}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;padding:26px 28px;border-bottom:1px solid var(--linea)}
+  .drawer-head h3{font-size:24px}
+  .drawer-items{flex:1;overflow:auto;padding:18px 28px}
+  .drawer-empty{text-align:center;color:var(--tinta-60);font-style:italic;font-family:var(--serif);padding:60px 0}
+  .ci-row{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--linea)}
+  .ci-row .thumb{width:58px;height:58px;border-radius:12px;background-size:cover;background-position:center;flex:none}
+  .ci-row .ci-info{flex:1}
+  .ci-row .ci-info b{font-size:14.5px;display:block;font-family:var(--serif)}
+  .ci-row .ci-info span{font-size:13px;color:var(--tinta-60)}
+  .ci-row .rm{background:none;border:none;color:var(--tinta-60);cursor:pointer;font-size:12px;text-decoration:underline;padding:0;margin-top:4px}
+  .drawer-foot{padding:24px 28px;border-top:1px solid var(--linea)}
+  .drawer-total{display:flex;justify-content:space-between;font-family:var(--serif);font-size:22px;margin-bottom:18px}
+  .drawer-foot .btn{width:100%;justify-content:center}
+
+  /* ---- TOAST ---- */
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(120%);z-index:200;background:var(--tinta);color:var(--lino);
+       padding:14px 24px;border-radius:100px;font-size:14px;font-weight:500;transition:.35s cubic-bezier(.4,0,.2,1);box-shadow:0 14px 40px -12px rgba(0,0,0,.5)}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  /* ---- REVEAL ---- */
+  .reveal{opacity:0;transform:translateY(28px);transition:.7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---- RESPONSIVE ---- */
+  @media(max-width:980px){
+    .cat-grid{grid-template-columns:repeat(2,1fr)}
+    .spec-grid,.store-grid,.test-grid{grid-template-columns:repeat(2,1fr)}
+    .about-grid,.contact-grid{grid-template-columns:1fr;gap:38px}
+    .foot-grid{grid-template-columns:1fr 1fr}
+    .modal{grid-template-columns:1fr}
+    .modal-photo{min-height:220px}
+    .rings{opacity:.45}
+  }
+  @media(max-width:680px){
+    .nav-links{display:none}
+    .menu-toggle{display:flex}
+    .mv-grid{grid-template-columns:1fr}
+    .cat-grid,.spec-grid,.store-grid,.test-grid{grid-template-columns:1fr}
+    .ws{grid-template-columns:1fr;gap:16px;text-align:left}
+    .ws-date{border:none;padding:0;display:flex;gap:10px;align-items:baseline}
+    .ws-action{text-align:left}
+    .foot-grid{grid-template-columns:1fr}
+    .band{padding:74px 0}
+    .wrap{padding:0 20px}
+    .nav-links.mobile-open{display:flex;flex-direction:column;position:absolute;top:74px;left:0;right:0;background:var(--lino);
+         padding:22px 28px;gap:18px;border-bottom:1px solid var(--linea)}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;scroll-behavior:auto}
+    .reveal{opacity:1;transform:none;transition:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header id="header">
+  <div class="wrap nav">
+    <a href="#home" class="brand" aria-label="Voces para el Alma">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/>
+        <circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/>
+        <circle cx="17" cy="17" r="4.6" fill="#B68A3E"/>
+      </svg>
+      <span>Voces<span style="color:var(--oro)"> · </span><span style="font-style:italic">Alma</span></span>
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a href="#especialidades" data-i18n="nav.cats">Especialidades</a>
+      <a href="#directorio" data-i18n="nav.dir">Especialistas</a>
+      <a href="#talleres" data-i18n="nav.ws">Talleres</a>
+      <a href="#tienda" data-i18n="nav.store">Tienda</a>
+      <a href="#nosotros" data-i18n="nav.about">Nosotros</a>
+      <a href="#contacto" data-i18n="nav.contact">Contacto</a>
+    </nav>
+    <div class="nav-tools">
+      <div class="lang" role="group" aria-label="Language">
+        <button data-lang="es" class="active" onclick="setLang('es')">ES</button>
+        <button data-lang="en" onclick="setLang('en')">EN</button>
+      </div>
+      <button class="cart-btn" onclick="openCart()" aria-label="Carrito">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>
+        <span class="cart-count" id="cartCount" data-n="0"></span>
+      </button>
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="rings" aria-hidden="true">
+    <div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    <div class="core"></div>
+  </div>
+  <div class="wrap hero-inner">
+    <span class="eyebrow" data-i18n="hero.eyebrow">Bienestar emocional, mental y humano</span>
+    <h1><span data-i18n="hero.title1">Voces para el</span> <em data-i18n="hero.title2">Alma</em>
+      <span class="sub-soul" data-i18n="hero.soul">Voices for the Soul</span>
+    </h1>
+    <p class="lead" data-i18n="hero.lead">Conectamos voces que sanan con almas que buscan transformarse. Encuentra al especialista que tu momento necesita.</p>
+    <div class="hero-cta">
+      <a href="#directorio" class="btn btn-primary" data-i18n="hero.cta1">Explorar especialistas →</a>
+      <a href="#talleres" class="btn btn-ghost" data-i18n="hero.cta2">Ver talleres</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MISSION / VISION ============ -->
+<section class="band" id="proposito">
+  <div class="wrap">
+    <div class="sec-head reveal" style="margin-left:auto;margin-right:auto;text-align:center">
+      <svg class="wave-divider" viewBox="0 0 120 22" fill="none" stroke="#CBA15A" stroke-width="1.4" aria-hidden="true"><path d="M2 11q15-9 30 0t30 0 30 0 26 0"/></svg>
+      <span class="eyebrow" data-i18n="mv.eyebrow">Por qué existimos</span>
+      <h2 data-i18n="mv.title">Un espacio donde el conocimiento llega al alma</h2>
+    </div>
+    <div class="mv-grid">
+      <div class="mv-card reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/></svg></div>
+        <h3 data-i18n="mv.m.t">Misión</h3>
+        <p data-i18n="mv.m.b">Conectar a personas que buscan bienestar, sanación y crecimiento con especialistas de alto nivel en desarrollo humano, en un espacio seguro, inclusivo y profesional donde la voz del conocimiento llega directo a quien la necesita.</p>
+      </div>
+      <div class="mv-card reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/></svg></div>
+        <h3 data-i18n="mv.v.t">Visión</h3>
+        <p data-i18n="mv.v.b">Ser la plataforma líder del mundo de habla hispana —y referente internacional— en democratizar el bienestar humano: una comunidad global donde cada persona, sin importar su origen o condición, acceda a las voces que transforman su vida desde adentro.</p>
+      </div>
+    </div>
+    <div class="values reveal">
+      <div class="value-pill"><b data-i18n="mv.val1.t">Inclusión</b> <span data-i18n="mv.val1.b">sin distinciones</span></div>
+      <div class="value-pill"><b data-i18n="mv.val2.t">Profesionalismo</b> <span data-i18n="mv.val2.b">solo especialistas certificados</span></div>
+      <div class="value-pill"><b data-i18n="mv.val3.t">Autenticidad</b> <span data-i18n="mv.val3.b">cada voz es genuina</span></div>
+      <div class="value-pill"><b data-i18n="mv.val4.t">Transformación</b> <span data-i18n="mv.val4.b">cambio real</span></div>
+      <div class="value-pill"><b data-i18n="mv.val5.t">Paz</b> <span data-i18n="mv.val5.b">sostenible para todos</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<section class="band band-tint" id="especialidades">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="cat.eyebrow">Disciplinas</span>
+      <h2 data-i18n="cat.title">Ocho caminos hacia el bienestar</h2>
+      <p data-i18n="cat.sub">Cada especialidad reúne a voces dedicadas a una dimensión del desarrollo humano. Elige por dónde empezar.</p>
+    </div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</section>
+
+<!-- ============ DIRECTORY ============ -->
+<section class="band" id="directorio">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="dir.eyebrow">Directorio</span>
+      <h2 data-i18n="dir.title">Encuentra tu voz</h2>
+      <p data-i18n="dir.sub">El contacto es directo entre tú y el especialista. La plataforma no intermedia ni cobra comisión por sesiones individuales — solo facilita el encuentro.</p>
+    </div>
+    <div class="filters reveal">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tinta-60)" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="specSearch" type="text" data-i18n-ph="dir.search" placeholder="Buscar por nombre o tema…" oninput="renderSpecs()">
+      </div>
+      <div class="select">
+        <select id="filterCat" onchange="renderSpecs()"></select>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="select">
+        <select id="filterMod" onchange="renderSpecs()"></select>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <div class="select">
+        <select id="filterLang" onchange="renderSpecs()"></select>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+    </div>
+    <div class="spec-grid" id="specGrid"></div>
+  </div>
+</section>
+
+<!-- ============ WORKSHOPS ============ -->
+<section class="band band-tint" id="talleres">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="ws.eyebrow">Agenda</span>
+      <h2 data-i18n="ws.title">Talleres y experiencias</h2>
+      <p data-i18n="ws.sub">Inscríbete y paga de forma segura desde la plataforma. Recibe confirmación y recordatorios por correo.</p>
+    </div>
+    <div class="shop-list" id="wsList"></div>
+  </div>
+</section>
+
+<!-- ============ STORE ============ -->
+<section class="band" id="tienda">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="store.eyebrow">Tienda de contenidos</span>
+      <h2 data-i18n="store.title">Lleva la calma contigo</h2>
+      <p data-i18n="store.sub">Ebooks, meditaciones guiadas, cursos grabados y guías descargables. Entrega digital automática tras la compra.</p>
+    </div>
+    <div class="store-grid" id="storeGrid"></div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="band band-ink" id="testimonios">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="test.eyebrow">Historias</span>
+      <h2 data-i18n="test.title">Almas que se transformaron</h2>
+    </div>
+    <div class="test-grid" id="testGrid"></div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="band" id="nosotros">
+  <div class="wrap about-grid">
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="about.eyebrow">Acerca de nosotros</span>
+      <h2 style="font-size:clamp(30px,4vw,46px);margin:14px 0 22px" data-i18n="about.title">Nacimos de una certeza simple</h2>
+      <p data-i18n="about.p1">Que cada persona merece acceso a las voces que pueden ayudarle a sanar y a crecer. Voces para el Alma reúne, cuida y verifica a especialistas de excelencia para que encontrarlos deje de ser cuestión de suerte.</p>
+      <p data-i18n="about.p2">Somos un equipo multidisciplinario unido por una misma fe: el bienestar no es un lujo, es un derecho. Y la transformación empieza cuando la voz correcta llega en el momento correcto.</p>
+      <a href="#contacto" class="btn btn-primary" style="margin-top:14px" data-i18n="about.cta">Súmate como especialista →</a>
+    </div>
+    <div class="about-art reveal">
+      <svg width="180" height="180" viewBox="0 0 180 180" fill="none" aria-hidden="true">
+        <circle cx="90" cy="90" r="78" stroke="#CBA15A" stroke-width="1" opacity=".5"/>
+        <circle cx="90" cy="90" r="56" stroke="#7E9078" stroke-width="1" opacity=".6"/>
+        <circle cx="90" cy="90" r="34" stroke="#B68A3E" stroke-width="1"/>
+        <circle cx="90" cy="90" r="13" fill="#B68A3E"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="band band-tint" id="contacto">
+  <div class="wrap contact-grid">
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="contact.eyebrow">Contacto</span>
+      <h2 style="font-size:clamp(28px,3.6vw,42px);margin:14px 0 22px" data-i18n="contact.title">Hablemos</h2>
+      <div class="tabs">
+        <button class="active" id="tabGeneral" onclick="switchTab('general')" data-i18n="contact.tab1">Soy visitante</button>
+        <button id="tabSpec" onclick="switchTab('spec')" data-i18n="contact.tab2">Soy especialista</button>
+      </div>
+      <form id="contactForm" onsubmit="submitForm(event)">
+        <div class="field"><label data-i18n="contact.name">Nombre completo</label><input required type="text"></div>
+        <div class="field"><label data-i18n="contact.email">Correo electrónico</label><input required type="email"></div>
+        <div class="field" id="specOnly" style="display:none"><label data-i18n="contact.disc">Disciplina / especialidad</label><input type="text"></div>
+        <div class="field"><label data-i18n="contact.msg">Mensaje</label><textarea required></textarea></div>
+        <button type="submit" class="btn btn-primary" data-i18n="contact.send">Enviar mensaje</button>
+      </form>
+    </div>
+    <div class="contact-aside reveal">
+      <div class="ci"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/></svg></div><div><b data-i18n="contact.c1t">Correo</b><span id="ciEmail">hola@vocesparaelalma.com</span></div></div>
+      <div class="ci"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div><b>WhatsApp</b><span id="ciWhatsapp">+52 55 0000 0000</span></div></div>
+      <div class="ci"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11Z"/><circle cx="12" cy="11" r="2.6"/></svg></div><div><b data-i18n="contact.c3t">Atención</b><span data-i18n="contact.c3b">México · LATAM · Comunidad global en línea</span></div></div>
+      <div class="ci"><div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b data-i18n="contact.c4t">Respuesta</b><span data-i18n="contact.c4b">En menos de 48 horas hábiles</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="brand">
+          <svg width="30" height="30" viewBox="0 0 34 34" fill="none" aria-hidden="true"><circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/><circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/><circle cx="17" cy="17" r="4.6" fill="#B68A3E"/></svg>
+          <span>Voces<span style="color:var(--oro-claro)"> · </span><span style="font-style:italic">Alma</span></span>
+        </div>
+        <p class="foot-tag" data-i18n="foot.tag">Conectando voces que sanan con almas que buscan transformarse.</p>
+        <div class="socials">
+          <a href="#" id="soIg" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+          <a href="#" id="soFb" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a href="#" id="soYt" aria-label="YouTube"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 8.5a3 3 0 0 0-2-2C18 6 12 6 12 6s-6 0-8 .5a3 3 0 0 0-2 2A31 31 0 0 0 1.5 12 31 31 0 0 0 2 15.5a3 3 0 0 0 2 2C6 18 12 18 12 18s6 0 8-.5a3 3 0 0 0 2-2 31 31 0 0 0 .5-3.5 31 31 0 0 0-.5-3.5Z"/><path d="m10 15 5-3-5-3z" fill="currentColor"/></svg></a>
+          <a href="#" id="soSp" aria-label="Spotify"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="M7 9.5c3-1 7-.5 9.5 1M7.5 13c2.5-.8 5.5-.4 7.5 1M8 16c2-.6 4-.3 5.5.8"/></svg></a>
+        </div>
+      </div>
+      <div><h5 data-i18n="foot.explore">Explorar</h5><ul>
+        <li><a href="#especialidades" data-i18n="nav.cats">Especialidades</a></li>
+        <li><a href="#directorio" data-i18n="nav.dir">Especialistas</a></li>
+        <li><a href="#talleres" data-i18n="nav.ws">Talleres</a></li>
+        <li><a href="#tienda" data-i18n="nav.store">Tienda</a></li>
+      </ul></div>
+      <div><h5 data-i18n="foot.org">Proyecto</h5><ul>
+        <li><a href="#nosotros" data-i18n="nav.about">Nosotros</a></li>
+        <li><a href="#contacto" data-i18n="foot.join">Súmate</a></li>
+        <li><a href="#contacto" data-i18n="nav.contact">Contacto</a></li>
+      </ul></div>
+      <div><h5 data-i18n="foot.legal">Legal</h5><ul>
+        <li><a href="#" data-i18n="foot.privacy">Aviso de privacidad</a></li>
+        <li><a href="#" data-i18n="foot.terms">Términos de uso</a></li>
+        <li><a href="#" data-i18n="foot.disclaimer">Descargo profesional</a></li>
+      </ul></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Voces para el Alma · Voices for the Soul</span>
+      <span data-i18n="foot.made">Hecho con cuidado para tu bienestar</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- ============ CART DRAWER ============ -->
+<div class="drawer-bg" id="drawerBg" onclick="closeCart()"></div>
+<aside class="drawer" id="drawer" aria-label="Carrito">
+  <div class="drawer-head">
+    <h3 data-i18n="cart.title">Tu carrito</h3>
+    <button onclick="closeCart()" style="background:none;border:none;cursor:pointer" aria-label="Cerrar">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tinta)" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot">
+    <div class="drawer-total"><span data-i18n="cart.total">Total</span><span id="cartTotal">$0 MXN</span></div>
+    <button class="btn btn-primary" onclick="checkout()" data-i18n="cart.checkout">Pagar de forma segura</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   i18n DICTIONARY
+============================================================ */
+const I18N = {
+  es:{
+    "nav.cats":"Especialidades","nav.dir":"Especialistas","nav.ws":"Talleres","nav.store":"Tienda","nav.about":"Nosotros","nav.contact":"Contacto",
+    "hero.eyebrow":"Bienestar emocional, mental y humano","hero.title1":"Voces para el","hero.title2":"Alma","hero.soul":"Voices for the Soul",
+    "hero.lead":"Conectamos voces que sanan con almas que buscan transformarse. Encuentra al especialista que tu momento necesita.",
+    "hero.cta1":"Explorar especialistas →","hero.cta2":"Ver talleres",
+    "mv.eyebrow":"Por qué existimos","mv.title":"Un espacio donde el conocimiento llega al alma",
+    "mv.m.t":"Misión","mv.m.b":"Conectar a personas que buscan bienestar, sanación y crecimiento con especialistas de alto nivel en desarrollo humano, en un espacio seguro, inclusivo y profesional donde la voz del conocimiento llega directo a quien la necesita.",
+    "mv.v.t":"Visión","mv.v.b":"Ser la plataforma líder del mundo de habla hispana —y referente internacional— en democratizar el bienestar humano: una comunidad global donde cada persona, sin importar su origen o condición, acceda a las voces que transforman su vida desde adentro.",
+    "mv.val1.t":"Inclusión","mv.val1.b":"sin distinciones","mv.val2.t":"Profesionalismo","mv.val2.b":"solo especialistas certificados",
+    "mv.val3.t":"Autenticidad","mv.val3.b":"cada voz es genuina","mv.val4.t":"Transformación","mv.val4.b":"cambio real","mv.val5.t":"Paz","mv.val5.b":"sostenible para todos",
+    "cat.eyebrow":"Disciplinas","cat.title":"Ocho caminos hacia el bienestar","cat.sub":"Cada especialidad reúne a voces dedicadas a una dimensión del desarrollo humano. Elige por dónde empezar.",
+    "dir.eyebrow":"Directorio","dir.title":"Encuentra tu voz","dir.sub":"El contacto es directo entre tú y el especialista. La plataforma no intermedia ni cobra comisión por sesiones individuales — solo facilita el encuentro.",
+    "dir.search":"Buscar por nombre o tema…",
+    "ws.eyebrow":"Agenda","ws.title":"Talleres y experiencias","ws.sub":"Inscríbete y paga de forma segura desde la plataforma. Recibe confirmación y recordatorios por correo.","ws.register":"Inscribirme",
+    "store.eyebrow":"Tienda de contenidos","store.title":"Lleva la calma contigo","store.sub":"Ebooks, meditaciones guiadas, cursos grabados y guías descargables. Entrega digital automática tras la compra.",
+    "test.eyebrow":"Historias","test.title":"Almas que se transformaron",
+    "about.eyebrow":"Acerca de nosotros","about.title":"Nacimos de una certeza simple",
+    "about.p1":"Que cada persona merece acceso a las voces que pueden ayudarle a sanar y a crecer. Voces para el Alma reúne, cuida y verifica a especialistas de excelencia para que encontrarlos deje de ser cuestión de suerte.",
+    "about.p2":"Somos un equipo multidisciplinario unido por una misma fe: el bienestar no es un lujo, es un derecho. Y la transformación empieza cuando la voz correcta llega en el momento correcto.","about.cta":"Súmate como especialista →",
+    "contact.eyebrow":"Contacto","contact.title":"Hablemos","contact.tab1":"Soy visitante","contact.tab2":"Soy especialista",
+    "contact.name":"Nombre completo","contact.email":"Correo electrónico","contact.disc":"Disciplina / especialidad","contact.msg":"Mensaje","contact.send":"Enviar mensaje",
+    "contact.c1t":"Correo","contact.c3t":"Atención","contact.c3b":"México · LATAM · Comunidad global en línea","contact.c4t":"Respuesta","contact.c4b":"En menos de 48 horas hábiles",
+    "foot.tag":"Conectando voces que sanan con almas que buscan transformarse.","foot.explore":"Explorar","foot.org":"Proyecto","foot.join":"Súmate","foot.legal":"Legal",
+    "foot.privacy":"Aviso de privacidad","foot.terms":"Términos de uso","foot.disclaimer":"Descargo profesional","foot.made":"Hecho con cuidado para tu bienestar",
+    "cart.title":"Tu carrito","cart.total":"Total","cart.checkout":"Pagar de forma segura","cart.empty":"Tu carrito está en silencio. Añade algo que nutra tu alma.",
+    "modal.focus":"Áreas de enfoque","modal.certs":"Certificaciones","modal.reveal":"Mostrar contacto directo","modal.note":"El contacto es directo. La plataforma no interviene en las sesiones individuales.","modal.book":"Contactar especialista",
+    "toast.add":"Añadido al carrito","toast.rm":"Eliminado del carrito","toast.checkout":"Redirigiendo a pago seguro…","toast.sent":"Mensaje enviado. Te responderemos pronto.","toast.reg":"Inscripción iniciada — redirigiendo a pago…",
+    "avail.now":"Disponible","avail.soon":"Agenda limitada","mod.all":"Todas las modalidades","mod.presencial":"Presencial","mod.online":"En línea","mod.hibrido":"Híbrido",
+    "lang.all":"Todos los idiomas","catfilter.all":"Todas las especialidades","ws.spots":"por persona"
+  },
+  en:{
+    "nav.cats":"Specialties","nav.dir":"Specialists","nav.ws":"Workshops","nav.store":"Shop","nav.about":"About","nav.contact":"Contact",
+    "hero.eyebrow":"Emotional, mental & human wellbeing","hero.title1":"Voices for the","hero.title2":"Soul","hero.soul":"Voces para el Alma",
+    "hero.lead":"We connect voices that heal with souls seeking transformation. Find the specialist your moment calls for.",
+    "hero.cta1":"Explore specialists →","hero.cta2":"See workshops",
+    "mv.eyebrow":"Why we exist","mv.title":"A space where knowledge reaches the soul",
+    "mv.m.t":"Mission","mv.m.b":"To connect people seeking wellbeing, healing and growth with top specialists in human development — in a safe, inclusive and professional space where the voice of knowledge reaches the one who needs it.",
+    "mv.v.t":"Vision","mv.v.b":"To be the leading platform in the Spanish-speaking world — and an international reference — in democratizing human wellbeing: a global community where every person, regardless of origin or condition, can access the voices that transform life from within.",
+    "mv.val1.t":"Inclusion","mv.val1.b":"no distinctions","mv.val2.t":"Professionalism","mv.val2.b":"only certified specialists",
+    "mv.val3.t":"Authenticity","mv.val3.b":"every voice is genuine","mv.val4.t":"Transformation","mv.val4.b":"real change","mv.val5.t":"Peace","mv.val5.b":"sustainable for all",
+    "cat.eyebrow":"Disciplines","cat.title":"Eight paths to wellbeing","cat.sub":"Each specialty gathers voices devoted to one dimension of human development. Choose where to begin.",
+    "dir.eyebrow":"Directory","dir.title":"Find your voice","dir.sub":"Contact is direct between you and the specialist. The platform does not mediate or charge commission on individual sessions — it only makes the encounter possible.",
+    "dir.search":"Search by name or topic…",
+    "ws.eyebrow":"Agenda","ws.title":"Workshops & experiences","ws.sub":"Register and pay securely on the platform. Receive confirmation and reminders by email.","ws.register":"Register",
+    "store.eyebrow":"Content shop","store.title":"Carry the calm with you","store.sub":"Ebooks, guided meditations, recorded courses and downloadable guides. Automatic digital delivery after purchase.",
+    "test.eyebrow":"Stories","test.title":"Souls that transformed",
+    "about.eyebrow":"About us","about.title":"We began with a simple certainty",
+    "about.p1":"That every person deserves access to the voices that can help them heal and grow. Voices for the Soul gathers, cares for and verifies specialists of excellence so that finding them is no longer a matter of luck.",
+    "about.p2":"We are a multidisciplinary team united by one belief: wellbeing is not a luxury, it is a right. And transformation begins when the right voice arrives at the right moment.","about.cta":"Join as a specialist →",
+    "contact.eyebrow":"Contact","contact.title":"Let's talk","contact.tab1":"I'm a visitor","contact.tab2":"I'm a specialist",
+    "contact.name":"Full name","contact.email":"Email","contact.disc":"Discipline / specialty","contact.msg":"Message","contact.send":"Send message",
+    "contact.c1t":"Email","contact.c3t":"We serve","contact.c3b":"Mexico · LATAM · Global online community","contact.c4t":"Response","contact.c4b":"Within 48 business hours",
+    "foot.tag":"Connecting voices that heal with souls seeking transformation.","foot.explore":"Explore","foot.org":"Project","foot.join":"Join us","foot.legal":"Legal",
+    "foot.privacy":"Privacy notice","foot.terms":"Terms of use","foot.disclaimer":"Professional disclaimer","foot.made":"Made with care for your wellbeing",
+    "cart.title":"Your cart","cart.total":"Total","cart.checkout":"Pay securely","cart.empty":"Your cart is quiet. Add something that nourishes your soul.",
+    "modal.focus":"Focus areas","modal.certs":"Credentials","modal.reveal":"Show direct contact","modal.note":"Contact is direct. The platform does not take part in individual sessions.","modal.book":"Contact specialist",
+    "toast.add":"Added to cart","toast.rm":"Removed from cart","toast.checkout":"Redirecting to secure checkout…","toast.sent":"Message sent. We'll be in touch soon.","toast.reg":"Registration started — redirecting to payment…",
+    "avail.now":"Available","avail.soon":"Limited slots","mod.all":"All formats","mod.presencial":"In person","mod.online":"Online","mod.hibrido":"Hybrid",
+    "lang.all":"All languages","catfilter.all":"All specialties","ws.spots":"per person"
+  }
+};
+
+/* ============================================================
+   DATA
+============================================================ */
+const SUPABASE_URL="https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+window.sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
+
+const PHOTO = n => !n ? '' : (String(n).startsWith('http') ? n : `https://images.unsplash.com/${n}?auto=format&fit=crop&w=600&q=70`);
+
+let CATEGORIES = [
+  {id:"neuro", icon:'<path d="M12 4a4 4 0 0 0-4 4 3 3 0 0 0-1 5.8V16a3 3 0 0 0 6 0V4Z"/><path d="M12 4a4 4 0 0 1 4 4 3 3 0 0 1 1 5.8V16a3 3 0 0 1-6 0"/>', es:{t:"Neurociencias y Mente",d:"Comprende tu cerebro para transformar tu vida."},en:{t:"Neuroscience & Mind",d:"Understand your brain to transform your life."}},
+  {id:"emocional", icon:'<path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/>', es:{t:"Inteligencia Emocional",d:"Reconoce, regula y habita tus emociones."},en:{t:"Emotional Intelligence",d:"Recognize, regulate and inhabit your emotions."}},
+  {id:"integral", icon:'<path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/>', es:{t:"Bienestar y Salud Integral",d:"Cuerpo, mente y energía en equilibrio."},en:{t:"Integral Wellbeing & Health",d:"Body, mind and energy in balance."}},
+  {id:"filosofias", icon:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>', es:{t:"Filosofías y Tradiciones",d:"Mindfulness y sabiduría aplicada, sin afiliación religiosa."},en:{t:"Philosophies & Traditions",d:"Mindfulness and applied wisdom, with no religious affiliation."}},
+  {id:"liderazgo", icon:'<path d="m12 2 2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6Z"/>', es:{t:"Liderazgo y Desarrollo",d:"Crece como persona y como profesional."},en:{t:"Leadership & Development",d:"Grow as a person and as a professional."}},
+  {id:"sanacion", icon:'<path d="M12 21s-7-4-9-9a5 5 0 0 1 9-2 5 5 0 0 1 9 2c-2 5-9 9-9 9Z"/><path d="m9 11 2 2 4-4"/>', es:{t:"Sanación de Heridas",d:"Libera el peso del pasado y sana de raíz."},en:{t:"Healing Emotional Wounds",d:"Release the weight of the past and heal at the root."}},
+  {id:"familia", icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.5"/>', es:{t:"Familia y Relaciones",d:"Construye vínculos sanos y duraderos."},en:{t:"Family & Relationships",d:"Build healthy, lasting bonds."}},
+  {id:"proposito", icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/>', es:{t:"Propósito y Proyecto de Vida",d:"Encuentra tu dirección y dale sentido a tu camino."},en:{t:"Purpose & Life Project",d:"Find your direction and give meaning to your path."}}
+];
+
+let SPECIALISTS = [
+  {cat:"neuro",photo:"photo-1559839734-2b71ea197ec2",availNow:true,langs:["es","en"],mod:["online","hibrido"],
+    es:{name:"Dra. Mariana Solís",role:"Neuropsicóloga clínica",bio:"Une neurociencia y compasión para ayudarte a reentrenar patrones mentales que ya no te sirven.",focus:["Ansiedad","Hábitos","Neuroplasticidad"],certs:"Doctorado en Neurociencia Cognitiva, UNAM · Certificación en TCC"},
+    en:{name:"Dr. Mariana Solís",role:"Clinical neuropsychologist",bio:"Blends neuroscience and compassion to help you retrain mental patterns that no longer serve you.",focus:["Anxiety","Habits","Neuroplasticity"],certs:"PhD in Cognitive Neuroscience, UNAM · CBT Certified"}},
+  {cat:"emocional",photo:"photo-1573497019940-1c28c88b4f3e",availNow:true,langs:["es","en"],mod:["presencial","online"],
+    es:{name:"Lucía Fernández",role:"Coach en inteligencia emocional",bio:"Te acompaña a nombrar lo que sientes y a convertir la emoción en información, no en obstáculo.",focus:["Autoconocimiento","Regulación","Comunicación"],certs:"Certificación internacional ICF · Especialista en gestión emocional"},
+    en:{name:"Lucía Fernández",role:"Emotional intelligence coach",bio:"Guides you to name what you feel and turn emotion into information, not an obstacle.",focus:["Self-awareness","Regulation","Communication"],certs:"ICF International Certification · Emotional management specialist"}},
+  {cat:"integral",photo:"photo-1594824476967-48c8b964273f",availNow:false,langs:["es"],mod:["presencial","hibrido"],
+    es:{name:"Tomás Aguilar",role:"Terapeuta de salud integral",bio:"Integra movimiento, respiración y nutrición consciente para devolverte energía y claridad.",focus:["Respiración","Sueño","Energía"],certs:"Certificación en Medicina Integrativa · Instructor de respiración"},
+    en:{name:"Tomás Aguilar",role:"Integral health therapist",bio:"Integrates movement, breath and conscious nutrition to restore your energy and clarity.",focus:["Breathwork","Sleep","Energy"],certs:"Integrative Medicine Certification · Breathwork instructor"}},
+  {cat:"filosofias",photo:"photo-1545205597-3d9d02c29597",availNow:true,langs:["es","en"],mod:["online"],
+    es:{name:"Ananda Reyes",role:"Maestra de mindfulness",bio:"Traduce la sabiduría contemplativa a herramientas prácticas para la vida moderna, sin dogmas.",focus:["Meditación","Atención plena","Calma"],certs:"Formación MBSR · 12 años de práctica contemplativa"},
+    en:{name:"Ananda Reyes",role:"Mindfulness teacher",bio:"Translates contemplative wisdom into practical tools for modern life, free of dogma.",focus:["Meditation","Mindfulness","Calm"],certs:"MBSR Training · 12 years of contemplative practice"}},
+  {cat:"liderazgo",photo:"photo-1560250097-0b93528c311a",availNow:true,langs:["es","en"],mod:["online","hibrido"],
+    es:{name:"Ricardo Méndez",role:"Coach de liderazgo consciente",bio:"Acompaña a líderes a crecer sin perderse: claridad, propósito y decisiones alineadas.",focus:["Propósito","Equipos","Decisiones"],certs:"MBA · Executive Coach certificado · 15 años acompañando líderes"},
+    en:{name:"Ricardo Méndez",role:"Conscious leadership coach",bio:"Helps leaders grow without losing themselves: clarity, purpose and aligned decisions.",focus:["Purpose","Teams","Decisions"],certs:"MBA · Certified Executive Coach · 15 years coaching leaders"}},
+  {cat:"sanacion",photo:"photo-1571019613454-1cb2f99b2d8b",availNow:false,langs:["es"],mod:["presencial","online"],
+    es:{name:"Valentina Cruz",role:"Terapeuta en sanación emocional",bio:"Crea un espacio seguro para soltar el peso del pasado y reescribir tu historia desde la raíz.",focus:["Duelo","Trauma","Autoestima"],certs:"Psicología clínica · Especialidad en trauma y EMDR"},
+    en:{name:"Valentina Cruz",role:"Emotional healing therapist",bio:"Creates a safe space to release the weight of the past and rewrite your story from its roots.",focus:["Grief","Trauma","Self-esteem"],certs:"Clinical Psychology · Trauma & EMDR specialty"}},
+  {cat:"familia",photo:"photo-1607990281513-2c110a25bd8c",availNow:true,langs:["es","en"],mod:["online","presencial"],
+    es:{name:"Sofía Herrera",role:"Terapeuta familiar y de pareja",bio:"Ayuda a familias y parejas a transformar el conflicto en comprensión y vínculos más fuertes.",focus:["Pareja","Crianza","Comunicación"],certs:"Maestría en Terapia Familiar Sistémica · Mediadora certificada"},
+    en:{name:"Sofía Herrera",role:"Family & couples therapist",bio:"Helps families and couples turn conflict into understanding and stronger bonds.",focus:["Couples","Parenting","Communication"],certs:"MA in Systemic Family Therapy · Certified mediator"}},
+  {cat:"proposito",photo:"photo-1639149888905-fb39731f2e6c",availNow:true,langs:["es","en"],mod:["online","hibrido"],
+    es:{name:"Daniel Ortega",role:"Mentor de propósito de vida",bio:"Te ayuda a conectar tus dones con una dirección clara para vivir con sentido y coherencia.",focus:["Vocación","Claridad","Transición"],certs:"Coach de vida certificado · Diseño de vida (Stanford method)"},
+    en:{name:"Daniel Ortega",role:"Life purpose mentor",bio:"Helps you connect your gifts to a clear direction so you can live with meaning and coherence.",focus:["Vocation","Clarity","Transition"],certs:"Certified life coach · Designing Your Life (Stanford method)"}}
+];
+
+let WORKSHOPS = [
+  {d:"14",mes:{es:"MAR",en:"MAR"},mod:"online",by:"Dra. Mariana Solís",price:680,
+    es:{t:"Reentrena tu mente ansiosa"},en:{t:"Retrain your anxious mind"}},
+  {d:"22",mes:{es:"MAR",en:"MAR"},mod:"presencial",by:"Ananda Reyes",price:950,
+    es:{t:"Retiro de mindfulness de un día"},en:{t:"One-day mindfulness retreat"}},
+  {d:"05",mes:{es:"ABR",en:"APR"},mod:"hibrido",by:"Sofía Herrera",price:540,
+    es:{t:"Comunicación que sana en pareja"},en:{t:"Communication that heals couples"}},
+  {d:"19",mes:{es:"ABR",en:"APR"},mod:"online",by:"Daniel Ortega",price:720,
+    es:{t:"Diseña tu proyecto de vida"},en:{t:"Design your life project"}}
+];
+
+let PRODUCTS = [
+  {cover:"photo-1544716278-ca5e3f4abd8c",price:189,type:{es:"Ebook",en:"Ebook"},
+    es:{t:"El arte de soltar",d:"Una guía para liberar lo que ya cumplió su propósito en tu vida."},
+    en:{t:"The art of letting go",d:"A guide to release what has already served its purpose in your life."}},
+  {cover:"photo-1506126613408-eca07ce68773",price:99,type:{es:"Audio",en:"Audio"},
+    es:{t:"Meditaciones para dormir",d:"7 prácticas guiadas para un descanso profundo y reparador."},
+    en:{t:"Meditations for sleep",d:"7 guided practices for deep, restorative rest."}},
+  {cover:"photo-1499209974431-9dddcece7f88",price:1290,type:{es:"Curso",en:"Course"},
+    es:{t:"Fundamentos de la calma",d:"Curso grabado de 6 módulos sobre regulación emocional."},
+    en:{t:"Foundations of calm",d:"6-module recorded course on emotional regulation."}},
+  {cover:"photo-1490750967868-88aa4486c946",price:149,type:{es:"Guía",en:"Guide"},
+    es:{t:"Hábitos que nutren",d:"Un sistema descargable para construir rutinas que sostienen tu bienestar."},
+    en:{t:"Habits that nourish",d:"A downloadable system to build routines that sustain your wellbeing."}},
+  {cover:"photo-1518531933037-91b2f5f229cc",price:129,type:{es:"Audio",en:"Audio"},
+    es:{t:"Respira y vuelve a ti",d:"Colección de ejercicios de respiración para momentos de tensión."},
+    en:{t:"Breathe and return to yourself",d:"A collection of breathing exercises for tense moments."}},
+  {cover:"photo-1512820790803-83ca734da794",price:259,type:{es:"Ebook",en:"Ebook"},
+    es:{t:"Cartas a mi yo del futuro",d:"Un diario guiado para reconectar con tu propósito y tu dirección."},
+    en:{t:"Letters to my future self",d:"A guided journal to reconnect with your purpose and direction."}}
+];
+
+let TESTIMONIALS = [
+  {av:"photo-1438761681033-6461ffad8d80",
+    es:{q:"Encontré a la terapeuta indicada en minutos. Hoy duermo, respiro y vuelvo a sentir.",who:"Carolina M.",role:"Ciudad de México"},
+    en:{q:"I found the right therapist in minutes. Today I sleep, I breathe, and I feel again.",who:"Carolina M.",role:"Mexico City"}},
+  {av:"photo-1507003211169-0a1dd7228f2d",
+    es:{q:"El taller de propósito me dio claridad después de años perdido. Una guía honesta.",who:"Andrés P.",role:"Bogotá"},
+    en:{q:"The purpose workshop gave me clarity after years of feeling lost. An honest guide.",who:"Andrés P.",role:"Bogotá"}},
+  {av:"photo-1494790108377-be9c29b29330",
+    es:{q:"Como especialista, por fin tengo un lugar profesional y cálido para que me encuentren.",who:"Lucía F.",role:"Especialista · Coach emocional"},
+    en:{q:"As a specialist, I finally have a professional, warm place where people can find me.",who:"Lucía F.",role:"Specialist · Emotional coach"}}
+];
+
+/* ============================================================
+   LIVE DATA (Supabase public views) — falls back to seed above
+============================================================ */
+const MONTHS = {es:["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"],
+                en:["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]};
+async function loadData(){
+  if(!window.sb) return false;
+  try{
+    const [cats,specs,ws,prods,tests] = await Promise.all([
+      sb.from("app_vpa_categories_public").select("*").order("sort_order"),
+      sb.from("app_vpa_specialists_public").select("*").order("sort_order"),
+      sb.from("app_vpa_workshops_public").select("*").order("starts_at"),
+      sb.from("app_vpa_products_public").select("*"),
+      sb.from("app_vpa_testimonials_public").select("*").order("sort_order")
+    ]);
+    if(cats.data&&cats.data.length) CATEGORIES = cats.data.map(c=>({id:c.id,icon:c.icon,
+      es:{t:c.name_es,d:c.desc_es},en:{t:c.name_en,d:c.desc_en}}));
+    if(specs.data&&specs.data.length) SPECIALISTS = specs.data.map(s=>({id:s.id,cat:s.category_id,
+      photo:s.photo_url,availNow:s.available_now,langs:s.langs||["es"],mod:s.modalities||["online"],
+      es:{name:s.name,role:s.role_es,bio:s.bio_es,focus:s.focus_es||[],certs:s.certs_es},
+      en:{name:s.name,role:s.role_en,bio:s.bio_en,focus:s.focus_en||[],certs:s.certs_en}}));
+    if(ws.data&&ws.data.length) WORKSHOPS = ws.data.map(w=>{const dt=new Date(w.starts_at);
+      return {id:w.id,d:String(dt.getDate()).padStart(2,"0"),
+        mes:{es:MONTHS.es[dt.getMonth()],en:MONTHS.en[dt.getMonth()]},
+        mod:w.modality,by:w.specialist_name||"",price:Math.round(w.price_cents/100),
+        es:{t:w.title_es},en:{t:w.title_en}};});
+    if(prods.data&&prods.data.length) PRODUCTS = prods.data.map(p=>({id:p.id,cover:p.cover_url,
+      price:Math.round(p.price_cents/100),type:{es:p.type_es,en:p.type_en},
+      es:{t:p.title_es,d:p.desc_es},en:{t:p.title_en,d:p.desc_en}}));
+    if(tests.data&&tests.data.length) TESTIMONIALS = tests.data.map(x=>({av:x.avatar_url,
+      es:{q:x.quote_es,who:x.author,role:x.loc_es},en:{q:x.quote_en,who:x.author,role:x.loc_en}}));
+    applySettings();
+    return true;
+  }catch(e){ console.warn("VPA: usando datos semilla (fallback)", e); return false; }
+}
+let SETTINGS = {};
+async function applySettings(){
+  try{
+    const { data } = await sb.from("app_vpa_settings_public").select("key,value");
+    SETTINGS = {}; (data||[]).forEach(r=>SETTINGS[r.key]=r.value||{});
+    const c=SETTINGS.contact||{}, s=SETTINGS.socials||{};
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v) el.textContent=v; };
+    set("ciEmail", c.email); set("ciWhatsapp", c.whatsapp);
+    const link=(id,url)=>{ const el=document.getElementById(id); if(el&&url){ el.href=url; el.target="_blank"; el.rel="noopener"; } };
+    link("soIg",s.instagram); link("soFb",s.facebook); link("soYt",s.youtube); link("soSp",s.spotify);
+  }catch(_){}
+}
+
+/* ============================================================
+   STATE + I18N ENGINE
+============================================================ */
+let lang = "es";
+let cart = [];
+let currentSpec = null;
+
+function t(key){ return (I18N[lang] && I18N[lang][key]) || key; }
+
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active", b.dataset.lang===l));
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
+  renderCategories(); renderSpecs(); renderWorkshops(); renderStore(); renderTestimonials();
+  renderCart(); buildFilters();
+}
+
+/* ============================================================
+   RENDERERS
+============================================================ */
+function renderCategories(){
+  document.getElementById("catGrid").innerHTML = CATEGORIES.map(c=>`
+    <div class="cat reveal" onclick="filterByCat('${c.id}')">
+      <div class="ring-ico"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">${c.icon}</svg></div>
+      <h4>${c[lang].t}</h4><p>${c[lang].d}</p>
+    </div>`).join("");
+  observeReveals();
+}
+
+function buildFilters(){
+  const fc=document.getElementById("filterCat");
+  fc.innerHTML = `<option value="">${t("catfilter.all")}</option>` + CATEGORIES.map(c=>`<option value="${c.id}">${c[lang].t}</option>`).join("");
+  const fm=document.getElementById("filterMod");
+  fm.innerHTML = `<option value="">${t("mod.all")}</option>
+    <option value="presencial">${t("mod.presencial")}</option>
+    <option value="online">${t("mod.online")}</option>
+    <option value="hibrido">${t("mod.hibrido")}</option>`;
+  const fl=document.getElementById("filterLang");
+  fl.innerHTML = `<option value="">${t("lang.all")}</option><option value="es">Español</option><option value="en">English</option>`;
+}
+
+function renderSpecs(){
+  const q=(document.getElementById("specSearch").value||"").toLowerCase();
+  const fc=document.getElementById("filterCat").value;
+  const fm=document.getElementById("filterMod").value;
+  const fl=document.getElementById("filterLang").value;
+  const list = SPECIALISTS.filter((s,i)=>{
+    const d=s[lang]; const catName=(CATEGORIES.find(c=>c.id===s.cat)||{})[lang]?.t||"";
+    const hay=(d.name+" "+d.role+" "+d.bio+" "+d.focus.join(" ")+" "+catName).toLowerCase();
+    return (!q||hay.includes(q))&&(!fc||s.cat===fc)&&(!fm||s.mod.includes(fm))&&(!fl||s.langs.includes(fl));
+  });
+  const grid=document.getElementById("specGrid");
+  if(!list.length){ grid.innerHTML=`<div class="empty">${lang==="es"?"No encontramos voces con esos filtros. Prueba ampliar tu búsqueda.":"No voices match those filters. Try broadening your search."}</div>`; return; }
+  grid.innerHTML = list.map(s=>{
+    const i=SPECIALISTS.indexOf(s); const d=s[lang]; const cat=CATEGORIES.find(c=>c.id===s.cat)[lang].t;
+    return `<article class="spec reveal" onclick="openModal(${i})">
+      <div class="spec-photo" style="background-image:url('${PHOTO(s.photo)}')">
+        <span class="avail"><span class="dot ${s.availNow?'':'busy'}"></span>${s.availNow?t("avail.now"):t("avail.soon")}</span>
+      </div>
+      <div class="spec-body">
+        <span class="cat-tag">${cat}</span>
+        <h4>${d.name}</h4>
+        <div class="role">${d.role}</div>
+        <p>${d.bio}</p>
+        <div class="spec-langs">${s.langs.map(l=>`<span class="lang-chip">${l.toUpperCase()}</span>`).join("")}</div>
+      </div>
+    </article>`;
+  }).join("");
+  observeReveals();
+}
+
+function filterByCat(id){
+  document.getElementById("filterCat").value=id; renderSpecs();
+  document.getElementById("directorio").scrollIntoView({behavior:"smooth"});
+}
+
+function renderWorkshops(){
+  document.getElementById("wsList").innerHTML = WORKSHOPS.map((w,i)=>`
+    <article class="ws reveal">
+      <div class="ws-date"><div class="d">${w.d}</div><div class="m">${w.mes[lang]}</div></div>
+      <div class="ws-main">
+        <h4>${w[lang].t}</h4>
+        <div class="by">${lang==="es"?"Con":"With"} ${w.by}</div>
+        <div class="ws-meta"><span class="badge ${w.mod}">${t("mod."+w.mod)}</span></div>
+      </div>
+      <div class="ws-action">
+        <span class="ws-price">$${w.price} <small>MXN · ${t("ws.spots")}</small></span>
+        <button class="btn btn-primary" onclick="register('${w[lang].t.replace(/'/g,"")}')">${t("ws.register")}</button>
+      </div>
+    </article>`).join("");
+  observeReveals();
+}
+
+function renderStore(){
+  document.getElementById("storeGrid").innerHTML = PRODUCTS.map((p,i)=>`
+    <article class="prod reveal">
+      <div class="prod-cover" style="background-image:url('${PHOTO(p.cover)}')"><span class="ptype">${p.type[lang]}</span></div>
+      <div class="prod-body">
+        <h4>${p[lang].t}</h4><p>${p[lang].d}</p>
+        <div class="prod-foot">
+          <span class="pp">$${p.price} <small style="font-family:var(--sans);font-size:12px;color:var(--tinta-60)">MXN</small></span>
+          <button class="add" onclick="addToCart(${i})" aria-label="Añadir">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+    </article>`).join("");
+  observeReveals();
+}
+
+function renderTestimonials(){
+  document.getElementById("testGrid").innerHTML = TESTIMONIALS.map(x=>`
+    <div class="test reveal">
+      <div class="q">“${x[lang].q}”</div>
+      <div class="who"><div class="av" style="background-image:url('${PHOTO(x.av)}')"></div>
+        <div><b>${x[lang].who}</b><span>${x[lang].role}</span></div></div>
+    </div>`).join("");
+  observeReveals();
+}
+
+/* ============================================================
+   SPECIALIST MODAL (direct-contact trust model)
+============================================================ */
+function openModal(i){
+  const s=SPECIALISTS[i]; currentSpec=s; const d=s[lang]; const catObj=CATEGORIES.find(c=>c.id===s.cat); const cat=catObj?catObj[lang].t:"";
+  document.getElementById("modalContent").innerHTML=`
+    <button class="modal-close" onclick="closeModal()" aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tinta)" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    <div class="modal-photo" style="background-image:url('${PHOTO(s.photo)}')"></div>
+    <div class="modal-info">
+      <span class="cat-tag">${cat}</span>
+      <h3>${d.name}</h3>
+      <div class="role">${d.role}</div>
+      <p>${d.bio}</p>
+      <div class="focus-list">${d.focus.map(f=>`<span>${f}</span>`).join("")}</div>
+      <div class="certs"><b>${t("modal.certs")}:</b> ${d.certs}</div>
+      <div class="contact-reveal">
+        <div class="note">${t("modal.note")}</div>
+        <button class="btn btn-ghost" id="revealBtn" onclick="revealContact()">${t("modal.reveal")}</button>
+        <div class="contact-data" id="contactData"></div>
+      </div>
+    </div>`;
+  document.getElementById("modalBg").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+function contactRow(href,svg,label){ return `<a href="${href}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--oro)" stroke-width="1.7">${svg}</svg> ${label}</a>`; }
+function showContact(c){
+  const cd=document.getElementById("contactData"); if(!cd) return;
+  let html="";
+  if(c.email) html+=contactRow("mailto:"+c.email,'<path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/>',c.email);
+  if(c.phone) html+=contactRow("tel:"+String(c.phone).replace(/\s/g,""),'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/>',c.phone);
+  if(c.web) html+=contactRow(c.web,'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/>',String(c.web).replace(/^https?:\/\//,""));
+  cd.innerHTML = html || `<span style="color:var(--tinta-60)">${lang==="es"?"Sin datos de contacto.":"No contact details."}</span>`;
+  cd.classList.add("show");
+  const rb=document.getElementById("revealBtn"); if(rb) rb.style.display="none";
+}
+async function revealContact(){
+  const rb=document.getElementById("revealBtn");
+  if(!window.sb || !currentSpec || !currentSpec.id){ showContact({email:"contacto@vocesparaelalma.com"}); return; }
+  if(rb){ rb.disabled=true; rb.textContent=lang==="es"?"Verificando…":"Checking…"; }
+  try{
+    const { data:{ user } } = await sb.auth.getUser();
+    if(!user){
+      const email = prompt(lang==="es"?"Para mostrar el contacto directo, escribe tu correo y te enviaremos un enlace de acceso:":"To reveal direct contact, enter your email and we'll send you a sign-in link:");
+      if(email){
+        await sb.auth.signInWithOtp({ email: email.trim(), options:{ emailRedirectTo: location.href } });
+        toast(lang==="es"?"Revisa tu correo para entrar y vuelve a tocar Mostrar contacto.":"Check your email to sign in, then tap Show contact again.");
+      }
+      if(rb){ rb.disabled=false; rb.textContent=t("modal.reveal"); }
+      return;
+    }
+    const { data, error } = await sb.rpc("vpa_reveal_contact", { p_specialist_id: currentSpec.id });
+    if(error) throw error;
+    showContact(data||{});
+  }catch(e){
+    console.warn("reveal", e);
+    toast(lang==="es"?"No se pudo mostrar el contacto.":"Could not reveal contact.");
+    if(rb){ rb.disabled=false; rb.textContent=t("modal.reveal"); }
+  }
+}
+function closeModal(){ document.getElementById("modalBg").classList.remove("open"); document.body.style.overflow=""; }
+
+/* ============================================================
+   CART
+============================================================ */
+function addToCart(i){ cart.push(i); renderCart(); toast(t("toast.add")); pulseCart(); }
+function removeFromCart(idx){ cart.splice(idx,1); renderCart(); toast(t("toast.rm")); }
+function renderCart(){
+  const count=cart.length;
+  const cc=document.getElementById("cartCount"); cc.textContent=count; cc.dataset.n=count;
+  const items=document.getElementById("drawerItems");
+  if(!count){ items.innerHTML=`<div class="drawer-empty">${t("cart.empty")}</div>`; }
+  else{
+    items.innerHTML=cart.map((pi,idx)=>{ const p=PRODUCTS[pi]; return `
+      <div class="ci-row">
+        <div class="thumb" style="background-image:url('${PHOTO(p.cover)}')"></div>
+        <div class="ci-info"><b>${p[lang].t}</b><span>${p.type[lang]} · $${p.price} MXN</span>
+          <button class="rm" onclick="removeFromCart(${idx})">${lang==="es"?"Quitar":"Remove"}</button></div>
+      </div>`; }).join("");
+  }
+  const total=cart.reduce((s,pi)=>s+PRODUCTS[pi].price,0);
+  document.getElementById("cartTotal").textContent=`$${total.toLocaleString()} MXN`;
+}
+function pulseCart(){ const c=document.getElementById("cartCount"); c.animate([{transform:"scale(1)"},{transform:"scale(1.5)"},{transform:"scale(1)"}],{duration:300}); }
+function openCart(){ document.getElementById("drawer").classList.add("open"); document.getElementById("drawerBg").classList.add("open"); document.body.style.overflow="hidden"; }
+function closeCart(){ document.getElementById("drawer").classList.remove("open"); document.getElementById("drawerBg").classList.remove("open"); document.body.style.overflow=""; }
+function checkout(){ if(!cart.length){ toast(t("cart.empty")); return; } toast(t("toast.checkout")); /* → Stripe Checkout / FlowShare */ }
+function register(name){ toast(t("toast.reg")); /* → Stripe Checkout for workshop seat */ }
+
+/* ============================================================
+   CONTACT FORM
+============================================================ */
+function switchTab(which){
+  document.getElementById("tabGeneral").classList.toggle("active",which==="general");
+  document.getElementById("tabSpec").classList.toggle("active",which==="spec");
+  document.getElementById("specOnly").style.display = which==="spec"?"block":"none";
+}
+async function submitForm(e){
+  e.preventDefault();
+  const form=e.target;
+  const isSpec = document.getElementById("tabSpec").classList.contains("active");
+  const name = form.querySelectorAll("input[type=text], input")[0].value.trim();
+  const email = form.querySelector("input[type=email]").value.trim();
+  const discipline = isSpec ? (document.querySelector("#specOnly input")?.value.trim()||"") : "";
+  const message = form.querySelector("textarea").value.trim();
+  const btn=form.querySelector("button[type=submit]");
+  if(btn){ btn.disabled=true; }
+  try{
+    if(window.sb){
+      const { error } = await sb.rpc("vpa_submit_inquiry", { payload:{ kind: isSpec?"specialist_application":"general", name, email, discipline, message } });
+      if(error) throw error;
+    }
+    form.reset(); switchTab("general"); toast(t("toast.sent"));
+  }catch(err){
+    console.warn("inquiry", err);
+    toast(lang==="es"?"No se pudo enviar. Intenta de nuevo.":"Could not send. Please try again.");
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+/* ============================================================
+   UI HELPERS
+============================================================ */
+let toastTimer;
+function toast(msg){ const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove("show"),2600); }
+function toggleMenu(){ document.getElementById("navlinks").classList.toggle("mobile-open"); }
+document.querySelectorAll("#navlinks a").forEach(a=>a.addEventListener("click",()=>document.getElementById("navlinks").classList.remove("mobile-open")));
+
+window.addEventListener("scroll",()=>{ document.getElementById("header").classList.toggle("scrolled",window.scrollY>20); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeModal(); closeCart(); } });
+
+let io;
+function observeReveals(){
+  if(!io){ io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } }),{threshold:.12}); }
+  document.querySelectorAll(".reveal:not(.in)").forEach(el=>io.observe(el));
+}
+
+/* INIT — render seed instantly, then swap in live Supabase data */
+setLang("es");
+observeReveals();
+loadData().then(ok=>{ if(ok) setLang(lang); });
+</script>
+</body>
+</html>

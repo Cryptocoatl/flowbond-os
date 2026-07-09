@@ -1,0 +1,602 @@
+<!--
+  BAÑOSECO — el juego regenerativo del mundo real · CDMX
+  App cliente sobre FlowBond Layer 0 (FBID + Supabase fgsrcxxccdjqyrpkitmk).
+  Estética: solarpunk ancestral mexica. Tablero = chinampas de Tenochtitlan.
+  Mecánica: Pokémon GO + empire building. Loot = tierra fértil + oro.
+  Datos mock; campos espejo de banoseco_migration.sql. // RPC marca integración.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Space+Grotesk:wght@400;500;700&family=Cormorant:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --void:#08130F; --void2:#0C1B16; --stone:#10241D; --stone2:#15302700;
+    --line:#1E4034; --line-soft:#163128;
+    --jade:#33C9B8; --jade-hi:#5DE6D2; --jade-deep:#12716A;
+    --bio:#8DE36A; --bio-hi:#B6F58C;
+    --gold:#F4C24A; --gold-hi:#FFDA72; --gold-deep:#A9761E;
+    --sun:#FF9A48; --rare:#E166A6;
+    --clay:#E0683B;
+    --paper:#E9F3EC; --paper-dim:#8FB3A6; --paper-faint:#5E7C70;
+    --r:16px;
+    --display:"Bricolage Grotesque",system-ui,sans-serif;
+    --hud:"Space Grotesk",ui-monospace,monospace;
+    --codex:"Cormorant",Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--void); color:var(--paper); font-family:var(--hud); font-size:15px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(110% 70% at 85% -5%, rgba(244,194,74,.10), transparent 55%),
+      radial-gradient(90% 60% at 5% 100%, rgba(51,201,184,.10), transparent 55%);
+    background-attachment:fixed;
+  }
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+  :focus-visible{outline:2px solid var(--jade-hi); outline-offset:2px; border-radius:8px}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 18px}
+
+  /* ============ HUD superior (jugador) ============ */
+  header{position:sticky; top:0; z-index:40; background:rgba(8,19,15,.86); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  .hudbar{display:flex; align-items:center; gap:16px; padding:10px 0}
+  .brand{display:flex; align-items:center; gap:10px; flex:0 0 auto}
+  .totem{width:34px; height:40px; flex:0 0 auto}
+  .wm{font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:-.02em; line-height:1}
+  .wm .s{color:var(--paper-faint)} .wm .eco{color:var(--bio)}
+  .wm small{display:block; font-family:var(--hud); font-weight:500; font-size:8.5px; letter-spacing:.32em;
+    color:var(--gold); margin-top:3px}
+
+  .player{margin-left:auto; display:flex; align-items:center; gap:14px}
+  .rank{display:flex; align-items:center; gap:9px}
+  .rankbadge{width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+    background:linear-gradient(150deg,var(--jade-deep),var(--stone)); border:1px solid var(--jade);
+    font-family:var(--display); font-weight:800; color:var(--jade-hi); box-shadow:0 0 14px rgba(51,201,184,.25)}
+  .rankmeta{line-height:1.15}
+  .rankmeta .n{font-family:var(--display); font-weight:800; font-size:13.5px}
+  .xpwrap{width:128px}
+  .xpbar{height:6px; background:var(--void2); border:1px solid var(--line); border-radius:99px; overflow:hidden; margin-top:4px}
+  .xpfill{height:100%; background:linear-gradient(90deg,var(--jade-deep),var(--bio-hi)); border-radius:99px; transition:width .6s}
+  .xpwrap .lab{font-size:9.5px; color:var(--paper-dim); letter-spacing:.06em}
+  .res{display:flex; gap:8px}
+  .chip{display:flex; align-items:center; gap:6px; padding:7px 11px; border-radius:11px;
+    background:var(--stone); border:1px solid var(--line); font-weight:700; font-size:13.5px}
+  .chip.oro{color:var(--gold-hi); border-color:rgba(244,194,74,.35)}
+  .chip.en{color:var(--jade-hi); border-color:rgba(51,201,184,.3)}
+  .chip i{font-style:normal}
+  @media(max-width:880px){ .xpwrap{display:none} }
+  @media(max-width:640px){ .rankmeta{display:none} .wm small{display:none} }
+
+  nav{display:flex; gap:4px; padding:0 0 10px}
+  nav button{font-family:var(--display); font-weight:600; font-size:13px; letter-spacing:.02em;
+    padding:8px 15px; border-radius:999px; color:var(--paper-dim); border:1px solid transparent; transition:.16s}
+  nav button:hover{color:var(--paper); border-color:var(--line)}
+  nav button[aria-selected="true"]{color:var(--void); background:var(--gold); border-color:var(--gold)}
+
+  /* ============ paneles ============ */
+  .panel{display:none; padding:22px 0 80px} .panel.on{display:block; animation:rise .4s ease both}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1}}
+  .eyebrow{font-family:var(--hud); font-weight:700; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold)}
+  h1{font-family:var(--display); font-weight:800; letter-spacing:-.03em; line-height:.95;
+    font-size:clamp(32px,5.8vw,56px); margin:.16em 0 0}
+  h1 .jade{color:var(--jade-hi)} h1 .gold{color:var(--gold)}
+  .lede{color:var(--paper-dim); max-width:48ch; margin-top:12px; font-size:15.5px}
+
+  /* ============ MAPA / mundo ============ */
+  .worldgrid{display:grid; grid-template-columns:1.3fr .9fr; gap:20px; margin-top:24px}
+  @media(max-width:860px){.worldgrid{grid-template-columns:1fr}}
+  .board{position:relative; border:1px solid var(--line); border-radius:var(--r); overflow:hidden;
+    background:radial-gradient(120% 120% at 30% 20%, #0E211B, #081310); aspect-ratio:1/.95}
+  .board svg{position:absolute; inset:0; width:100%; height:100%}
+  .canal{stroke:var(--jade-deep); stroke-width:2; opacity:.5}
+  .canal.glow{stroke:var(--jade); opacity:.85; filter:drop-shadow(0 0 4px rgba(51,201,184,.6))}
+  .plot{fill:rgba(141,227,106,.05); stroke:var(--line-soft); stroke-width:1}
+  .plot.live{fill:rgba(141,227,106,.13)}
+  .node{cursor:pointer}
+  .node:hover .ring{opacity:.8}
+  .you{fill:var(--jade-hi)}
+  .hudtag{position:absolute; left:12px; top:12px; font-family:var(--hud); font-size:11px; color:var(--paper-dim);
+    background:rgba(8,19,15,.7); border:1px solid var(--line); border-radius:9px; padding:6px 10px}
+  .hudtag b{color:var(--bio-hi)}
+  .legend{position:absolute; right:12px; bottom:12px; display:flex; gap:12px; flex-wrap:wrap; font-size:11px;
+    color:var(--paper-dim); background:rgba(8,19,15,.7); border:1px solid var(--line); border-radius:10px; padding:7px 10px}
+  .legend span{display:flex; align-items:center; gap:6px}
+  .legend i{width:9px;height:9px;border-radius:50%; box-shadow:0 0 6px currentColor}
+
+  .side{display:flex; flex-direction:column; gap:12px}
+  .telemetry{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+  .tel{background:var(--stone); border:1px solid var(--line); border-radius:12px; padding:11px 12px}
+  .tel .n{font-family:var(--display); font-weight:800; font-size:20px; color:var(--gold)}
+  .tel .l{font-size:10.5px; color:var(--paper-dim); letter-spacing:.04em}
+
+  .ncard{background:linear-gradient(155deg,var(--stone),var(--void2)); border:1px solid var(--line);
+    border-radius:14px; padding:15px; transition:.18s}
+  .ncard.sel{border-color:var(--jade); box-shadow:0 0 0 1px var(--jade) inset, 0 8px 30px -12px rgba(51,201,184,.5)}
+  .ncard .top{display:flex; align-items:center; gap:11px}
+  .powerring{width:46px;height:46px;flex:0 0 auto}
+  .ncard .code{font-family:var(--display); font-weight:800; font-size:15px}
+  .ncard .name{font-size:12.5px; color:var(--paper-dim)}
+  .ncard .dist{margin-left:auto; text-align:right; font-size:11px; color:var(--paper-dim)}
+  .ncard .dist b{display:block; font-family:var(--hud); font-weight:700; font-size:14px; color:var(--paper)}
+  .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:11px}
+  .tag{font-size:10.5px; padding:4px 9px; border-radius:999px; border:1px solid var(--line); color:var(--paper-faint); display:flex; gap:5px; align-items:center}
+  .tag.on{color:var(--bio-hi); border-color:rgba(141,227,106,.4); background:rgba(141,227,106,.07)}
+  .st{font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; letter-spacing:.03em}
+  .st-ok{background:rgba(244,194,74,.16); color:var(--gold-hi)}
+  .st-full{background:rgba(224,104,59,.18); color:var(--clay)}
+  .st-serv{background:rgba(51,201,184,.16); color:var(--jade-hi)}
+  .act{margin-top:12px; width:100%; padding:11px; border-radius:11px; font-family:var(--display); font-weight:800; font-size:13.5px; transition:.15s}
+  .act.gold{background:var(--gold); color:var(--void)} .act.gold:hover{background:var(--gold-hi)}
+  .act.alert{background:transparent; border:1px solid var(--clay); color:var(--clay)}
+
+  .powerring text{font-family:var(--hud); font-weight:700; font-size:13px; fill:var(--paper)}
+
+  /* ============ MISIONES / operaciones ============ */
+  .opsgrid{display:grid; grid-template-columns:1fr; gap:12px; margin-top:22px}
+  .op{position:relative; background:linear-gradient(150deg,var(--stone),var(--void2)); border:1px solid var(--line);
+    border-radius:15px; padding:16px 16px 16px 18px; overflow:hidden}
+  .op::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--clay)}
+  .op.claimed::before{background:var(--jade)} .op.done::before{background:var(--gold)}
+  .op.done{opacity:.6}
+  .ophead{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .optype{font-family:var(--display); font-weight:800; font-size:16px}
+  .urg{font-size:10px; font-weight:700; letter-spacing:.1em; padding:3px 8px; border-radius:6px;
+    background:rgba(224,104,59,.16); color:var(--clay)}
+  .diff{display:flex; gap:2px; color:var(--gold)} .diff .d{opacity:.25}
+  .timer{margin-left:auto; font-family:var(--hud); font-size:12px; color:var(--paper-dim)}
+  .timer b{color:var(--clay)}
+  .opwhere{font-size:13px; color:var(--paper-dim); margin-top:6px; display:flex; align-items:center; gap:7px}
+  .oploot{display:flex; align-items:center; gap:8px; margin-top:13px; flex-wrap:wrap}
+  .loot{display:flex; align-items:center; gap:6px; font-family:var(--hud); font-weight:700; font-size:13px;
+    padding:6px 11px; border-radius:9px; border:1px solid var(--line); background:var(--void2)}
+  .loot.xp{color:var(--bio-hi)} .loot.oro{color:var(--gold-hi)} .loot.item{color:var(--jade-hi)}
+  .opbtn{margin-left:auto; padding:10px 18px; border-radius:11px; font-family:var(--display); font-weight:800; font-size:13.5px; transition:.15s}
+  .opbtn.go{background:var(--jade); color:var(--void)} .opbtn.go:hover{background:var(--jade-hi)}
+  .opbtn.fin{background:var(--gold); color:var(--void)} .opbtn.fin:hover{background:var(--gold-hi)}
+  .opbtn.done{background:var(--void2); color:var(--paper-faint); cursor:default}
+
+  .section-h{display:flex; align-items:baseline; gap:12px; margin:34px 0 12px}
+  .section-h h2{font-family:var(--display); font-weight:800; font-size:21px; margin:0; letter-spacing:-.01em}
+  .section-h .meta{margin-left:auto; color:var(--paper-dim); font-size:12.5px}
+
+  /* rangos */
+  .ladder{display:flex; gap:8px; flex-wrap:wrap}
+  .lvl{flex:1; min-width:96px; background:var(--stone); border:1px solid var(--line); border-radius:12px; padding:12px; text-align:center}
+  .lvl.has{border-color:var(--jade); background:linear-gradient(160deg,rgba(51,201,184,.12),var(--stone))}
+  .lvl.now{border-color:var(--gold); box-shadow:0 0 18px -6px rgba(244,194,74,.5)}
+  .lvl .ic{font-size:22px}
+  .lvl .nm{font-family:var(--display); font-weight:800; font-size:13px; margin-top:5px}
+  .lvl .xp{font-size:10.5px; color:var(--paper-dim); margin-top:2px}
+
+  .lead{display:flex; flex-direction:column; gap:3px}
+  .lr{display:flex; align-items:center; gap:12px; padding:10px 13px; border-radius:11px}
+  .lr:nth-child(odd){background:var(--stone)}
+  .lr .rk{font-family:var(--display); font-weight:800; color:var(--paper-faint); width:22px}
+  .lr .nm{flex:1} .lr .rglyph{font-size:13px}
+  .lr .lp{font-family:var(--hud); font-weight:700; color:var(--gold)}
+  .lr.me{background:linear-gradient(90deg,rgba(244,194,74,.14),transparent); border:1px solid rgba(244,194,74,.35)}
+
+  /* ============ CÓDICE ============ */
+  .codex{max-width:700px; margin:6px auto 0}
+  .codex .lore{font-family:var(--codex); font-size:clamp(22px,3.3vw,30px); line-height:1.34; font-weight:500}
+  .codex .lore b{color:var(--gold); font-weight:600}
+  .codex p{font-family:var(--codex); font-size:19px; line-height:1.6; color:var(--paper-dim); margin:16px 0}
+  .codex .drop::first-letter{font-family:var(--display); font-weight:800; font-size:62px; float:left; line-height:.72; padding:6px 12px 0 0; color:var(--jade-hi)}
+  .greca{height:18px; margin:30px 0; background-image:repeating-linear-gradient(90deg,var(--gold) 0 8px,transparent 8px 16px); -webkit-mask:repeating-linear-gradient(90deg,#000 0 8px,transparent 8px 16px); opacity:.5}
+  .deity{display:flex; gap:16px; align-items:center; background:linear-gradient(150deg,rgba(225,102,166,.08),var(--stone)); border:1px solid var(--line); border-radius:16px; padding:18px; margin:8px 0}
+  .deity .glyph{font-size:40px; flex:0 0 auto}
+  .deity h4{font-family:var(--display); font-weight:800; margin:0 0 3px; font-size:16px; color:var(--rare)}
+  .deity p{font-family:var(--codex); margin:0; font-size:16px; color:var(--paper-dim)}
+
+  .impact{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:14px}
+  @media(max-width:640px){.impact{grid-template-columns:repeat(2,1fr)}}
+  .ic{background:var(--stone); border:1px solid var(--line); border-radius:14px; padding:16px}
+  .ic .n{font-family:var(--display); font-weight:800; font-size:27px; color:var(--gold); line-height:1}
+  .ic .l{font-size:12px; color:var(--paper-dim); margin-top:6px}
+  .ic .sub{font-size:10.5px; color:var(--paper-faint); margin-top:2px}
+
+  .sponsor{margin-top:26px; background:linear-gradient(140deg,rgba(244,194,74,.12),var(--stone)); border:1px solid var(--gold-deep); border-radius:18px; padding:24px; text-align:center}
+  .sponsor h3{font-family:var(--display); font-weight:800; font-size:22px; margin:0 0 6px}
+  .sponsor p{color:var(--paper-dim); margin:0 auto 16px; max-width:52ch; font-size:14px}
+  .sponsor a{display:inline-block; background:var(--gold); color:var(--void); font-family:var(--display); font-weight:800; padding:11px 24px; border-radius:11px; text-decoration:none}
+
+  footer{border-top:1px solid var(--line); color:var(--paper-faint); font-size:11.5px; padding:20px 0 50px; display:flex; gap:14px; flex-wrap:wrap}
+  footer b{color:var(--paper-dim)}
+
+  /* modal donación */
+  .scrim{position:fixed; inset:0; background:rgba(4,9,7,.72); backdrop-filter:blur(5px); display:none; align-items:center; justify-content:center; z-index:60; padding:18px}
+  .scrim.on{display:flex; animation:rise .25s ease}
+  .modal{position:relative; background:var(--stone); border:1px solid var(--jade-deep); border-radius:20px; width:min(380px,100%); padding:24px; text-align:center; box-shadow:0 20px 60px -20px rgba(51,201,184,.4)}
+  .modal .code{font-family:var(--hud); font-weight:700; color:var(--jade-hi); font-size:12px; letter-spacing:.08em}
+  .modal h3{font-family:var(--display); font-weight:800; font-size:22px; margin:5px 0 2px}
+  .modal .sub{color:var(--paper-dim); font-size:13px; margin-bottom:15px}
+  .qr{width:168px;height:168px; margin:0 auto; background:#EAF4EE; border-radius:13px; padding:11px; box-shadow:0 0 22px rgba(141,227,106,.25)}
+  .amounts{display:flex; gap:8px; margin:15px 0 4px}
+  .amt{flex:1; background:var(--void2); border:1px solid var(--line); border-radius:10px; font-family:var(--display); font-weight:800; padding:10px; transition:.15s}
+  .amt:hover{border-color:var(--gold)} .amt.sel{background:var(--gold); color:var(--void)}
+  .modal .note{font-size:11px; color:var(--paper-faint); margin-top:12px; line-height:1.5}
+  .x{position:absolute; top:13px; right:15px; font-size:22px; color:var(--paper-dim)}
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(18px); background:var(--gold); color:var(--void); font-family:var(--display); font-weight:800; padding:12px 22px; border-radius:12px; opacity:0; transition:.3s; z-index:70; font-size:14px; box-shadow:0 10px 30px -8px rgba(244,194,74,.6)}
+  .toast.on{opacity:1; transform:translateX(-50%)}
+  .toast.xp{background:var(--bio)} .toast.jade{background:var(--jade)}
+
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="hudbar">
+      <div class="brand">
+        <svg class="totem" viewBox="0 0 120 140" aria-hidden="true">
+          <defs>
+            <radialGradient id="g" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#FFE39A"/><stop offset=".45" stop-color="#F4C24A"/><stop offset="1" stop-color="#A9761E"/></radialGradient>
+            <linearGradient id="j" x1="0" y1="1" x2=".3" y2="0"><stop offset="0" stop-color="#12716A"/><stop offset="1" stop-color="#8DE36A"/></linearGradient>
+          </defs>
+          <g stroke="#7A5414" stroke-width="2.5">
+            <ellipse cx="60" cy="118" rx="44" ry="15" fill="url(#g)"/>
+            <ellipse cx="60" cy="98"  rx="35" ry="14" fill="url(#g)"/>
+            <ellipse cx="60" cy="80"  rx="25" ry="12" fill="url(#g)"/>
+            <ellipse cx="60" cy="65"  rx="14" ry="9"  fill="url(#g)"/>
+          </g>
+          <path d="M60 64 C60 52 60 44 60 34" fill="none" stroke="url(#j)" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M60 46 C49 43 42 34 44 24 C55 26 62 36 60 46Z" fill="url(#j)"/>
+          <path d="M60 40 C71 38 79 30 79 20 C68 20 60 30 60 40Z" fill="url(#j)"/>
+        </svg>
+        <div class="wm">BAÑO<span class="s">S</span><span class="eco">ECO</span><small>RED REGENERATIVA</small></div>
+      </div>
+
+      <div class="player">
+        <div class="rank">
+          <div class="rankbadge" id="rankIc">🌽</div>
+          <div class="rankmeta">
+            <div class="n" id="rankName">Chinampa</div>
+            <div class="xpwrap">
+              <div class="lab"><span id="xpNow">0</span> / <span id="xpNext">0</span> XP</div>
+              <div class="xpbar"><div class="xpfill" id="xpFill" style="width:0%"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="res">
+          <div class="chip oro"><i>◈</i><span id="oroChip">0</span></div>
+          <div class="chip en"><i>⚡</i><span id="enChip">0</span></div>
+        </div>
+      </div>
+    </div>
+    <nav role="tablist" aria-label="Mundo">
+      <button role="tab" aria-selected="true" data-tab="mapa">🗺 El Mapa</button>
+      <button role="tab" aria-selected="false" data-tab="misiones">⚑ Misiones</button>
+      <button role="tab" aria-selected="false" data-tab="codice">📜 El Códice</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== MAPA ===== -->
+  <section id="mapa" class="panel on" role="tabpanel">
+    <span class="eyebrow">Territorio vivo · CDMX</span>
+    <h1>Cada baño es un <span class="gold">nodo</span><br>que regenera la <span class="jade">tierra</span>.</h1>
+    <p class="lede">Camina la ciudad, activa baños secos, completa misiones. Donde antes se contaminaba agua,
+      ahora crece suelo vivo —y tu red de poder se expande sobre las chinampas.</p>
+
+    <div class="worldgrid">
+      <div class="board" id="board" aria-label="Tablero de chinampas con nodos BAÑOSECO">
+        <svg viewBox="0 0 400 380" id="boardSvg">
+          <g id="plots"></g><g id="canals"></g><g id="territory"></g><g id="nodes"></g>
+          <g id="player"></g>
+        </svg>
+        <div class="hudtag">Red activa · <b id="liveCount">0</b> nodos en línea</div>
+        <div class="legend">
+          <span style="color:var(--gold)"><i></i>Activo</span>
+          <span style="color:var(--clay)"><i></i>Misión</span>
+          <span style="color:var(--jade)"><i></i>En servicio</span>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="telemetry">
+          <div class="tel"><div class="n" id="kT">—</div><div class="l">NODOS</div></div>
+          <div class="tel"><div class="n" id="kW">—</div><div class="l">L AGUA/DÍA</div></div>
+          <div class="tel"><div class="n" id="kS">—</div><div class="l">KG TIERRA/MES</div></div>
+        </div>
+        <div id="nodeList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MISIONES ===== -->
+  <section id="misiones" class="panel" role="tabpanel">
+    <span class="eyebrow">Operaciones regenerativas</span>
+    <h1>Acepta la <span class="jade">misión</span>.<br>Transmuta el <span class="gold">residuo</span>.</h1>
+    <p class="lede">Cuando un nodo se llena, se abre una operación con su ubicación. Cambia la cubeta,
+      sanitiza, lleva a composta. El sistema te paga en XP, oro y artefactos del ecosistema.</p>
+
+    <div class="opsgrid" id="opsList"></div>
+
+    <div class="section-h"><h2>Tu ascenso</h2><span class="meta" id="rankMeta"></span></div>
+    <div class="ladder" id="ladder"></div>
+
+    <div class="section-h"><h2>Gremio del mes</h2><span class="meta">CDMX</span></div>
+    <div class="lead" id="leaderboard"></div>
+  </section>
+
+  <!-- ===== CÓDICE ===== -->
+  <section id="codice" class="panel" role="tabpanel">
+    <div class="codex">
+      <span class="eyebrow">El códice del oro</span>
+      <p class="lore" style="margin-top:12px">En la alquimia y en el pensamiento mexica, <b>el oro y el excremento</b>
+        eran dos caras del mismo misterio: la materia que se transforma. Lo que el cuerpo descarta no es desecho —
+        es la semilla de la tierra.</p>
+
+      <div class="deity">
+        <span class="glyph">🌀</span>
+        <div>
+          <h4>Tlazoltéotl · la que come la inmundicia</h4>
+          <p>Diosa mexica de la purificación: devoraba la suciedad del mundo para devolverlo limpio.
+            En BAÑOSECO es el rango máximo —quien transforma más residuo en vida.</p>
+        </div>
+      </div>
+
+      <p class="drop">Las chinampas de Tenochtitlan ya lo sabían: islas de cultivo levantadas sobre el agua,
+        alimentadas por los propios desechos de la ciudad, las más productivas que ha conocido el continente.
+        BAÑOSECO recupera ese circuito. Cada baño seco que usas en lugar de uno de agua no contamina seis litros:
+        siembra. El residuo se queda, se composta, y regresa como suelo vivo a los huertos.</p>
+      <p>El valor circula igual. Los $5 de entrada —o tu donación con el QR— no pagan un servicio: financian la red.
+        Más nodos, más guardianes, más tierra. La caca se vuelve oro, literalmente, cuando la tratamos como
+        lo que siempre fue: el inicio de la vida, no su final.</p>
+
+      <div class="greca"></div>
+      <span class="eyebrow">Regeneración del territorio</span>
+      <div class="impact">
+        <div class="ic"><div class="n" id="iT">—</div><div class="l">nodos en la red</div><div class="sub">y creciendo</div></div>
+        <div class="ic"><div class="n" id="iW">—</div><div class="l">litros de agua salvados</div><div class="sub">vs. inodoro de agua</div></div>
+        <div class="ic"><div class="n" id="iS">—</div><div class="l">kg de tierra creada</div><div class="sub">a huertos urbanos</div></div>
+        <div class="ic"><div class="n" id="iMx">—</div><div class="l">MXN donados</div><div class="sub">reinvertidos</div></div>
+      </div>
+
+      <div class="sponsor">
+        <h3>Adopta un nodo</h3>
+        <p>Marcas, alcaldías y huertos: patrocinen un baño y reciban reporte mensual de agua salvada,
+          tierra creada y alcance comunitario. El piloto vive en Huerto Roma Verde.</p>
+        <a href="#" id="sponsorBtn">Quiero patrocinar</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <b>BAÑOSECO</b> — baño eco, baño seco.
+    <span>Layer 0 · FlowBond · FBID</span>
+    <span style="margin-left:auto">Piloto: Huerto Roma Verde, CDMX</span>
+  </footer>
+</main>
+
+<div class="scrim" id="scrim">
+  <div class="modal">
+    <button class="x" id="closeModal" aria-label="Cerrar">×</button>
+    <div class="code" id="mCode">BS-—</div>
+    <h3>Activa el nodo</h3>
+    <div class="sub" id="mName">Tu donación expande la red</div>
+    <div class="qr"><svg viewBox="0 0 146 146" width="146" height="146" id="qrSvg" aria-label="Código de donación"></svg></div>
+    <div class="amounts" id="amounts">
+      <button class="amt sel" data-amt="5">$5</button>
+      <button class="amt" data-amt="20">$20</button>
+      <button class="amt" data-amt="50">$50</button>
+    </div>
+    <button class="act gold" id="confirmDonate" style="margin-top:8px">Donar $5 · +5 XP</button>
+    <div class="note">Escanea el QR o deja monedas en el bote del módulo. BAÑOSECO nunca retiene fondos: van directo a la cuenta de la red.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== ESTADO MOCK · espejo de banoseco_* · // RPC marca integración Supabase/FBID ===== */
+const toilets = [
+  {code:'BS-ROMA-014', name:'Huerto Roma Verde', hood:'Roma Sur', status:'ok',   fill:18, solar:true,  recycle:true,  dist:0.4, px:6,py:5},
+  {code:'BS-COND-007', name:'Parque México',     hood:'Condesa',  status:'full', fill:100,solar:true,  recycle:false, dist:0.9, px:3,py:4},
+  {code:'BS-JRZ-002',  name:'Jardín del Arte',    hood:'Juárez',   status:'ok',   fill:54, solar:false, recycle:true,  dist:1.3, px:4,py:2},
+  {code:'BS-DOC-011',  name:'Mercado Hidalgo',    hood:'Doctores', status:'serv', fill:65, solar:true,  recycle:true,  dist:1.6, px:7,py:3},
+  {code:'BS-NAR-019',  name:'Parq. de los Venados',hood:'Narvarte',status:'ok',  fill:32, solar:false, recycle:false, dist:2.1, px:8,py:6},
+  {code:'BS-COY-031',  name:'Vivero Coyoacán',    hood:'Coyoacán', status:'full', fill:100,solar:true,  recycle:true,  dist:3.4, px:5,py:8},
+];
+
+const player = { oro:380, energy:7, xp:1180 };          // // RPC banoseco_guardian_balance + perfil FBID
+const MXN_PER_PT = 0.5;
+const ranks = [
+  {nm:'Semilla', ic:'🌱', xp:0},   {nm:'Brote', ic:'🌿', xp:200},
+  {nm:'Raíz', ic:'🪵', xp:500},    {nm:'Milpa', ic:'🌾', xp:900},
+  {nm:'Chinampa', ic:'🌽', xp:1000},{nm:'Tlazoltéotl', ic:'🌀', xp:2000},
+];
+
+let missions = [
+  {id:'m1', code:'BS-COND-007', name:'Parque México',  hood:'Condesa',  kind:'swap',     xp:50, oro:25, item:'Composta×1', diff:1, urg:'URGENTE', mins:42, status:'open'},
+  {id:'m2', code:'BS-COY-031',  name:'Vivero Coyoacán', hood:'Coyoacán', kind:'swap',     xp:70, oro:35, item:'Composta×1', diff:3, urg:'LEJANO',  mins:120,status:'open'},
+  {id:'m3', code:'BS-DOC-011',  name:'Mercado Hidalgo', hood:'Doctores', kind:'sanitize', xp:35, oro:18, item:null,         diff:2, urg:'',        mins:0,  status:'claimed'},
+];
+
+const leaders = [
+  {nm:'Beto · El Compostero', pts:1980, ic:'🌀'},
+  {nm:'Mariana R.', pts:1240, ic:'🌽'},
+  {nm:'Lucía V.', pts:760, ic:'🌾'},
+  {nm:'Diego M.', pts:430, ic:'🪵'},
+  {nm:'Tú', pts:380, ic:'🪵', me:true},
+];
+const impact = { toilets:6, waterDay:2160, soilMonth:340, waterTotal:184500, soilTotal:2870, donatedMxn:48750 };
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=n=>n.toLocaleString('es-MX');
+const colorOf={ok:'var(--gold)',full:'var(--clay)',serv:'var(--jade)'};
+const stMap={ok:['st-ok','Activo'],full:['st-full','Misión abierta'],serv:['st-serv','En servicio']};
+const kindLabel={swap:'Cambiar cubeta',clean:'Limpieza',sanitize:'Sanitizar',compost_dropoff:'Llevar a composta'};
+let selCode=null;
+
+function toast(msg,kind){const t=$('#toast');t.className='toast on'+(kind?' '+kind:'');t.textContent=msg;clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2300);}
+
+function curRank(){let r=ranks[0];for(const x of ranks)if(player.xp>=x.xp)r=x;return r;}
+function nextRank(){return ranks.find(x=>x.xp>player.xp);}
+function renderHUD(){
+  const r=curRank(), nx=nextRank();
+  $('#rankIc').textContent=r.ic; $('#rankName').textContent=r.nm;
+  $('#oroChip').textContent=fmt(player.oro); $('#enChip').textContent=player.energy;
+  if(nx){const span=nx.xp-r.xp,have=player.xp-r.xp;
+    $('#xpNow').textContent=fmt(have); $('#xpNext').textContent=fmt(span);
+    $('#xpFill').style.width=Math.min(100,have/span*100)+'%';
+  } else {$('#xpNow').textContent='MAX';$('#xpNext').textContent='—';$('#xpFill').style.width='100%';}
+}
+
+/* ----- power ring (transmutación: suelo -> oro) ----- */
+function ring(pct,size,col){const r=size/2-3,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<svg class="powerring" viewBox="0 0 ${size} ${size}">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--void2)" stroke-width="3.5"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="3.5"
+      stroke-dasharray="${c}" stroke-dashoffset="${off}" stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
+    <text x="50%" y="55%" text-anchor="middle">${pct}</text></svg>`;}
+
+/* ----- tablero de chinampas ----- */
+const GX=10, GY=10, CELL=400/GX;
+function drawBoard(){
+  let plots='',canals='';
+  for(let y=0;y<GY;y++)for(let x=0;x<GX;x++){
+    const live=toilets.some(t=>t.px===x&&t.py===y);
+    plots+=`<rect class="plot ${live?'live':''}" x="${x*CELL+3}" y="${y*CELL+3}" width="${CELL-6}" height="${CELL-6}" rx="3"/>`;
+  }
+  for(let i=0;i<=GX;i++){canals+=`<line class="canal" x1="${i*CELL}" y1="0" x2="${i*CELL}" y2="400"/><line class="canal" x1="0" y1="${i*CELL}" x2="400" y2="${i*CELL}"/>`;}
+  // canal-arteria glow (Calzada / acequia principal)
+  canals+=`<line class="canal glow" x1="0" y1="${4*CELL}" x2="400" y2="${4*CELL}"/><line class="canal glow" x1="${5*CELL}" y1="0" x2="${5*CELL}" y2="400"/>`;
+  $('#plots').innerHTML=plots; $('#canals').innerHTML=canals;
+  drawTerritory(); drawNodes(); drawPlayer();
+}
+function drawTerritory(){ // halo de regeneración alrededor de nodos activos = "imperio"
+  $('#territory').innerHTML=toilets.filter(t=>t.status!=='full').map(t=>{
+    const cx=t.px*CELL+CELL/2, cy=t.py*CELL+CELL/2;
+    return `<circle cx="${cx}" cy="${cy}" r="${CELL*1.4}" fill="var(--bio)" opacity="0.05"/>`;
+  }).join('');
+}
+function drawNodes(){
+  $('#nodes').innerHTML=toilets.map(t=>{
+    const cx=t.px*CELL+CELL/2, cy=t.py*CELL+CELL/2, c=colorOf[t.status], pulse=t.status==='full';
+    return `<g class="node" data-code="${t.code}" tabindex="0" role="button" aria-label="${t.name}, ${stMap[t.status][1]}">
+      <circle class="ring" cx="${cx}" cy="${cy}" r="15" fill="${c}" opacity="${pulse?.35:.15}">
+        ${pulse?'<animate attributeName="r" values="13;21;13" dur="1.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".45;0;.45" dur="1.7s" repeatCount="indefinite"/>':''}
+      </circle>
+      <circle cx="${cx}" cy="${cy}" r="7" fill="${c}" stroke="var(--void)" stroke-width="2" style="filter:drop-shadow(0 0 5px ${c})"/>
+    </g>`;
+  }).join('');
+  $$('#nodes .node').forEach(n=>{const code=n.dataset.code;
+    n.addEventListener('click',()=>selectNode(code,true));
+    n.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectNode(code,true);}});});
+}
+function drawPlayer(){ // tú estás aquí
+  const cx=2.5*CELL, cy=6.5*CELL;
+  $('#player').innerHTML=`<circle cx="${cx}" cy="${cy}" r="18" fill="none" stroke="var(--jade-hi)" stroke-width="1.5" opacity=".5">
+      <animate attributeName="r" values="14;22;14" dur="2.4s" repeatCount="indefinite"/></circle>
+    <circle class="you" cx="${cx}" cy="${cy}" r="6" style="filter:drop-shadow(0 0 6px var(--jade-hi))"/>`;
+}
+function renderNodeList(){
+  $('#nodeList').innerHTML=toilets.map(t=>{const[cls,label]=stMap[t.status];
+    return `<div class="ncard ${t.code===selCode?'sel':''}" data-code="${t.code}">
+      <div class="top">${ring(t.fill,46,colorOf[t.status])}
+        <div><div class="code">${t.code}</div><div class="name">${t.name} · ${t.hood}</div></div>
+        <div class="dist"><b>${t.dist}</b>km</div></div>
+      <div class="tags">
+        <span class="st ${cls}">${label}</span>
+        <span class="tag ${t.solar?'on':''}">☀ ${t.solar?'Carga solar':'—'}</span>
+        <span class="tag ${t.recycle?'on':''}">♺ ${t.recycle?'Reciclaje':'—'}</span>
+      </div>
+      ${t.status==='full'
+        ? `<button class="act alert" disabled>⚑ Misión en curso</button>`
+        : `<button class="act gold" data-donate="${t.code}">Activar · donar $5</button>`}
+    </div>`;}).join('');
+  $$('#nodeList [data-donate]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openDonate(b.dataset.donate);}));
+  $$('#nodeList .ncard').forEach(c=>c.addEventListener('click',()=>selectNode(c.dataset.code,false)));
+}
+function selectNode(code,scroll){selCode=code;renderNodeList();
+  const c=$(`#nodeList .ncard[data-code="${code}"]`);if(scroll&&c)c.scrollIntoView({behavior:'smooth',block:'center'});}
+
+/* ----- donación + QR ----- */
+function pseudoQR(seed){let h=0;for(const ch of seed)h=(h*31+ch.charCodeAt(0))>>>0;
+  const rng=()=>{h=(h*1103515245+12345)&0x7fffffff;return h/0x7fffffff;};
+  const n=21,cell=146/n;let r='';
+  const fp=(x,y)=>x===0||x===6||y===0||y===6||(x>=2&&x<=4&&y>=2&&y<=4);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){let on;
+    if(x<7&&y<7)on=fp(x,y);else if(x>n-8&&y<7)on=fp(x-(n-7),y);
+    else if(x<7&&y>n-8)on=fp(x,y-(n-7));else on=rng()>0.52;
+    if(on)r+=`<rect x="${x*cell}" y="${y*cell}" width="${cell+0.4}" height="${cell+0.4}" fill="#08130F"/>`;}
+  return r;}
+let donAmt=5,donCode=null;
+function openDonate(code){donCode=code;const t=toilets.find(x=>x.code===code)||{};
+  $('#mCode').textContent=code;$('#mName').textContent=(t.name||'')+' · '+(t.hood||'');
+  $('#qrSvg').innerHTML='<rect width="146" height="146" fill="#EAF4EE"/>'+pseudoQR(code);
+  setAmt(5);$('#scrim').classList.add('on');}
+function setAmt(a){donAmt=a;$$('#amounts .amt').forEach(b=>b.classList.toggle('sel',+b.dataset.amt===a));
+  $('#confirmDonate').textContent=`Donar $${a} · +5 XP`;}
+$$('#amounts .amt').forEach(b=>b.addEventListener('click',()=>setAmt(+b.dataset.amt)));
+$('#confirmDonate').addEventListener('click',()=>{ // // RPC banoseco_record_donation
+  player.xp+=5; renderHUD(); $('#scrim').classList.remove('on');
+  toast(`+5 XP · $${donAmt} a la red 🌱`,'xp');});
+$('#closeModal').addEventListener('click',()=>$('#scrim').classList.remove('on'));
+$('#scrim').addEventListener('click',e=>{if(e.target===$('#scrim'))$('#scrim').classList.remove('on');});
+
+/* ----- misiones ----- */
+function diffDots(d){let s='';for(let i=0;i<3;i++)s+=`<span class="d" style="${i<d?'opacity:1':''}">◆</span>`;return s;}
+function renderOps(){
+  $('#opsList').innerHTML=missions.map(m=>{
+    const btn=m.status==='open'?`<button class="opbtn go" data-claim="${m.id}">Aceptar</button>`
+      :m.status==='claimed'?`<button class="opbtn fin" data-done="${m.id}">Completar</button>`
+      :`<button class="opbtn done">Completada ✓</button>`;
+    const timer=m.status==='claimed'?`<span class="timer">aceptada · en curso</span>`
+      :m.mins?`<span class="timer">⏱ <b>${m.mins}</b> min · ${m.dist?'':''}</span>`:'';
+    const loot=`<span class="loot xp">✦ ${m.xp} XP</span><span class="loot oro">◈ ${m.oro}</span>${m.item?`<span class="loot item">🎁 ${m.item}</span>`:''}`;
+    return `<div class="op ${m.status}">
+      <div class="ophead">
+        <span class="optype">${kindLabel[m.kind]}</span>
+        ${m.urg&&m.status==='open'?`<span class="urg">${m.urg}</span>`:''}
+        <span class="diff">${diffDots(m.diff)}</span>${timer}
+      </div>
+      <div class="opwhere">📍 ${m.code} · ${m.name}, ${m.hood}</div>
+      <div class="oploot">${loot}${btn}</div>
+    </div>`;}).join('');
+  $('#opsList').querySelectorAll('[data-claim]').forEach(b=>b.addEventListener('click',()=>claim(b.dataset.claim)));
+  $('#opsList').querySelectorAll('[data-done]').forEach(b=>b.addEventListener('click',()=>complete(b.dataset.done)));
+  $('#rankMeta').textContent=`${player.xp} XP totales`;
+}
+function claim(id){const m=missions.find(x=>x.id===id);if(!m)return; // // RPC banoseco_claim_mission
+  if(player.energy<=0){toast('Sin energía ⚡ espera la recarga solar','jade');return;}
+  m.status='claimed';player.energy--;renderHUD();renderOps();toast('Misión aceptada · ve por la cubeta 🧤','jade');}
+function complete(id){const m=missions.find(x=>x.id===id);if(!m)return; // // RPC banoseco_complete_mission
+  m.status='done';player.oro+=m.oro;player.xp+=m.xp;
+  const me=leaders.find(l=>l.me);if(me)me.pts=player.oro;leaders.sort((a,b)=>b.pts-a.pts);
+  renderHUD();renderOps();renderLadder();renderLeaders();
+  toast(`+${m.xp} XP · +${m.oro} ◈ · cubeta a composta 🌾`,'xp');}
+
+function renderLadder(){const r=curRank();
+  $('#ladder').innerHTML=ranks.map(x=>{
+    const has=player.xp>=x.xp, now=x.nm===r.nm;
+    return `<div class="lvl ${has?'has':''} ${now?'now':''}"><div class="ic">${x.ic}</div>
+      <div class="nm">${x.nm}</div><div class="xp">${x.xp?fmt(x.xp)+' XP':'inicio'}</div></div>`;}).join('');}
+function renderLeaders(){
+  $('#leaderboard').innerHTML=leaders.map((l,i)=>
+    `<div class="lr ${l.me?'me':''}"><span class="rk">${i+1}</span>
+      <span class="rglyph">${l.ic}</span><span class="nm">${l.nm}</span><span class="lp">${fmt(l.pts)} ◈</span></div>`).join('');}
+
+function renderTelemetry(){
+  $('#kT').textContent=impact.toilets;$('#kW').textContent=fmt(impact.waterDay);$('#kS').textContent=fmt(impact.soilMonth);
+  $('#liveCount').textContent=toilets.filter(t=>t.status!=='full').length;
+  $('#iT').textContent=impact.toilets;$('#iW').textContent=fmt(impact.waterTotal);
+  $('#iS').textContent=fmt(impact.soilTotal);$('#iMx').textContent='$'+fmt(impact.donatedMxn);}
+
+$('#sponsorBtn').addEventListener('click',e=>{e.preventDefault();toast('Te contactamos para adoptar un nodo 🤝');});
+
+/* ----- tabs ----- */
+$$('nav button').forEach(b=>b.addEventListener('click',()=>{
+  $$('nav button').forEach(x=>x.setAttribute('aria-selected','false'));b.setAttribute('aria-selected','true');
+  $$('.panel').forEach(p=>p.classList.remove('on'));$('#'+b.dataset.tab).classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});}));
+
+/* ----- init ----- */
+renderHUD();drawBoard();renderNodeList();renderOps();renderLadder();renderLeaders();renderTelemetry();
+selectNode('BS-ROMA-014',false);
+</script>

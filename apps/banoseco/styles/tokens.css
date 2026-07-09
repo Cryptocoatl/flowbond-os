@@ -1,0 +1,31 @@
+/* BAÑOSECO design tokens — solarpunk ancestral mexica.
+   Ported 1:1 from the prototype palette, namespaced as --bs-* per spec.
+   Fonts are injected by next/font as --font-display / --font-hud / --font-codex. */
+:root {
+  --bs-void: #08130f;
+  --bs-void2: #0c1b16;
+  --bs-stone: #10241d;
+  --bs-line: #1e4034;
+  --bs-line-soft: #163128;
+
+  --bs-jade: #33c9b8;
+  --bs-jade-hi: #5de6d2;
+  --bs-jade-deep: #12716a;
+
+  --bs-bio: #8de36a;
+  --bs-bio-hi: #b6f58c;
+
+  --bs-gold: #f4c24a;
+  --bs-gold-hi: #ffda72;
+  --bs-gold-deep: #a9761e;
+
+  --bs-sun: #ff9a48;
+  --bs-rare: #e166a6;
+  --bs-clay: #e0683b;
+
+  --bs-paper: #e9f3ec;
+  --bs-paper-dim: #8fb3a6;
+  --bs-paper-faint: #5e7c70;
+
+  --bs-r: 16px;
+}

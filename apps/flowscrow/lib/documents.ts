@@ -3,7 +3,7 @@
 
 export const PARTIES = {
   steph: { full: 'Estefanía Ferrera', short: 'Steph', role: 'Founder & CEO, FlowBond Tech Inc.' },
-  russell: { full: 'Russell Herod', short: 'Russell', role: 'Early Co-founder — DANZ & FlowB' },
+  russell: { full: 'Russell Herod', short: 'Russell', role: 'Early Contributor — DANZ & FlowB' },
   deven: { full: 'Deven', short: 'Deven', role: 'Contributor' },
   entity: 'FlowBond Tech Inc.',
 };
@@ -22,7 +22,7 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
   russell: {
     title: 'Russell — your cover note and the agreement are below',
     paras: [
-      'Welcome, Russell. The cover note (my email), the Mutual Dissolution, Wind-Up and Release Agreement, and your Early Co-founder recognition are all below. Read it, and when you’re ready, verify with FBID and we sign together.',
+      'Welcome, Russell. The cover note and the full Mutual Dissolution, Wind-Up and Release Agreement are below. Read it, and when you’re ready, verify with FBID and we sign together.',
     ],
   },
   roman: {
@@ -79,7 +79,7 @@ export const FINALIZE_STEPS = [
   { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” log in with cryptokoh@gmail.com, and you’ll return here verified — that’s what unlocks signing. No password, ever.' },
   { n: 2, key: 'read', title: 'Read the cover note & the Agreement', detail: 'Read the cover note and the full Mutual Dissolution, Wind-Up and Release Agreement, including Exhibits 1–3. If any detail is wrong, tell Estefanía before you sign — she’s open to your review of the wording.' },
   { n: 3, key: 'sign-agreement', title: 'Sign the Agreement (DocuSign)', detail: 'Once verified, sign the Agreement — this also serves as your Consent to Voluntary Dissolution (Exhibit 1) and resignation. It’s executed and delivered by both Parties before any transfer, resignation, or Dissolution filing occurs (Section 5) — your obligations only arise after full execution.' },
-  { n: 4, key: 'sign-ack', title: 'Receive your Early Co-founder recognition', detail: 'Your recognition as an early co-founder of DANZ and FlowB lives in the separate Acknowledgment of Contribution (Document 2), stated without disparagement — yours to reference anywhere, unaffected by the Dissolution.' },
+  { n: 4, key: 'sign-ack', title: 'Receive your Acknowledgment of Contribution', detail: 'Because the Company is being dissolved, no founder title survives it. Your contribution to the early DANZ and FlowB workstreams is recognized in the separate Acknowledgment of Contribution (Document 2), stated without disparagement — yours to reference anywhere.' },
   { n: 5, key: 'transfer', title: 'Complete the Exhibit 2 transfers (Phase B)', detail: 'Only the Company-only items in Exhibit 2: domains (flowbond.tech, danz.now, flowb.me, pee.network) to Estefanía’s Namecheap “stepbysteph”; Mercury, Stripe, Coinbase; the former FlowBond Tech GitHub org; Telegram/Base/Farcaster; FlowBond social profiles. Wallet seeds & keys via secure channel only. Nothing personal, nothing outside scope.' },
   { n: 6, key: 'done', title: 'Dissolution filings complete (Phase C)', detail: 'Final federal and Texas franchise tax returns filed, Certificate of Account Status obtained from the Comptroller, then the Certificate of Termination filed with the Texas Secretary of State. Once that’s confirmed, the Dissolution and the mutual release take effect and escrow releases — tracked openly for you and every witness the whole way.' },
 ];
@@ -215,14 +215,14 @@ export const ACKNOWLEDGMENT = {
   title: 'Acknowledgment of Contribution',
   issuedBy: 'Estefanía Ferrera, on behalf of FlowBond Tech Inc.',
   recognitionOf: 'Russell Herod',
-  role: 'Early Co-founder — DANZ & FlowB',
+  role: 'Early Contributor — DANZ & FlowB',
   period: 'August 13, 2025 → March 30, 2026',
   scope: [
-    'Recognized as an early co-founder who contributed to the initial infrastructure of the DANZ and FlowB workstreams.',
-    'This restates the recognition in Section 2 of the Agreement, stated without any disparagement.',
+    'Recognized as an early contributor to the initial infrastructure of the DANZ and FlowB workstreams.',
+    'The Company is being dissolved and will cease to exist; no founder title survives it. This acknowledgment is stated without any disparagement.',
   ],
   acknowledgment:
-    'Estefanía Ferrera and FlowBond Tech Inc. recognize Russell Herod as an early co-founder of the DANZ and FlowB workstreams, and the contribution he made to their initial infrastructure. Russell is free to reference this recognition in his professional materials.',
+    'Estefanía Ferrera and FlowBond Tech Inc. recognize Russell Herod as an early contributor to the DANZ and FlowB workstreams, and the contribution he made to their initial infrastructure. Russell is free to reference this acknowledgment in his professional materials.',
   also: [
     {
       name: 'Roman',
@@ -237,13 +237,12 @@ export const ACKNOWLEDGMENT = {
     },
   ],
   scopeClarity:
-    'This acknowledgment restates the recognition in Section 2 and does not alter the Agreement. It confers no equity, ownership, or continuing claim beyond the terms of the Agreement.',
+    'This acknowledgment does not alter the Agreement. It confers no equity, ownership, or continuing claim beyond the terms of the Agreement.',
 };
 
 // "Where we stand today" — the transparent factual standing (per the real agreement).
 export const STANDING = [
   { k: 'What this is', v: 'Formal Dissolution of FlowBond Tech Inc.', tone: 'fact' as const },
-  { k: 'Recognition — Russell', v: 'Early Co-founder · DANZ & FlowB (Acknowledgment, Document 2)', tone: 'good' as const },
   { k: 'Scope', v: 'FlowBond / DANZ / FlowB only', tone: 'fact' as const },
   { k: 'Excluded', v: 'Harmonik Habitats + cryptocoatl + FlowBond HQ + personal assets', tone: 'fact' as const },
   { k: 'Order', v: 'Both sign first — transfers, then Dissolution filings (Section 5)', tone: 'good' as const },

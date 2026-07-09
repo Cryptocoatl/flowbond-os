@@ -1,0 +1,9 @@
+# Build artifacts & transient files — never needed in a deployment upload.
+# Vercel rebuilds from source, so excluding these speeds the upload and avoids
+# races on editor/temp files in sibling apps during monorepo deploys.
+**/.next
+**/.turbo
+**/*.tsbuildinfo
+**/*.tmp
+**/*.tmp.*
+**/.DS_Store

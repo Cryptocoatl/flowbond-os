@@ -426,7 +426,7 @@ function GuideChat() {
   function answer(text: string) {
     const t = text.toLowerCase();
     const hit = GUIDE_FAQ.find((f) => f.keys.some((k) => t.includes(k)));
-    return hit ? hit.a : 'I can help with: verifying FBID, signing, the transfers (Exhibit 3), what “Early Co-founder” means, why there’s no lawyer, and what happens after you sign. Tap a question below.';
+    return hit ? hit.a : 'I can help with: verifying FBID, signing, the transfers (Exhibit 3), and what happens after you sign. Tap a question below.';
   }
   function send(text: string) {
     const q = text.trim();
@@ -526,13 +526,11 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
       )}
 
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div className="v-eyebrow">Recognition, signed honestly</div>
-        <h1 className="v-h1">The work, <span className="v-grad">named to the record.</span></h1>
+        <div className="v-eyebrow">Sealed on the record</div>
+        <h1 className="v-h1">The agreement, <span className="v-grad">sealed on the record.</span></h1>
         <p className="v-lead" style={{ maxWidth: 660, margin: '6px auto 0' }}>
           Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Mutual Dissolution, Wind-Up and
-          Release Agreement and the Acknowledgment of Contribution — recognizing <b style={{ color: 'var(--v-ink)' }}>Russell</b> as an{' '}
-          <b className="gold">Early Co-founder</b> of DANZ &amp; FlowB and acknowledging <b style={{ color: 'var(--v-ink)' }}>Deven</b> —
-          alongside the real numbers, validated by cryptography and witnessed on the record.
+          Release Agreement — validated by cryptography and witnessed on the record.
         </p>
         {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>

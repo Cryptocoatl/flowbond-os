@@ -1,0 +1,57 @@
+<svg viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BAÑOSECO">
+  <defs>
+    <radialGradient id="bs-gold" cx="38%" cy="28%" r="80%">
+      <stop offset="0%"  stop-color="#FFE39A"/>
+      <stop offset="45%" stop-color="#F4C24A"/>
+      <stop offset="100%" stop-color="#A9761E"/>
+    </radialGradient>
+    <linearGradient id="bs-jade" x1="0" y1="1" x2="0.3" y2="0">
+      <stop offset="0%" stop-color="#15776E"/>
+      <stop offset="100%" stop-color="#7DE08A"/>
+    </linearGradient>
+    <filter id="bs-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- solar halo / rayos ancestrales -->
+  <g stroke="#F4C24A" stroke-width="3" stroke-linecap="round" opacity="0.55">
+    <line x1="100" y1="14" x2="100" y2="30"/>
+    <line x1="60"  y1="30" x2="70"  y2="42"/>
+    <line x1="140" y1="30" x2="130" y2="42"/>
+    <line x1="38"  y1="70" x2="52"  y2="76"/>
+    <line x1="162" y1="70" x2="148" y2="76"/>
+  </g>
+
+  <!-- montículo de oro (caca dorada): tiers apilados tipo espiral -->
+  <g stroke="#7A5414" stroke-width="2.5">
+    <ellipse cx="100" cy="172" rx="64" ry="22" fill="url(#bs-gold)"/>
+    <ellipse cx="100" cy="142" rx="52" ry="21" fill="url(#bs-gold)"/>
+    <ellipse cx="100" cy="115" rx="38" ry="19" fill="url(#bs-gold)"/>
+    <ellipse cx="100" cy="93"  rx="22" ry="14" fill="url(#bs-gold)"/>
+  </g>
+  <!-- costuras de espiral (lectura de "swirl") -->
+  <g fill="none" stroke="#B07E22" stroke-width="2" stroke-linecap="round" opacity="0.7">
+    <path d="M52 168 Q100 158 148 168"/>
+    <path d="M58 140 Q100 131 142 140"/>
+    <path d="M70 113 Q100 106 130 113"/>
+  </g>
+  <!-- glifo grabado (greca/escalonado) en la base -->
+  <path d="M74 178 h10 v-6 h10 v6 h10 v-6 h10 v6 h10" fill="none" stroke="#7A5414" stroke-width="2.5" stroke-linejoin="miter" opacity="0.8"/>
+
+  <!-- brote de vida saliendo del oro -->
+  <g filter="url(#bs-glow)">
+    <path d="M100 92 C100 76 100 64 100 50" fill="none" stroke="url(#bs-jade)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M100 64 C84 60 74 48 76 34 C92 36 102 50 100 64 Z" fill="url(#bs-jade)"/>
+    <path d="M100 56 C116 54 128 42 128 28 C112 28 100 42 100 56 Z" fill="url(#bs-jade)"/>
+  </g>
+
+  <!-- wordmark: BAÑO·S·ECO  (eco escondido dentro de seco) -->
+  <g font-family="'Bricolage Grotesque','Arial Black',sans-serif" font-weight="800" font-size="46" letter-spacing="-1">
+    <text x="190" y="118" fill="#F0E7D3">BAÑO</text>
+    <text x="190" y="170" fill="#8A7350">S</text>
+    <text x="214" y="170" fill="#7DE08A">ECO</text>
+  </g>
+  <text x="192" y="196" font-family="'Space Grotesk',monospace" font-size="13" letter-spacing="4" fill="#F4C24A">RED REGENERATIVA</text>
+</svg>
