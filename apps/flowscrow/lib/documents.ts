@@ -102,10 +102,10 @@ export const GUIDE_FAQ = [
 export const AGREEMENT = {
   title: 'Mutual Dissolution, Wind-Up and Release Agreement',
   subtitle: 'FlowBond Tech Inc. — a Texas corporation',
-  effective: 'June 26, 2026',
+  effective: 'July 9, 2026',
   docx: true,
   body: [
-    'This Mutual Dissolution, Wind-Up and Release Agreement (the “Agreement”) is made as of June 26, 2026 (the “Effective Date”), by and between Estefanía Ferrera, Founder and Chief Executive Officer (“Estefanía”), and Russell Alan Herod, also known as koH Russell Herod (“Russell”), being the founders and shareholders of FlowBond Tech Inc. Each is a “Party” and together the “Parties.”',
+    'This Mutual Dissolution, Wind-Up and Release Agreement (the “Agreement”) is made as of July 9, 2026 (the “Effective Date”), by and between Estefanía Ferrera, Founder and Chief Executive Officer (“Estefanía”), and Russell Alan Herod, also known as koH Russell Herod (“Russell”), being the founders and shareholders of FlowBond Tech Inc. Each is a “Party” and together the “Parties.”',
     'Recitals',
     'A. FlowBond Tech Inc. (the “Company”) is a Texas for-profit corporation (SOS File No. 806178572; EIN 39-3913669; formed August 20, 2025; principal office 5900 Balcones Drive #15266, Austin, TX 78731).',
     'B. The Parties have jointly and voluntarily decided to dissolve and wind up the Company and to separate cleanly and permanently.',

@@ -538,7 +538,7 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
       </div>
 
       <div className="v-card v-noprint" style={{ marginBottom: 18, textAlign: 'center', fontSize: 13, color: 'var(--v-dim)' }}>
-        📄 This is the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement (June 26, 2026)</b>.
+        📄 This is the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement (July 9, 2026)</b>.
         If you opened this earlier, refresh the page to load the latest before you review or sign.
       </div>
 
