@@ -1,12 +1,11 @@
 'use client';
 
-import { browserClient } from '@/lib/supabase';
-
 /**
  * Anonymous journey analytics for /openflow. No PII — event name, small jsonb
  * detail, truncated UA hint. Writes go through the SECURITY DEFINER RPC
  * `openflow_log_event` (table is RLS deny-by-default). Fire-and-forget:
- * analytics must never block or break the experience.
+ * analytics must never block or break the experience. The Supabase client is
+ * dynamic-imported on first use so it stays out of the critical render path.
  */
 
 export type OpenflowEvent =
@@ -17,7 +16,8 @@ export type OpenflowEvent =
   | 'pdf_downloaded'
   | 'closing_viewed';
 
-let sb: ReturnType<typeof browserClient> | null = null;
+type Rpc = { rpc: (fn: string, args: Record<string, unknown>) => PromiseLike<unknown> };
+let sbPromise: Promise<Rpc> | null = null;
 const SEEN_KEY = 'openflow:logged';
 
 function seen(): Set<string> {
@@ -42,13 +42,15 @@ export function logOpenflow(
       s.add(key);
       sessionStorage.setItem(SEEN_KEY, JSON.stringify([...s]));
     }
-    sb ??= browserClient();
-    void sb
-      .rpc('openflow_log_event', {
-        p_event: event,
-        p_detail: detail,
-        p_ua: navigator.userAgent.slice(0, 160),
-      })
+    sbPromise ??= import('@/lib/supabase').then((m) => m.browserClient() as unknown as Rpc);
+    void sbPromise
+      .then((sb) =>
+        sb.rpc('openflow_log_event', {
+          p_event: event,
+          p_detail: detail,
+          p_ua: navigator.userAgent.slice(0, 160),
+        }),
+      )
       .then(
         () => undefined,
         () => undefined,

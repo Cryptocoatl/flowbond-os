@@ -33,6 +33,8 @@ function load(): Journey {
 }
 
 export default function OpenFlowExperience({ book, pdfUrl }: { book: Book; pdfUrl: string }) {
+  // SSR/first paint always shows the gate (contentful paint before hydration);
+  // a stored journey is restored in the mount effect below.
   const [ready, setReady] = useState(false);
   const [journey, setJourney] = useState<Journey>({ unlocked: false, act: 'gate', part: 1 });
 
@@ -60,9 +62,7 @@ export default function OpenFlowExperience({ book, pdfUrl }: { book: Book; pdfUr
     setJourney((j) => ({ ...j, act, part: part ?? j.part, unlocked: j.unlocked || act !== 'gate' }));
   }, []);
 
-  if (!ready) return null;
-
-  switch (journey.act) {
+  switch (ready ? journey.act : 'gate') {
     case 'gate':
       return <GateAct onUnlocked={() => go('welcome')} />;
     case 'welcome':
