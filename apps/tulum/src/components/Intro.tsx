@@ -1,19 +1,17 @@
 "use client";
-// Intro — el jaguar despierta. Awakening plays at var(--eye-x/--eye-y)
-// (tokens.css is the single source of truth). Tap skips; auto-dismiss 5.8s;
-// prefers-reduced-motion never mounts it (CSS #intro{display:none} backstops SSR).
-import { useEffect, useState } from "react";
+// Intro — la apertura épica. Steph's animated opening video WITH sound.
+// Browsers only allow audio after a user gesture, so the flow is:
+//   gate ("toca para entrar") → tap → video plays with sound → ended/tap → site.
+// "saltar intro" goes straight in; prefers-reduced-motion never mounts it
+// (CSS #intro{display:none} backstops SSR).
+import { useEffect, useRef, useState } from "react";
 
 export default function Intro() {
-  const [phase, setPhase] = useState<"play" | "done" | "gone">("play");
+  const [phase, setPhase] = useState<"gate" | "playing" | "done" | "gone">("gate");
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPhase("gone");
-      return;
-    }
-    const t = setTimeout(() => setPhase((p) => (p === "play" ? "done" : p)), 5800);
-    return () => clearTimeout(t);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) setPhase("gone");
   }, []);
 
   useEffect(() => {
@@ -24,25 +22,46 @@ export default function Intro() {
 
   if (phase === "gone") return null;
 
+  function enter() {
+    const v = videoRef.current;
+    if (!v) { setPhase("done"); return; }
+    setPhase("playing");
+    v.muted = false;
+    v.volume = 1;
+    // the tap is the gesture that unlocks audio; if playback still fails, enter anyway
+    v.play().catch(() => setPhase("done"));
+  }
+
   return (
     <div
       id="intro"
       className={phase === "done" ? "done" : undefined}
-      aria-hidden="true"
-      title="Toca para entrar"
-      onClick={() => setPhase("done")}
+      title={phase === "gate" ? "Toca para entrar" : "Toca para saltar"}
+      onClick={() => (phase === "gate" ? enter() : setPhase("done"))}
     >
-      <div className="coin-stage">
-        <div className="c coin-el" />
-        <div className="sweep" />
-        <div className="awaken-eye" />
-        <div className="pulse p1" />
-        <div className="pulse p2" />
+      <div className="intro-stage">
+        <video
+          ref={videoRef}
+          src="/assets/intro-opening.mp4"
+          poster="/assets/intro-poster.webp"
+          preload="auto"
+          playsInline
+          onEnded={() => setPhase("done")}
+          onError={() => setPhase("done")}
+        />
       </div>
-      <div className="intro-word">
-        <span className="disp">El jaguar despierta</span>
-        <span className="skip">toca para entrar</span>
-      </div>
+      {phase === "gate" && (
+        <div className="intro-word">
+          <span className="disp">El jaguar despierta</span>
+          <span className="skip">toca para entrar · con sonido 🔊</span>
+          <button
+            className="intro-skip"
+            onClick={(e) => { e.stopPropagation(); setPhase("done"); }}
+          >
+            saltar intro
+          </button>
+        </div>
+      )}
     </div>
   );
 }

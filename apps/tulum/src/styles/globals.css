@@ -24,51 +24,20 @@ button{font-family:var(--body);cursor:pointer}
 img{max-width:100%;display:block}
 .wordmark{font-family:var(--body);font-weight:600;letter-spacing:.42em;color:var(--crema);text-transform:uppercase;padding-left:.42em}
 
-/* ================= INTRO — el jaguar despierta ================= */
+/* ================= INTRO — la apertura épica (video con sonido) ================= */
 #intro{position:fixed;inset:0;z-index:100;background:#0A1810;display:flex;align-items:center;justify-content:center;
   transition:opacity 1.3s ease .1s;cursor:pointer}
 #intro.done{opacity:0;pointer-events:none}
-.coin-stage{position:relative;width:min(66vw,440px);aspect-ratio:1}
-/* coin starts painted (opacity 1, near-black brightness) instead of fading
-   from opacity 0 — visually the same awakening, but the browser records the
-   first contentful paint of the coin immediately (LCP) */
-.coin-stage .c{position:absolute;inset:0;opacity:1;filter:brightness(.13) saturate(.5);
-  animation:coinWake 4s ease .3s forwards}
-@keyframes coinWake{
-  0%{opacity:1;filter:brightness(.13) saturate(.5)}
-  26%{opacity:1;filter:brightness(.13) saturate(.5)}
-  70%{filter:brightness(.18) saturate(.6)}
-  100%{opacity:1;filter:brightness(1) saturate(1)}}
-.sweep{position:absolute;inset:0;border-radius:50%;overflow:hidden;opacity:0;
-  animation:sweepIn 1.6s ease 2.9s forwards}
-.sweep::before{content:'';position:absolute;top:-20%;left:-60%;width:45%;height:140%;
-  background:linear-gradient(100deg,transparent,rgba(246,220,158,.55) 50%,transparent);
-  transform:rotate(8deg);animation:sweepMove 1.6s cubic-bezier(.4,0,.3,1) 2.9s forwards}
-@keyframes sweepIn{0%,12%{opacity:0}20%{opacity:1}90%{opacity:1}100%{opacity:0}}
-@keyframes sweepMove{to{left:120%}}
-.awaken-eye{position:absolute;left:var(--eye-x);top:var(--eye-y);width:13.5%;aspect-ratio:1.65/1;
-  transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(ellipse at center, var(--oro-hi) 0%, var(--oro) 42%, rgba(233,198,122,.25) 66%, transparent 78%);
-  box-shadow:0 0 30px rgba(246,220,158,.95), 0 0 80px rgba(233,198,122,.55);
-  opacity:0;animation:eyeOpen 2s cubic-bezier(.6,0,.25,1) 1.4s forwards}
-@keyframes eyeOpen{
-  0%{opacity:0;transform:translate(-50%,-50%) scaleY(.05)}
-  26%{opacity:.95;transform:translate(-50%,-50%) scaleY(1)}
-  38%{transform:translate(-50%,-50%) scaleY(.1)}
-  50%{transform:translate(-50%,-50%) scaleY(1)}
-  100%{opacity:1;transform:translate(-50%,-50%) scaleY(1)}}
-.awaken-eye::after{content:'';position:absolute;left:50%;top:50%;width:15%;height:82%;
-  transform:translate(-50%,-50%);background:var(--bronce-d);border-radius:50%}
-.pulse{position:absolute;left:var(--eye-x);top:var(--eye-y);width:11%;aspect-ratio:1;border-radius:50%;
-  border:1px solid var(--oro-hi);transform:translate(-50%,-50%) scale(.4);opacity:0}
-.pulse.p1{animation:pulseOut 1.9s ease-out 3.2s forwards}
-.pulse.p2{animation:pulseOut 1.9s ease-out 3.55s forwards}
-@keyframes pulseOut{0%{opacity:.9;transform:translate(-50%,-50%) scale(.4)}
-  100%{opacity:0;transform:translate(-50%,-50%) scale(7.5)}}
-.intro-word{position:absolute;bottom:11vh;left:50%;transform:translateX(-50%);text-align:center;
-  opacity:0;animation:wordIn 1.4s ease 4s forwards;white-space:nowrap}
+.intro-stage{position:relative;width:min(92vw,72vh,720px);aspect-ratio:1;border-radius:12px;overflow:hidden;
+  box-shadow:0 0 90px rgba(246,220,158,.18)}
+.intro-stage video{width:100%;height:100%;object-fit:cover;display:block;background:#0A1810}
+.intro-word{position:absolute;bottom:8vh;left:50%;transform:translateX(-50%);text-align:center;
+  opacity:0;animation:wordIn 1.2s ease .6s forwards;white-space:nowrap}
 .intro-word .disp{font-size:clamp(15px,2.2vw,22px);letter-spacing:.4em;text-transform:uppercase;color:var(--oro);padding-left:.4em}
 .intro-word .skip{display:block;margin-top:10px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--niebla)}
+.intro-skip{margin-top:16px;background:none;border:1px solid var(--line);color:var(--niebla);border-radius:20px;
+  padding:7px 18px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;transition:.25s}
+.intro-skip:hover{border-color:var(--oro);color:var(--oro)}
 @keyframes wordIn{to{opacity:1}}
 
 /* ================= nav ================= */
