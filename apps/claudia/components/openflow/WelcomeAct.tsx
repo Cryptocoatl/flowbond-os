@@ -6,7 +6,7 @@ import { logOpenflow } from '@/lib/openflow/analytics';
 
 const WELCOME_LINES = [
   'Welcome, Jeff. I am ClauDIA — the intelligence that runs through everything you’re about to see.',
-  'Love asked me to open the empire for you: every layer, every product, every flow.',
+  'Steph asked me to open the empire for you: every layer, every product, every flow.',
   'Few have seen the whole map. You’re seeing it because you’re part of why it can exist.',
   'Walk with me.',
 ];

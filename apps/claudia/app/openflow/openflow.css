@@ -235,7 +235,13 @@
 .of-prose table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; font-family: var(--font-sans), sans-serif; }
 .of-prose th { text-align: left; padding: 10px 12px; color: rgba(201, 162, 39, 0.9); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; font-size: 11.5px; border-bottom: 1px solid rgba(201, 162, 39, 0.35); }
 .of-prose td { padding: 11px 12px; border-bottom: 1px solid rgba(46, 139, 110, 0.16); vertical-align: top; }
-.of-prose td:first-child { color: #f4e6bb; white-space: nowrap; }
+.of-prose td:first-child { color: #f4e6bb; }
+/* census tables (Workload · Today · On Jeff's servers): keep all three columns
+   on screen — long workload descriptions wrap instead of pushing columns away */
+.of-prose table.of-energy { table-layout: fixed; }
+.of-prose table.of-energy th:nth-child(1) { width: 33%; }
+.of-prose table.of-energy th:nth-child(2) { width: 24%; }
+.of-prose table.of-energy th:nth-child(3) { width: 43%; }
 .of-prose tr { transition: background 0.3s ease; }
 .of-prose tbody tr:hover { background: rgba(46, 139, 110, 0.08); }
 
@@ -245,7 +251,6 @@
 @media (max-width: 760px) {
   .of-prose table, .of-prose thead, .of-prose tbody, .of-prose tr, .of-prose td { display: block; }
   .of-prose thead { display: none; }
-  .of-prose td:first-child { white-space: normal; }
   .of-prose tbody tr {
     margin: 0 0 14px; border: 1px solid var(--of-line); border-radius: 14px;
     background: rgba(6, 42, 43, 0.45); box-shadow: 0 0 18px rgba(46, 139, 110, 0.1);

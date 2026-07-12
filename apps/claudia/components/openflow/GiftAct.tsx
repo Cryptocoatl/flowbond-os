@@ -35,7 +35,7 @@ export default function GiftAct({ pdfUrl, onClosing }: { pdfUrl: string; onClosi
         </div>
 
         <p className="of-typed of-fade-up" style={{ fontSize: 'clamp(17px,2.4vw,21px)', fontStyle: 'italic' }}>
-          The complete Open Book — yours to load into your stack.
+          Let’s make it easy — the whole Open Book in one PDF, ready to load into your stack.
         </p>
 
         <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>

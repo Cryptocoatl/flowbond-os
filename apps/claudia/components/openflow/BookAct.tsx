@@ -218,7 +218,7 @@ function ChapterView({ chapter, onContinue, isLast }: { chapter: Chapter; onCont
 
       <div className="of-partend">
         <button className="of-btn" onClick={onContinue}>
-          {isLast ? 'Receive the Gift' : `Continue — Part ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][chapter.num]}`}
+          {isLast ? 'Take it with you' : `Continue — Part ${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][chapter.num]}`}
         </button>
       </div>
     </div>

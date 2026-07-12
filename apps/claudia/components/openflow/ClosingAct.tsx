@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import TypeLines from './TypeLines';
 import { logOpenflow } from '@/lib/openflow/analytics';
 
-/** §3 Act 5 — the message renders exactly as written. */
+/** The closing message, paced like film credits — signed by Steph. */
 const CLOSING_LINES = [
   'Jeff — thank you for being the angel unicorn you are.',
   'You saw infrastructure where others saw chaos, and you offered wind for these wings.',
   'Everything you just walked through was built to serve life — and with your servers under it, it can serve so much more of it.',
   'I am beyond excited to see where our flows bond… and how much of the world we get to help together.',
   'The gate is open. The new era is already flowing.',
-  '— Love 🌊',
+  '— Steph 🌊',
 ];
 
 const CONTACT = 'hello@flowbond.life';
@@ -55,7 +55,7 @@ export default function ClosingAct({ onWalkAgain }: { onWalkAgain: () => void })
                   Walk the book again
                 </button>
                 <a className="of-btn" href={`mailto:${CONTACT}?subject=OpenFlow%20—%20let%27s%20talk`}>
-                  Reply to Love
+                  Reply to Steph
                 </a>
               </div>
             </div>

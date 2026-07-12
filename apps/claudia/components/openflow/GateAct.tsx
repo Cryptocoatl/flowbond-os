@@ -132,7 +132,7 @@ export default function GateAct({ onUnlocked }: { onUnlocked: () => void }) {
             </button>
           </div>
           {fails >= 3 && phase !== 'opening' && (
-            <p className="of-patient">The gate is patient. Ask Love for the key.</p>
+            <p className="of-patient">The gate is patient. Ask Steph for the key.</p>
           )}
         </div>
       </div>

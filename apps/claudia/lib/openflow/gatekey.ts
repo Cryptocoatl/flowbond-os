@@ -3,16 +3,16 @@
 /**
  * Gate key check: client hashes the entered passphrase with SHA-256 and
  * compares against NEXT_PUBLIC_OPENFLOW_KEY_HASH (hex). The passphrase itself
- * never ships in the bundle — only its hash.
+ * never ships in the bundle or the repo — only its hash.
  *
- * PLACEHOLDER (for /test only): hash of `flows-bond-2026`.
- * ⚠️ Set the real hash in the deploy env BEFORE sharing with Jeff:
- *   NEXT_PUBLIC_OPENFLOW_KEY_HASH=$(echo -n '<real passphrase>' | shasum -a 256 | cut -d' ' -f1)
+ * Default hash below = the passphrase Steph set on 2026-07-11 (she holds it).
+ * To rotate: NEXT_PUBLIC_OPENFLOW_KEY_HASH=$(echo -n '<new passphrase>' | shasum -a 256 | cut -d' ' -f1)
+ * in the Vercel env (Production) overrides this default; or update it here + redeploy.
  */
-const PLACEHOLDER_HASH = 'cbc6b2d89be038f4104967226a3488e5ee5ae1796d808a3cf4c8d3dbd472fab8';
+const DEFAULT_HASH = '6b4ce56dde28a5a512a220da1c71e42e5182f1614b9651f6cba7d04b4578a3c6';
 
 export const OPENFLOW_KEY_HASH = (
-  process.env.NEXT_PUBLIC_OPENFLOW_KEY_HASH ?? PLACEHOLDER_HASH
+  process.env.NEXT_PUBLIC_OPENFLOW_KEY_HASH ?? DEFAULT_HASH
 ).toLowerCase();
 
 export async function sha256Hex(text: string): Promise<string> {
