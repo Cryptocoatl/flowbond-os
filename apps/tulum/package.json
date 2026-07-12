@@ -1,0 +1,48 @@
+{
+  "name": "@flowbond/tulum",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3040",
+    "build": "next build",
+    "start": "next start --port 3040",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name tulum-flowme"
+  },
+  "dependencies": {
+    "@near-wallet-selector/core": "^8.9.0",
+    "@near-wallet-selector/here-wallet": "^8.9.0",
+    "@near-wallet-selector/meteor-wallet": "^8.9.0",
+    "@near-wallet-selector/modal-ui": "^8.9.0",
+    "@near-wallet-selector/my-near-wallet": "^8.9.0",
+    "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-react": "^0.15.35",
+    "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@solana/web3.js": "^1.95.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "@tanstack/react-query": "^5.60.0",
+    "@wagmi/core": "^2.16.0",
+    "buffer": "^6.0.3",
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.21.0",
+    "wagmi": "^2.14.0"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "bs58": "^6.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.3.0",
+    "tweetnacl": "^1.0.3",
+    "typescript": "^5.6.0",
+    "vercel": "^39.0.0",
+    "wrangler": "^3.90.0"
+  }
+}

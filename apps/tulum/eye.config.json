@@ -1,0 +1,5 @@
+{
+  "eye": { "x": "35.1%", "y": "50.1%" },
+  "asset": "public/tulum-coin.webp",
+  "note": "Calibrated values live in src/styles/tokens.css (--eye-x/--eye-y) — the single source of truth. Re-run eye-calibrator.html only if the coin asset changes."
+}

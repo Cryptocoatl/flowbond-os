@@ -1,0 +1,16 @@
+:root{
+  /* eye — CALIBRATED via eye-calibrator.html (single source of truth).
+     Locked in the v4 prototype; nothing else positions the eye. */
+  --eye-x: 35.1%;
+  --eye-y: 50.1%;
+  /* palette sampled from TulumCoin_Logo_Last_.png */
+  --selva:#132A1A; --jungla:#1C3B25; --verde-bg:#28502F; --hoja:#33613C;
+  --oro-hi:#F6DC9E; --oro:#E9C67A; --oro-mid:#C9974C; --bronce:#5A3611; --bronce-d:#3A2208;
+  --crema:#F5E5C0; --niebla:#9CBBA3; --helecho:#40684A;
+  --mar:#00BFFF; --mar-d:#0E3A4E; --mar-deep:#0A2836;
+  --verde:#6FCF8E; --line:rgba(245,229,192,.15);
+  --coin:url('/tulum-coin.webp');
+}
+/* same coin, 560px encode — phones render it ≤340px, keeps LCP lean */
+@media(max-width:900px){:root{--coin:url('/tulum-coin-sm.webp')}}
+.coin-el{background:var(--coin) center/contain no-repeat}
