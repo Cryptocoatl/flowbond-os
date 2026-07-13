@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next'
+import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@flowbond/security'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
@@ -9,4 +11,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSecurity(nextConfig)

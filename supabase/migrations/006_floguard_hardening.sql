@@ -1,3 +1,8 @@
+-- ⚠️  SUPERSEDED by 009_floguard_hardening.sql (2026-07-13, round 3).
+--    DRY-RUN template only — never applied to any project.
+--    FG-022 (flowbond_role_rank) + FG-023 (banoseco deny) live in 009.
+--    FG-020 column-constraint guidance below is still valid (reference only).
+--    Naming collision with 006_tianguis_escrow.sql tracked as FG-045.
 -- ════════════════════════════════════════════════════════════════════════
 --  006_floguard_hardening.sql  —  FloGuard safe DB fixes (canonical project
 --  fgsrcxxccdjqyrpkitmk). Authored by ClaudIA's FloGuard operator.
