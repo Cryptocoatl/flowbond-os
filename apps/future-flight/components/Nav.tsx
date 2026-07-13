@@ -5,6 +5,7 @@ import { Monogram } from './brand/Marks'
 
 const LINKS = [
   { href: '#experience', label: 'Experience' },
+  { href: '#artists', label: 'Artists' },
   { href: '#tickets', label: 'Tickets' },
   { href: '#sponsors', label: 'Sponsors' },
   { href: '#passport', label: 'Passport' },

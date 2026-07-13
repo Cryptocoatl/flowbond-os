@@ -142,6 +142,32 @@ section { position: relative; }
 .step h3 { font-size: 16px; letter-spacing: .12em; text-transform: uppercase; margin: 14px 0 10px; }
 .step p { font-size: 13.5px; color: var(--muted); }
 
+/* ---------- artists aboard ---------- */
+.artists-sub { text-align: center; color: var(--muted); font-size: 14px; letter-spacing: .04em;
+  max-width: 620px; margin: -32px auto 46px; }
+.artists { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+@media (max-width: 860px) { .artists { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px) { .artists { grid-template-columns: 1fr; } }
+.artist { display: flex; flex-direction: column; align-items: center; text-align: center;
+  background: linear-gradient(180deg, var(--charcoal), #141416); border: 1px solid var(--hair);
+  border-radius: 18px; padding: 32px 22px; transition: transform .5s var(--ease), border-color .5s, box-shadow .5s; }
+.artist:hover { transform: translateY(-6px); border-color: rgba(212,175,55,.5);
+  box-shadow: 0 40px 80px -44px rgba(212,175,55,.4); }
+.artist-av { width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--gold); color: var(--gold); font-family: var(--disp); font-size: 26px; letter-spacing: .06em;
+  background: radial-gradient(circle at 50% 35%, rgba(212,175,55,.16), transparent 70%);
+  box-shadow: inset 0 0 22px -6px rgba(212,175,55,.5), 0 0 40px -14px rgba(255,186,0,.45);
+  overflow: hidden; margin-bottom: 18px; }
+.artist-av img { width: 100%; height: 100%; object-fit: cover; }
+.artist-name { font-family: var(--disp); font-size: 15px; letter-spacing: .1em; }
+.artist-tag { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin-top: 7px; }
+
+.artists-collab { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  margin-top: 44px; padding-top: 34px; border-top: 1px solid var(--hair); }
+.artists-collab .cc-label { font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: var(--faint); }
+.artists-collab .cc-name { font-family: var(--disp); font-size: 22px; letter-spacing: .14em; color: var(--gold); }
+.artists-collab .cc-note { font-size: 12px; color: var(--muted); letter-spacing: .04em; max-width: 460px; }
+
 /* ---------- tiers ---------- */
 .tiers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 @media (max-width: 960px) { .tiers { grid-template-columns: repeat(2, 1fr); } }

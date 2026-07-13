@@ -38,6 +38,21 @@ export interface ExperienceStep {
   body: string
 }
 
+export interface Artist {
+  name: string
+  tag: string
+  /** optional portrait in /public/brand/artists/*; falls back to initials */
+  photo?: string
+}
+
+export interface ArtistsSection {
+  eyebrow: string
+  heading: string
+  subtitle: string
+  members: Artist[]
+  collab: { label: string; name: string; note: string }
+}
+
 export interface TicketTier {
   name: string
   seats: number
@@ -117,6 +132,7 @@ export interface LandingContent {
   pillars: Pillar[]
   band: string
   experience: { eyebrow: string; heading: string; steps: ExperienceStep[] }
+  artists: ArtistsSection
   tickets: {
     eyebrow: string
     heading: string
@@ -163,7 +179,7 @@ export const defaultContent: LandingContent = {
     departISO: '2026-12-08T09:30:00',
   },
   routeStrip: [
-    { label: 'Miami · BitBasel', dates: 'Dec 5–7' },
+    { label: 'Miami Art Week', dates: 'Dec 5–7' },
     { label: 'Future Flight', dates: 'Dec 8', highlight: true },
     { label: 'Tulum Innovation Fest', dates: 'Dec 9–12' },
   ],
@@ -186,6 +202,22 @@ export const defaultContent: LandingContent = {
       { n: '05', title: 'Arrival in Tulum', body: 'VIP transfers, Mayan welcome, media moment and arrival ceremony.' },
       { n: '06', title: 'The Opening Celebration', body: 'Sunset ceremony, live music, community dinner — the future begins.' },
     ],
+  },
+  artists: {
+    eyebrow: 'Artists Aboard',
+    heading: 'The Lunar Artists.',
+    subtitle: 'From the Miami × Tulum art × crypto family — aboard the first flight.',
+    members: [
+      { name: 'Steph Ferrera', tag: 'Founder · Lunar Artist' },
+      { name: 'Alejandro Glatt', tag: 'Lunar Artist' },
+      { name: 'Scott Page', tag: 'Lunar Artist' },
+      { name: 'Isla Moon', tag: 'Lunar Artist' },
+    ],
+    collab: {
+      label: 'In collaboration with',
+      name: 'BitBasel',
+      note: 'Miami Art Week partner — expanded artist formats wired on request.',
+    },
   },
   tickets: {
     eyebrow: 'Tickets & Memberships',

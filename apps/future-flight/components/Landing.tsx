@@ -4,6 +4,7 @@ import { Nav } from '@/components/Nav'
 import { Hero } from '@/components/Hero'
 import { Pillars } from '@/components/Pillars'
 import { ExperienceTimeline } from '@/components/ExperienceTimeline'
+import { ArtistsAboard } from '@/components/ArtistsAboard'
 import { Tiers } from '@/components/Tiers'
 import { Sponsors } from '@/components/Sponsors'
 import { FundingTiers } from '@/components/FundingTiers'
@@ -34,6 +35,7 @@ export function Landing({ content = defaultContent }: { content?: LandingContent
         heading={c.experience.heading}
         steps={c.experience.steps}
       />
+      <ArtistsAboard {...c.artists} />
       <Tiers
         eyebrow={c.tickets.eyebrow}
         heading={c.tickets.heading}
