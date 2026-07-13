@@ -12,6 +12,7 @@
   "dependencies": {
     "@flowbond/ai": "workspace:*",
     "@flowbond/auth": "workspace:*",
+    "@flowbond/security": "workspace:*",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "mapbox-gl": "^3.9.0",

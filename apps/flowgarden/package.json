@@ -14,6 +14,7 @@
     "@flowbond/auth": "workspace:*",
     "@flowbond/core": "workspace:*",
     "@flowbond/db": "workspace:*",
+    "@flowbond/security": "workspace:*",
     "@flowbond/ui": "workspace:*",
     "@reown/appkit": "^1.8.20",
     "@reown/appkit-adapter-solana": "^1.8.20",

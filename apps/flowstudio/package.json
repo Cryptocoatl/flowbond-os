@@ -14,6 +14,7 @@
   "dependencies": {
     "@fal-ai/client": "^1.6.0",
     "@flowbond/auth": "workspace:*",
+    "@flowbond/security": "workspace:*",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
     "next": "^15.2.1",
