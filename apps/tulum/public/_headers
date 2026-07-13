@@ -1,0 +1,6 @@
+# Media served directly by Pages (excluded from the worker in _routes.json).
+# Long-cache so Cloudflare's edge caches them — range/206 seeking (needed for the
+# scroll-scrubbed film) is only served from cache, so this is what makes it work.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  Accept-Ranges: bytes

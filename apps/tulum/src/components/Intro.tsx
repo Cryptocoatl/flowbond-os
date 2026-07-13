@@ -1,9 +1,10 @@
 "use client";
-// Intro — la apertura épica. Steph's animated opening video WITH sound.
-// Browsers only allow audio after a user gesture, so the flow is:
-//   gate ("toca para entrar") → tap → video plays with sound → ended/tap → site.
-// "saltar intro" goes straight in; prefers-reduced-motion never mounts it
-// (CSS #intro{display:none} backstops SSR).
+// Intro — la apertura épica. Steph's golden-coin film opens OVER living Tulum
+// (no black box): a regenerative-Tulum still breathes behind it while the coin
+// floats in front via screen-blend (its black drops out). Tap to enter plays it
+// WITH sound, then the whole thing pushes through into the site.
+//   gate ("toca para entrar") → tap → coin plays with sound → ended/tap → site.
+// prefers-reduced-motion never mounts it (CSS #intro{display:none} backstops SSR).
 import { useEffect, useRef, useState } from "react";
 
 export default function Intro() {
@@ -39,11 +40,16 @@ export default function Intro() {
       title={phase === "gate" ? "Toca para entrar" : "Toca para saltar"}
       onClick={() => (phase === "gate" ? enter() : setPhase("done"))}
     >
+      {/* living Tulum behind the coin — no black background */}
+      <div className="intro-bg" aria-hidden="true">
+        <div className="intro-bg-img" />
+        <div className="intro-bg-tint" />
+      </div>
       <div className="intro-stage">
         <video
           ref={videoRef}
+          className="intro-coin"
           src="/assets/intro-opening.mp4"
-          poster="/assets/intro-poster.webp"
           preload="auto"
           playsInline
           onEnded={() => setPhase("done")}

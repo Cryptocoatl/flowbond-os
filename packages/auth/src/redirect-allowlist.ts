@@ -39,6 +39,8 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://www.reciprociudad.lat', path: '/auth/callback' },         // reciprociudad (www)
   { origin: 'https://chords.flowme.one', path: '/' },                          // flowchords (static SPA, hash session)
   { origin: 'https://voces.flowme.one', path: '/admin' },                      // voces para el alma (static admin, hash session)
+  { origin: 'https://tulum.flowme.one', path: '/' },                           // tulumcoin (magic-link fallback, hash session)
+  { origin: 'https://tulum.flowme.one', path: '/admin' },                      // tulumcoin El Templo admin
   // ---- local development ----
   { origin: 'http://localhost:5173', path: '/proveedores/callback' }, // brandmark-web (vite dev)
   { origin: 'http://localhost:8080', path: '/proveedores/callback' }, // brandmark-web (vite dev alt)
@@ -55,6 +57,8 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'http://localhost:3012', path: '/auth/callback' },     // grantflow
   { origin: 'http://localhost:3015', path: '/auth/callback' },     // reciprociudad
   { origin: 'http://localhost:5173', path: '/' },                  // flowchords (vite dev)
+  { origin: 'http://localhost:3040', path: '/' },                  // tulumcoin (next dev)
+  { origin: 'http://localhost:3040', path: '/admin' },             // tulumcoin admin (next dev)
 ])
 
 /** True only if `raw` exactly matches an allowed (origin, pathname) pair. */

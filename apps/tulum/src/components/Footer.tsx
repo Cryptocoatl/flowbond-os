@@ -6,7 +6,13 @@ export default function Footer() {
         <span className="wordmark">Tulum Coin</span>
       </a>
       <div className="brands">REFI TULUM · PETGAS · XELVA · TULUM CIRCULA · TULUMGO · TIF 2026</div>
-      <div>tulum.flowme.one · Guardianes de la Naturaleza 💚 · FBID soulbound — nunca custodiamos tus fondos</div>
+      <div className="f-meta">
+        <span>tulum.flowme.one · Guardianes de la Naturaleza 💚 · FBID soulbound — nunca custodiamos tus fondos</span>
+        <a className="f-flowbond" href="https://flowbond.life" target="_blank" rel="noopener noreferrer">
+          <span className="fb-mark" aria-hidden="true">◈</span>
+          Desarrollado por <b>FlowBond</b>
+        </a>
+      </div>
     </footer>
   );
 }

@@ -1,7 +1,7 @@
 import Intro from "@/components/Intro";
 import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
-import StackBand from "@/components/StackBand";
+import ImmersiveScroll from "@/components/ImmersiveScroll";
 import TokenBand from "@/components/TokenBand";
 import Ecosystem from "@/components/Ecosystem";
 import Refi from "@/components/Refi";
@@ -18,7 +18,7 @@ export default function Page() {
       <Intro />
       <Nav />
       <Hero />
-      <StackBand />
+      <ImmersiveScroll />
       <TokenBand />
       <Ecosystem />
       <Refi />

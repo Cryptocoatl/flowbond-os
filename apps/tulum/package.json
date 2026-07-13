@@ -8,7 +8,7 @@
     "start": "next start --port 3040",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:build": "npx @cloudflare/next-on-pages && node scripts/patch-routes.mjs",
     "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name tulum-flowme"
   },
   "dependencies": {
