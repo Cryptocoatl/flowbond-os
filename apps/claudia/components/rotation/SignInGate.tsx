@@ -13,7 +13,9 @@ export default function SignInGate() {
           Primera cerradura: tu sesión FlowBond.
         </p>
         <button
-          onClick={() => hubRedirect('claudia', `${window.location.origin}/auth/callback?next=/rotation`)}
+          onClick={() => {
+            window.location.href = hubRedirect('claudia', `${window.location.origin}/auth/callback`, '/rotation');
+          }}
           className="w-full rounded-xl bg-amber-400/90 text-slate-950 font-medium py-2.5 hover:bg-amber-300 transition"
         >
           Entrar con FBID
