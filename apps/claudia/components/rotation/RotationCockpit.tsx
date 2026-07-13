@@ -17,10 +17,37 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { browserClient } from '../../lib/supabase';
-import {
-  ROTATION_PLAN, PARKED, SESSION_TITLES, STEP_LABEL, ALL_STEPS,
-  rotateCmd, type RotationItem, type StepId,
-} from '../../lib/rotation/plan';
+import type { StepId } from '../../lib/rotation/plan';
+
+// The PLAN never ships in this (public) client bundle — it arrives as props
+// from the server component, which only renders us after all three locks.
+export interface CockpitItem {
+  id: string;
+  session: number;
+  project: string;
+  key: string;
+  provider: string;
+  providerUrl: string;
+  steps: StepId[];
+  deploy?: string[];
+  verify?: string;
+  warn?: string;
+  selfGenerated?: boolean;
+  cmd: string;
+}
+export interface CockpitProps {
+  plan: CockpitItem[];
+  parked: { id: string; reason: string }[];
+  sessionTitles: Record<number, string>;
+}
+
+const STEP_LABEL: Record<StepId, string> = {
+  created: '1 · Nueva llave creada en el proveedor (la vieja sigue viva)',
+  deployed: '2 · Deploys actualizados (Vercel env / wrangler secret)',
+  verified: '3 · App viva verificada',
+  vaulted: '4 · Guardada en el vault local (prompt silencioso)',
+  revoked: '5 · Llave vieja revocada en el proveedor',
+};
 
 const STORE = 'claudia-rotation-v1';
 const RELOCK_MS = 15 * 60 * 1000;
@@ -31,11 +58,7 @@ function loadProgress(): Progress {
   try { return JSON.parse(localStorage.getItem(STORE) ?? '{}'); } catch { return {}; }
 }
 
-function stepsFor(item: RotationItem): StepId[] {
-  return item.steps ?? ALL_STEPS;
-}
-
-export default function RotationCockpit() {
+export default function RotationCockpit({ plan, parked, sessionTitles }: CockpitProps) {
   const [progress, setProgress] = useState<Progress>({});
   const [locked, setLocked] = useState(false);
   const [ready, setReady] = useState(false);
@@ -63,12 +86,12 @@ export default function RotationCockpit() {
   };
 
   const doneCount = useMemo(
-    () => ROTATION_PLAN.filter((i) => stepsFor(i).every((s) => (progress[i.id] ?? []).includes(s))).length,
-    [progress],
+    () => plan.filter((i) => i.steps.every((s) => (progress[i.id] ?? []).includes(s))).length,
+    [progress, plan],
   );
   const nextId = useMemo(
-    () => ROTATION_PLAN.find((i) => !stepsFor(i).every((s) => (progress[i.id] ?? []).includes(s)))?.id,
-    [progress],
+    () => plan.find((i) => !i.steps.every((s) => (progress[i.id] ?? []).includes(s)))?.id,
+    [progress, plan],
   );
 
   if (!ready) return null;
@@ -80,12 +103,12 @@ export default function RotationCockpit() {
         <header className="mb-8">
           <h1 className="text-2xl font-semibold text-amber-200">Rotación de llaves</h1>
           <p className="text-sm text-slate-400 mt-1">
-            {doneCount}/{ROTATION_PLAN.length} llaves rotadas · una a la vez · nunca revocar antes de verificar
+            {doneCount}/{plan.length} llaves rotadas · una a la vez · nunca revocar antes de verificar
           </p>
           <div className="h-1.5 rounded-full bg-slate-800 mt-3 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-teal-400 transition-all"
-              style={{ width: `${(doneCount / ROTATION_PLAN.length) * 100}%` }}
+              style={{ width: `${(doneCount / plan.length) * 100}%` }}
             />
           </div>
           <div className="mt-4 rounded-xl border border-teal-900/60 bg-teal-950/30 px-4 py-3 text-[13px] text-teal-200/90">
@@ -97,10 +120,10 @@ export default function RotationCockpit() {
         {[1, 2, 3, 4].map((s) => (
           <section key={s} className="mb-10">
             <h2 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">
-              {SESSION_TITLES[s]}
+              {sessionTitles[s]}
             </h2>
             <div className="space-y-4">
-              {ROTATION_PLAN.filter((i) => i.session === s).map((item) => (
+              {plan.filter((i) => i.session === s).map((item) => (
                 <Card
                   key={item.id}
                   item={item}
@@ -118,7 +141,7 @@ export default function RotationCockpit() {
             Estacionadas — NO rotar sin plan de migración
           </h2>
           <div className="space-y-2">
-            {PARKED.map((p) => (
+            {parked.map((p) => (
               <div key={p.id} className="rounded-xl border border-rose-950 bg-rose-950/20 px-4 py-3 opacity-70">
                 <span className="font-mono text-[13px] text-rose-200">{p.id}</span>
                 <p className="text-xs text-slate-400 mt-1">{p.reason}</p>
@@ -132,15 +155,15 @@ export default function RotationCockpit() {
 }
 
 function Card({ item, done, isNext, onToggle }: {
-  item: RotationItem;
+  item: CockpitItem;
   done: StepId[];
   isNext: boolean;
   onToggle: (id: string, step: StepId) => void;
 }) {
-  const steps = stepsFor(item);
+  const steps = item.steps;
   const complete = steps.every((s) => done.includes(s));
   const [copied, setCopied] = useState(false);
-  const cmd = rotateCmd(item.project, item.key.split(' ')[0]);
+  const cmd = item.cmd;
 
   const copy = async () => {
     try {

@@ -15,9 +15,10 @@
 // ════════════════════════════════════════════════════════════════════════
 
 import { serverClient } from '../../lib/supabase-server';
-import RotationCockpit from '../../components/rotation/RotationCockpit';
+import RotationCockpit, { type CockpitItem } from '../../components/rotation/RotationCockpit';
 import StepUp from '../../components/rotation/StepUp';
 import SignInGate from '../../components/rotation/SignInGate';
+import { ROTATION_PLAN, PARKED, SESSION_TITLES, ALL_STEPS, rotateCmd } from '../../lib/rotation/plan';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,5 +63,14 @@ export default async function RotationPage() {
   const aal = (session ? jwtPayload(session.access_token).aal : 'aal1') as string;
   if (aal !== 'aal2') return <StepUp />;
 
-  return <RotationCockpit />;
+  // All three locks passed — only NOW does the plan leave the server.
+  // (The plan lives in this server component's bundle, never in public
+  //  client chunks; below AAL2 the RSC payload contains none of it.)
+  const plan: CockpitItem[] = ROTATION_PLAN.map((i) => ({
+    ...i,
+    steps: i.steps ?? ALL_STEPS,
+    cmd: rotateCmd(i.project, i.key.split(' ')[0]),
+  }));
+
+  return <RotationCockpit plan={plan} parked={PARKED} sessionTitles={SESSION_TITLES} />;
 }
