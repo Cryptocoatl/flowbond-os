@@ -1,0 +1,48 @@
+/* Future Flight — design tokens (derived from brand boards, not invented)
+   Palette: #D4AF37 soft gold · #FFBA00 copper-amber · #F2F2F2 warm white
+            #1A1A1D charcoal · #0D0D0F black · #0A3D3A jungle teal
+   Type:    Orbitron (display/headlines) · Montserrat (body/UI) */
+
+:root {
+  /* surfaces */
+  --ff-black:        #0D0D0F;   /* page base */
+  --ff-charcoal:     #1A1A1D;   /* cards / panels */
+  --ff-charcoal-2:   #232327;   /* raised / hover */
+  --ff-hairline:     rgba(212,175,55,0.14); /* gold-tinted 1px dividers */
+
+  /* brand */
+  --ff-gold:         #D4AF37;   /* primary accent, ring/portal, CTA borders */
+  --ff-gold-soft:    rgba(212,175,55,0.55);
+  --ff-copper:       #FFBA00;   /* secondary accent, prices, energy */
+  --ff-teal:         #0A3D3A;   /* regeneration / deep-jungle accent */
+
+  /* text */
+  --ff-white:        #F2F2F2;   /* primary text */
+  --ff-muted:        rgba(242,242,242,0.62);
+  --ff-faint:        rgba(242,242,242,0.38);
+
+  /* type */
+  --ff-font-display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
+  --ff-font-body:    "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --ff-tracking-display: 0.24em;  /* the wide F U T U R E lockup */
+  --ff-tracking-eyebrow: 0.34em;
+
+  /* elevation — soft, low, cinematic (never harsh) */
+  --ff-shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset,
+                    0 24px 60px -32px rgba(0,0,0,0.9);
+  --ff-glow-portal: 0 0 60px -8px rgba(255,186,0,0.45),
+                    0 0 140px -20px rgba(212,175,55,0.35);
+
+  /* radii — generous, Apple-calm */
+  --ff-r-sm: 10px;
+  --ff-r-md: 16px;
+  --ff-r-lg: 22px;
+
+  /* motion */
+  --ff-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ff-dur:  480ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --ff-dur: 0ms; }
+}
