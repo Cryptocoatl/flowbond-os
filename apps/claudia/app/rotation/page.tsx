@@ -69,7 +69,7 @@ export default async function RotationPage() {
   const plan: CockpitItem[] = ROTATION_PLAN.map((i) => ({
     ...i,
     steps: i.steps ?? ALL_STEPS,
-    cmd: rotateCmd(i.project, i.key.split(' ')[0]),
+    cmd: i.cmd ?? rotateCmd(i.project, i.key.split(' ')[0]),
   }));
 
   return <RotationCockpit plan={plan} parked={PARKED} sessionTitles={SESSION_TITLES} />;

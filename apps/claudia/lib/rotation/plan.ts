@@ -34,6 +34,8 @@ export interface RotationItem {
   warn?: string;
   /** Self-generated secret: mint locally, no provider dashboard. */
   selfGenerated?: boolean;
+  /** Override the vault command (e.g. `claudia keys rm` for orphaned keys). */
+  cmd?: string;
 }
 
 export const SESSION_TITLES: Record<number, string> = {
@@ -63,7 +65,9 @@ export const ROTATION_PLAN: RotationItem[] = [
     id: 'flowbond-app/RESEND_API_KEY', session: 1,
     project: 'flowbond-app', key: 'RESEND_API_KEY',
     provider: 'Resend', providerUrl: 'https://resend.com/api-keys',
-    deploy: ['Vercel env flowbond-app + redeploy'],
+    steps: ['revoked', 'vaulted'],
+    cmd: 'claudia keys rm flowbond-app RESEND_API_KEY --yes',
+    warn: 'HUÉRFANA (verificado 2026-07-13): ningún código de flowbond-app la usa, y flowbond.life no usa Resend. No se rota — se revoca en Resend y se borra del vault. Los Resend vivos son legatum y heady-teddys.',
   },
   {
     id: 'heady-teddys-project/RESEND_API_KEY', session: 1,

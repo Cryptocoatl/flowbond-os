@@ -17,6 +17,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { browserClient } from '../../lib/supabase';
+import RotationChat from './RotationChat';
 import type { StepId } from '../../lib/rotation/plan';
 
 // The PLAN never ships in this (public) client bundle — it arrives as props
@@ -115,6 +116,10 @@ export default function RotationCockpit({ plan, parked, sessionTitles }: Cockpit
             🔒 Esta página nunca ve un valor. Los secretos viajan solo del proveedor a tu Keychain,
             por el prompt silencioso de <span className="font-mono">claudia keys rotate</span> en tu Mac.
           </div>
+          <div className="mt-2 rounded-xl border border-sky-900/60 bg-sky-950/30 px-4 py-3 text-[13px] text-sky-200/90">
+            🚚 Migración Vercel→Cloudflare en curso: donde una tarjeta diga «Vercel env», confirma
+            primero dónde vive HOY esa app — pregúntale al chat 💬 o a ClaudIA local.
+          </div>
         </header>
 
         {[1, 2, 3, 4].map((s) => (
@@ -150,6 +155,7 @@ export default function RotationCockpit({ plan, parked, sessionTitles }: Cockpit
           </div>
         </section>
       </div>
+      <RotationChat plan={plan} progress={progress} />
     </main>
   );
 }
