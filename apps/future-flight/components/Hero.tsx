@@ -1,5 +1,5 @@
 import type { Edition, RouteStop } from '@/lib/content'
-import { PlaneMark } from './brand/Marks'
+import { HeroCrest } from './brand/Marks'
 import { Reveal } from './Reveal'
 import { Countdown } from './Countdown'
 
@@ -7,6 +7,12 @@ export function Hero({ edition, routeStrip }: { edition: Edition; routeStrip: Ro
   return (
     <header className="hero">
       <div className="hero-bg" />
+      <div className="hero-rays" aria-hidden="true" />
+      <div className="hero-embers" aria-hidden="true">
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span key={i} className={`ember ember-${i}`} />
+        ))}
+      </div>
       <div className="wrap">
         <Reveal className="route-strip">
           {routeStrip.map((s) => (
@@ -19,7 +25,8 @@ export function Hero({ edition, routeStrip }: { edition: Edition; routeStrip: Ro
 
         <div className="portal-wrap">
           <div className="portal" />
-          <PlaneMark />
+          <div className="portal-inner" />
+          <HeroCrest />
         </div>
 
         <Reveal>

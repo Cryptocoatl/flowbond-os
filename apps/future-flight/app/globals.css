@@ -257,3 +257,75 @@ section { position: relative; }
 .foot-b { display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--muted); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
 .cta-final { text-align: center; padding: 90px 0 20px; }
 .cta-final h2 { font-size: clamp(26px, 5vw, 46px); letter-spacing: .14em; margin-bottom: 26px; }
+
+/* ============================================================
+   CINEMATIC LAYER — brand reveal intro + "flight into the future"
+   ============================================================ */
+
+/* ---------- intro reveal (full-screen brand film) ---------- */
+.intro { position: fixed; inset: 0; z-index: 200; background: #000;
+  display: flex; align-items: center; justify-content: center; }
+.intro-video { width: 100%; height: 100%; object-fit: cover; }
+/* soft cinematic vignette over the film */
+.intro-vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%); }
+.intro-skip { position: absolute; bottom: 34px; right: 34px; z-index: 2;
+  font-family: var(--disp); font-size: 10px; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--muted); background: rgba(13,13,15,.35); border: 1px solid var(--hair);
+  border-radius: 999px; padding: 10px 18px; cursor: pointer; backdrop-filter: blur(8px);
+  transition: color .3s, border-color .3s, background .3s; }
+.intro-skip:hover { color: var(--gold); border-color: var(--gold-soft); background: rgba(13,13,15,.6); }
+@media (max-width: 560px) { .intro-skip { bottom: 20px; right: 20px; } }
+
+/* ---------- hero light rays (echoes the reveal's radiating burst) ---------- */
+.hero-rays { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 46%,
+      rgba(255,186,0,0.045) 0deg 2deg, transparent 2deg 11deg);
+  -webkit-mask-image: radial-gradient(58% 52% at 50% 46%, #000 0%, transparent 72%);
+          mask-image: radial-gradient(58% 52% at 50% 46%, #000 0%, transparent 72%);
+  opacity: .8; animation: rays-rotate 90s linear infinite; transform-origin: 50% 46%; }
+@keyframes rays-rotate { to { transform: rotate(360deg); } }
+
+/* ---------- drifting gold embers ---------- */
+.hero-embers { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.hero-embers .ember { position: absolute; bottom: -12px; width: 3px; height: 3px; border-radius: 50%;
+  background: var(--copper); box-shadow: 0 0 8px 1px rgba(255,186,0,.7);
+  opacity: 0; animation: ember-rise 9s var(--ease) infinite; }
+@keyframes ember-rise {
+  0% { transform: translateY(0) scale(.6); opacity: 0; }
+  12% { opacity: .9; }
+  70% { opacity: .55; }
+  100% { transform: translateY(-78vh) scale(1); opacity: 0; }
+}
+.ember-0  { left: 8%;  animation-delay: 0s;   animation-duration: 10s; }
+.ember-1  { left: 15%; animation-delay: 2.4s; animation-duration: 8.5s; }
+.ember-2  { left: 23%; animation-delay: 5.1s; animation-duration: 11s; }
+.ember-3  { left: 31%; animation-delay: 1.2s; animation-duration: 9.5s; }
+.ember-4  { left: 39%; animation-delay: 3.7s; animation-duration: 12s; }
+.ember-5  { left: 46%; animation-delay: 6.3s; animation-duration: 8s; }
+.ember-6  { left: 53%; animation-delay: 0.7s; animation-duration: 10.5s; }
+.ember-7  { left: 61%; animation-delay: 4.4s; animation-duration: 9s; }
+.ember-8  { left: 68%; animation-delay: 2.0s; animation-duration: 11.5s; }
+.ember-9  { left: 76%; animation-delay: 5.7s; animation-duration: 8.7s; }
+.ember-10 { left: 83%; animation-delay: 1.8s; animation-duration: 10.2s; }
+.ember-11 { left: 90%; animation-delay: 3.1s; animation-duration: 9.3s; }
+.ember-12 { left: 96%; animation-delay: 6.9s; animation-duration: 12s; }
+.ember-13 { left: 4%;  animation-delay: 4.9s; animation-duration: 8.9s; }
+
+/* keep hero content above the cinematic layers */
+.hero .wrap { position: relative; z-index: 3; }
+
+/* ---------- hero crest inside the portal (the real gold monogram) ---------- */
+.portal-inner { position: absolute; width: 52%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,186,0,.22), transparent 68%);
+  filter: blur(6px); }
+.hero-crest { position: relative; z-index: 2; width: 34%; height: auto;
+  filter: drop-shadow(0 10px 34px rgba(255,186,0,.45)) drop-shadow(0 2px 8px rgba(0,0,0,.6));
+  animation: crest-float 7s var(--ease) infinite; }
+@keyframes crest-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-rays, .hero-embers .ember, .hero-crest { animation: none !important; }
+  .hero-rays { opacity: .5; }
+}

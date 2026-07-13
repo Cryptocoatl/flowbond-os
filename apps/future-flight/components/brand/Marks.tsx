@@ -1,32 +1,32 @@
+/* eslint-disable @next/next/no-img-element */
 /**
- * Brand marks. These are the inline-SVG placeholders from the reference. When
- * finals land per BRAND-ASSETS.md, swap the monogram body for
- * <Image src="/brand/monogram.svg" ... /> and the plane for
- * <Image src="/brand/hero-poster.jpg" ... /> — no other code changes needed.
+ * Brand marks — the real gold FF monogram, extracted from the brand reveal film
+ * (public/brand/monogram.png, transparent). The wordmark "FUTURE FLIGHT" is set
+ * in Orbitron throughout, so the monogram is the only raster brand mark needed.
  */
 
-export function Monogram({ size = 38 }: { size?: number }) {
+export function Monogram({ size = 34, className }: { size?: number; className?: string }) {
   return (
-    <span className="mark" aria-hidden="true" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 48 48">
-        <g fill="#D4AF37">
-          <path d="M6 30 L30 14 L44 14 L20 30 Z" />
-          <path d="M6 40 L26 27 L38 27 L18 40 Z" opacity=".85" />
-        </g>
-      </svg>
-    </span>
+    <img
+      src="/brand/monogram.png"
+      alt="Future Flight"
+      width={size}
+      height={size}
+      className={className}
+      style={{ width: size, height: 'auto', display: 'block' }}
+    />
   )
 }
 
-export function PlaneMark() {
+/** Large hero crest — the monogram with the portal glow behind it. */
+export function HeroCrest() {
   return (
-    <svg className="plane" viewBox="0 0 200 120" fill="none" aria-label="aircraft">
-      <path
-        d="M100 6c8 0 14 22 15 44l55 30c4 2 4 8-1 8l-58-8c-2 14-5 24-11 24s-9-10-11-24l-58 8c-5 0-5-6-1-8l55-30C86 28 92 6 100 6Z"
-        fill="#F2F2F2"
-        stroke="#D4AF37"
-        strokeWidth="1.5"
-      />
-    </svg>
+    <img
+      src="/brand/monogram.png"
+      alt="Future Flight"
+      className="hero-crest"
+      width={220}
+      height={204}
+    />
   )
 }

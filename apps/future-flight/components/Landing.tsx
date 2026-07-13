@@ -1,4 +1,5 @@
 import { defaultContent, type LandingContent } from '@/lib/content'
+import { IntroReveal } from '@/components/IntroReveal'
 import { Nav } from '@/components/Nav'
 import { Hero } from '@/components/Hero'
 import { Pillars } from '@/components/Pillars'
@@ -24,6 +25,7 @@ export function Landing({ content = defaultContent }: { content?: LandingContent
   const c = content
   return (
     <>
+      <IntroReveal />
       <Nav brandName={`${c.edition.wordmarkTop} ${c.edition.wordmarkBottom}`} />
       <Hero edition={c.edition} routeStrip={c.routeStrip} />
       <Pillars pillars={c.pillars} band={c.band} />
