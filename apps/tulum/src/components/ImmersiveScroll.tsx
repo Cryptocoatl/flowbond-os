@@ -39,8 +39,8 @@ export default function ImmersiveScroll() {
     if (!section || !video) return;
 
     const isMobile = window.innerWidth <= 760;
-    const rendition = isMobile ? "/assets/tulum-scroll-sm.mp4" : "/assets/tulum-scroll.mp4";
-    video.poster = isMobile ? "/assets/tulum-scroll-poster-sm.webp" : "/assets/tulum-scroll-poster.webp";
+    const rendition = isMobile ? "/assets/tulum-scroll-v3-sm.mp4" : "/assets/tulum-scroll-v3.mp4";
+    video.poster = isMobile ? "/assets/tulum-scroll-v3-poster-sm.webp" : "/assets/tulum-scroll-v3-poster.webp";
     let objectUrl: string | null = null;
 
     // ---- caption index from a time (shared by both modes) ----
@@ -150,7 +150,7 @@ export default function ImmersiveScroll() {
         <video
           ref={videoRef}
           className="immersive-video"
-          poster="/assets/tulum-scroll-poster.webp"
+          poster="/assets/tulum-scroll-v3-poster.webp"
           preload="auto"
           muted
           playsInline

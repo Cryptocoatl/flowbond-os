@@ -1,8 +1,8 @@
 "use client";
-// Intro — la apertura épica. Steph's golden-coin film opens OVER living Tulum
-// (no black box): a regenerative-Tulum still breathes behind it while the coin
-// floats in front via screen-blend (its black drops out). Tap to enter plays it
-// WITH sound, then the whole thing pushes through into the site.
+// Intro — la apertura épica. Steph's golden-coin film on a deep-dark ground.
+// The coin's own black is screen-blended into the near-black background so there
+// is NO visible video box/frame — only the coin glows out of the darkness. Tap
+// to enter plays it WITH sound, then it pushes through into the site.
 //   gate ("toca para entrar") → tap → coin plays with sound → ended/tap → site.
 // prefers-reduced-motion never mounts it (CSS #intro{display:none} backstops SSR).
 import { useEffect, useRef, useState } from "react";
@@ -40,11 +40,6 @@ export default function Intro() {
       title={phase === "gate" ? "Toca para entrar" : "Toca para saltar"}
       onClick={() => (phase === "gate" ? enter() : setPhase("done"))}
     >
-      {/* living Tulum behind the coin — no black background */}
-      <div className="intro-bg" aria-hidden="true">
-        <div className="intro-bg-img" />
-        <div className="intro-bg-tint" />
-      </div>
       <div className="intro-stage">
         <video
           ref={videoRef}

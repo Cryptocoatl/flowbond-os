@@ -25,26 +25,21 @@ img{max-width:100%;display:block}
 .wordmark{font-family:var(--body);font-weight:600;letter-spacing:.42em;color:var(--crema);text-transform:uppercase;padding-left:.42em}
 
 /* ================= INTRO — la apertura épica (video con sonido) ================= */
-/* the opening plays OVER living Tulum — no black. A regenerative-Tulum still
-   breathes behind while the golden coin floats in front via screen-blend (its
-   black drops out). "done" pushes through (scale+fade) into the site beneath. */
-#intro{position:fixed;inset:0;z-index:100;background:#050D08;display:flex;align-items:center;justify-content:center;
+/* Deep-dark ground (near-black, faint green core). The coin film is screen-blended
+   so its own black merges INTO the background — no visible video box/frame, just
+   the coin glowing out of the dark. "done" pushes through into the site beneath. */
+#intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(75% 65% at 50% 46%,#0A1A10 0%,#04100A 48%,#010604 100%);
   transition:opacity 1.4s cubic-bezier(.5,0,.2,1) .05s,transform 1.4s cubic-bezier(.5,0,.2,1) .05s;
   transform:scale(1);cursor:pointer;overflow:hidden}
 #intro.done{opacity:0;transform:scale(1.14);pointer-events:none}
-.intro-bg{position:absolute;inset:0;overflow:hidden}
-.intro-bg-img{position:absolute;inset:-4%;background:var(--intro-bg,url('/assets/tulum-scroll-poster.webp')) center/cover no-repeat;
-  animation:introKen 14s ease-out both;transform-origin:52% 46%}
-.intro-bg-tint{position:absolute;inset:0;
-  background:radial-gradient(120% 90% at 50% 44%,rgba(5,13,8,.35) 0%,rgba(5,13,8,.7) 70%,rgba(5,13,8,.9) 100%)}
-@keyframes introKen{from{transform:scale(1.12)}to{transform:scale(1)}}
-.intro-stage{position:relative;width:min(96vw,88vh);aspect-ratio:1;overflow:hidden}
-.intro-coin{width:100%;height:100%;object-fit:contain;display:block;mix-blend-mode:screen}
-@media(max-width:760px){.intro-bg-img{background-image:url('/assets/tulum-scroll-poster-sm.webp')}.intro-stage{width:96vw}}
-.intro-word{position:absolute;bottom:7vh;left:50%;transform:translateX(-50%);text-align:center;
-  opacity:0;animation:wordIn 1.2s ease .6s forwards;white-space:nowrap;z-index:2}
-.intro-word .disp{font-size:clamp(15px,2.2vw,22px);letter-spacing:.4em;text-transform:uppercase;color:var(--oro);padding-left:.4em}
-.intro-word .skip{display:block;margin-top:10px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--niebla)}
+.intro-stage{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.intro-coin{width:min(94vh,94vw);height:min(94vh,94vw);max-width:none;object-fit:contain;display:block;
+  mix-blend-mode:screen}
+.intro-word{position:absolute;bottom:8vh;left:50%;transform:translateX(-50%);text-align:center;
+  opacity:0;animation:wordIn 1.2s ease .9s forwards;white-space:nowrap;z-index:2}
+.intro-word .disp{font-size:clamp(15px,2.2vw,22px);letter-spacing:.4em;text-transform:uppercase;color:var(--oro-hi);padding-left:.4em;text-shadow:0 2px 24px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.8)}
+.intro-word .skip{display:block;margin-top:10px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--crema);text-shadow:0 1px 12px rgba(0,0,0,.9)}
 .intro-skip{margin-top:16px;background:none;border:1px solid var(--line);color:var(--niebla);border-radius:20px;
   padding:7px 18px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;transition:.25s}
 .intro-skip:hover{border-color:var(--oro);color:var(--oro)}
@@ -300,11 +295,18 @@ footer .brands{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--disp);lett
 .immersive{position:relative;height:520vh;background:#050D08}
 .immersive-stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#050D08}
 .immersive-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-/* scrim keeps captions legible over any scene — darker at the base */
+/* scrim = the readability layer. A gentle overall veil + a strong dark base so
+   captions stay crisp over any scene (bright sand, busy crowds). */
 .immersive-scrim{position:absolute;inset:0;pointer-events:none;
   background:
-    radial-gradient(120% 60% at 50% 82%,rgba(5,13,8,.66) 0%,rgba(5,13,8,0) 60%),
-    linear-gradient(180deg,rgba(5,13,8,.40) 0%,rgba(5,13,8,.06) 22%,rgba(5,13,8,.08) 40%,rgba(5,13,8,.52) 64%,rgba(5,13,8,.84) 100%)}
+    radial-gradient(115% 55% at 50% 88%,rgba(3,9,5,.82) 0%,rgba(3,9,5,0) 62%),
+    linear-gradient(180deg,rgba(3,9,5,.52) 0%,rgba(3,9,5,.22) 20%,rgba(3,9,5,.22) 38%,rgba(3,9,5,.62) 62%,rgba(3,9,5,.9) 100%)}
+@media(max-width:760px){
+  /* phones: busier portrait frames + bigger text → veil harder for clean reading */
+  .immersive-scrim{background:
+    radial-gradient(140% 48% at 50% 86%,rgba(3,9,5,.9) 0%,rgba(3,9,5,0) 60%),
+    linear-gradient(180deg,rgba(3,9,5,.55) 0%,rgba(3,9,5,.34) 24%,rgba(3,9,5,.4) 46%,rgba(3,9,5,.74) 66%,rgba(3,9,5,.94) 100%)}
+}
 /* filmic edge vignette on top of the scrim */
 .immersive-vignette{position:absolute;inset:0;pointer-events:none;
   box-shadow:inset 0 0 min(22vw,220px) rgba(3,8,5,.6);
@@ -322,16 +324,20 @@ footer .brands{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--disp);lett
 .immersive-hint .chev{width:15px;height:15px;border-right:1.5px solid var(--oro-hi);
   border-bottom:1.5px solid var(--oro-hi);transform:rotate(45deg);animation:hintBob 1.7s ease-in-out infinite}
 @keyframes hintBob{0%,100%{transform:rotate(45deg) translate(-2px,-2px);opacity:.5}50%{transform:rotate(45deg) translate(2px,2px);opacity:1}}
-/* captions vertically center inside the lower band, so any length fits cleanly */
-.immersive-caps{position:absolute;left:0;right:0;top:50%;bottom:clamp(64px,11vh,120px);
+/* captions sit in the lower band (over the strongest scrim) + carry their own
+   soft dark bed so they stay crisp on ANY scene, bright or busy */
+.immersive-caps{position:absolute;left:0;right:0;top:54%;bottom:clamp(64px,11vh,120px);
   display:flex;align-items:center;justify-content:center;padding:0 6vw;pointer-events:none}
+.immersive-caps::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(60ch,124%);height:130%;pointer-events:none;
+  background:radial-gradient(ellipse 58% 50% at 50% 52%,rgba(2,7,4,.72) 0%,rgba(2,7,4,.36) 56%,transparent 100%)}
 .immersive-cap{position:absolute;text-align:center;max-width:min(22ch,90vw);margin:0;
   opacity:0;transform:translateY(24px) scale(.99);filter:blur(6px);
   transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1),filter .9s ease}
 .immersive-cap.on{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
-.immersive-cap .cap-es{display:block;font-family:var(--disp);color:var(--crema);
+.immersive-cap .cap-es{display:block;font-family:var(--disp);color:#FBF3DE;
   font-size:clamp(25px,3.6vw,47px);line-height:1.14;letter-spacing:.01em;
-  text-shadow:0 2px 30px rgba(0,0,0,.85),0 0 12px rgba(0,0,0,.7),0 1px 3px rgba(0,0,0,.9)}
+  text-shadow:0 2px 28px rgba(0,0,0,.95),0 0 14px rgba(0,0,0,.85),0 1px 2px rgba(0,0,0,1)}
 .immersive-cap .cap-en{display:block;margin-top:14px;color:var(--oro-hi);opacity:.86;
   font-size:clamp(11px,1.4vw,15px);letter-spacing:.22em;text-transform:uppercase;
   text-shadow:0 1px 20px rgba(0,0,0,.7)}
