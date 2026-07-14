@@ -25,10 +25,22 @@ do $$ begin
 begin end; exception when duplicate_object then null; end $$;
 
 -- shared helpers (thin wrappers over Core; keep the app decoupled from Core naming)
+-- ADAPTED 2026-07-13 to the real FlowBond Core in fgsrcxxccdjqyrpkitmk:
+--   `public.fb_current_user()` / `public.fb_is_admin()` do NOT exist under those
+--   names. The canonical equivalents are:
+--     • identity : auth.uid()  ==  public.flowbond_users.id  (the ff_ FK root;
+--                  every auth user has a matching flowbond_users row).
+--                  (public.current_fbid() returns the DIFFERENT flowbond_identities.id
+--                   hub namespace and must NOT be used here — it would break the FKs.)
+--     • admin    : public.has_grant('future-flight', null, 'admin')  — the FBID
+--                  grants RBAC (flowbond_grants, keyed by flowbond_users.id). Returns
+--                  true for a global superadmin OR anyone granted 'admin'+ on the
+--                  'future-flight' app. Grant via public.grant_access(fbid,
+--                  'future-flight', null, 'admin') as a superadmin.
 create or replace function ff_uid() returns uuid
-  language sql stable as $$ select public.fb_current_user() $$;
+  language sql stable as $$ select auth.uid() $$;
 create or replace function ff_is_admin() returns boolean
-  language sql stable as $$ select coalesce(public.fb_is_admin(), false) $$;
+  language sql stable as $$ select coalesce(public.has_grant('future-flight', null::text, 'admin'), false) $$;
 
 -- ============================================================================
 -- §1 ── EDITIONS + CMS (no hardcoded dates/prices anywhere)
@@ -134,7 +146,7 @@ create table ff_tickets (
   owner_id      uuid not null references flowbond_users(id) on delete cascade,
   status        ff_ticket_status not null default 'reserved',
   seat_label    text,
-  qr_token      text unique not null default encode(gen_random_bytes(16),'hex'),
+  qr_token      text unique not null default encode(extensions.gen_random_bytes(16),'hex'),
   price_paid_cents bigint not null,
   escrow_txn_id uuid,                                        -- links to ff_escrow_ledger
   checked_in_at timestamptz,
