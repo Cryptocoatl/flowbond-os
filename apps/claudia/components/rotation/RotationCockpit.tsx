@@ -40,6 +40,7 @@ export interface CockpitProps {
   plan: CockpitItem[];
   parked: { id: string; reason: string }[];
   sessionTitles: Record<number, string>;
+  knowledge: string;
 }
 
 const STEP_LABEL: Record<StepId, string> = {
@@ -59,7 +60,7 @@ function loadProgress(): Progress {
   try { return JSON.parse(localStorage.getItem(STORE) ?? '{}'); } catch { return {}; }
 }
 
-export default function RotationCockpit({ plan, parked, sessionTitles }: CockpitProps) {
+export default function RotationCockpit({ plan, parked, sessionTitles, knowledge }: CockpitProps) {
   const [progress, setProgress] = useState<Progress>({});
   const [locked, setLocked] = useState(false);
   const [ready, setReady] = useState(false);
@@ -75,6 +76,17 @@ export default function RotationCockpit({ plan, parked, sessionTitles }: Cockpit
     }, 30_000);
     return () => clearInterval(t);
   }, []);
+
+  // Chat protocol: SET a step (idempotent — never un-ticks).
+  const mark = (id: string, step: StepId) => {
+    setProgress((prev) => {
+      const cur = new Set(prev[id] ?? []);
+      cur.add(step);
+      const next = { ...prev, [id]: [...cur] as StepId[] };
+      try { localStorage.setItem(STORE, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const toggle = (id: string, step: StepId) => {
     setProgress((prev) => {
@@ -155,7 +167,7 @@ export default function RotationCockpit({ plan, parked, sessionTitles }: Cockpit
           </div>
         </section>
       </div>
-      <RotationChat plan={plan} progress={progress} />
+      <RotationChat plan={plan} progress={progress} knowledge={knowledge} onMark={mark} />
     </main>
   );
 }

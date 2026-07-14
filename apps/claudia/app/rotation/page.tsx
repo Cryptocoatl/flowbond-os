@@ -19,6 +19,7 @@ import RotationCockpit, { type CockpitItem } from '../../components/rotation/Rot
 import StepUp from '../../components/rotation/StepUp';
 import SignInGate from '../../components/rotation/SignInGate';
 import { ROTATION_PLAN, PARKED, SESSION_TITLES, ALL_STEPS, rotateCmd } from '../../lib/rotation/plan';
+import { INFRA_KNOWLEDGE } from '../../lib/rotation/knowledge';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,5 +73,5 @@ export default async function RotationPage() {
     cmd: i.cmd ?? rotateCmd(i.project, i.key.split(' ')[0]),
   }));
 
-  return <RotationCockpit plan={plan} parked={PARKED} sessionTitles={SESSION_TITLES} />;
+  return <RotationCockpit plan={plan} parked={PARKED} sessionTitles={SESSION_TITLES} knowledge={INFRA_KNOWLEDGE} />;
 }
