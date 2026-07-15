@@ -1,0 +1,34 @@
+name = "tulum-verify-worker"
+main = "src/index.ts"
+compatibility_date = "2026-07-14"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets (NEVER in this file — set with `wrangler secret put`):
+#   SUPABASE_SERVICE_ROLE_KEY   service role, service-role-only RPCs
+#   SUPABASE_ANON_KEY           for auth.getUser(jwt) + user-context RPCs
+# Vars:
+#   SUPABASE_URL                https://fgsrcxxccdjqyrpkitmk.supabase.co
+
+[vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+
+# Per-FBID + per-IP rate limiting for /claim
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "PLACEHOLDER_CREATE_WITH_wrangler_kv_namespace_create_RATE_KV"
+
+[env.test]
+name = "tulum-verify-worker-test"
+[env.test.vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+[[env.test.kv_namespaces]]
+binding = "RATE_KV"
+id = "PLACEHOLDER_TEST_KV"
+
+[env.production]
+name = "tulum-verify-worker"
+[env.production.vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+[[env.production.kv_namespaces]]
+binding = "RATE_KV"
+id = "PLACEHOLDER_PROD_KV"

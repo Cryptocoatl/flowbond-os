@@ -1,0 +1,27 @@
+{
+  "name": "@flowbond/tulum-snapshot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "tulum-snapshot": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "tulum-snapshot": "node --experimental-strip-types ./src/cli.ts"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.7.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "bs58": "^5.0.0",
+    "viem": "^2.21.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@flowbond/config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.3"
+  }
+}

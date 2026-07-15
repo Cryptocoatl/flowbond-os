@@ -1,0 +1,24 @@
+{
+  "name": "@flowbond/tulum-verify-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "deploy:test": "wrangler deploy --env test",
+    "deploy:prod": "wrangler deploy --env production"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.8.0",
+    "@noble/hashes": "^1.7.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "bs58": "^5.0.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.78.0"
+  }
+}

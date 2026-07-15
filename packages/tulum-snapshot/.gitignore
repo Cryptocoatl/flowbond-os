@@ -1,0 +1,4 @@
+# dry-run receipts (config-hash keyed) and replay checkpoints — never committed
+.snapshot-review.json
+.snapshot-cache/
+node_modules/
