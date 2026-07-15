@@ -145,15 +145,12 @@ create table if not exists public.tulum_xp_rate_card (
   multiplier_applies boolean not null default false
 );
 
--- Seed the rate card. PETGAS split values are pinned by the build spec
--- (OG=200, ALLY=100); the rest are tunable starting points.
+-- Seed the rate card — one credential per snapshotted asset. Tunable.
 insert into public.tulum_xp_rate_card (credential, base_xp, requires_validator, multiplier_applies) values
-  ('OG_JAGUAR',    500, false, false),
-  ('TLMC_STEWARD', 300, false, false),
-  ('PETGAS_OG',    200, false, false),
-  ('PETGAS_ALLY',  100, false, false),
-  ('XELVA_OG',     150, false, false),
-  ('REFI_HOLDER',  100, false, true )
+  ('OG_JAGUAR',     500, false, false),  -- PTLC on NEAR
+  ('TLMC_STEWARD',  300, false, false),  -- TLMC on Optimism
+  ('PETGAS_HOLDER', 100, false, false),  -- PetgasCoin on BNB
+  ('XELVA_HOLDER',  150, false, false)   -- Xelva on Solana
 on conflict (credential) do nothing;
 
 -- ============================================================================

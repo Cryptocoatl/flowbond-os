@@ -29,7 +29,6 @@ const ASSET_LABELS: Record<string, string> = {
   petgascoin_bnb: "PetgasCoin · BNB",
   refi_nft: "ReFi Tulum NFT",
   xelva_nft: "Xelva NFT",
-  gorillae_nft: "Gorillae NFT",
 };
 
 export default function VerifyOG() {
@@ -185,7 +184,7 @@ export default function VerifyOG() {
           <Card title="EVM" sub="TLMC (Optimism) · PetgasCoin (BNB) · ReFi NFTs"
             state={cards.evm} error={errors.evm} holdings={holdings.evm} locked={locked}
             cta={isConnected ? "Firmar · lee BNB + OP" : "Conectar EVM"} onClick={onEvm} />
-          <Card title="SOLANA" sub="Xelvas · Gorillae · pases del Fest"
+          <Card title="SOLANA" sub="Xelvas · pases del Fest"
             state={cards.solana} error={errors.solana} holdings={holdings.solana} locked={locked}
             cta={sol.connected ? "Firmar con Solana" : "Conectar Solana"} onClick={onSolana} />
         </div>

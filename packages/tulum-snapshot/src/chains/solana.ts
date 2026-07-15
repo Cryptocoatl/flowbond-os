@@ -6,7 +6,7 @@
 // we HALT with a clear message — we do not degrade to the heuristic.
 // Base58 is CASE-SENSITIVE — never lowercase it (must match the claim path).
 // ============================================================================
-import { requireBlock, type ContractEntry } from "../config.js";
+import { type ContractEntry } from "../config.js";
 import type { ChainSnapshot, SnapshotHolder } from "../types.js";
 
 export class MissingHeliusKeyError extends Error {
@@ -80,8 +80,8 @@ async function scanNft(e: ContractEntry): Promise<SnapshotHolder[]> {
 }
 
 export async function scanSolana(e: ContractEntry): Promise<ChainSnapshot> {
-  requireBlock(e); // present-state, but the config still records a slot literal
   heliusUrl(); // fail fast if the key is missing
+  const slot = (await das("getSlot", [])) as number; // present-state: record the slot read at
   const excluded = new Set(e.excludeList.map((x) => x.address)); // case-sensitive
   const raw = e.kind === "ft" ? await scanFt(e) : await scanNft(e);
   const holders = raw.filter((h) => !excluded.has(h.address_norm));
@@ -90,7 +90,7 @@ export async function scanSolana(e: ContractEntry): Promise<ChainSnapshot> {
     key: e.key,
     holders,
     balanceSum: balanceSum.toString(),
-    blockHeight: e.blockHeight,
+    blockHeight: Number(slot) || 0,
     endpoint: "https://mainnet.helius-rpc.com (DAS)",
     evidenceClass: "present-state",
     warnings: [

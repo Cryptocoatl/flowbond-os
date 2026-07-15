@@ -65,9 +65,10 @@ export type ContractEntry = z.infer<typeof ContractEntry>;
 
 // ---------------------------------------------------------------------------
 // THE REGISTRY. Edit here; nowhere else.
+// Scoped to four assets: PTLC (NEAR) · TLMC (Optimism) · PetgasCoin (BNB) ·
+// Xelva (Solana). One FT per chain, one credential each.
 // ---------------------------------------------------------------------------
 const REGISTRY: ContractEntry[] = [
-  // ---- NEAR ----
   {
     key: "ptlc",
     chain: "near",
@@ -80,34 +81,6 @@ const REGISTRY: ContractEntry[] = [
     excludeList: [],
     notes: "NEP-141; no holder enumeration — candidates via NearBlocks, truth via archival ft_balance_of.",
   },
-  {
-    key: "tulumcoin_mintbase",
-    chain: "near",
-    network: "near-mainnet",
-    contract: "tulumcoin.mintbase1.near",
-    kind: "nft",
-    credential: "OG_JAGUAR",
-    // ⚠️ STOP-AND-ASK: ~15 nft_batch_burn ran on blocks 78,744,777–78,745,101.
-    // Pin ABOVE → burned-token OGs vanish. Pin BELOW → honor later-burned tokens.
-    // A human decides what OG means. Do not choose.
-    blockHeight: PENDING, // TODO(human): pin relative to the burn window
-    evidenceClass: "archival",
-    excludeList: [],
-    notes: "Mintbase store. Burn-window decision pending (blocks 78,744,777–78,745,101).",
-  },
-  {
-    key: "tulumcoin_snft",
-    chain: "near",
-    network: "near-mainnet",
-    contract: "tulumcoin.snft.near",
-    kind: "nft",
-    credential: "OG_JAGUAR",
-    blockHeight: PENDING, // TODO(human): pin an archival block
-    evidenceClass: "archival",
-    excludeList: [],
-  },
-
-  // ---- EVM ----
   {
     key: "tlmc_op",
     chain: "evm",
@@ -122,71 +95,30 @@ const REGISTRY: ContractEntry[] = [
     notes: "Zero public index footprint — our Transfer replay is the first real read. If holders < 10 → STOP, do not freeze.",
   },
   {
-    key: "pgc_legacy",
-    chain: "evm",
-    network: "bsc",
-    chainId: 56,
-    contract: "0x28cfa181ea060446de0ddc6fd23fa1dd4dd51dd0",
-    kind: "ft",
-    credential: "PETGAS_OG",
-    blockHeight: PENDING, // TODO(human): pin a BSC block
-    evidenceClass: "replay",
-    excludeList: [
-      { address: "0x0847b9441E8D5e3D59550B04442d342849534099", reason: "Petgas deployer" },
-    ],
-    notes: 'Deprecated "Old Contract" (migrated to 0x46617e…). Snapshotted as EARLINESS evidence only — NEVER present as the current Petgas token. OlympusDAO-style fork with authority-gated unbounded mint; presence-count only, no balance-scaled XP.',
-  },
-  {
-    key: "pgc_current",
+    key: "petgascoin",
     chain: "evm",
     network: "bsc",
     chainId: 56,
     contract: "0x46617e7bca14de818d9E5cFf2aa106b72CB33fe3",
     kind: "ft",
-    credential: "PETGAS_ALLY",
+    credential: "PETGAS_HOLDER",
     blockHeight: PENDING, // TODO(human): pin a BSC block
     evidenceClass: "replay",
     excludeList: [
       { address: "0x0847b9441E8D5e3D59550B04442d342849534099", reason: "Petgas deployer" },
     ],
   },
-  {
-    key: "refi_tulum",
-    chain: "evm",
-    network: "optimism", // TODO(human): confirm chain — Optimism or BSC?
-    chainId: 10,
-    contract: MISSING, // TODO(human): ReFi Tulum NFT address → loadConfig() throws until set
-    kind: "nft",
-    credential: "REFI_HOLDER",
-    blockHeight: PENDING,
-    evidenceClass: "replay",
-    excludeList: [],
-  },
-
-  // ---- SOLANA ----
   {
     key: "xelva",
     chain: "solana",
     network: "solana-mainnet",
     contract: "Bkn34e6T1ZD5tZiVgTfkQQNGX5kAuLD4fWtST3tZmoon",
     kind: "ft",
-    credential: "XELVA_OG",
+    credential: "XELVA_HOLDER",
     blockHeight: PENDING, // Solana: current slot at read time (present-state)
     evidenceClass: "present-state",
     excludeList: [],
     notes: "Present-state read; Solana has no accessible historical state — weaker evidence class than EVM replay / NEAR archival.",
-  },
-  {
-    key: "gorillae",
-    chain: "solana",
-    network: "solana-mainnet",
-    contract: MISSING, // TODO(human): Gorillae collection address → loadConfig() throws until set
-    kind: "nft",
-    credential: "XELVA_OG",
-    blockHeight: PENDING,
-    evidenceClass: "present-state",
-    excludeList: [],
-    notes: "Collection-grouped DAS read once address is known.",
   },
 ];
 

@@ -56,7 +56,7 @@ function SkeletonCards({ note }: { note: string }) {
   const cards = [
     ["NEAR", "Tulumcoin OG · NFTs fundacionales", "Conectar NEAR"],
     ["EVM", "TLMC (Optimism) · PetgasCoin (BNB) · ReFi NFTs", "Conectar EVM"],
-    ["SOLANA", "Xelvas · Gorillae · pases del Fest", "Conectar Solana"],
+    ["SOLANA", "Xelvas · pases del Fest", "Conectar Solana"],
   ] as const;
   return (
     <div className="wallet-grid" aria-busy={note ? true : undefined}>

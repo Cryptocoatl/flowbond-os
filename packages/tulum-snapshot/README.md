@@ -16,8 +16,8 @@ pnpm tulum-snapshot dry-run --key <key>
 pnpm tulum-snapshot freeze --key <key>
 ```
 
-Keys: `ptlc`, `tulumcoin_mintbase`, `tulumcoin_snft` (NEAR) · `tlmc_op`,
-`pgc_legacy`, `pgc_current`, `refi_tulum` (EVM) · `xelva`, `gorillae` (Solana).
+Keys (one FT per chain): `ptlc` (NEAR) · `tlmc_op` (Optimism) · `petgascoin`
+(BNB) · `xelva` (Solana).
 
 ## Env (never committed)
 
@@ -39,12 +39,10 @@ Keys: `ptlc`, `tulumcoin_mintbase`, `tulumcoin_snft` (NEAR) · `tlmc_op`,
 - EVM replay sum ≠ `totalSupply()` at the pinned block.
 - EVM replay with < 10 holders (treat as wrong address until proven otherwise).
 
-## Open human decisions (block a full run)
+## Open human inputs (block a full run)
 
-1. **Pin every `blockHeight`** in `src/config.ts` (currently `PENDING`). Never `latest`, never computed.
-2. **Mintbase burn window** — `tulumcoin.mintbase1.near` ran ~15 `nft_batch_burn` on blocks **78,744,777–78,745,101**. Pin above → burned-token OGs vanish; below → honor later-burned tokens. A values call.
-3. **`refi_tulum` address + chain** and **`gorillae` collection address** — both `MISSING`; `loadConfig()` throws until set.
-4. **`HELIUS_API_KEY`** in the vault for Solana.
+1. **Pin the three historical `blockHeight`s** in `src/config.ts` (`ptlc`, `tlmc_op`, `petgascoin` — currently `PENDING`). Never `latest`, never computed. Xelva is present-state (records the current slot at read time — no pin).
+2. **`HELIUS_API_KEY`** in the vault for Solana; **`NEARBLOCKS_API_KEY`** for `ptlc` holder discovery.
 
 Freezing is **permanent** — the DB trigger seals the holder set. A mistake needs
 a new block height and a new snapshot row.
