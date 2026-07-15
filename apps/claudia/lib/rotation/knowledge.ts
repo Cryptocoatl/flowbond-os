@@ -8,14 +8,15 @@
 //  Keep in sync as the Vercel→Cloudflare migration advances.
 // ════════════════════════════════════════════════════════════════════════
 
-export const KNOWLEDGE_DATE = '2026-07-14';
+export const KNOWLEDGE_DATE = '2026-07-15';
 
 export const INFRA_KNOWLEDGE = `
 HECHOS DE INFRAESTRUCTURA (verificados ${KNOWLEDGE_DATE} por ClaudIA local — DNS + headers + repos):
 
 DÓNDE VIVE CADA APP HOY:
 • flowgarden.life — app en VERCEL detrás de proxy Cloudflare (DNS ya migró a CF, hosting no: tiene x-vercel-id). Sus env vars se actualizan en VERCEL (proyecto flowgarden) y luego redeploy.
-• flowme.one (+ /flowmap), translate.flowme.one (Raíz), voces.flowme.one, fbid.flowbond.life (hub FBID), flowbond.life, claudiaflow.life, mountaindogs.app, brandmark.click, refirides-sigma.vercel.app, mohe-web, flowcdmx, heady-teddys — todos VERCEL puro (76.76.21.21 / cname.vercel-dns). Env vars en Vercel + redeploy.
+• MIGRADOS A CLOUDFLARE PAGES 2026-07-14/15 (batch estático completo, verificados 200 desde edge CF): chords.flowme.one (flowchords), time.flowme.one (timeflow), steph.flowme.one (flow-steph), micelio.reciprociudad.lat, legatum.flowme.one (legatum-site — la copia Vercel servía branding viejo), brandmark.click (brandmark-web; ⚠️ brandmark.com.mx sigue en Vercel hasta mover su DNS), voces.flowme.one (proyecto Pages "voces", _headers portados, MP intacto), origo.flowme.one (origo-site-crr, con api/flowme + api/voice convertidas a Pages Functions — sin secretos aún = paridad 503/canned con prod anterior; al configurar ANTHROPIC_API_KEY propio el chat cobra vida). Proyectos Vercel vivos como rollback 24-48h.
+• SIGUEN EN VERCEL (Next.js, migración one-by-one pendiente vía OpenNext): flowme.one (+ /flowmap), translate.flowme.one (Raíz), fbid.flowbond.life (hub FBID), flowbond.life, claudiaflow.life, mountaindogs.app, refirides-sigma.vercel.app, mohe-web, flowcdmx, heady-teddys, flowgarden.life (Vercel detrás de proxy CF). Env vars en Vercel + redeploy.
 • legatum.lat — CLOUDFLARE Worker puro (repo local ~/Projects/legatum, deploy desde dist/, wrangler desde raíz del repo). Secretos: npx wrangler secret put <KEY> desde la raíz del repo.
 • ops.claudiaflow.life (FlowOps) — CLOUDFLARE Worker (OpenNext), repo local ~/Projects/flowops (wrangler.jsonc). Secretos: npx wrangler secret put <KEY> desde ese repo.
 • kai.flowbond.life (Los Siete Mundos) — CLOUDFLARE Pages (proyecto kai-mundos) + Worker "abuela" (abuela.cryptocoatl101.workers.dev, fuente ~/Downloads/KAI WORLD/abuela-worker.js). Secreto de la Abuela: npx wrangler secret put ANTHROPIC_API_KEY --name abuela.
