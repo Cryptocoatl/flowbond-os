@@ -47,6 +47,7 @@ export default function LoginClient() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
   const [method, setMethod] = useState<Method>('magic')
   const [status, setStatus] = useState<Status>('idle')
   const [message, setMessage] = useState('')
@@ -87,6 +88,34 @@ export default function LoginClient() {
     })
     setStatus(error ? 'error' : 'sent')
     if (error) setMessage(error.message)
+  }
+
+  // The 8-digit code from the SAME email as the magic link. verifyOtp is
+  // stateless — no redirect, no allowlist, no same-browser cookie jar — so it
+  // works from any device even when the link itself can't. This is the
+  // never-fails method.
+  async function signInWithCode(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('loading')
+    setMessage('')
+    const supabase = createClient()
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.toLowerCase().trim(),
+      token: code.trim(),
+      type: 'email',
+    })
+    if (error) {
+      setStatus('sent')
+      setMessage('That code didn\u2019t match \u2014 check the newest email, or resend.')
+      return
+    }
+    if (hubMode) {
+      window.location.assign('/')
+    } else {
+      window.location.assign(
+        `/api/handoff?app=${encodeURIComponent(app)}&redirect=${encodeURIComponent(redirect)}`,
+      )
+    }
   }
 
   async function signInWithPassword(e: React.FormEvent) {
@@ -164,9 +193,9 @@ export default function LoginClient() {
           <p className="text-[var(--fb-muted)] text-sm leading-relaxed">
             {status === 'sent' ? (
               <>
-                We sent a magic link to <span className="text-white">{email}</span>.
-                <br />
-                Open it to continue into {appLabel}.
+                We sent an email to <span className="text-white">{email}</span> with a magic
+                link and an <span className="text-white">8-digit code</span>. Open the link,
+                or type the code here \u2014 the code always works, on any device.
               </>
             ) : (
               <>
@@ -176,6 +205,28 @@ export default function LoginClient() {
               </>
             )}
           </p>
+          {status === 'sent' && (
+            <form onSubmit={signInWithCode} className="space-y-3 pt-2 text-left">
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={8}
+                required
+                autoFocus
+                placeholder="8-digit code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                className="w-full px-4 py-3 rounded-xl bg-white/[0.05] border border-white/10 text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 transition text-sm tracking-[0.3em] text-center"
+              />
+              <button
+                type="submit"
+                className="w-full px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-95 text-white text-sm font-semibold transition-all"
+              >
+                Enter with code
+              </button>
+              {message && <p className="text-amber-300 text-xs text-center">{message}</p>}
+            </form>
+          )}
         </div>
       </Card>
     )

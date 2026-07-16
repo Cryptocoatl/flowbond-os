@@ -38,6 +38,7 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://reciprociudad.lat', path: '/auth/callback' },             // reciprociudad (+ /team console)
   { origin: 'https://www.reciprociudad.lat', path: '/auth/callback' },         // reciprociudad (www)
   { origin: 'https://voces.flowme.one', path: '/admin' },                      // voces para el alma (static admin, hash session)
+  { origin: 'https://ops.claudiaflow.life', path: '/auth/callback' },          // flowops (POS, CF Worker)
   // ---- local development ----
   { origin: 'http://localhost:5173', path: '/proveedores/callback' }, // brandmark-web (vite dev)
   { origin: 'http://localhost:8080', path: '/proveedores/callback' }, // brandmark-web (vite dev alt)
