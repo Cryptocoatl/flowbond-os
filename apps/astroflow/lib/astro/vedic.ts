@@ -5,6 +5,7 @@
 
 import type { Chart } from './types';
 import { ZODIAC, type Sign } from './ephemeris';
+import { loreByName, DASHA_LORD_THEME } from './nakshatras';
 
 // Index-aligned with ZODIAC (Aries…Pisces).
 export const RASHIS = [
@@ -108,6 +109,35 @@ export function vimshottariDasha(chart: Chart): Vimshottari {
   };
 }
 
+// ── Which maha-dasha is running NOW ─────────────────────────────────────────
+// chart.jd is the birth moment; elapsed years since then walk the timeline.
+// The first period is the *balance* of the birth lord, then full periods cycle.
+export interface CurrentDasha {
+  lord: string;          // the maha-dasha lord ruling now
+  ageYears: number;      // current age in years
+  remainingYears: number;// years left in the current maha-dasha
+  progress: number;      // 0–1 through the current maha-dasha
+}
+
+const jdNow = () => 2440587.5 + Date.now() / 86400000;
+
+export function currentDasha(chart: Chart, atJd: number = jdNow()): CurrentDasha {
+  const v = vimshottariDasha(chart);
+  const age = Math.max(0, (atJd - chart.jd) / 365.25);
+  let elapsed = age;
+  const startIdx = DASHA_SEQUENCE.indexOf(v.lord as (typeof DASHA_SEQUENCE)[number]);
+  // First (birth) period is partial; subsequent periods are full.
+  for (let i = 0; i < 20; i++) {
+    const lord = DASHA_SEQUENCE[(startIdx + i) % 9];
+    const span = i === 0 ? v.balanceYears : DASHA_YEARS[lord];
+    if (elapsed < span || i === 19) {
+      return { lord, ageYears: age, remainingYears: Math.max(0, span - elapsed), progress: span ? Math.min(1, elapsed / span) : 0 };
+    }
+    elapsed -= span;
+  }
+  return { lord: v.lord, ageYears: age, remainingYears: v.balanceYears, progress: 0 };
+}
+
 // ── Summary lines for readings ──────────────────────────────────────────────
 export function vedicSummary(v: VedicChart): string[] {
   const lines: string[] = [
@@ -115,9 +145,27 @@ export function vedicSummary(v: VedicChart): string[] {
   ];
   for (const name of ['Sun', 'Moon'] as const) {
     const p = v.bodies[name];
-    if (p) lines.push(`${name} in ${p.rashi} (${p.sign} sidereal) — ${p.nakshatra} pada ${p.pada}, ruled by ${p.nakshatraLord}`);
+    if (!p) continue;
+    lines.push(`${name} in ${p.rashi} (${p.sign} sidereal) — ${p.nakshatra} pada ${p.pada}, ruled by ${p.nakshatraLord}`);
+    const lore = loreByName(p.nakshatra);
+    if (lore) {
+      // The Moon's nakshatra is the heart of a Vedic chart — give it full depth.
+      const depth = name === 'Moon' ? `; symbol ${lore.symbol}; ${lore.gana} temperament; aim ${lore.purushartha}` : '';
+      lines.push(`  ↳ ${p.nakshatra}: deity ${lore.deity}; shakti = ${lore.shakti}${depth} — ${lore.essence}`);
+    }
   }
-  if (v.asc) lines.push(`Lagna (ascendant) in ${v.asc.rashi} — ${v.asc.nakshatra} pada ${v.asc.pada}`);
+  if (v.asc) {
+    lines.push(`Lagna (ascendant) in ${v.asc.rashi} — ${v.asc.nakshatra} pada ${v.asc.pada}`);
+    const alore = loreByName(v.asc.nakshatra);
+    if (alore) lines.push(`  ↳ ${v.asc.nakshatra}: ${alore.essence} (shakti = ${alore.shakti})`);
+  }
   lines.push(`Rahu in ${v.node.rashi} — ${v.node.nakshatra}`);
   return lines;
+}
+
+// Adds the "chapter of life you're living now" line from the running maha-dasha.
+export function vedicDashaLine(chart: Chart): string {
+  const now = currentDasha(chart);
+  const theme = DASHA_LORD_THEME[now.lord] ?? now.lord;
+  return `Current maha-dasha: ${theme} — ~${now.remainingYears.toFixed(1)} yrs remaining in this chapter (age ${now.ageYears.toFixed(0)})`;
 }

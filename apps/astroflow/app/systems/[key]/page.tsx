@@ -8,7 +8,8 @@ import { personLines } from '../../../lib/astro/interpret';
 import { natalAspects } from '../../../lib/astro/aspects';
 import { dreamspell, tzolkin, DREAMSPELL_SEALS, DREAMSPELL_TONES } from '../../../lib/astro/mayan';
 import { geneKeys, GENE_KEYS } from '../../../lib/astro/genekeys';
-import { vedicChart, vedicSummary, vimshottariDasha } from '../../../lib/astro/vedic';
+import { vedicChart, vedicSummary, vimshottariDasha, currentDasha } from '../../../lib/astro/vedic';
+import { loreByName, DASHA_LORD_THEME, GANA_MEANING, PURUSHARTHA_MEANING } from '../../../lib/astro/nakshatras';
 import {
   systemByKey, SEAL_KEY, TONE_KEY, COLOR_FAMILY, ORACLE_ROLE,
 } from '../../../lib/astro/systems-ref';
@@ -142,20 +143,51 @@ function Vedic({ chart, color, locale }: { chart: Chart; color: string; locale: 
   const t = tFor(locale);
   const v = vedicChart(chart);
   const dasha = vimshottariDasha(chart);
+  const now = currentDasha(chart);
   const summary = vedicSummary(v);
+  const moonNak = v.bodies.Moon?.nakshatra;
+  const moonLore = moonNak ? loreByName(moonNak) : undefined;
   return (
     <>
       <Hero color={color} big={`${v.asc ? `${v.asc.rashi} Lagna` : t('no birth time')}${v.bodies.Moon ? ` · ${t('Moon')} ${t('in')} ${v.bodies.Moon.nakshatra}` : ''}`}
         small={t('your sidereal ground — the karmic layer beneath the personality')} />
+
+      {moonLore && (
+        <Section title={t('Your Moon nakshatra — the heart of a Vedic chart')}>
+          <div className="rounded-xl border p-3.5" style={{ borderColor: `${color}55`, background: `${color}0f` }}>
+            <div className="text-base font-semibold" style={{ color: '#cfc8e8' }}>{moonNak}</div>
+            <div className="text-sm text-[#b6abec] italic mt-0.5">{moonLore.essence}</div>
+            <div className="mt-2.5 space-y-1 text-[13px]">
+              <Row><span className="text-[#8a8ea3]">{t('Deity')}:</span> {moonLore.deity}</Row>
+              <Row><span className="text-[#8a8ea3]">{t('Shakti (power)')}:</span> {moonLore.shakti}</Row>
+              <Row><span className="text-[#8a8ea3]">{t('Held between')}:</span> {moonLore.basisAbove} → {moonLore.basisBelow}</Row>
+              <Row><span className="text-[#8a8ea3]">{t('Symbol')}:</span> {moonLore.symbol}</Row>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              <span className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: '#2c3350', color: '#8a8ea3' }}>{GANA_MEANING[moonLore.gana]}</span>
+              <span className="text-[11px] px-2 py-1 rounded-full border" style={{ borderColor: '#2c3350', color: '#8a8ea3' }}>{PURUSHARTHA_MEANING[moonLore.purushartha]}</span>
+            </div>
+          </div>
+        </Section>
+      )}
+
       <Section title={t('Your sidereal chart')}>
         {summary.map((l, i) => <Row key={i}>{l}</Row>)}
       </Section>
-      <Section title={t('Your life chapter — Vimshottari dasha')}>
-        <Row><b style={{ color }}>{dasha.lord}</b> {t('mahadasha at birth · ~{years} years of it remaining when you were born', { years: dasha.balanceYears.toFixed(1) })}</Row>
+
+      <Section title={t('The chapter you are living now — Vimshottari dasha')}>
+        <div className="rounded-xl border p-3.5 mb-2.5" style={{ borderColor: `${color}55`, background: `${color}0f` }}>
+          <div className="text-sm" style={{ color: '#cfc8e8' }}>{DASHA_LORD_THEME[now.lord] ?? now.lord}</div>
+          <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: '#2c3350' }}>
+            <div className="h-full rounded-full" style={{ width: `${Math.round(now.progress * 100)}%`, background: color }} />
+          </div>
+          <div className="text-[11px] text-[#8a8ea3] mt-1.5">{t('~{years} years remaining in this chapter', { years: now.remainingYears.toFixed(1) })}</div>
+        </div>
+        <Row className="text-[#8a8ea3] text-xs">{t('The full 120-year cycle from your birth lord {lord}:', { lord: dasha.lord })}</Row>
         <div className="flex flex-wrap gap-1.5 mt-2">
           {dasha.sequence.map((d, i) => (
             <span key={i} className="text-[11px] px-2 py-1 rounded-full border"
-              style={{ borderColor: i === 0 ? color : '#2c3350', color: i === 0 ? '#cfc8e8' : '#8a8ea3', background: i === 0 ? `${color}1a` : 'transparent' }}>
+              style={{ borderColor: d.lord === now.lord ? color : '#2c3350', color: d.lord === now.lord ? '#cfc8e8' : '#8a8ea3', background: d.lord === now.lord ? `${color}1a` : 'transparent' }}>
               {d.lord} · {d.years}y
             </span>
           ))}
