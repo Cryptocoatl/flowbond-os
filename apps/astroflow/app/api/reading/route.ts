@@ -358,9 +358,10 @@ export async function POST(req: NextRequest) {
           name: firstName(p),
           vedic: bundle.vedic,
           vimshottari: bundle.vimshottari,
+          dasha: bundle.dasha,
           westernBigThree: western.bigThree,
         };
-        ask = `Write a Vedic (sidereal) reading for ${firstName(p)}. Ground it in the Moon's nakshatra and its lord, the Lagna, and the rashi placements; describe the karmic texture they carry and what chapter the Vimshottari dasha says they are living now. Mention the western big three only to orient, never to contradict.`;
+        ask = `Write a Vedic (sidereal) reading for ${firstName(p)}. Ground it in the Moon's nakshatra — its presiding deity, its shakti (power) and symbol — and the nakshatra lord, the Lagna, and the rashi placements; describe the karmic texture they carry. Then name the chapter of life they are living now from the CURRENT maha-dasha line, concretely. Mention the western big three only to orient, never to contradict.`;
         maxTokens = 900;
       } else if (system === 'mayan') {
         facts = {
@@ -383,6 +384,7 @@ export async function POST(req: NextRequest) {
           western: { bigThree: western.bigThree, defining: western.natalAspects.slice(0, 5) },
           vedic: bundle.vedic,
           vimshottari: bundle.vimshottari,
+          dasha: bundle.dasha,
           mayan: bundle.mayan,
           geneKeys: bundle.geneKeys,
         };
