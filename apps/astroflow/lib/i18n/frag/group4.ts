@@ -46,6 +46,19 @@ export const group4: Record<string, string> = {
   'The four color families': 'Las cuatro familias de color',
   'The 20 solar seals': 'Los 20 sellos solares',
   'The 13 galactic tones': 'Los 13 tonos galácticos',
+  // Maya · Cholq'ij (Guatemalan K'iche' — the living count)
+  'Your nawal — the living Cholq’ij count of the K’iche’ daykeepers of Guatemala':
+    'Tu nawal — el Cholq’ij vivo de los ajq’ijab’ k’iche’ de Guatemala',
+  'Your nawal — your face and your guide': 'Tu nawal — tu rostro y tu guía',
+  'Domain': 'Ámbito',
+  'Number': 'Número',
+  'Archaeological Tzolk’in equivalent:': 'Equivalente Tzolk’in arqueológico:',
+  'The 20 nawales': 'Los 20 nawales',
+  'The 13 numbers (K’iche’)': 'Los 13 números (k’iche’)',
+  'The Cholq’ij is the same unbroken 260-day count the K’iche’ and Kaqchikel ajq’ijab’ (daykeepers) still keep in the highlands of Guatemala. Below, two other lenses on the same day.':
+    'El Cholq’ij es la misma cuenta ininterrumpida de 260 días que los ajq’ijab’ (contadores del tiempo) k’iche’ y kaqchikel aún guardan en el altiplano de Guatemala. Abajo, otros dos lentes sobre el mismo día.',
+  'Dreamspell overlay (Argüelles) — a modern lens': 'Capa Dreamspell (Argüelles) — un lente moderno',
+  'Archaeological Tzolk’in / Haab count:': 'Cuenta Tzolk’in / Haab arqueológica:',
   // Vedic
   'no birth time': 'sin hora de nacimiento',
   'in': 'en',

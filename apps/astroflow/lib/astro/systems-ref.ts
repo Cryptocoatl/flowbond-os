@@ -21,9 +21,9 @@ export const SYSTEMS: SystemMeta[] = [
     about: 'The map of where every planet stood the moment you were born: your big three, your placements, and the aspects that wire them together.',
   },
   {
-    key: 'mayan', title: 'Mayan · 13 Moons', glyph: '🌞', color: '#e8956a',
-    tagline: 'your galactic signature — Tzolkin & Dreamspell',
-    about: 'The sacred count of days. Your kin carries a seal (your face), a tone (your power), a color family, and an oracle of supporting energies.',
+    key: 'mayan', title: 'Mayan · Cholq’ij', glyph: '🌞', color: '#e8956a',
+    tagline: 'your nawal — the living Maya count of Guatemala',
+    about: 'The sacred count of days as the K’iche’ daykeepers still keep it: your nawal (your face and guide) woven with its number, plus the archaeological Tzolk’in and the modern Dreamspell overlay.',
   },
   {
     key: 'vedic', title: 'Vedic · Jyotish', glyph: '🪔', color: '#caa6f0',

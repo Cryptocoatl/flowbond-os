@@ -6,7 +6,8 @@ import { serverClient } from '../../../lib/supabase-server';
 import { myFbid } from '../../../lib/astro/access';
 import { personLines } from '../../../lib/astro/interpret';
 import { natalAspects } from '../../../lib/astro/aspects';
-import { dreamspell, tzolkin, DREAMSPELL_SEALS, DREAMSPELL_TONES } from '../../../lib/astro/mayan';
+import { dreamspell, tzolkin, cholqij, DREAMSPELL_SEALS, DREAMSPELL_TONES } from '../../../lib/astro/mayan';
+import { NAWALES, KICHE_NUMBERS } from '../../../lib/astro/cholqij';
 import { geneKeys, GENE_KEYS } from '../../../lib/astro/genekeys';
 import { vedicChart, vedicSummary, vimshottariDasha, currentDasha } from '../../../lib/astro/vedic';
 import { loreByName, DASHA_LORD_THEME, GANA_MEANING, PURUSHARTHA_MEANING } from '../../../lib/astro/nakshatras';
@@ -93,18 +94,44 @@ function Mayan({ date, jd, color, locale }: { date: string; jd: number; color: s
   const t = tFor(locale);
   const ds = dreamspell(date);
   const tz = tzolkin(jd);
+  const ch = cholqij(jd);
   const fam = COLOR_FAMILY[ds.color];
   const oracle: Array<[string, number]> = [
     ['guide', ds.oracle.guide], ['analog', ds.oracle.analog], ['antipode', ds.oracle.antipode], ['occult', ds.oracle.occult],
   ];
   return (
     <>
-      <Hero color={fam.hex} big={`${ds.color} ${ds.toneName} ${ds.sealName.split(' ').slice(1).join(' ')}`}
-        small={`Kin ${ds.kin} · ${t('Dreamspell galactic signature')} · ${fam.role}`} />
-      <Section title={t('Your seal & tone')}>
+      {/* The living Guatemalan count leads — your nawal is your face and guide. */}
+      <Hero color={color} big={`${ch.number} ${ch.nawal.kiche}`}
+        small={`${t('Your nawal — the living Cholq’ij count of the K’iche’ daykeepers of Guatemala')}`} />
+
+      <Section title={t('Your nawal — your face and your guide')}>
+        <div className="rounded-xl border p-3.5" style={{ borderColor: `${color}55`, background: `${color}0f` }}>
+          <div className="text-base font-semibold" style={{ color: '#f0e2c8' }}>{ch.nawal.kiche}</div>
+          <div className="text-[13px] text-[#e8b98a] mt-0.5">{ch.nawal.symbol}</div>
+          <p className="text-[13px] text-[#cfc8b8] mt-2 leading-relaxed">{ch.nawal.meaning}</p>
+          <div className="mt-2.5 space-y-1 text-[13px]">
+            <Row><span className="text-[#8a8ea3]">{t('Domain')}:</span> {ch.nawal.domain}</Row>
+            <Row><span className="text-[#8a8ea3]">{t('Number')} {ch.number} ({ch.numberName}):</span> {ch.numberEnergy}</Row>
+            <Row className="text-[#5b5e72]">{t('Archaeological Tzolk’in equivalent:')} {ch.nawal.yucatec}</Row>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={t('The 20 nawales')}>
+        <Grid items={NAWALES.map((n, i) => ({ label: n.kiche, sub: n.domain, on: n.kiche === ch.nawal.kiche }))} color={color} />
+      </Section>
+
+      <Section title={t('The 13 numbers (K’iche’)')}>
+        <Grid items={KICHE_NUMBERS.map((n, i) => ({ label: `${i + 1} ${n}`, sub: '', on: i + 1 === ch.number }))} color={color} />
+      </Section>
+
+      <Reference>{t('The Cholq’ij is the same unbroken 260-day count the K’iche’ and Kaqchikel ajq’ijab’ (daykeepers) still keep in the highlands of Guatemala. Below, two other lenses on the same day.')}</Reference>
+
+      <Section title={t('Dreamspell overlay (Argüelles) — a modern lens')}>
         <Row><b style={{ color: fam.hex }}>{ds.sealName}</b> — {SEAL_KEY[ds.seal - 1]} <span className="text-[#5b5e72]">({t('seal')} {ds.seal})</span></Row>
         <Row><b style={{ color }}>{t('Tone')} {ds.tone} · {ds.toneName}</b> — {TONE_KEY[ds.tone - 1]}</Row>
-        <Row className="text-[#9698a8]">{t('Traditional (GMT) count:')} {tz.number} {tz.dayName} — {tz.meaning}</Row>
+        <Row className="text-[#9698a8]">{t('Archaeological Tzolk’in / Haab count:')} {tz.number} {tz.dayName} — {tz.meaning}</Row>
       </Section>
       <Section title={t('Your oracle — the four energies around you')}>
         <div className="grid sm:grid-cols-2 gap-2">

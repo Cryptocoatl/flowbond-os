@@ -7,6 +7,8 @@
 // IMPORTANT: birth-day counts should use the LOCAL civil date — Chart.jd is
 // UTC and can land on the next civil day (e.g. a 23:03 CDMX birth).
 
+import { cholqijFrom, type CholqijInfo } from './cholqij';
+
 const GMT_CORRELATION = 584283; // JDN of Long Count 0.0.0.0.0 (4 Ahau 8 Cumku)
 
 export const TZOLKIN_NAMES = [
@@ -67,6 +69,17 @@ export function tzolkin(jd: number): Tzolkin {
 export function haab(jd: number): Haab {
   const doy = pmod(jdn(jd) - GMT_CORRELATION + 348, 365); // epoch = 8 Cumku
   return { day: pmod(doy, 20), month: HAAB_MONTHS[Math.floor(doy / 20)] };
+}
+
+// Cholq'ij — the same continuous count, read as the Guatemalan highland K'iche'
+// daykeepers (ajq'ijab') keep it: the 20 nawales × 13 numbers. Reuses the exact
+// day-sign index + number the archaeological Tzolk'in computes above; cholqij.ts
+// carries the K'iche' names + daykeeper meanings.
+export function cholqij(jd: number): CholqijInfo {
+  const days = jdn(jd) - GMT_CORRELATION;
+  const dayIndex = pmod(days + 19, 20); // same index as tzolkin() day-sign
+  const number = pmod(days + 3, 13) + 1;
+  return cholqijFrom(dayIndex, number);
 }
 
 export function lordOfNight(jd: number): string {
@@ -158,10 +171,13 @@ export function dreamspell(date: string): Dreamspell {
 // ── Summary lines for readings ──────────────────────────────────────────────
 export function mayanSummary(jd: number, date: string): string[] {
   const lc = longCount(jd), tz = tzolkin(jd), hb = haab(jd);
+  const ch = cholqij(jd);
   const ds = dreamspell(date);
   return [
-    `Traditional (GMT): ${tz.number} ${tz.dayName} (${tz.meaning}) · ${hb.day} ${hb.month} · Long Count ${lc.baktun}.${lc.katun}.${lc.tun}.${lc.uinal}.${lc.kin} · ${lordOfNight(jd)}`,
-    `Dreamspell: Kin ${ds.kin} — ${ds.color} ${ds.toneName} ${ds.sealName.split(' ').slice(1).join(' ')} (tone ${ds.tone}, seal ${ds.seal})`,
+    // The living Guatemalan count leads — your nawal is your face and guide.
+    `Cholq'ij (living Maya count, Guatemalan K'iche'): ${ch.number} ${ch.nawal.kiche} — nawal ${ch.nawal.kiche} = ${ch.nawal.domain}; ${ch.nawal.meaning} The number ${ch.number} (${ch.numberName}) carries ${ch.numberEnergy}.`,
+    `Traditional (GMT/archaeological): ${tz.number} ${tz.dayName} (${tz.meaning}) · Haab ${hb.day} ${hb.month} · Long Count ${lc.baktun}.${lc.katun}.${lc.tun}.${lc.uinal}.${lc.kin} · ${lordOfNight(jd)}`,
+    `Dreamspell (Argüelles overlay): Kin ${ds.kin} — ${ds.color} ${ds.toneName} ${ds.sealName.split(' ').slice(1).join(' ')} (tone ${ds.tone}, seal ${ds.seal})`,
     `Dreamspell oracle: guide ${DREAMSPELL_SEALS[ds.oracle.guide - 1]}, analog ${DREAMSPELL_SEALS[ds.oracle.analog - 1]}, antipode ${DREAMSPELL_SEALS[ds.oracle.antipode - 1]}, occult ${DREAMSPELL_SEALS[ds.oracle.occult - 1]}`,
   ];
 }

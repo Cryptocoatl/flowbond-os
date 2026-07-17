@@ -90,9 +90,13 @@ describe('Dreamspell', () => {
 describe('summary', () => {
   it('emits clearly labeled lines for both systems', () => {
     const lines = mayanSummary(jdOf('1994-03-24'), '1994-03-24');
-    expect(lines[0]).toContain('Traditional (GMT)');
-    expect(lines[0]).toContain('8 Ben');
-    expect(lines[1]).toContain('Kin 125');
-    expect(lines[2]).toContain('guide');
+    // The living Cholq'ij (Guatemalan K'iche') count leads: 8 Ben → nawal Aj.
+    expect(lines[0]).toContain("Cholq'ij");
+    expect(lines[0]).toContain('Aj');
+    expect(lines[0]).toContain('8');
+    expect(lines[1]).toContain('Traditional (GMT');
+    expect(lines[1]).toContain('8 Ben');
+    expect(lines[2]).toContain('Kin 125');
+    expect(lines[3]).toContain('guide');
   });
 });
