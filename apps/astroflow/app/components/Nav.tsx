@@ -44,6 +44,7 @@ export default async function Nav() {
             <Link href="/systems" className="hover:text-[#cfc8e8] transition">{t('Currents')}</Link>
             <Link href="/instant" className="hover:text-[#cfc8e8] transition hidden sm:inline">{t('Instant')}</Link>
             <Link href="/cosmos" className="hover:text-[#e3c07a] transition">{t('Cosmos ✦')}</Link>
+            <Link href="/dreams" className="hover:text-[#8F7CFF] transition">{t('Dreams')}</Link>
             <FlowMeChip handle={flowMeHandle} className="text-[#9698a8] hover:text-[#cfc8e8] transition normal-case tracking-normal" />
           </div>
           <LanguageSwitcher />
