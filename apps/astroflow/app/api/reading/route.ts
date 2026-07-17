@@ -368,7 +368,7 @@ export async function POST(req: NextRequest) {
           name: firstName(p),
           mayan: bundle.mayan,
         };
-        ask = `Write a Mayan reading for ${firstName(p)} covering BOTH counts: the Traditional (GMT) day sign + tone as their ancestral face of the day, and the Dreamspell kin with its oracle (guide, analog, antipode, occult) as their galactic working team. Keep the two counts clearly distinct, then close with what carrying both says about how they move through time.`;
+        ask = `Write a Mayan reading for ${firstName(p)}. LEAD with the Cholq'ij — the living Maya count still kept by the K'iche' daykeepers (ajq'ijab') of highland Guatemala: name their nawal (their face and guide) in K'iche', read its meaning and domain deeply, and weave in the energy of their number (1–13). This is the heart of the reading. THEN, more briefly, add the archaeological Tzolk'in/Haab/Long Count as the ancestral record, and the Dreamspell kin + oracle as a modern overlay — clearly labeled as such, never conflated with the living count. Close with what their nawal asks of how they move through time.`;
         maxTokens = 900;
       } else if (system === 'genekeys') {
         facts = {

@@ -36,7 +36,7 @@ export interface ChartFacts {
 /** Stable, cheap hash of the chart — changes iff a placement/angle/jd changes.
  *  FACTS_VERSION is folded in so a change to the fact SHAPE (e.g. adding the
  *  Vedic nakshatra depth + dasha line) invalidates every cached bundle once. */
-const FACTS_VERSION = 'v2-nakshatra-depth';
+const FACTS_VERSION = 'v3-cholqij-nawal';
 export function hashChart(chart: Chart): string {
   const s = JSON.stringify({ v: FACTS_VERSION, b: chart.bodies, a: chart.asc, m: chart.mc, n: chart.node, jd: chart.jd });
   let h = 0;
