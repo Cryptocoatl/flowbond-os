@@ -339,6 +339,7 @@ export default function Constellation({
           {myFbid && hasProfile && (
             <button onClick={() => { setAddFriend((v) => !v); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('+ Add friend')}</button>
           )}
+          {myFbid && <Link href="/today" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">☽ {t('Your sky today')}</Link>}
           {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Dashboard')}</Link>}
           {myFbid && <Link href="/privacy" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">🛡 {t('Your data & privacy')}</Link>}
           {myFbid && <Link href="/dreams" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">✦ {t('Dreams — what should we build?')}</Link>}
