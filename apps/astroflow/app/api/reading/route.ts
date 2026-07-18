@@ -6,14 +6,15 @@ import { synastry } from '../../../lib/astro/aspects';
 import { panorama, interpretAspect } from '../../../lib/astro/interpret';
 import { LINE_MEANING } from '../../../lib/astro/astrocartography';
 import { powerPlaces } from '../../../lib/astro/acg-geo';
+import { transitSummary } from '../../../lib/astro/transits';
 import { serverClient } from '../../../lib/supabase-server';
 import { getOrBuildFacts, buildFacts, appendMemory, getConstellationCache, setConstellationCache, type ChartFacts } from '../../../lib/astro/memory';
 import type { RelContext, AstroProfile } from '../../../lib/astro/types';
 
 // Which symbolic system(s) to read through. 'comparison' reads the SAME person
 // through two systems side by side (western vs vedic, gene keys vs the chart).
-export type ReadingSystem = 'western' | 'vedic' | 'mayan' | 'genekeys' | 'comparison' | 'unified';
-const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comparison', 'unified'];
+export type ReadingSystem = 'western' | 'vedic' | 'mayan' | 'genekeys' | 'comparison' | 'unified' | 'transits';
+const SYSTEMS: ReadingSystem[] = ['western', 'vedic', 'mayan', 'genekeys', 'comparison', 'unified', 'transits'];
 
 // Model is env-configurable; see https://docs.claude.com/en/docs/about-claude/models
 // Default to the deepest model — readings are reflective guidance people may
@@ -377,6 +378,16 @@ export async function POST(req: NextRequest) {
         };
         ask = `Write a Gene Keys reading for ${firstName(p)} along the Activation Sequence: Life's Work, Evolution, Radiance, Purpose. For each sphere, name the shadow as the contracted pattern they will recognize, the gift as what unlocks, and the siddhi as the far star. Weave the profile lines into HOW they walk this path. Close with the single shadow→gift shift that would move everything else.`;
         maxTokens = 1000;
+      } else if (system === 'transits') {
+        // Time-dependent: computed fresh for right now, never cached.
+        const now = transitSummary(p.chart);
+        facts = {
+          name: firstName(p),
+          bigThree: western.bigThree,
+          skyNow: now,
+        };
+        ask = `Write a "sky now" reading for ${firstName(p)} — the present-day transits over their natal chart. LEAD with any active LIFE CYCLE (a Saturn/Jupiter/solar/lunar return or a Uranus turn) if present: name it plainly and say what season of life it opens. Then read the 2–4 strongest current transits as this week's weather — what each is asking, where to lean in and where to be patient — grounding every line in the specific transit given (planet, aspect, the natal area it touches, and whether it is building or easing). Note the Moon phase as the day's emotional tide. Keep it practical and encouraging; this is timing guidance, patterns not fate. Close with the one thing most worth their attention right now.`;
+        maxTokens = 900;
       } else {
         // comparison & unified: same person through all the lenses
         facts = {
