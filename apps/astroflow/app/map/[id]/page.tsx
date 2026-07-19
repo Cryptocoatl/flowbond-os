@@ -7,6 +7,7 @@ import CollectiveContext from '../../components/CollectiveContext';
 import AddToConstellation from '../../components/AddToConstellation';
 import CurrentsLens from '../../components/CurrentsLens';
 import MapMembership from '../../components/MapMembership';
+import ChartWheel, { type WheelPerson, type WheelBody } from '../../components/ChartWheel';
 import { buildCurrents } from '../../../lib/astro/currents';
 import type { Chart } from '../../../lib/astro/types';
 
@@ -77,6 +78,23 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
     ...members.map((m) => (m.handle ? chartByHandle.get(m.handle) : undefined)).filter(Boolean) as Chart[],
     ...guests.map((g) => g.chart),
   ];
+  // Collective wheel data — every person's planets on one circle, tinted by them.
+  const WHEEL_PLANETS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  const toBodies = (c: Chart): WheelBody[] =>
+    WHEEL_PLANETS.filter((k) => c.bodies[k]).map((k) => {
+      const b = c.bodies[k];
+      return { planet: k, lon: b.abs, sign: b.sign, deg: b.deg, house: b.house, retro: b.retro };
+    });
+  const wheelPeople: WheelPerson[] = [
+    ...members
+      .map((m) => {
+        const c = m.handle ? chartByHandle.get(m.handle) : undefined;
+        return c ? { name: m.display_name ?? t('Unknown'), color: m.avatar_color ?? '#9a8fe0', bodies: toBodies(c) } : null;
+      })
+      .filter(Boolean) as WheelPerson[],
+    ...guests.map((g) => ({ name: g.display_name, color: g.avatar_color, bodies: toBodies(g.chart) })),
+  ];
+
   const composite: Record<string, number> = { Fire: 0, Earth: 0, Air: 0, Water: 0 };
   for (const c of charts) for (const el of ELEMENTS) composite[el] += c.elements?.[el] ?? 0;
   const total = Object.values(composite).reduce((a, b) => a + b, 0) || 1;
@@ -139,6 +157,15 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
         >
           🌍 {t('View on the globe — where your lines cross')}
         </Link>
+      )}
+
+      {wheelPeople.length > 0 && (
+        <Section title={t('The collective wheel — everyone on one sky')}>
+          <ChartWheel
+            people={wheelPeople}
+            caption={t('Each person is a color. Tap any planet to see whose it is and what it means.')}
+          />
+        </Section>
       )}
 
       <Section title={t('The weave — your crew of stars')}>
