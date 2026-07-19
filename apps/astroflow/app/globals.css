@@ -53,8 +53,13 @@ body {
   to { transform: rotate(360deg); }
 }
 .af-rise { animation: af-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes af-sheet-rise {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.af-sheet-rise { animation: af-sheet-rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) {
-  .af-rise, [class*='af-'] { animation: none !important; }
+  .af-rise, .af-sheet-rise, [class*='af-'] { animation: none !important; }
 }
 
 /* ── Native-app touches ───────────────────────────────────────── */

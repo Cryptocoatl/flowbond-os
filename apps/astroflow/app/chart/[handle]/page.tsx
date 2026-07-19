@@ -4,6 +4,7 @@ import { personLines } from '../../../lib/astro/interpret';
 import { powerPlaces, linesToGeoJSON, spotsToGeoJSON, PLANET_COLOR, PLANET_GLYPH } from '../../../lib/astro/acg-geo';
 import { astrocartography } from '../../../lib/astro/astrocartography';
 import AcgMap from '../../components/AcgMap';
+import ChartWheel, { type WheelBody } from '../../components/ChartWheel';
 import { vedicChart, vedicSummary } from '../../../lib/astro/vedic';
 import { mayanSummary } from '../../../lib/astro/mayan';
 import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
@@ -43,6 +44,18 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
 
   const lines = showFull ? personLines(p.chart) : [];
   const aspects = showFull ? natalAspects(p.chart).filter((a) => a.type !== 'quincunx').slice(0, 9) : [];
+
+  // Data for the circular wheel — the 10 planets placed by longitude + the web.
+  const WHEEL_PLANETS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  const wheelBodies: WheelBody[] = showFull
+    ? WHEEL_PLANETS.filter((k) => p.chart.bodies[k]).map((k) => {
+        const b = p.chart.bodies[k];
+        return { planet: k, lon: b.abs, sign: b.sign, deg: b.deg, house: b.house, retro: b.retro };
+      })
+    : [];
+  const wheelAspects = showFull
+    ? natalAspects(p.chart).slice(0, 26).map((a) => ({ p1: a.p1, p2: a.p2, type: a.type, harmony: a.harmony, orb: a.orb }))
+    : [];
 
   // Per-person astrocartography: the real cities THIS chart's own lines run
   // through — deterministic, so it's identical everywhere it's shown.
@@ -88,6 +101,18 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
               <span key={el}>{el} <b className="text-[#e3c07a]">{n}</b></span>
             ))}
           </div>
+        </div>
+      )}
+
+      {showFull && wheelBodies.length > 0 && (
+        <div className="mt-6">
+          <ChartWheel
+            people={[{ name: firstName, color: p.avatarColor, bodies: wheelBodies }]}
+            asc={p.chart.asc ? p.chart.asc.abs : null}
+            mc={p.chart.mc ? p.chart.mc.abs : null}
+            aspects={wheelAspects}
+            caption={t('Tap any planet, sign or aspect line to open its meaning.')}
+          />
         </div>
       )}
 
