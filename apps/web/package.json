@@ -12,6 +12,7 @@
   "dependencies": {
     "@flowbond/core": "workspace:*",
     "@flowbond/flowedit": "workspace:*",
+    "@flowbond/security": "workspace:*",
     "@flowbond/ui": "workspace:*",
     "@supabase/supabase-js": "^2.105.4",
     "next": "^15.2.1",

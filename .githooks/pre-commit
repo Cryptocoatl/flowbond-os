@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# FloGuard secret-scanning backstop (FG-042).
+# Requires gitleaks ≥8 installed: https://github.com/gitleaks/gitleaks
+# Activate once per clone: git config core.hooksPath .githooks
+
+if ! command -v gitleaks &>/dev/null; then
+  echo "⚠️  gitleaks not found — skipping secret scan (install: brew install gitleaks)"
+  exit 0
+fi
+
+gitleaks protect --staged --config .gitleaks.toml --redact -v
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ FloGuard: gitleaks found potential secrets in staged files."
+  echo "   Review the output above, remove/rotate the secret, then commit again."
+  echo "   To bypass (ONLY if a false positive): git commit --no-verify"
+fi
+exit $STATUS
