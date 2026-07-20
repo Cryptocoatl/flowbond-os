@@ -1,0 +1,37 @@
+# FloGuard gitleaks configuration (FG-042)
+# https://github.com/gitleaks/gitleaks#configuration
+
+title = "flowbond-os secret scanner"
+
+[extend]
+# Extend the default ruleset shipped with gitleaks
+useDefault = true
+
+[[rules]]
+id          = "supabase-service-role"
+description = "Supabase service_role key (eyJ prefix, long JWT)"
+regex       = '''eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}'''
+tags        = ["supabase", "jwt"]
+
+[[rules]]
+id          = "supabase-anon"
+description = "Supabase anon/publishable key"
+regex       = '''sb_publishable_[A-Za-z0-9]{20,}'''
+tags        = ["supabase"]
+
+[allowlist]
+description = "Known safe patterns"
+regexes     = [
+  # Placeholder / example values in tests or fixtures
+  '''REPLACE_ME''',
+  '''your[-_].*[-_]key''',
+  '''example[-_].*[-_]key''',
+]
+paths = [
+  # Lock files and build artifacts are never secrets
+  '''pnpm-lock\.yaml''',
+  '''package-lock\.json''',
+  '''\.next/''',
+  '''dist/''',
+  '''node_modules/''',
+]

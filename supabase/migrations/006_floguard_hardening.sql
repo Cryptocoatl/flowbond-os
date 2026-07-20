@@ -14,9 +14,13 @@
 --  leaked-password toggle (FG-021, dashboard), locking anon admin RPCs (FG-005).
 -- ════════════════════════════════════════════════════════════════════════
 
--- ── FG-022 · pin search_path on flowbond_role_rank ────────────────────────
--- Mutable search_path on a function is a privilege-escalation vector. Pin it
--- to empty for every overload, regardless of signature.
+-- ── FG-022 · pin search_path on all mutable-search-path functions ─────────
+-- Mutable search_path is a privilege-escalation vector. Pin to '' for every
+-- overload of each flagged function.
+-- Scope expanded 2026-07-20: 8 additional fns flagged by advisors.
+-- Functions: flowbond_role_rank, ff_uid, ff_is_admin, vpa__is_service,
+--   _tevo_jwt_email, tulum_holders_sealed, tulum_snapshot_freeze_guard,
+--   tulum_wallets_permanent, ff_ledger_no_mutate
 do $$
 declare r record;
 begin
@@ -24,7 +28,18 @@ begin
     select p.oid::regprocedure as sig
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.proname = 'flowbond_role_rank'
+    where n.nspname = 'public'
+      and p.proname in (
+        'flowbond_role_rank',
+        'ff_uid',
+        'ff_is_admin',
+        'vpa__is_service',
+        '_tevo_jwt_email',
+        'tulum_holders_sealed',
+        'tulum_snapshot_freeze_guard',
+        'tulum_wallets_permanent',
+        'ff_ledger_no_mutate'
+      )
   loop
     execute format('alter function %s set search_path = ''''', r.sig);
   end loop;

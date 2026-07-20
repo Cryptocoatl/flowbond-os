@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next'
 import { join } from 'path'
+import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/core', '@flowbond/ui', '@flowbond/flowedit'],
+  transpilePackages: ['@flowbond/core', '@flowbond/ui', '@flowbond/flowedit', '@flowbond/security'],
   // Pin file-tracing to the monorepo root (multiple lockfiles exist on this machine).
   outputFileTracingRoot: join(__dirname, '../..'),
   async rewrites() {
@@ -15,4 +16,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSecurity(nextConfig)
