@@ -5,6 +5,7 @@ import { powerPlaces, linesToGeoJSON, spotsToGeoJSON, PLANET_COLOR, PLANET_GLYPH
 import { astrocartography } from '../../../lib/astro/astrocartography';
 import AcgMap from '../../components/AcgMap';
 import ChartWheel, { type WheelBody } from '../../components/ChartWheel';
+import TrackView from '../../components/TrackView';
 import { vedicChart, vedicSummary } from '../../../lib/astro/vedic';
 import { mayanSummary } from '../../../lib/astro/mayan';
 import { geneKeys, geneKeysSummary } from '../../../lib/astro/genekeys';
@@ -79,6 +80,7 @@ export default async function ChartPage({ params }: { params: Promise<{ handle: 
 
   return (
     <Shell>
+      <TrackView event="view_chart" screen="chart" />
       <div className="flex items-center gap-3">
         <span className="w-4 h-4 rounded-full" style={{ background: p.avatarColor }} />
         <h1 className="text-3xl font-serif">{p.displayName}</h1>

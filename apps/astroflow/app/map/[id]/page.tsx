@@ -8,6 +8,7 @@ import AddToConstellation from '../../components/AddToConstellation';
 import CurrentsLens from '../../components/CurrentsLens';
 import MapMembership from '../../components/MapMembership';
 import ChartWheel, { type WheelPerson, type WheelBody } from '../../components/ChartWheel';
+import TrackView from '../../components/TrackView';
 import { buildCurrents } from '../../../lib/astro/currents';
 import type { Chart } from '../../../lib/astro/types';
 
@@ -122,6 +123,7 @@ export default async function MapPage({ params }: { params: Promise<{ id: string
           animation: 'af-aurora 12s ease-in-out infinite',
         }}
       />
+      <TrackView event="view_map" screen="map" />
       <Link href="/dashboard" className="text-xs text-[#5b5e72]">← {t('dashboard')}</Link>
       <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mt-4 mb-2">{t('Collective chart')} · {map.context}</p>
       <h1
