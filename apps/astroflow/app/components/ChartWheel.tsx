@@ -1,9 +1,10 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PLANETS, SIGNS, HOUSES, ASPECTS as ASPECT_REF } from '../../lib/astro/university';
 import { SIGN_GLYPH } from '../../lib/astro/currents';
 import { PLANET_GLYPH, PLANET_COLOR } from '../../lib/astro/acg-geo';
 import { useT } from '../../lib/i18n/provider';
+import { track } from '../../lib/analytics';
 
 // A full circular natal wheel — zodiac ring, whole-sign houses, planets placed
 // by longitude, and the aspect web. Tap anything to expand its meaning in a
@@ -60,6 +61,8 @@ export default function ChartWheel({
   const [sel, setSel] = useState<Sel>(null);
   const [guide, setGuide] = useState(false);
   const collective = people.length > 1;
+  useEffect(() => { track('wheel_opened', collective ? 'map' : 'chart'); }, [collective]);
+  useEffect(() => { if (sel) track('wheel_detail', collective ? 'map' : 'chart'); }, [sel, collective]);
 
   const S = 400, C = 200; // viewBox size, center
   const rSignOuter = 195, rSignInner = 162; // zodiac band

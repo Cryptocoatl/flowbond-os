@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getT } from '../../lib/i18n/server';
 import { myFbid } from '../../lib/astro/access';
 import Dreams from '../components/Dreams';
+import TrackView from '../components/TrackView';
 
 // Dreams — the community roadmap. Anyone can post what they wish AstralFlow
 // could do, vote on the wall, or ask FlowMe to dream up ideas. The most-loved
@@ -24,6 +25,7 @@ export default async function DreamsPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 pt-8 pb-24">
+      <TrackView event="view_dreams" screen="dreams" />
       <header className="mb-5">
         <h1 className="text-2xl font-serif text-[#ece9e0]">{t('Dreams')}</h1>
         <p className="text-[#9698a8] text-[14px] mt-1">

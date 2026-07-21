@@ -6,6 +6,8 @@ import { activeTransits, moonPhase, lifeCycles, describeTransit } from '../../li
 import { signOf, degInSign, sunLon, moonLon } from '../../lib/astro/ephemeris';
 import { jdOfDate } from '../../lib/astro/transits';
 import DailyReading from '../components/DailyReading';
+import TrackView from '../components/TrackView';
+import FeedbackButton from '../components/FeedbackButton';
 import type { Chart } from '../../lib/astro/types';
 
 // Today — the sky right now over your chart: Moon phase, any great life-cycle
@@ -54,6 +56,7 @@ export default async function TodayPage() {
 
   return (
     <div className="max-w-xl mx-auto px-4 pt-8 pb-24 text-[#ece9e0]">
+      <TrackView event="view_today" screen="today" />
       <header className="mb-5">
         <h1 className="text-2xl font-serif">{t('Your sky today')}</h1>
         <p className="text-[#9698a8] text-[14px] mt-1">
@@ -112,6 +115,10 @@ export default async function TodayPage() {
       <div className="mt-7 pt-5 border-t border-white/5">
         <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-1">{t('Read my sky with FlowMe')}</div>
         <DailyReading handle={handle} />
+      </div>
+
+      <div className="mt-8 text-center">
+        <FeedbackButton screen="today" inline />
       </div>
     </div>
   );
