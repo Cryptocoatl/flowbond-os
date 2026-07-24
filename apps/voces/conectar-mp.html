@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conecta tu MercadoPago · Voces para el Alma</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#F7F2E9;color:#2C2722;font-family:Inter,system-ui,sans-serif;
+    min-height:100vh;display:grid;place-items:center;padding:24px}
+  .card{max-width:480px;width:100%;background:#FCFAF4;border:1px solid rgba(44,39,34,.12);border-radius:20px;padding:34px 30px;text-align:center;box-shadow:0 30px 70px -30px rgba(44,39,34,.35)}
+  .dot{width:14px;height:14px;border-radius:50%;background:#B68A3E;margin:0 auto 18px;box-shadow:0 0 0 6px rgba(203,161,90,.25),0 0 0 12px rgba(126,144,120,.15)}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:400;font-size:26px;margin:0 0 6px}
+  .who{color:#B68A3E;font-weight:600;font-size:14px;margin-bottom:18px;min-height:18px}
+  .steps{text-align:left;background:#F7F2E9;border-radius:14px;padding:16px 18px;margin:0 0 22px;font-size:14.5px;line-height:1.55}
+  .steps b{color:#2C2722}
+  .note{font-size:13px;color:#8a8378;margin:10px 0 0}
+  button{font-family:Inter,sans-serif;font-size:16px;font-weight:600;color:#fff;background:#B01E2E;border:none;
+    border-radius:999px;padding:15px 30px;cursor:pointer;width:100%;transition:.2s}
+  button:hover{background:#7C1420} button:disabled{opacity:.55;cursor:default}
+  .msg{margin-top:14px;font-size:14px;min-height:18px}
+  .msg.err{color:#B01E2E}
+  .foot{margin-top:22px;font-size:12px;color:#8a8378}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="dot"></div>
+  <h1>Conecta tu MercadoPago</h1>
+  <div class="who" id="who"></div>
+  <div class="steps">
+    <p style="margin:0 0 10px"><b>Así recibes tus pagos directo en tu cuenta.</b></p>
+    <p style="margin:0 0 8px">1 · Asegúrate de tener la sesión iniciada en <b>TU</b> cuenta de MercadoPago (la tuya, no otra).</p>
+    <p style="margin:0 0 8px">2 · Toca el botón y <b>autoriza</b> la conexión.</p>
+    <p style="margin:0">3 · Listo: cada venta llega a tu cuenta y Voces retiene solo su comisión acordada.</p>
+  </div>
+  <button id="btn" onclick="connect()">Conectar mi MercadoPago</button>
+  <div class="msg" id="msg"></div>
+  <p class="foot">Voces para el Alma · La conexión es segura vía MercadoPago.</p>
+</div>
+<script>
+const k = new URLSearchParams(location.search).get("k");
+const SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const ANON = "sb_publishable_4R87bXxkX8zwRB5wlVdiXg_X_ZEnVIB";
+const sb = supabase.createClient(SUPABASE_URL, ANON);
+const $ = id => document.getElementById(id);
+if (!k) { $("who").textContent = "Este enlace no es válido."; $("btn").disabled = true; }
+async function connect(){
+  const btn = $("btn"), msg = $("msg"); msg.className = "msg"; msg.textContent = "Abriendo MercadoPago…"; btn.disabled = true;
+  try {
+    const { data, error } = await sb.rpc("vpa_mp_authorize_from_claim", { p_token: k });
+    if (error) throw error;
+    if (data && data.name) $("who").textContent = data.name;
+    location.href = data.authorize_url;
+  } catch (e) {
+    msg.className = "msg err"; msg.textContent = "No se pudo iniciar la conexión: " + (e.message || e);
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

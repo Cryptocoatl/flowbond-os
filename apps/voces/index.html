@@ -1303,8 +1303,13 @@ function openVozFromUrl(){
   if(i>=0){ openModal(i); setTimeout(()=>document.getElementById("directorio").scrollIntoView({behavior:"smooth"}),50); }
 }
 function captureRef(){
-  const ref=new URLSearchParams(location.search).get("ref");
+  const q=new URLSearchParams(location.search);
+  const ref=q.get("ref");
   if(ref) try{ localStorage.setItem("vpa_ref", ref.trim().toUpperCase()); }catch(_){}
+  // Enlace de compatibilidad del Test de Temperamentos (La Vida es Bella §5):
+  // quien invitó comparte ?compat=TOKEN; se guarda para ligar ambos tests al pagar.
+  const compat=q.get("compat");
+  if(compat && /^[0-9a-f-]{36}$/i.test(compat)) try{ localStorage.setItem("lvb_compat", compat); }catch(_){}
 }
 // vuelta desde MercadoPago
 function handlePayReturn(){
@@ -1322,11 +1327,16 @@ async function deliverEbooks(orderId){
   if(!email) return;
   // 1) ¿Es una compra del Test de Temperamentos? → acceso al Test (un solo uso, La Vida es Bella).
   try{
+    let compat=null; try{ compat=localStorage.getItem("lvb_compat")||null; }catch(_){}
     const tr=await fetch(SUPABASE_URL+"/rest/v1/rpc/lvb_issue_test_access",{ method:"POST",
       headers:{ "Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON,"apikey":SUPABASE_ANON },
-      body:JSON.stringify({ p_order:orderId, p_email:email }) });
+      body:JSON.stringify({ p_order:orderId, p_email:email, p_compat:compat }) });
     const tj=await tr.json();
-    if(tj && tj.ok && tj.url){ showTestAccess(tj.url); try{ localStorage.removeItem("vpa_last_order"); }catch(_){} return; }
+    if(tj && tj.ok && tj.url){
+      showTestAccess(tj.url);
+      try{ localStorage.removeItem("vpa_last_order"); localStorage.removeItem("lvb_compat"); }catch(_){}
+      return;
+    }
   }catch(_){}
   // 2) Cualquier otra oferta con archivo: entrega digital normal.
   try{

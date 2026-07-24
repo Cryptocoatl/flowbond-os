@@ -148,7 +148,8 @@
   <div class="drawer-body" id="drawerBody"></div>
   <div class="drawer-foot">
     <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
-    <button class="btn btn-primary" id="saveBtn" onclick="saveForm()">Guardar</button>
+    <button class="btn btn-ghost" id="suggestBtn" style="display:none" onclick="saveAsSuggestion()">Proponer a la voz</button>
+    <button class="btn btn-primary" id="saveBtn" onclick="saveForm()">Guardar y publicar</button>
   </div>
 </aside>
 
@@ -169,6 +170,10 @@ const $ = id => document.getElementById(id);
 let toastTimer;
 function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),2800); }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
+const usd = c => "$"+((Number(c)||0)/100).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:2})+" USD";
+const mxn = c => "$"+((Number(c)||0)/100).toLocaleString("es-MX")+" MXN";
+let PLANS=[];   // planes de membresía (cache)
 const STATUS_PUB = ["published","hidden","pending","draft"];
 const STATUS_SPEC = ["published","verified","pending","hidden"];
 const MOD = ["presencial","online","hibrido"];
@@ -230,16 +235,22 @@ async function boot(){
   $("whoami").textContent = session.user.email;
   buildNav();
   await preload();
-  go("specialists");
+  go("guia");
 }
 sb.auth.onAuthStateChange((_e,_s)=>{});
 
 /* ============ NAV ============ */
 const SECTIONS = [
-  ["specialists","Especialistas"],["categories","Categorías"],["workshops","Talleres"],
-  ["products","Tienda"],["testimonials","Testimonios"],["inquiries","Postulaciones"],
-  ["members","Miembros"],["settings","Inicio / Contacto"]
+  ["guia","✦ Guía rápida"],
+  ["applications","Solicitudes de perfil"],["specialists","Especialistas"],["changes","Cambios y comentarios"],
+  ["offerings","Ofertas"],["categories","Temáticas"],["workshops","Talleres"],["products","Tienda"],
+  ["pagos","Pagos"],["orders","Pedidos"],["memberships","Membresías"],["codes","Códigos y referidos"],["points","Puntos y créditos"],
+  ["testimonials","Testimonios"],["inquiries","Postulaciones"],["members","Miembros"],["settings","Inicio / Contacto"]
 ];
+const KINDS=["libro","ebook","audiolibro","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
+const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",curso:"Curso",coaching:"Coaching",
+  sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
+const PHOTO_BASE = SUPABASE_URL + "/storage/v1/object/public/vpa-photos/";
 function buildNav(){
   $("nav").innerHTML = SECTIONS.map(([k,l])=>`<button data-sec="${k}" onclick="go('${k}')">${l}</button>`).join("");
 }
@@ -250,12 +261,16 @@ function go(sec){
   RENDER[sec]();
 }
 
+
 async function preload(){
   const c = await sb.from("app_vpa_categories").select("*").order("sort_order");
   CATS = c.data||[];
   const s = await sb.from("app_vpa_specialists").select("id,name").order("sort_order");
   SPECS = s.data||[];
+  const p = await sb.from("app_vpa_plans").select("*").order("sort_order");
+  PLANS = p.data||[];
 }
+function planName(id){ const p=PLANS.find(x=>x.id===id); return p?p.name_es:(id||"—"); }
 function catName(id){ const c=CATS.find(x=>x.id===id); return c?c.name_es:"—"; }
 function specName(id){ const s=SPECS.find(x=>x.id===id); return s?s.name:"—"; }
 
@@ -275,7 +290,7 @@ const CFG = {
       {k:"focus_es",t:"text",l:"Áreas de enfoque (separadas por coma)",bi:"es",arr:true},
       {k:"focus_en",t:"text",l:"Focus areas (comma separated)",bi:"en",arr:true},
       {k:"certs_es",t:"text",l:"Certificaciones",bi:"es"},{k:"certs_en",t:"text",l:"Credentials",bi:"en"},
-      {k:"photo_url",t:"text",l:"Foto (URL o token Unsplash photo-xxxx)"},
+      {k:"photo_url",t:"upload",media:"image",l:"Foto de perfil (se muestra circular)"},
       {k:"langs",t:"chkgroup",l:"Idiomas",opts:[["es","ES"],["en","EN"]]},
       {k:"modalities",t:"chkgroup",l:"Modalidades",opts:MOD.map(m=>[m,m])},
       {k:"available_now",t:"chk",l:"Disponible ahora"},
@@ -313,7 +328,7 @@ const CFG = {
       {k:"modality",t:"select",l:"Modalidad",opts:MOD.map(m=>[m,m])},
       {k:"price_mxn",t:"number",l:"Precio (MXN)"},
       {k:"capacity",t:"number",l:"Cupo"},
-      {k:"cover_url",t:"text",l:"Imagen (URL o token)"},
+      {k:"cover_url",t:"upload",media:"image",l:"Imagen"},
       {k:"status",t:"select",l:"Estado",opts:[["published","published"],["hidden","hidden"],["draft","draft"]]}
     ],
     list:i=>({thumb:i.cover_url,title:i.title_es,meta:specName(i.specialist_id)+" · "+new Date(i.starts_at).toLocaleString("es-MX")+" · $"+(i.price_cents/100)+" MXN",status:i.status}),
@@ -327,12 +342,39 @@ const CFG = {
       {k:"desc_es",t:"textarea",l:"Descripción",bi:"es"},{k:"desc_en",t:"textarea",l:"Description",bi:"en"},
       {k:"type_es",t:"text",l:"Tipo (Ebook/Audio/Curso/Guía)",bi:"es"},{k:"type_en",t:"text",l:"Type",bi:"en"},
       {k:"price_mxn",t:"number",l:"Precio (MXN)"},
-      {k:"cover_url",t:"text",l:"Portada (URL o token)"},
+      {k:"cover_url",t:"upload",media:"image",l:"Portada"},
       {k:"network_shareable",t:"chk",l:"Compartible en la red (FlowShare)"},
       {k:"status",t:"select",l:"Estado",opts:[["published","published"],["hidden","hidden"],["draft","draft"]]}
     ],
     list:i=>({thumb:i.cover_url,title:i.title_es,meta:(i.type_es||"")+" · $"+(i.price_cents/100)+" MXN",status:i.status}),
     statusRpc:(id,st)=>sb.rpc("vpa_set_status",{p_entity:"product",p_id:id,p_status:st}), statusOpts:["published","hidden"]
+  },
+  offerings:{
+    title:"oferta", table:"app_vpa_offerings", rpc:"vpa_upsert_offering", order:"sort_order",
+    fields:()=>[
+      {k:"specialist_id",t:"select",l:"Especialista (dueño)",opts:SPECS.map(s=>[s.id,s.name]),req:true},
+      {k:"kind",t:"select",l:"Tipo",opts:KINDS.map(k=>[k,KIND_ES[k]])},
+      {k:"title",t:"text",l:"Título",req:true},
+      {k:"description",t:"textarea",l:"Descripción"},
+      {k:"price_mxn",t:"number",l:"Precio (MXN, vacío = a convenir)"},
+      {k:"external_url",t:"text",l:"Enlace externo (Amazon / tienda) — opcional, o sube el archivo abajo"},
+      {k:"file_url",t:"upload",media:"file",l:"📄 Archivo descargable — SUBE AQUÍ tu PDF, Word, ePub, ZIP…"},
+      {k:"file_name",t:"text",l:"Nombre del archivo (visible para el comprador)"},
+      {k:"cover_url",t:"upload",media:"image",l:"🖼️ Portada — solo imágenes (JPG, PNG, WebP)"},
+      {k:"preview_url",t:"upload",media:"audio",l:"🎧 Audio / muestra (mp3, m4a, wav)"},
+      {k:"sell_via_voces",t:"chk",l:"Se vende a través de Voces"},
+      {k:"in_progress",t:"chk",l:"Obra en proceso"},
+      {k:"wants_help",t:"chk",l:"Pide apoyo de Voces para terminarla (privado)"},
+      {k:"sort_order",t:"number",l:"Orden"},
+      {k:"status",t:"select",l:"Estado",opts:[["published","published"],["pending","pending"],["hidden","hidden"],["draft","draft"]]}
+    ],
+    list:i=>({thumb:i.cover_url,title:i.title,
+      meta:(KIND_ES[i.kind]||i.kind)+" · "+specName(i.specialist_id)
+        +(i.price_cents!=null?" · $"+(i.price_cents/100)+" MXN":" · precio a convenir")
+        +(i.sell_via_voces?" · vía Voces":"")+(i.external_url?" · 🔗 externo":"")
+        +(i.wants_help?" · ⚠ pide apoyo":""),
+      status:i.status}),
+    statusRpc:(id,st)=>sb.rpc("vpa_set_status",{p_entity:"offering",p_id:id,p_status:st}), statusOpts:STATUS_PUB
   },
   testimonials:{
     title:"testimonio", table:"app_vpa_testimonials", rpc:"vpa_upsert_testimonial", order:"sort_order",
@@ -351,7 +393,27 @@ const CFG = {
 
 /* ============ GENERIC LIST RENDER ============ */
 const RENDER = {};
-["specialists","categories","workshops","products","testimonials"].forEach(sec=>{
+
+/* ---- Guía rápida (home amigable para editar libremente) ---- */
+RENDER.guia=()=>{
+  $("main").innerHTML=`
+    <div class="sec-head"><h2>Tu panel, en simple ✦</h2></div>
+    <div class="hint" style="margin-bottom:18px">Aquí controlas todo tu espacio en Voces. Lo que edites se ve en el sitio <b>al instante</b>. Nada se pierde: puedes cambiar lo que quieras, cuando quieras.</div>
+    <div style="display:grid;gap:14px;max-width:760px">
+      <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">1 · Tu perfil</h4>
+        <p class="meta" style="margin:0">Entra a <b>Especialistas</b> → busca tu tarjeta → <b>Editar</b>. Ahí cambias tu <b>foto</b>, tu bio, tu rol y tus redes. Usa el botón <b>📎 Subir archivo</b> para poner tu foto.</p></div>
+      <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">2 · Tus libros, cursos y ofertas</h4>
+        <p class="meta" style="margin:0">Entra a <b>Ofertas</b> → <b>Nueva oferta</b> (o edita una). Pon título, precio y marca <b>“vender vía Voces”</b> si quieres cobrarla aquí. Con <b>📎 Subir archivo</b> subes el PDF/portada. Si es un ebook de pago, tras la compra se entrega solo.</p></div>
+      <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">3 · Cobrar (MercadoPago)</h4>
+        <p class="meta" style="margin:0">En <b>Pagos</b> conectas tu MercadoPago pegando tu <b>Access Token</b>. Cuando aparezca la etiqueta verde <b>PRODUCCIÓN</b>, ya cobras de verdad. Puedes usar “Probar pago $3”.</p></div>
+      <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">4 · Ordenar, ocultar o borrar</h4>
+        <p class="meta" style="margin:0">En cada lista puedes <b>Editar</b>, cambiar el orden y <b>Borrar</b> lo que no quieras (el botón rojo). Si borras algo, desaparece del sitio de inmediato.</p></div>
+      <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">5 · Lo demás</h4>
+        <p class="meta" style="margin:0"><b>Temáticas</b> = categorías del directorio · <b>Talleres</b> y <b>Testimonios</b> = eventos y reseñas (aparecen en el sitio cuando agregas al menos uno) · <b>Pedidos</b> = tus ventas · <b>Inicio / Contacto</b> = textos y redes del pie de página.</p></div>
+    </div>
+    <p class="meta" style="margin-top:20px">¿Dudas? Escríbele a Steph y lo vemos. Este espacio es tuyo — explóralo con confianza. 🌊</p>`;
+};
+["specialists","offerings","categories","workshops","products","testimonials"].forEach(sec=>{
   RENDER[sec]=async ()=>{
     const cfg=CFG[sec];
     $("main").innerHTML=`<div class="sec-head"><h2>${labelOf(sec)}</h2>
@@ -371,6 +433,7 @@ const RENDER = {};
           <span class="pill ${v.status}">${v.status}</span>
           <select class="btn-sm" style="padding:6px;border-radius:8px" onchange="quickStatus('${sec}','${i.id}',this.value)">${stOpts}</select>
           <button class="btn btn-ghost btn-sm" onclick='openForm("${sec}", ${JSON.stringify(i).replace(/'/g,"&#39;")})'>Editar</button>
+          ${sec==="specialists"?specActions(i):""}
         </div></div>`;
     }).join("");
   };
@@ -378,12 +441,114 @@ const RENDER = {};
 function labelOf(sec){ return (SECTIONS.find(s=>s[0]===sec)||["",sec])[1]; }
 function hintOf(sec){ return ({
   specialists:"Crea y edita las voces del directorio. Solo los 'published' se ven en el sitio. El correo/teléfono son privados y se revelan a quien inicia sesión.",
-  categories:"Las ocho disciplinas. Edita nombres, descripciones e íconos.",
+  offerings:"Lo que ofrece cada voz: libros, ebooks, audiolibros, coaching, sesiones, retiros, conferencias. Con enlace externo (Amazon etc.) o venta vía Voces. Solo los 'published' se ven en el perfil público.",
+  categories:"Las temáticas del directorio. Edita nombres, descripciones e íconos. Incluye la nueva “Historias de Transformación”.",
   workshops:"Talleres y retiros. Define fecha, modalidad, precio y especialista.",
   products:"Tienda de contenidos digitales (ebooks, audios, cursos, guías).",
   testimonials:"Historias de personas que se transformaron.",
 }[sec]||""); }
 function imgUrl(n){ return !n?"":(String(n).startsWith("http")?n:`https://images.unsplash.com/${n}?auto=format&fit=crop&w=120&q=60`); }
+
+/* ---- acciones por especialista (comentar, reclamar, compartir, borrar) ---- */
+function specActions(i){
+  const claimed = i.fbid_user ? `<span class="pill verified" title="perfil reclamado">✓ cuenta</span>` : "";
+  return `${claimed}
+    <button class="btn btn-ghost btn-sm" onclick='specComment("${i.id}","${escAttr(i.name)}")'>Comentar</button>
+    <button class="btn btn-ghost btn-sm" onclick='specDeal("${i.id}","${escAttr(i.name)}")'>Acuerdo %</button>
+    <button class="btn btn-ghost btn-sm" onclick='specClaim("${i.id}","${escAttr(i.name)}",${i.fbid_user?1:0})'>Enlace de reclamo</button>
+    <button class="btn btn-ghost btn-sm" onclick='specPhoto("${i.id}","${escAttr(i.name)}")'>Subir/editar foto</button>
+    <button class="btn btn-ghost btn-sm" onclick='specShare("${escAttr(i.slug||i.id)}")'>Compartir</button>
+    <button class="btn btn-ghost btn-sm" style="color:var(--bad)" onclick='specDelete("${i.id}","${escAttr(i.name)}")'>Borrar</button>`;
+}
+async function specComment(id,name){
+  const msg=prompt("Comentario para "+name+" (le llega como notificación en su panel; si aún no reclama su perfil, se le envía por correo):");
+  if(!msg||!msg.trim()) return;
+  try{ const {error}=await sb.rpc("vpa_open_change",{payload:{specialist_id:id,kind:"comment",message:msg.trim()}}); if(error)throw error;
+    toast("Comentario enviado ✓"); }catch(e){ toast("Error: "+e.message); }
+}
+async function specClaim(id,name,claimed){
+  if(claimed && !confirm(name+" ya reclamó su perfil. ¿Generar un enlace nuevo de todos modos? (invalida el anterior)")) return;
+  try{
+    const { data, error } = await sb.rpc("vpa_create_claim",{ p_specialist_id:id }); if(error)throw error;
+    const url = location.origin + "/mi-voz?claim=" + data;
+    await navigator.clipboard.writeText(url).catch(()=>{});
+    prompt("Enlace de reclamo para "+name+" — cópialo y compártelo (copiado al portapapeles):", url);
+    toast("Enlace de reclamo generado ✓");
+  }catch(e){ toast("Error: "+e.message); }
+}
+// Subir un archivo desde el formulario (foto/portada/audio) → sube a storage y guarda la URL en el campo oculto
+// Solo se bloquean ejecutables/scripts; cualquier otro documento (pdf, html, doc, epub, mobi, zip…) se permite
+const BAD_EXT=["exe","bat","cmd","com","scr","msi","app","dll","js","mjs","jar","sh","bash","bin","apk","deb","dmg","pkg","svg","vbs","ps1","wsf","cpl","gadget","jse","msc"];
+async function pickFormFile(key, accept, media){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept=accept;
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const ext=(f.name.split(".").pop()||"").toLowerCase();
+    if(media==="image"){ if(!/^image\/(jpeg|png|webp)$/.test(f.type)){ toast("Este campo es solo para IMÁGENES. Para un PDF/HTML/Word usa el campo '📄 Archivo descargable'."); return; } }
+    else if(media==="audio"){ if(!/^audio\//.test(f.type)){ toast("Este campo es solo para AUDIO. Para un PDF/HTML/Word usa '📄 Archivo descargable'."); return; } }
+    else { if(BAD_EXT.includes(ext)){ toast("Por seguridad no se permite ese tipo de archivo (ejecutable/script)."); return; } }
+    const maxMB = media==="image"?10:60;
+    if(f.size>maxMB*1024*1024){ toast("Archivo muy grande (máx "+maxMB+" MB)"); return; }
+    const safeExt=ext||(media==="image"?"jpg":media==="audio"?"mp3":"pdf");
+    const path="offers/forms/"+crypto.randomUUID()+"."+safeExt;
+    toast("Subiendo archivo…");
+    try{
+      const { error }=await sb.storage.from("vpa-photos").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
+      if(error) throw error;
+      const url=PHOTO_BASE+path;
+      const hid=$("f_"+key); if(hid) hid.value=url;
+      const prev=$("f_"+key+"_prev");
+      if(prev){
+        if(media==="image") prev.style.backgroundImage=`url('${url}')`;
+        else if(media==="audio") prev.innerHTML=`<audio controls src="${url}" style="width:100%"></audio>`;
+        else prev.innerHTML=`<a href="${url}" target="_blank" rel="noopener">📄 ${f.name}</a>`;
+      }
+      // autollenar nombre visible del archivo si existe ese campo
+      if(media==="file"){ const nm=$("f_file_name"); if(nm && !nm.value.trim()) nm.value=f.name; }
+      toast("Archivo subido ✓ — guarda para aplicar");
+    }catch(e){ toast("Error al subir: "+(e.message||e)); }
+  };
+  inp.click();
+}
+// Subir/editar la foto de un perfil (Mónica sube su imagen ya lista, se muestra circular)
+function specPhoto(id,name){
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/jpeg,image/png,image/webp";
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    if(!/^image\/(jpeg|png|webp)$/.test(f.type)){ toast("Usa JPG, PNG o WebP"); return; }
+    if(f.size>10*1024*1024){ toast("Máx 10 MB"); return; }
+    const ext=(f.name.split(".").pop()||"jpg").toLowerCase();
+    const path="profiles/"+id+"/photo-"+crypto.randomUUID()+"."+ext;
+    toast("Subiendo foto de "+name+"…");
+    try{
+      const { error }=await sb.storage.from("vpa-photos").upload(path,f,{contentType:f.type,upsert:false});
+      if(error) throw error;
+      const { error:se }=await sb.rpc("vpa_upsert_specialist",{ payload:{ id, photo_url:PHOTO_BASE+path } });
+      if(se) throw se;
+      toast("Foto de "+name+" actualizada ✓");
+      await preload(); RENDER.specialists();
+    }catch(e){ toast("Error al subir: "+(e.message||e)); }
+  };
+  inp.click();
+}
+async function specShare(slugOrId){
+  const url = location.origin + "/?voz=" + slugOrId;
+  try{ await navigator.clipboard.writeText(url); toast("Enlace copiado ✓"); }
+  catch(_){ prompt("Enlace público del perfil:", url); }
+}
+async function specDeal(id,name){
+  const v=prompt("Acuerdo de reparto para "+name+":\n¿Qué % de cada venta CONSERVA la voz? (0–100). El resto es para Voces. La voz debe aceptarlo en su panel para activarlo.");
+  if(v===null) return;
+  const pct=Number(v); if(isNaN(pct)||pct<0||pct>100) return toast("Pon un número 0–100");
+  const note=prompt("Nota para la voz (opcional):")||null;
+  try{ const {error}=await sb.rpc("vpa_deal_propose",{p_specialist:id,p_specialist_pct:pct,p_note:note}); if(error)throw error;
+    toast("Acuerdo propuesto — la voz lo verá en su panel ✓"); }catch(e){ toast("Error: "+e.message); }
+}
+async function specDelete(id,name){
+  if(!confirm("¿Borrar el perfil de "+name+"? Se elimina junto con sus ofertas, hilos y datos. Esta acción no se puede deshacer.")) return;
+  try{ const {error}=await sb.rpc("vpa_delete_specialist",{p_id:id}); if(error)throw error;
+    toast("Perfil borrado"); await preload(); RENDER.specialists(); }catch(e){ toast("Error: "+e.message); }
+}
 
 async function quickStatus(sec,id,st){
   try{ const { error }=await CFG[sec].statusRpc(id,st); if(error) throw error; toast("Estado actualizado"); RENDER[sec](); }
@@ -393,10 +558,40 @@ async function quickStatus(sec,id,st){
 /* ============ FORM (drawer) ============ */
 function openForm(sec,item){
   const cfg=CFG[sec]; current={entity:sec,item:item||null,cfg};
+  if(item && item.price_cents!=null && item.price_mxn===undefined) item.price_mxn=item.price_cents/100;
   $("drawerTitle").textContent=(item?"Editar ":"Nuevo ")+cfg.title;
   const f=cfg.fields();
   $("drawerBody").innerHTML=f.map(fd=>fieldHtml(fd,item?item[fd.k]:undefined)).join("");
+  // "Proponer a la voz" sólo tiene sentido al editar un perfil/oferta existente
+  $("suggestBtn").style.display = (item && (sec==="specialists"||sec==="offerings")) ? "" : "none";
   openDrawer();
+}
+// diff del payload vs. el item original (para proponer sólo lo que cambió)
+function diffPayload(payload, orig){
+  const changes={};
+  Object.keys(payload).forEach(k=>{
+    if(k==="id") return;
+    const a=payload[k], b=orig?orig[k]:undefined;
+    const na=Array.isArray(a)?JSON.stringify(a):(a==null?"":String(a));
+    const nb=Array.isArray(b)?JSON.stringify(b):(b==null?"":String(b));
+    if(na!==nb) changes[k]=a;
+  });
+  return changes;
+}
+async function saveAsSuggestion(){
+  const sec=current.entity; if(sec!=="specialists"&&sec!=="offerings"){ return; }
+  const payload=collect(); const changes=diffPayload(payload, current.item);
+  delete changes.status; delete changes.specialist_id;
+  if(!Object.keys(changes).length){ toast("No hay cambios para proponer"); return; }
+  const msg=prompt("Mensaje para la voz sobre esta sugerencia (opcional):")||"";
+  const p = sec==="specialists"
+    ? { specialist_id:current.item.id, kind:"suggestion", changes, message:msg }
+    : { offering_id:current.item.id, specialist_id:current.item.specialist_id, kind:"suggestion", changes, message:msg };
+  const btn=$("suggestBtn"); btn.disabled=true;
+  try{ const {error}=await sb.rpc("vpa_open_change",{payload:p}); if(error)throw error;
+    toast("Sugerencia enviada a la voz ✓"); closeDrawer(); }
+  catch(e){ toast("Error: "+e.message); }
+  finally{ btn.disabled=false; }
 }
 function fieldHtml(fd,val){
   const id="f_"+fd.k; const bi=fd.bi?`<span class="bi">${fd.bi}</span> `:"";
@@ -410,6 +605,21 @@ function fieldHtml(fd,val){
     const arr=Array.isArray(val)?val:[];
     return `<div class="field"><label>${esc(fd.l)}</label><div class="chkgroup">${fd.opts.map(o=>`<label class="chk"><input type="checkbox" data-grp="${fd.k}" value="${o[0]}" ${arr.includes(o[0])?"checked":""}> ${esc(o[1])}</label>`).join("")}</div></div>`;
   }
+  else if(fd.t==="upload"){
+    const media=fd.media||"image"; const cur=val!=null?String(val):"";
+    const accept = media==="audio" ? "audio/*"
+                 : media==="file"  ? ""
+                 : "image/jpeg,image/png,image/webp";
+    const prev = media==="audio"
+      ? `<div id="${id}_prev" style="flex:1;min-width:180px">${cur?`<audio controls src="${esc(cur)}" style="width:100%"></audio>`:`<span style="color:#a49a88;font-size:13px">Sin audio</span>`}</div>`
+      : media==="file"
+      ? `<div id="${id}_prev" style="flex:1;min-width:180px">${cur?`<a href="${esc(cur)}" target="_blank" rel="noopener">📄 Ver archivo actual</a>`:`<span style="color:#a49a88;font-size:13px">Sin archivo</span>`}</div>`
+      : `<div id="${id}_prev" style="width:120px;height:120px;border-radius:50%;background:#efe8db center/cover no-repeat;border:1px solid var(--linea);flex:none;${cur?`background-image:url('${esc(cur)}')`:""}"></div>`;
+    return `<div class="field"><label>${bi}${esc(fd.l)}</label>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${prev}
+        <div><button type="button" class="btn btn-ghost btn-sm" onclick="pickFormFile('${fd.k}','${accept}','${media}')">📎 Subir archivo</button>
+        <input type="hidden" id="${id}" value="${esc(cur)}"></div></div></div>`;
+  }
   else { // text, arr
     const v=fd.arr&&Array.isArray(val)?val.join(", "):(val!=null?val:"");
     inner=`<input id="${id}" type="text" value="${esc(v)}">`;
@@ -422,14 +632,15 @@ function collect(){
   cfg.fields().forEach(fd=>{
     if(fd.t==="chk"){ p[fd.k]=$("f_"+fd.k).checked; return; }
     if(fd.t==="chkgroup"){ p[fd.k]=[...document.querySelectorAll(`[data-grp="${fd.k}"]:checked`)].map(e=>e.value); return; }
+    if(fd.t==="upload"){ const el=$("f_"+fd.k); p[fd.k]= el?el.value.trim():""; return; }
     const el=$("f_"+fd.k); if(!el) return; let v=el.value;
     if(fd.t==="datetime"){ p[fd.k]= v? new Date(v).toISOString() : ""; return; }
     if(fd.arr){ p[fd.k]= v.split(",").map(x=>x.trim()).filter(Boolean); return; }
     if(fd.t==="number"){ p[fd.k]= v===""?null:Number(v); return; }
     p[fd.k]=v;
   });
-  // price_mxn -> price_cents
-  if("price_mxn" in p){ p.price_cents = Math.round((Number(p.price_mxn)||0)*100); delete p.price_mxn; }
+  // price_mxn -> price_cents (null se conserva: ofertas "a convenir")
+  if("price_mxn" in p){ p.price_cents = p.price_mxn==null ? null : Math.round((Number(p.price_mxn)||0)*100); delete p.price_mxn; }
   return p;
 }
 async function saveForm(){
@@ -446,6 +657,67 @@ function openDrawer(){ $("drawer").classList.add("open"); $("drawerBg").classLis
 function closeDrawer(){ $("drawer").classList.remove("open"); $("drawerBg").classList.remove("open"); }
 function toLocalInput(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=n=>String(n).padStart(2,"0");
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+
+/* ============ APPLICATIONS (solicitudes de perfil) ============ */
+const APP_PILL={new:"pending",in_review:"verified",approved:"published",rejected:"hidden"};
+RENDER.applications=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Solicitudes de perfil</h2></div>
+    <div class="hint">Perfiles enviados desde <a href="/crear-perfil" target="_blank">/crear-perfil</a>. Revisa la información, elige categoría y posición (1 = primera del directorio) y aprueba: se crea el perfil publicado con sus ofertas. El correo/teléfono quedan privados. Las ofertas con "pide apoyo" son quienes quieren que Voces les ayude a terminar su obra.</div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  const { data, error } = await sb.from("app_vpa_applications").select("*").order("created_at",{ascending:false});
+  if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  if(!data.length){ $("rows").innerHTML=`<div class="empty">Sin solicitudes todavía. Comparte el enlace /crear-perfil.</div>`; return; }
+  $("rows").innerHTML=data.map(a=>{
+    const photo=a.photo_path?`style="background-image:url('${PHOTO_BASE+encodeURI(a.photo_path)}')"`:"";
+    const offers=Array.isArray(a.offerings)?a.offerings:[];
+    const offHtml=offers.length?offers.map(o=>`<div style="margin:4px 0">• <b>${esc(KIND_ES[o.kind]||o.kind)}:</b> ${esc(o.title)}${o.price_mxn?` · $${esc(o.price_mxn)} MXN`:""}${o.external_url?` · <a href="${esc(o.external_url)}" target="_blank" rel="noopener noreferrer">enlace ↗</a>`:""}${o.sell_via_voces?' · <span class="pill verified">vía Voces</span>':""}${o.wants_help?' · <span class="pill pending">pide apoyo</span>':""}${o.description?`<div class="meta" style="margin-left:14px">${esc(o.description)}</div>`:""}</div>`).join(""):'<span class="meta">Sin ofertas.</span>';
+    const catSel=`<select id="ac_${a.id}" class="btn-sm" style="padding:6px;border-radius:8px;max-width:180px">${CATS.map(c=>`<option value="${c.id}" ${c.id===a.category_id?"selected":""}>${esc(c.name_es)}</option>`).join("")}</select>`;
+    const socials=a.socials&&Object.keys(a.socials).length?Object.entries(a.socials).map(([k,v])=>esc(k)+": "+esc(v)).join(" · "):"";
+    const pending=a.status==="new"||a.status==="in_review";
+    return `<div class="card" style="align-items:flex-start">
+      <div class="thumb" style="width:64px;height:64px;border-radius:50%" ${photo}></div>
+      <div class="grow">
+        <h4>${esc(a.name)} <span class="pill ${APP_PILL[a.status]||"pending"}">${esc(a.status)}</span></h4>
+        <div class="meta">${esc(a.headline||"")}${a.headline?" · ":""}${esc(a.email)}${a.phone?" · "+esc(a.phone):""} · ${(a.langs||[]).join("/").toUpperCase()} · ${(a.modalities||[]).join(", ")} · ${new Date(a.created_at).toLocaleString("es-MX")}</div>
+        <details style="margin-top:8px">
+          <summary style="cursor:pointer;font-size:13px;color:var(--pizarra)">Ver información completa</summary>
+          <div style="font-size:13.5px;margin-top:8px">
+            <p><b>¿Qué hace?</b><br>${esc(a.what_do||"—")}</p>
+            ${a.mission?`<p style="margin-top:6px"><b>Misión</b><br>${esc(a.mission)}</p>`:""}
+            ${a.certifications?`<p style="margin-top:6px"><b>Certificaciones</b><br>${esc(a.certifications)}</p>`:""}
+            ${a.website?`<p style="margin-top:6px"><b>Web:</b> <a href="${esc(a.website)}" target="_blank" rel="noopener noreferrer">${esc(a.website)}</a></p>`:""}
+            ${socials?`<p style="margin-top:6px"><b>Redes:</b> ${socials}</p>`:""}
+            <p style="margin-top:6px"><b>Oferta (${offers.length})</b></p>${offHtml}
+            ${a.admin_notes?`<p style="margin-top:6px"><b>Notas:</b> ${esc(a.admin_notes)}</p>`:""}
+          </div>
+        </details>
+      </div>
+      <div class="acts" style="flex-direction:column;align-items:flex-end">
+        ${pending?`${catSel}
+        <input id="ap_${a.id}" type="number" placeholder="posición" min="1" class="btn-sm" style="width:110px;padding:6px;border-radius:8px">
+        <button class="btn btn-primary btn-sm" onclick="approveApp('${a.id}')">Aprobar y publicar</button>
+        <button class="btn btn-ghost btn-sm" onclick="rejectApp('${a.id}')">Rechazar</button>`
+        :(a.specialist_id?`<span class="meta">→ perfil creado</span>`:"")}
+      </div></div>`;
+  }).join("");
+};
+async function approveApp(id){
+  const cat=$("ac_"+id).value, pos=$("ap_"+id).value;
+  if(!cat) return toast("Elige una categoría");
+  try{
+    const { error } = await sb.rpc("vpa_review_application",{ p_id:id, p_approve:true, p_category_id:cat, p_sort_order:pos?Number(pos):null });
+    if(error) throw error;
+    toast("Perfil publicado con sus ofertas ✓"); await preload(); RENDER.applications();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function rejectApp(id){
+  const notes=prompt("Motivo del rechazo (se guarda como nota interna):")||null;
+  try{
+    const { error } = await sb.rpc("vpa_review_application",{ p_id:id, p_approve:false, p_notes:notes });
+    if(error) throw error;
+    toast("Solicitud rechazada"); RENDER.applications();
+  }catch(e){ toast("Error: "+e.message); }
+}
 
 /* ============ INQUIRIES ============ */
 RENDER.inquiries=async ()=>{
@@ -494,6 +766,360 @@ RENDER.members=async ()=>{
 async function setRole(fbid,role){ try{ const {error}=await sb.rpc("vpa_set_member_role",{p_fbid:fbid,p_role:role}); if(error)throw error; toast("Rol actualizado"); }catch(e){ toast("Error: "+e.message);} }
 async function grantRole(){ const fbid=$("newFbid").value.trim(),role=$("newRole").value; if(!fbid)return toast("Ingresa un FBID");
   try{ const {error}=await sb.rpc("vpa_set_member_role",{p_fbid:fbid,p_role:role}); if(error)throw error; toast("Rol otorgado"); RENDER.members(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ PAGOS (MercadoPago) ============ */
+RENDER.pagos=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Pagos</h2></div>
+    <div class="hint">Conecta <b>tu MercadoPago</b> para cobrar en el sitio (por ahora a tu cuenta personal; luego la de la empresa). Pega tu <b>Access Token</b> de MercadoPago (Producción para cobros reales, o TEST para pruebas). Se guarda cifrado en el vault, nunca en el sitio. Los pagos entran a tu cuenta; a cada expositor se le registra su parte según su acuerdo y su método de cobro.</div>
+    <div id="payStatus" class="card">Cargando estado…</div>
+    <div class="card" style="display:block">
+      <h4 style="margin-bottom:10px">Conectar / actualizar MercadoPago</h4>
+      <div class="field"><label>Access Token (APP_USR-… para cobros reales · TEST-… para pruebas)</label>
+        <input id="pay_token" type="password" placeholder="APP_USR-… o TEST-…" autocomplete="off"></div>
+      <button class="btn btn-primary btn-sm" onclick="savePayToken()">Guardar token</button>
+      <a href="https://www.mercadopago.com.mx/developers/panel/app" target="_blank" style="margin-left:10px;font-size:13px">¿Dónde saco mi token? ↗</a>
+    </div>
+    <div class="card" style="display:block">
+      <h4 style="margin-bottom:8px">Probar el cobro</h4>
+      <div class="meta" style="margin-bottom:10px">Crea un pedido de prueba de $60 MXN (≈ $3 USD) y ábrelo en MercadoPago para confirmar que el cobro funciona de punta a punta.</div>
+      <button class="btn btn-primary btn-sm" onclick="runPayTest()">Probar pago $3</button>
+      <span id="payTestMsg" style="margin-left:12px;font-size:13px"></span>
+    </div>
+    <div class="card" style="display:block;margin-top:14px">
+      <h4 style="margin-bottom:6px">Marketplace · split por autor</h4>
+      <div class="meta" style="margin-bottom:10px">Cada autor recibe su pago directo a SU cuenta de MercadoPago; Voces retiene su comisión automáticamente al cobrar. Tú fijas el % de comisión por autor.</div>
+      <details style="margin:0 0 12px;background:rgba(182,138,62,.08);border:1px solid rgba(182,138,62,.35);border-radius:12px;padding:12px 14px">
+        <summary style="cursor:pointer;font-weight:600;color:#8a5a12">⚙️ ¿El autor ve “La aplicación no está preparada”? Configura la Redirect URI (una sola vez)</summary>
+        <div class="meta" style="margin-top:10px;line-height:1.6">
+          Para que MercadoPago acepte la conexión, la app de Voces necesita esta dirección registrada. Se hace <b>una sola vez</b>:
+          <ol style="margin:8px 0 0;padding-left:20px">
+            <li>Entra a <b>MercadoPago Developers → Tus integraciones</b> y abre la app de Voces (Client ID <code>739529340316820</code>).</li>
+            <li>En el menú de la app ve a <b>“Editar” → sección “URLs de redireccionamiento” (Redirect URL / OAuth)</b>.</li>
+            <li>Pega ahí exactamente esta dirección y guarda:</li>
+          </ol>
+          <div style="display:flex;gap:8px;align-items:center;margin:10px 0 0;flex-wrap:wrap">
+            <code id="redirUri" style="background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:8px 10px;word-break:break-all;flex:1;min-width:220px">https://fgsrcxxccdjqyrpkitmk.supabase.co/functions/v1/vpa-mp-connect</code>
+            <button class="btn btn-ghost btn-sm" onclick="copyRedirect()">Copiar</button>
+          </div>
+          <div style="margin-top:8px">4 · Asegúrate de que la app tenga activado <b>“Pagos / Checkout con marketplace (OAuth)”</b>. Guarda y listo — los links de conexión de los autores funcionarán al instante.</div>
+        </div>
+      </details>
+      <div id="mktBody" class="meta">Cargando…</div>
+    </div>`;
+  try{
+    const { data } = await sb.rpc("vpa_payment_status");
+    const s=data||{};
+    // Consultar la cuenta REAL en MercadoPago (detecta tokens de usuario de prueba)
+    let acct=null;
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-mp-account",{ method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+(session?session.access_token:SUPABASE_ANON) }});
+      acct=await r.json();
+    }catch(_){}
+    const isTest = acct && acct.is_test_user;
+    const testWarn = isTest
+      ? `<div class="card" style="border:1px solid var(--bad);background:rgba(200,50,50,.07);margin-top:10px">
+           <b style="color:var(--bad)">⚠️ Este token es de una CUENTA DE PRUEBA</b>
+           <div class="meta">La cuenta conectada es <b>${esc(acct.nickname)}</b> — un usuario de prueba de MercadoPago que <b>NO cobra dinero real</b> (solo tarjetas de test). Entra al panel de MercadoPago con <b>TU cuenta</b> → <b>Credenciales de producción</b> y pega ese Access Token (no el de un “usuario de prueba”).</div></div>`
+      : "";
+    const badge = !s.configured ? `<span class="pill hidden">sin conectar</span>`
+      : isTest ? `<span class="pill hidden">PRUEBA · usuario de test</span>`
+      : `<span class="pill ${s.mode==='live'?'published':'pending'}">${s.mode==='live'?'PRODUCCIÓN (cobros reales)':'PRUEBA (sandbox)'}</span>`;
+    const acctLine = (acct && acct.ok && !isTest)
+      ? `<div class="meta">Cuenta: <b>${esc(acct.nickname||"—")}</b>${acct.can_sell?' · puede cobrar ✓':' · <b style="color:var(--bad)">⚠️ la cuenta aún no puede cobrar (verifícala en MercadoPago)</b>'}</div>` : "";
+    const mainMsg = !s.configured ? 'Aún no has conectado MercadoPago. Pega tu Access Token abajo.'
+      : isTest ? 'Estás en una cuenta de prueba — no entra dinero real. Cambia al token de producción de tu cuenta real.'
+      : (s.mode==='live'?'Listo para cobrar de verdad a tu cuenta.':'En modo prueba: usa tarjetas de test, no entra dinero real. Pega tu token de Producción para lanzar.');
+    $("payStatus").innerHTML=`<div class="grow"><h4>Estado ${badge}</h4>
+      <div class="meta">${mainMsg}</div>${acctLine}</div>${testWarn}`;
+  }catch(e){ $("payStatus").innerHTML=`<div class="meta">No se pudo leer el estado: ${esc(e.message)}</div>`; }
+  renderMarketplace();
+};
+const MKT_REDIRECT="https://fgsrcxxccdjqyrpkitmk.supabase.co/functions/v1/vpa-mp-connect";
+async function renderMarketplace(){
+  const host=$("mktBody"); if(!host) return;
+  try{
+    const { data:ready } = await sb.rpc("vpa_mp_marketplace_ready");
+    if(!ready){
+      host.innerHTML=`<div class="field"><label>Client ID (App ID) de la app Marketplace de Voces</label><input id="mkt_cid" autocomplete="off"></div>
+        <div class="field"><label>Client Secret</label><input id="mkt_secret" type="password" autocomplete="off"></div>
+        <button class="btn btn-primary btn-sm" onclick="saveMarketplaceApp()">Guardar app de Marketplace</button>
+        <div class="meta" style="margin-top:8px">En MercadoPago, la <b>Redirect URI</b> de la app debe ser:<br><code>${MKT_REDIRECT}</code></div>`;
+      return;
+    }
+    const [{ data:specs }, { data:conns }, { data:comms }] = await Promise.all([
+      sb.from("app_vpa_specialists_public").select("id,name").order("sort_order"),
+      sb.rpc("vpa_mp_connections"),
+      sb.rpc("vpa_mp_commissions")
+    ]);
+    const connected=new Set((conns||[]).map(c=>c.specialist_id));
+    const commMap=comms||{};
+    const nSet=Object.keys(commMap).length, nConn=connected.size, nTot=(specs||[]).length;
+    host.innerHTML=`<div class="meta" style="margin-bottom:8px">App de Marketplace configurada ✓ · <b>${nConn}/${nTot}</b> conectados · <b>${nSet}/${nTot}</b> con comisión asignada</div>`+
+      (specs||[]).map(s=>{
+        const hasComm = Object.prototype.hasOwnProperty.call(commMap, s.id);
+        const commPct = hasComm ? commMap[s.id] : "";
+        const commBadge = hasComm
+          ? `<span class="pill published" title="Comisión de Voces ya asignada">${commPct}% ✓</span>`
+          : `<span class="pill hidden" title="Aún sin comisión — se cobrará el 15% por defecto">sin asignar</span>`;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid rgba(0,0,0,.06);flex-wrap:wrap">
+        <b style="flex:1;min-width:120px">${esc(s.name)}</b>
+        ${commBadge}
+        ${connected.has(s.id)?'<span class="pill published">conectado ✓</span>':`<button class="btn btn-ghost btn-sm" onclick="genClaimLink('${s.id}','${escAttr(s.name)}')">Link de conexión</button>`}
+        <span style="font-size:13px">Comisión Voces <input type="number" min="0" max="100" style="width:56px" id="com_${s.id}" placeholder="%" value="${commPct}"> %
+        <button class="btn btn-ghost btn-sm" onclick="setCommission('${s.id}')">Guardar</button></span>
+      </div>`;}).join("");
+  }catch(e){ host.innerHTML=`<div class="meta">No se pudo cargar el marketplace: ${esc(e.message)}</div>`; }
+}
+async function copyRedirect(){
+  const t=($("redirUri")||{}).textContent||MKT_REDIRECT;
+  try{ await navigator.clipboard.writeText(t.trim()); toast("Redirect URI copiada ✓"); }
+  catch(_){ prompt("Copia esta Redirect URI:", t.trim()); }
+}
+async function saveMarketplaceApp(){
+  const cid=($("mkt_cid").value||"").trim(), sec=($("mkt_secret").value||"").trim();
+  if(!cid||!sec) return toast("Pega Client ID y Client Secret");
+  try{ const {error}=await sb.rpc("vpa_mp_set_marketplace_app",{p_client_id:cid,p_client_secret:sec}); if(error)throw error;
+    toast("App de Marketplace guardada ✓"); renderMarketplace(); }catch(e){ toast("Error: "+e.message); }
+}
+async function genClaimLink(id, name){
+  try{ const {data,error}=await sb.rpc("vpa_mp_create_claim",{p_specialist:id}); if(error)throw error;
+    const link=data.link;
+    try{ await navigator.clipboard.writeText(link); toast("Link copiado ✓"); }catch(_){}
+    prompt("Link de conexión para "+name+"\n\nEnvíaselo para que abra ese enlace CON SU cuenta de MercadoPago iniciada y conecte su cobro. (También puedes abrirlo tú en tu otro navegador con tu MP personal.)", link);
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function setCommission(id){
+  const v=parseInt((($("com_"+id)||{}).value||""),10); if(isNaN(v)) return toast("Pon un % (0-100)");
+  try{ const {error}=await sb.rpc("vpa_mp_set_commission",{p_specialist:id,p_commission_pct:v}); if(error)throw error;
+    toast("Comisión de Voces guardada: "+v+"%"); renderMarketplace(); }catch(e){ toast("Error: "+e.message); }
+}
+async function savePayToken(){
+  const tok=$("pay_token").value.trim(); if(!tok) return toast("Pega tu Access Token");
+  try{ const {error}=await sb.rpc("vpa_set_payment_secret",{p_provider:"mercadopago",p_token:tok}); if(error)throw error;
+    $("pay_token").value=""; toast("MercadoPago conectado ✓"); RENDER.pagos(); }catch(e){ toast("Error: "+e.message); }
+}
+async function runPayTest(){
+  const msg=$("payTestMsg"); msg.style.color=""; msg.textContent="Creando pedido de prueba…";
+  try{
+    const { data:orderId, error } = await sb.rpc("vpa_create_test_order",{ p_amount_mxn:60 });
+    if(error) throw error;
+    const { data:{ session } } = await sb.auth.getSession();
+    const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-pay",{ method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+(session?session.access_token:SUPABASE_ANON) },
+      body:JSON.stringify({ order_id:orderId }) });
+    const pj=await r.json();
+    if(!r.ok||!pj.checkout_url) throw new Error(pj.error==="not_configured"?"Conecta MercadoPago primero.":(pj.error||"no se pudo crear el cobro"));
+    msg.style.color="var(--ok)"; msg.innerHTML=`Listo (${pj.mode==='test'?'prueba':'real'}) — <a href="${esc(pj.checkout_url)}" target="_blank">abrir pago $3 ↗</a>`;
+    window.open(pj.checkout_url,"_blank");
+  }catch(e){ msg.style.color="var(--bad)"; msg.textContent="Error: "+e.message; }
+}
+
+/* ============ CAMBIOS Y COMENTARIOS (moderación) ============ */
+const CH_PILL={open:"pending",applied:"published",rejected:"hidden",withdrawn:"draft"};
+const CH_KIND={comment:"comentario",suggestion:"sugerencia",edit:"edición propuesta"};
+RENDER.changes=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Cambios y comentarios</h2></div>
+    <div class="hint">Conversaciones con cada voz: tus comentarios, tus sugerencias de cambio y las ediciones que proponen las voces. <b>Nada se publica hasta que tú apruebas</b> (o la voz acepta lo que sugeriste). Aprobar aplica los cambios al sitio; responder mantiene el hilo.</div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  const { data:reqs, error } = await sb.from("app_vpa_change_requests").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  if(!reqs.length){ $("rows").innerHTML=`<div class="empty">Sin conversaciones todavía. Usa “Comentar” o “Editar → Proponer a la voz” en Especialistas.</div>`; return; }
+  const ids=reqs.map(r=>r.id);
+  const { data:msgs } = await sb.from("app_vpa_change_messages").select("*").in("request_id",ids).order("created_at");
+  const byReq={}; (msgs||[]).forEach(m=>{ (byReq[m.request_id]=byReq[m.request_id]||[]).push(m); });
+  $("rows").innerHTML=reqs.map(r=>{
+    const openedBy = r.opened_role==="super_admin" ? "Voces" : "la voz";
+    const chg = r.changes&&Object.keys(r.changes).length ? Object.keys(r.changes).join(", ") : "";
+    const thread=(byReq[r.id]||[]).map(m=>`<div style="margin:4px 0;font-size:13px"><b>${m.author_role==="super_admin"?"Voces":"Voz"}:</b> ${esc(m.body)}</div>`).join("");
+    let actions="";
+    if(r.status==="open"){
+      if(chg) actions+=`<button class="btn btn-primary btn-sm" onclick="resolveChange('${r.id}','approve')">Aprobar y publicar</button>`;
+      actions+=`<button class="btn btn-ghost btn-sm" onclick="resolveChange('${r.id}','reject')">Rechazar</button>`;
+      actions+=`<button class="btn btn-ghost btn-sm" onclick="replyChange('${r.id}')">Responder</button>`;
+    }
+    return `<div class="card" style="align-items:flex-start;flex-direction:column">
+      <div class="grow"><h4>${esc(specName(r.specialist_id))} <span class="pill ${CH_PILL[r.status]||"pending"}">${esc(r.status)}</span></h4>
+        <div class="meta">${CH_KIND[r.kind]||r.kind} · por ${openedBy} · ${new Date(r.created_at).toLocaleString("es-MX")}${chg?` · campos: ${esc(chg)}`:""}</div>
+        ${thread?`<div style="margin-top:8px">${thread}</div>`:""}</div>
+      <div class="acts" style="margin-top:10px">${actions}</div>
+    </div>`;
+  }).join("");
+};
+async function resolveChange(id,action){ try{ const {error}=await sb.rpc("vpa_resolve_change",{p_request:id,p_action:action}); if(error)throw error; toast(action==="approve"?"Cambios publicados ✓":"Listo"); RENDER.changes(); }catch(e){ toast("Error: "+e.message);} }
+async function replyChange(id){ const b=prompt("Tu respuesta:"); if(!b||!b.trim())return; try{ const {error}=await sb.rpc("vpa_reply_change",{p_request:id,p_body:b.trim()}); if(error)throw error; toast("Respuesta enviada"); RENDER.changes(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ PEDIDOS ============ */
+const ORD_PILL={awaiting_payment:"pending",paid:"verified",fulfilled:"published",canceled:"hidden",refunded:"hidden"};
+RENDER.orders=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Pedidos</h2></div>
+    <div class="hint">Pedidos del carrito (productos, ofertas y talleres). El cobro se procesa en MXN. Marca <b>Pagado</b> al confirmar el pago: se avisa a cada voz y se otorgan puntos. El reparto por venta se calcula según la membresía de cada voz (50/30/20/10%).</div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  const { data:groups, error } = await sb.from("app_vpa_order_groups").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  if(!groups.length){ $("rows").innerHTML=`<div class="empty">Sin pedidos todavía.</div>`; return; }
+  const ids=groups.map(g=>g.id);
+  const { data:items } = await sb.from("app_vpa_order_items").select("*").in("group_id",ids);
+  const byG={}; (items||[]).forEach(it=>(byG[it.group_id]=byG[it.group_id]||[]).push(it));
+  $("rows").innerHTML=groups.map(g=>{
+    const its=(byG[g.id]||[]).map(it=>`<div style="font-size:13px;margin:3px 0">• ${it.qty}× ${esc(it.title)} — ${mxn(it.unit_cents*it.qty)} <span class="meta">(${esc(it.item_type)}${it.specialist_id?` · ${esc(specName(it.specialist_id))} · voz recibe ${mxn(it.specialist_cents)} · plataforma ${mxn(it.platform_cents)}`:` · plataforma 100%`})</span></div>`).join("");
+    const stSel=["awaiting_payment","paid","fulfilled","canceled","refunded"].map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("");
+    return `<div class="card" style="align-items:flex-start;flex-direction:column">
+      <div class="grow"><h4>Pedido ${esc(g.id.slice(0,8))} <span class="pill ${ORD_PILL[g.status]||"pending"}">${esc(g.status)}</span></h4>
+        <div class="meta">${esc(g.buyer_email)}${g.buyer_name?" · "+esc(g.buyer_name):""} · ${new Date(g.created_at).toLocaleString("es-MX")}${g.code?" · código "+esc(g.code):""}</div>
+        <div style="margin-top:8px">${its}</div>
+        <div class="meta" style="margin-top:6px">Subtotal ${mxn(g.subtotal_cents)}${g.discount_cents?` · desc. −${mxn(g.discount_cents)}`:""} · <b>Total ${mxn(g.total_cents)}</b></div></div>
+      <div class="acts" style="margin-top:10px">
+        <select class="btn-sm" style="padding:6px;border-radius:8px" onchange="setOrderStatus('${g.id}',this.value)">${stSel}</select>
+      </div></div>`;
+  }).join("");
+};
+async function setOrderStatus(id,st){ try{ const {error}=await sb.rpc("vpa_set_order_status",{p_id:id,p_status:st}); if(error)throw error; toast("Pedido actualizado"); RENDER.orders(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ MEMBRESÍAS ============ */
+RENDER.memberships=async ()=>{
+  const planOpts=PLANS.map(p=>`<option value="${p.id}">${esc(p.name_es)} · ${p.commission_pct}% comisión · ${usd(p.monthly_cents)}/mes</option>`).join("");
+  const specOpts=SPECS.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  $("main").innerHTML=`<div class="sec-head"><h2>Membresías</h2></div>
+    <div class="hint">Planes: <b>Comunidad</b> (gratis, 50%) · <b>ON</b> $11/mes · $111/año (30%) · <b>Amplified</b> $44/mes · $444/año (20%) · <b>Global Exposure</b> $144/mes · $1,440/año (10%). Asignar una membresía activa fija la comisión de venta de esa voz y le abona sus créditos de marketing. El cobro real llega con FlowShare; aquí registras el acuerdo.</div>
+    <div class="card" style="display:block">
+      <div class="row2"><div class="field"><label>Voz</label><select id="mb_spec">${specOpts}</select></div>
+        <div class="field"><label>Plan</label><select id="mb_plan">${planOpts}</select></div></div>
+      <div class="row2"><div class="field"><label>Periodo</label><select id="mb_period"><option value="monthly">Mensual</option><option value="yearly">Anual</option></select></div>
+        <div class="field"><label>Estado</label><select id="mb_status"><option value="active">active</option><option value="pending">pending</option></select></div></div>
+      <div class="field"><label>Código de descuento (opcional)</label><input id="mb_code" style="text-transform:uppercase" placeholder="EJ. AMIGA20"></div>
+      <button class="btn btn-primary btn-sm" onclick="setMembership()">Asignar membresía</button>
+    </div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  const { data, error } = await sb.from("app_vpa_subscriptions").select("*").in("status",["active","pending","past_due"]).order("created_at",{ascending:false});
+  if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  if(!data.length){ $("rows").innerHTML=`<div class="empty">Ninguna voz tiene membresía activa todavía (todas en Comunidad, 50%).</div>`; return; }
+  $("rows").innerHTML=data.map(s=>`<div class="card"><div class="grow">
+    <h4>${esc(specName(s.specialist_id))} <span class="pill ${s.status==="active"?"published":"pending"}">${esc(planName(s.plan_id))} · ${esc(s.status)}</span></h4>
+    <div class="meta">${esc(s.period)} · ${usd(s.price_cents)}${s.code?" · código "+esc(s.code):""}${s.current_period_end?" · hasta "+new Date(s.current_period_end).toLocaleDateString("es-MX"):""}</div></div>
+    <div class="acts"><select class="btn-sm" style="padding:6px;border-radius:8px" onchange="updateSub('${s.id}',this.value)">
+      ${["active","past_due","canceled"].map(x=>`<option ${x===s.status?"selected":""}>${x}</option>`).join("")}</select></div></div>`).join("");
+};
+async function setMembership(){
+  const p={ specialist_id:$("mb_spec").value, plan_id:$("mb_plan").value, period:$("mb_period").value, status:$("mb_status").value, code:$("mb_code").value.trim() };
+  if(!p.specialist_id) return toast("Elige una voz");
+  try{ const {error}=await sb.rpc("vpa_admin_set_subscription",{payload:p}); if(error)throw error; toast("Membresía asignada ✓"); RENDER.memberships(); }catch(e){ toast("Error: "+e.message);} }
+async function updateSub(id,status){ try{ const {error}=await sb.rpc("vpa_admin_set_subscription",{payload:{id,status,plan_id:"free",period:"monthly"}}); if(error)throw error; toast("Actualizado"); RENDER.memberships(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ CÓDIGOS Y REFERIDOS ============ */
+RENDER.codes=async ()=>{
+  const specOpts=`<option value="">— nadie —</option>`+SPECS.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  $("main").innerHTML=`<div class="sec-head"><h2>Códigos y referidos</h2>
+      <button class="btn btn-primary" onclick="openCode()">+ Nuevo código</button></div>
+    <div class="hint"><b>Aquí creas TODOS los códigos.</b> Un código puede ser: <b>(1) Descuento</b> — % o monto fijo que el cliente escribe en el checkout de <code>/unete</code>. <b>(2) Partner/Comunidad</b> — además del descuento, paga <b>comisión</b> a una Voz cada vez que se usa. Puedes fijar la <b>duración</b> (permanente o los primeros N meses) y límites (usos, vencimiento). Cada código trae su <b>link para compartir</b> (botón “Copiar link” / WhatsApp). Todo se valida y registra solo.</div>
+    <div id="codeForm"></div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  window.__specOptsCode=specOpts;
+  const { data, error } = await sb.from("app_vpa_codes").select("*").order("created_at",{ascending:false});
+  if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  if(!data.length){ $("rows").innerHTML=`<div class="empty">Sin códigos todavía.</div>`; return; }
+  $("rows").innerHTML=data.map(c=>{
+    const disc=c.discount_type==="percent"?`${c.discount_value}%`:mxn(c.discount_value);
+    const dur=(c.discount_value>0)?(c.duration_months?` · ${c.duration_months} meses`:` · permanente`):"";
+    const refc=(c.referrer||c.referrer_specialist)?` · comisión: ${c.referrer_commission_type==="percent"?c.referrer_commission_value+"%":mxn(c.referrer_commission_value)}${c.referrer_specialist?" ("+esc(specName(c.referrer_specialist))+")":""}`:"";
+    const isRef=(c.notes==="referral");
+    return `<div class="card"><div class="grow">
+      <h4>${esc(c.code)} <span class="pill ${c.active?"published":"hidden"}">${c.active?"activo":"inactivo"}</span>${isRef?' <span class="pill">referido</span>':''}</h4>
+      <div class="meta">${c.discount_value>0?"−"+disc+dur:"sin descuento"} · aplica: ${c.applies_plans.join("/")}${c.applies_orders?" + tienda":""}${refc} · usos ${c.uses}${c.max_uses?"/"+c.max_uses:""}${c.expires_at?" · vence "+new Date(c.expires_at).toLocaleDateString("es-MX"):""}${c.notes&&!isRef?" · "+esc(c.notes):""}</div></div>
+      <div class="acts">
+        <button class="btn btn-ghost btn-sm" onclick="copyRef('${esc(c.code)}')">🔗 Copiar link</button>
+        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent('Únete a Voces para el Alma con mi enlace: https://voces.world/crear-perfil?ref='+c.code)}">WhatsApp</a>
+        <button class="btn btn-ghost btn-sm" onclick='openCode(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button></div></div>`;
+  }).join("");
+};
+function openCode(c){
+  c=c||{};
+  const plans=["basic","pro"];
+  const dval  = (c.discount_type==="amount") ? (c.discount_value? (c.discount_value/100):"") : (c.discount_value!=null?c.discount_value:"");
+  const refval= (c.referrer_commission_type==="amount") ? (c.referrer_commission_value? (c.referrer_commission_value/100):"") : (c.referrer_commission_value||"");
+  $("codeForm").innerHTML=`<div class="card" style="display:block">
+    <div class="bi">1 · El código</div>
+    <div class="row2"><div class="field"><label>Código (lo que escribe el cliente)</label><input id="cd_code" style="text-transform:uppercase" placeholder="EJ. FUNDADORAS" value="${esc(c.code||"")}"></div>
+      <div class="field"><label>Activo</label><select id="cd_active"><option value="true" ${c.active!==false?"selected":""}>Sí</option><option value="false" ${c.active===false?"selected":""}>No</option></select></div></div>
+
+    <div class="bi">2 · El descuento</div>
+    <div class="row2"><div class="field"><label>Tipo</label><select id="cd_dtype" onchange="cdLbls()"><option value="percent" ${c.discount_type!=="amount"?"selected":""}>Porcentaje (%)</option><option value="amount" ${c.discount_type==="amount"?"selected":""}>Monto fijo (pesos)</option></select></div>
+      <div class="field"><label id="cd_dval_lbl">Porcentaje (%)</label><input id="cd_dval" type="number" min="0" step="1" value="${dval}"></div></div>
+    <div class="field"><label>Duración del descuento</label><input id="cd_dur" type="number" min="1" placeholder="vacío = permanente · ej. 3 = sólo los primeros 3 meses, luego precio lleno" value="${c.duration_months||""}"></div>
+    <div class="row2"><div class="field"><label>Aplica a planes</label><div class="chkgroup">${plans.map(p=>`<label class="chk"><input type="checkbox" data-cdp value="${p}" ${!c.applies_plans||c.applies_plans.includes(p)?"checked":""}> ${p}</label>`).join("")}</div></div>
+      <div class="field"><label>¿Aplica también en la tienda?</label><select id="cd_orders"><option value="false" ${!c.applies_orders?"selected":""}>No</option><option value="true" ${c.applies_orders?"selected":""}>Sí</option></select></div></div>
+
+    <div class="bi">3 · Partner / comunidad (opcional)</div>
+    <div class="hint" style="margin:0 0 10px">Asigna una Voz para que este código le pague <b>comisión</b> cada vez que se use (código de partner/comunidad). Déjalo en “— nadie —” para un descuento normal.</div>
+    <div class="row2"><div class="field"><label>Voz que refiere (partner)</label><select id="cd_refspec">${window.__specOptsCode||""}</select></div>
+      <div class="field"><label id="cd_refval_lbl">Comisión (%)</label><input id="cd_refval" type="number" min="0" value="${refval}"></div></div>
+    <div class="row2"><div class="field"><label>Tipo de comisión</label><select id="cd_reftype" onchange="cdLbls()"><option value="percent" ${c.referrer_commission_type!=="amount"?"selected":""}>Porcentaje (%)</option><option value="amount" ${c.referrer_commission_type==="amount"?"selected":""}>Monto (pesos)</option></select></div>
+      <div class="field"><label>Puntos al partner por uso</label><input id="cd_pts" type="number" min="0" value="${c.points_per_use||""}"></div></div>
+
+    <div class="bi">4 · Límites (opcional)</div>
+    <div class="row2"><div class="field"><label>Máx. usos (vacío = ilimitado)</label><input id="cd_max" type="number" min="1" value="${c.max_uses||""}"></div>
+      <div class="field"><label>Vence</label><input id="cd_exp" type="date" value="${c.expires_at?c.expires_at.slice(0,10):""}"></div></div>
+    <div class="field"><label>Notas internas (no se muestran al cliente)</label><input id="cd_notes" value="${esc(c.notes==='referral'?'':(c.notes||''))}"></div>
+    <button class="btn btn-primary btn-sm" onclick="saveCode('${c.id||""}')">Guardar código</button>
+  </div>`;
+  if(c.referrer_specialist) $("cd_refspec").value=c.referrer_specialist;
+  cdLbls();
+}
+function cdLbls(){
+  const dt=$("cd_dtype")?$("cd_dtype").value:"percent"; const dl=$("cd_dval_lbl"); if(dl) dl.textContent = dt==="amount"?"Monto en pesos (MXN)":"Porcentaje (%)";
+  const rt=$("cd_reftype")?$("cd_reftype").value:"percent"; const rl=$("cd_refval_lbl"); if(rl) rl.textContent = rt==="amount"?"Comisión en pesos (MXN)":"Comisión (%)";
+}
+async function saveCode(id){
+  const plansSel=[...document.querySelectorAll("[data-cdp]:checked")].map(e=>e.value);
+  const code=$("cd_code").value.trim().toUpperCase();
+  if(!code) return toast("Escribe un código");
+  const dtype=$("cd_dtype").value, reftype=$("cd_reftype").value;
+  const discount_value = dtype==="amount" ? Math.round(Number($("cd_dval").value||0)*100) : Number($("cd_dval").value||0);
+  const referrer_commission_value = reftype==="amount" ? Math.round(Number($("cd_refval").value||0)*100) : Number($("cd_refval").value||0);
+  if(!id){
+    const { data:exist } = await sb.from("app_vpa_codes").select("id").eq("code",code).maybeSingle();
+    if(exist){ return toast("Ya existe un código con ese nombre. Elige otro o edítalo."); }
+  }
+  const p={ id:id||"", code, active:$("cd_active").value, discount_type:dtype,
+    discount_value, applies_plans:plansSel, applies_orders:$("cd_orders").value,
+    referrer_specialist:$("cd_refspec").value||"", referrer_commission_type:reftype,
+    referrer_commission_value, points_per_use:Number($("cd_pts").value||0),
+    duration_months:$("cd_dur").value||"",
+    max_uses:$("cd_max").value||"", expires_at:$("cd_exp").value?new Date($("cd_exp").value).toISOString():"", notes:$("cd_notes").value.trim() };
+  try{ const {error}=await sb.rpc("vpa_upsert_code",{payload:p}); if(error)throw error; toast("Código guardado ✓"); $("codeForm").innerHTML=""; RENDER.codes(); }catch(e){ toast("Error: "+e.message);} }
+async function copyRef(code){
+  const link="https://voces.world/crear-perfil?ref="+code;
+  try{ await navigator.clipboard.writeText(link); toast("Link de registro copiado ✓"); }
+  catch(_){ prompt("Copia el link para compartir:", link); }
+}
+
+/* ============ PUNTOS Y CRÉDITOS ============ */
+RENDER.points=async ()=>{
+  const specOpts=SPECS.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");
+  $("main").innerHTML=`<div class="sec-head"><h2>Puntos y créditos</h2></div>
+    <div class="hint">Voces Points (gamificación) y créditos de marketing. Puedes otorgar puntos a un usuario o abonar créditos a una voz (campañas regaladas, material profesional). Las reglas automáticas de puntos viven en Ajustes → points_rules.</div>
+    <div class="card" style="display:block">
+      <h4 style="margin-bottom:10px">Abonar créditos a una voz</h4>
+      <div class="row2"><div class="field"><label>Voz</label><select id="cr_spec">${specOpts}</select></div>
+        <div class="field"><label>Monto (centavos USD)</label><input id="cr_amt" type="number" placeholder="4400 = $44"></div></div>
+      <div class="field"><label>Motivo</label><input id="cr_reason" placeholder="campaña regalada / material"></div>
+      <button class="btn btn-primary btn-sm" onclick="grantCredits()">Abonar créditos</button>
+    </div>
+    <div id="rows"><div class="empty">Cargando movimientos…</div></div>`;
+  const [{ data:pts }, { data:crs }] = await Promise.all([
+    sb.from("app_vpa_points").select("*").order("created_at",{ascending:false}).limit(50),
+    sb.from("app_vpa_credits").select("*").order("created_at",{ascending:false}).limit(50)
+  ]);
+  const rows=[]
+    .concat((pts||[]).map(p=>`<div class="card"><div class="grow"><h4 style="font-size:14px">+${p.points} pts</h4><div class="meta">${esc(p.reason||"")} · ${new Date(p.created_at).toLocaleString("es-MX")}</div></div></div>`))
+    .concat((crs||[]).map(c=>`<div class="card"><div class="grow"><h4 style="font-size:14px">${c.delta_cents>=0?"+":""}${usd(c.delta_cents)} créditos</h4><div class="meta">${c.specialist_id?esc(specName(c.specialist_id)):""} · ${esc(c.reason||"")} · ${new Date(c.created_at).toLocaleString("es-MX")}</div></div></div>`));
+  $("rows").innerHTML=rows.length?rows.join(""):`<div class="empty">Sin movimientos todavía.</div>`;
+};
+async function grantCredits(){
+  const spec=$("cr_spec").value, amt=Number($("cr_amt").value||0), reason=$("cr_reason").value.trim();
+  if(!spec||!amt) return toast("Elige voz y monto");
+  try{ const {error}=await sb.rpc("vpa_grant_credits",{p_specialist:spec,p_delta_cents:amt,p_reason:reason||"admin_grant"}); if(error)throw error; toast("Créditos abonados ✓"); RENDER.points(); }catch(e){ toast("Error: "+e.message);} }
 
 /* ============ SETTINGS ============ */
 RENDER.settings=async ()=>{
