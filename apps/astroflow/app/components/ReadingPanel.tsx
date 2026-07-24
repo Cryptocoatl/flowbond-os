@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RelContext } from '../../lib/astro/types';
 import { useT } from '../../lib/i18n/provider';
 
@@ -17,9 +17,13 @@ const SYSTEMS = [
 ] as const;
 type SystemKey = (typeof SYSTEMS)[number]['key'];
 
-// FlowMe — the voice of the flow. Readings are channeled live and never
-// stored: each transmission exists only in this moment, inside FlowBond's
-// privacy layer. The engine receives symbols, not identities.
+interface Msg { role: 'user' | 'assistant'; text: string }
+
+// FlowMe — the voice of the flow, now a real conversation: your questions and
+// its readings live in one thread of bubbles, like the chats people already
+// know. Readings are channeled live and never stored: each transmission exists
+// only in this moment, inside FlowBond's privacy layer. The engine receives
+// symbols, not identities.
 export default function ReadingPanel({
   handles = [],
   mapId,
@@ -35,12 +39,17 @@ export default function ReadingPanel({
   const [context, setContext] = useState<RelContext>('friendship');
   const [system, setSystem] = useState<SystemKey>('western');
   const [question, setQuestion] = useState('');
-  const [reading, setReading] = useState('');
+  const [thread, setThread] = useState<Msg[]>([]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const scroll = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { scroll.current?.scrollTo({ top: scroll.current.scrollHeight, behavior: 'smooth' }); }, [thread, busy]);
 
   async function run(ctx: RelContext, sys: SystemKey = system, q: string = '') {
+    if (busy) return;
     setBusy(true); setErr(''); setContext(ctx); setSystem(sys);
+    if (q) setThread((th) => [...th, { role: 'user', text: q }]);
     try {
       const base = mapId ? { mapId } : { handles };
       const res = await fetch('/api/reading', {
@@ -50,7 +59,7 @@ export default function ReadingPanel({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || t('Failed'));
-      setReading(json.reading);
+      setThread((th) => [...th, { role: 'assistant', text: json.reading }]);
       if (q) setQuestion(''); // clear the prompt so the conversation can flow on
     } catch (e: any) {
       setErr(e.message);
@@ -105,50 +114,64 @@ export default function ReadingPanel({
               </div>
             )}
           </div>
-          {/* The writing — ask the stars; the answer always appears BELOW it */}
+
+          {/* the conversation — questions and readings in one thread */}
+          {(thread.length > 0 || busy) && (
+            <div ref={scroll} className="space-y-2.5 mb-3 max-h-[420px] overflow-y-auto overscroll-contain pr-1">
+              {thread.map((m, i) => (
+                <div key={i} className={`af-msg flex items-end gap-2 ${m.role === 'user' ? 'justify-end' : ''}`}>
+                  {m.role === 'assistant' && (
+                    <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-xs self-start mt-1" style={{ background: 'radial-gradient(circle at 35% 30%, #b6abec, #6f5fd0)' }}>✦</span>
+                  )}
+                  <div className={`${m.role === 'user' ? 'af-bubble-user text-sm' : 'af-bubble-flowme font-serif text-[15px]'} px-3.5 py-2.5 leading-relaxed max-w-[92%] whitespace-pre-wrap`}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {busy && (
+                <div className="af-msg flex items-end gap-2">
+                  <span className="w-6 h-6 shrink-0 rounded-full grid place-items-center text-xs" style={{ background: 'radial-gradient(circle at 35% 30%, #b6abec, #6f5fd0)' }}>✦</span>
+                  <div className="af-bubble-flowme px-4 py-3 af-typing"><span /> <span /> <span /></div>
+                </div>
+              )}
+            </div>
+          )}
+          {err && <p className="text-[#d9663c] text-sm mb-2">{err}</p>}
+
+          {/* first move — channel the reading */}
+          {thread.length === 0 && !busy && (
+            <button onClick={() => run(context)}
+              className="text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2 mb-3 hover:bg-[#9a8fe0]/25 transition">
+              {t('✦ Channel the {kind} reading', { kind: mapId ? t('collective') : pair ? t('compatibility') : t('personal') })}
+            </button>
+          )}
+
+          {/* the writing — ask the stars */}
           <div className="flex gap-2">
             <input
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && question.trim() && !busy) run(context, system, question); }}
               maxLength={300}
-              placeholder={t('Ask the stars — a decision, a tension, a dream…')}
-              className="flex-1 bg-[#0a0b14] border border-[#242a3b] rounded-lg px-3 py-2 text-sm text-[#ece9e0] placeholder-[#454962] focus:border-[#9a8fe0]/50 outline-none"
+              placeholder={t('Ask the stars — a decision, a tension, a dream…')} enterKeyHint="send"
+              className="flex-1 bg-[#0a0b14] border border-[#242a3b] rounded-full px-4 py-2.5 text-sm text-[#ece9e0] placeholder-[#454962] focus:border-[#9a8fe0]/50 outline-none"
             />
             <button
               onClick={() => run(context, system, question)}
-              disabled={busy || !question.trim()}
-              className="text-sm bg-[#e3c07a]/90 text-[#0a0b12] font-semibold rounded-lg px-4 disabled:opacity-40 hover:bg-[#e3c07a] transition"
+              disabled={busy || !question.trim()} aria-label={t('✦ Ask')}
+              className="w-10 h-10 shrink-0 rounded-full grid place-items-center bg-[#e3c07a]/90 text-[#0a0b12] font-semibold disabled:opacity-40 hover:bg-[#e3c07a] active:scale-95 transition"
             >
-              {t('✦ Ask')}
+              ↑
             </button>
           </div>
-          {!reading && !busy && (
-            <button onClick={() => run(context)}
-              className="text-sm bg-[#9a8fe0]/15 border border-[#9a8fe0]/40 text-[#b6abec] rounded-lg px-4 py-2 mt-3 hover:bg-[#9a8fe0]/25 transition">
-              {t('✦ Channel the {kind} reading', { kind: mapId ? t('collective') : pair ? t('compatibility') : t('personal') })}
-            </button>
-          )}
 
-          {/* The answer — under the writing */}
-          {busy && (
-            <p className="text-[#9698a8] text-sm animate-pulse mt-3">
-              {mapId ? t('FlowMe is reading the sky you share…') : t('FlowMe is reading the sky…')}
-            </p>
-          )}
-          {err && <p className="text-[#d9663c] text-sm mt-3">{err}</p>}
-          {reading && (
-            <p className="font-serif text-[15px] leading-relaxed text-[#ece9e0] whitespace-pre-wrap mt-3" style={{ animation: 'af-rise 0.6s ease-out' }}>
-              {reading}
-            </p>
-          )}
           <p className="text-[10px] text-[#5b5e72] mt-2">
             {t('FlowMe reflects your question through the symbols — a mirror for star-aligned decisions, never a verdict.')}
           </p>
 
           <p className="text-[9px] text-[#3f4358] mt-4 tracking-wide">
             {t('Channeled live, never stored — your chart speaks in symbols, your identity stays in the flow ·')}{' '}
-            <a href="/cosmos" className="text-[#5b5e72] underline decoration-dotted hover:text-[#b6abec]">{t('study the symbols ✦')}</a>
+            <a href="/guide" className="text-[#5b5e72] underline decoration-dotted hover:text-[#b6abec]">{t('read the guide ✦')}</a>
           </p>
         </div>
       </div>

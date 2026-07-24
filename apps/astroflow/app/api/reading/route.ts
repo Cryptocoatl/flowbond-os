@@ -86,6 +86,10 @@ OTHER TRADITIONS — when the facts include them, read them on their own terms:
   contracted pattern, the gift as the unlocked expression, the siddhi as the far star. The four prime
   spheres (Life's Work, Evolution, Radiance, Purpose) are the spine of the reading. Profile lines
   describe HOW they move through it.
+• Chinese (year animal): the shēngxiào — one of 12 animals × 5 elements (wood/fire/earth/metal/water)
+  × yin-yang — set by the birth YEAR as it turns at the real Chinese New Year (not Jan 1). Read the
+  animal as temperament and the element as its flavour; allies are the same-trine teammates, the clash
+  is the opposite animal (a growth mirror), the secret friend a quiet unconditional ally.
 • COMPARISON readings: when asked to compare two systems for the SAME person, find where the lenses
   AGREE (that's the loudest signal in the chart) and where they reveal different layers (western =
   personality weather, vedic = karmic ground, gene keys = evolutionary arc). Never declare one system
@@ -397,12 +401,13 @@ export async function POST(req: NextRequest) {
           vimshottari: bundle.vimshottari,
           dasha: bundle.dasha,
           mayan: bundle.mayan,
+          chinese: bundle.chinese,
           geneKeys: bundle.geneKeys,
         };
         ask =
           system === 'unified'
-            ? `Write a UNIFIED reading for ${firstName(p)}: weave the western chart, Vedic sidereal, the Mayan counts and Gene Keys into one clear resume of a few short paragraphs. Lead with what every lens agrees on about who they are — said once, strongly, in plain language — then what each tradition uniquely adds, and close with the single clearest thing this whole sky is asking of them right now.`
-            : `Write a comparison reading for ${firstName(p)} across the four lenses they carry: western tropical (personality weather), Vedic sidereal (karmic ground), the Mayan counts (the face of their day), and Gene Keys (evolutionary arc). Name where the systems AGREE — that convergence is the loudest truth in the chart — and what each lens uniquely reveals that the others cannot see. Do not rank the systems.`;
+            ? `Write a UNIFIED reading for ${firstName(p)}: weave the western chart, Vedic sidereal, the Mayan counts, the Chinese year animal and Gene Keys into one clear resume of a few short paragraphs. Lead with what every lens agrees on about who they are — said once, strongly, in plain language — then what each tradition uniquely adds, and close with the single clearest thing this whole sky is asking of them right now.`
+            : `Write a comparison reading for ${firstName(p)} across the five lenses they carry: western tropical (personality weather), Vedic sidereal (karmic ground), the Mayan counts (the face of their day), the Chinese year animal (element + animal temperament), and Gene Keys (evolutionary arc). Name where the systems AGREE — that convergence is the loudest truth in the chart — and what each lens uniquely reveals that the others cannot see. Do not rank the systems.`;
         maxTokens = 1200;
       }
     } else if (profiles.length === 2) {

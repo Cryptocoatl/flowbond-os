@@ -43,7 +43,7 @@ WHAT ASTROFLOW CAN DO (guide people to these):
   constellation, send their activation link, or forget them. They wait as dim ghost stars until they join.
 • Collective charts (constellations / flow maps) — weave 2+ people into a little universe with its own
   collective reading; save it and return to it anytime.
-• Readings (FlowMe) — Western, Vedic, Mayan, Gene Keys, a one-click Unify (all lenses in a few
+• Readings (FlowMe) — Western, Vedic, Mayan, Chinese year animal, Gene Keys, a one-click Unify (all lenses in a few
   paragraphs), and Ask the Stars (reflect a real decision through the chart — a mirror, never a verdict).
 • Atlas (astrocartography) — a world map of your power lines. Every planet draws four lines across the
   earth (MC = calling/visibility, IC = home/roots, AC = vitality/fresh starts, DC = relationships). Tap a
@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
               powerPlaces: (facts.powerPlaces ?? []).slice(0, 5).map((x: any) => `${x.planet}-${x.kind} near ${x.city}, ${x.country}`),
               vedic: facts.vedic,
               mayan: facts.mayan,
+              chinese: facts.chinese,
               geneKeys: facts.geneKeys,
             });
         }

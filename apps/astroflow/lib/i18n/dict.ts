@@ -9,6 +9,7 @@ import { privacy } from './frag/privacy';
 import { dreams } from './frag/dreams';
 import { today } from './frag/today';
 import { wheel } from './frag/wheel';
+import { guide } from './frag/guide';
 
 // One Spanish map, assembled from per-area fragments so they can be authored
 // independently without merge collisions. Keys are the English SOURCE strings;
@@ -24,6 +25,7 @@ export const es: Record<string, string> = {
   ...dreams,
   ...today,
   ...wheel,
+  ...guide,
 };
 
 export const DICT: Record<Exclude<Locale, 'en'>, Record<string, string>> = {

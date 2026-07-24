@@ -21,7 +21,7 @@ describe('memory: cached facts', () => {
     const a = buildFacts(chart, REF.date);
     const b = buildFacts(chart, REF.date);
     expect(a).toEqual(b); // pure
-    for (const k of ['placements', 'aspects', 'elements', 'modalities', 'vedic', 'vimshottari', 'mayan', 'geneKeys', 'strongestSpot'])
+    for (const k of ['placements', 'aspects', 'elements', 'modalities', 'vedic', 'vimshottari', 'mayan', 'chinese', 'geneKeys', 'strongestSpot'])
       expect(a).toHaveProperty(k);
     expect(Array.isArray(a.placements)).toBe(true);
     expect(a.placements.length).toBeGreaterThan(0);

@@ -9,6 +9,7 @@ import { natalAspects } from '../../../lib/astro/aspects';
 import { dreamspell, tzolkin, cholqij, DREAMSPELL_SEALS, DREAMSPELL_TONES } from '../../../lib/astro/mayan';
 import { NAWALES, KICHE_NUMBERS } from '../../../lib/astro/cholqij';
 import { geneKeys, GENE_KEYS } from '../../../lib/astro/genekeys';
+import { chineseSummary, CN_ANIMALS, CN_ELEMENTS } from '../../../lib/astro/chinese';
 import { vedicChart, vedicSummary, vimshottariDasha, currentDasha } from '../../../lib/astro/vedic';
 import { loreByName, DASHA_LORD_THEME, GANA_MEANING, PURUSHARTHA_MEANING } from '../../../lib/astro/nakshatras';
 import {
@@ -49,6 +50,7 @@ export default async function SystemPage({ params }: { params: Promise<{ key: st
       {key === 'mayan' && <Mayan date={date} jd={chart.jd} color={meta.color} locale={locale} />}
       {key === 'vedic' && <Vedic chart={chart} color={meta.color} locale={locale} />}
       {key === 'genekeys' && <GeneKeysView chart={chart} color={meta.color} locale={locale} />}
+      {key === 'chinese' && <ChineseView jd={chart.jd} color={meta.color} locale={locale} />}
 
       <div className="mt-9 pt-5 border-t border-white/5">
         <div className="text-[9px] uppercase tracking-[0.18em] text-[#b6abec] mb-3">{t('Read mine with FlowMe')}</div>
@@ -259,6 +261,59 @@ function GeneKeysView({ chart, color, locale }: { chart: Chart; color: string; l
         </div>
       </Section>
       <Reference>{t('Each gate carries an arc: the shadow is the contracted pattern, the gift its unlocked expression, the siddhi the far star. Your profile')} <b className="text-[#cfc8e8]">{gk.profile}</b> {t('describes how you walk it.')}</Reference>
+    </>
+  );
+}
+
+// ── Chinese · year animal ─────────────────────────────────────────────────────
+function ChineseView({ jd, color, locale }: { jd: number; color: string; locale: Locale }) {
+  const t = tFor(locale);
+  const cn = chineseSummary(jd);
+  return (
+    <>
+      <Hero color={color}
+        big={`${cn.element.glyph} ${t(cn.element.name)} ${t(cn.animal.name)} ${cn.animal.glyph}`}
+        small={`${cn.year} · ${cn.yang ? t('yang (active, outward)') : t('yin (receptive, inward)')} — ${t('your birth year animal, from the real Chinese New Year')}`} />
+
+      <Section title={t('Your animal — your face in the year cycle')}>
+        <div className="rounded-xl border p-3.5" style={{ borderColor: `${color}55`, background: `${color}0f` }}>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl">{cn.animal.glyph}</span>
+            <span className="text-base font-semibold" style={{ color: '#f0d2c8' }}>{t(cn.animal.name)}</span>
+            <span className="text-xs text-[#8a8ea3]">· {t(cn.animal.key)}</span>
+          </div>
+          <p className="text-[13px] text-[#cfc8b8] mt-2 leading-relaxed">{t(cn.animal.body)}</p>
+        </div>
+      </Section>
+
+      <Section title={t('Your element — the flavour of your animal')}>
+        <div className="rounded-xl border border-[#242a3b] bg-[#11131f]/80 p-3.5">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl" style={{ color }}>{cn.element.glyph}</span>
+            <span className="text-sm font-semibold text-[#cfc8e8]">{t(cn.element.name)}</span>
+            <span className="text-xs text-[#8a8ea3]">· {t(cn.element.key)}</span>
+          </div>
+          <p className="text-[13px] text-[#cfc8b8] mt-2 leading-relaxed">{t(cn.element.body)}</p>
+          <p className="text-[11px] text-[#5b5e72] mt-2">{t('Each element colours two years — yours is the {pol} expression.', { pol: cn.yang ? t('yang') : t('yin') })}</p>
+        </div>
+      </Section>
+
+      <Section title={t('Your relationships in the cycle')}>
+        <div className="space-y-2 text-sm">
+          <Row><span className="text-[#7bd0c6]">◈ {t('Natural allies')}:</span> {cn.allies.map((a) => `${a.glyph} ${t(a.name)}`).join(' · ')} <span className="text-[#5b5e72]">— {t('your trine; you move at the same pace')}</span></Row>
+          <Row><span className="text-[#b6abec]">✦ {t('Secret friend')}:</span> {cn.secretFriend.glyph} {t(cn.secretFriend.name)} <span className="text-[#5b5e72]">— {t('a quiet, unconditional support')}</span></Row>
+          <Row><span className="text-[#e8956a]">⚡ {t('Clash / growth mirror')}:</span> {cn.clash.glyph} {t(cn.clash.name)} <span className="text-[#5b5e72]">— {t('opposite energy; friction that teaches')}</span></Row>
+        </div>
+      </Section>
+
+      <Section title={t('The twelve animals')}>
+        <Grid color={color} items={CN_ANIMALS.map((a) => ({ label: `${a.glyph} ${t(a.name)}`, sub: t(a.key), on: a.name === cn.animal.name }))} />
+      </Section>
+
+      <Reference>
+        {t('The Chinese year turns at Chinese New Year — the second new moon after the winter solstice — not on January 1. AstralFlow computes that exact boundary from the same astronomy behind your chart, so a January or early-February birth gets its true animal.')} {' '}
+        {t('The five elements')}: {CN_ELEMENTS.map((e) => `${e.glyph} ${t(e.name)}`).join(' · ')}.
+      </Reference>
     </>
   );
 }
