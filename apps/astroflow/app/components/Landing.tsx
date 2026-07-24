@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Tour from './Tour';
+import { ORCHESTRATION } from '../../lib/astro/guide';
 import { useT } from '../../lib/i18n/provider';
 
 // Deterministic pseudo-random (stable across SSR/hydration) for the starfield.
@@ -187,6 +188,17 @@ export default function Landing() {
         <p className="text-[#b6b3cf] text-lg leading-relaxed">
           {t('Choose who sees your chart: only you, specific people you grant, accepted friends, or everyone on AstralFlow. Every tier is enforced at the data layer, per row. You decide who gets to weave you into their constellation.')}
         </p>
+      </section>
+
+      {/* what this really is — the honest framing + the hope */}
+      <section className="max-w-3xl mx-auto px-6 py-16 text-center">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-[#b6abec] mb-3">{t('What this really is')}</p>
+        <h2 className="font-serif text-3xl text-[#ece9e0] mb-4">{t('An orchestration of many sources — not a claim to know your future.')}</h2>
+        <p className="text-[#b6b3cf] text-lg leading-relaxed">{t(ORCHESTRATION.lead)}</p>
+        <p className="text-[#cfc8e8] text-lg leading-relaxed mt-5 border-l-2 border-[#e3c07a]/50 pl-4 text-left mx-auto max-w-xl italic">
+          {t(ORCHESTRATION.hope)}
+        </p>
+        <a href="/guide#truth" className="inline-block text-sm text-[#b6abec] underline decoration-dotted mt-5">{t('Read how it works ✦')}</a>
       </section>
 
       {/* final CTA */}

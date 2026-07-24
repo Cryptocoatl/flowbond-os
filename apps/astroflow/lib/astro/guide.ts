@@ -105,6 +105,50 @@ export function scoreBand(score: number) {
   return SCORE_BANDS.find((b) => score >= b.min) ?? SCORE_BANDS[SCORE_BANDS.length - 1];
 }
 
+// ── The depth: everything AstralFlow can actually weave ──────────────────────
+// One person's chart is just the first layer. These are the connections the app
+// can bond and read — the "whole flow."
+export interface Weave { glyph: string; name: string; what: string; where: string }
+
+export const WEAVE: Weave[] = [
+  { glyph: '◉', name: 'You', where: '/dashboard',
+    what: 'Your own chart read through five living traditions at once — Western, Vedic, the Mayan Cholq’ij, the Chinese year animal and Gene Keys — plus your power places and the sky moving over you today.' },
+  { glyph: '☌', name: 'Two people', where: '/match',
+    what: 'The currents between any two charts — what flows easily, what asks for work — weighed for the exact bond you care about: romance, friendship, living together, or building together.' },
+  { glyph: '✦', name: 'A whole group', where: '/',
+    what: 'Weave three, five, a dozen people into a constellation with a shared purpose — a team, a family, a household, a crew — and read the group as one sky: the strongest bonds, the friction to tend, the base where everyone thrives.' },
+  { glyph: '🗺', name: 'Place', where: '/atlas',
+    what: 'Your chart projected onto the Earth — the planetary lines crossing the planet for you, and the cities where your sky is strongest. Where two people’s lines cross is a shared power spot.' },
+  { glyph: '☽', name: 'Time', where: '/today',
+    what: 'The sky never stops moving. Live transits show this week’s weather over your chart, and real life cycles — your Saturn return, a Jupiter return — computed astronomically, not guessed from your age.' },
+  { glyph: '💘', name: 'New connection', where: '/match',
+    what: 'Opt in to what you’re open to and meet people open to the same. A mutual spark bonds you and opens the deep read — connection built on consent, from the first step.' },
+];
+
+// ── What this really is: the honest claim ────────────────────────────────────
+// The information sources AstralFlow orchestrates. Naming them is the point —
+// the app doesn't invent knowledge, it composes many old and living systems.
+export const SOURCES: string[] = [
+  'Precise astronomy — Sun, Moon and planet positions computed to the degree (Meeus)',
+  'Western astrology — the ~2,000-year Hellenistic tradition of signs, houses and aspects',
+  'Vedic Jyotish — the sidereal zodiac, the 27 nakshatras and the dasha life-cycles',
+  'The Mayan Cholq’ij — the living 260-day count still kept by daykeepers in Guatemala',
+  'Chinese astrology — the 12 year-animals and 5 elements, from the real lunar New Year',
+  'Gene Keys — the I Ching’s 64 hexagrams, read as shadow → gift → siddhi',
+  'Astrocartography — your planetary lines mapped across the whole Earth',
+  'Relationship synastry — classical aspect-weighting, tuned per kind of bond',
+];
+
+export const ORCHESTRATION = {
+  title: 'What AstralFlow really is',
+  lead: 'AstralFlow doesn’t claim to know your future, and it isn’t magic. It’s an orchestration — a careful weaving-together of many different sources of information about the moment you were born.',
+  body: [
+    'The astronomy is exact. The meanings come from traditions that humans have refined over thousands of years — each one a different, valid language for talking about temperament, timing and how people fit together. AstralFlow computes them all precisely and translates them into plain words, so you don’t need to study any of them to feel seen.',
+    'None of it is destiny. Every reading is a mirror — a way to notice patterns you already live, and to have a kinder, clearer conversation about them.',
+  ],
+  hope: 'We hope it’s useful. Our wish is simple: that this helps people connect in a healthier way, understand each other with more grace, and find how everyone can work — and love, and live, and build — better together.',
+};
+
 /** Composed one-breath answers for the FlowMe dock — served locally, instantly. */
 export const BASIS_SUMMARY =
   'The astronomy is real: planet positions are computed from standard celestial mechanics (Meeus), exact to the degree for your birth moment and place. On top of that sky, AstralFlow reads four traditions — ☉ Western (the ~2,000-year Hellenistic tradition), 🕉 Vedic Jyotish (sidereal zodiac, the 27 nakshatras of the Taittiriya Brahmana), ☀ the Mayan Cholq’ij (the living 260-day count still kept by daykeepers in Guatemala), and ⬡ Gene Keys (the I Ching’s 64 hexagrams mapped to your Sun). Every source is named openly in the Guide.';
