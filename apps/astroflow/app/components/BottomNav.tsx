@@ -12,8 +12,8 @@ import { useT } from '../../lib/i18n/provider';
 const TABS = [
   { href: '/', label: 'Sky', icon: 'sky' },
   { href: '/atlas', label: 'Atlas', icon: 'atlas' },
+  { href: '/match', label: 'Match', icon: 'match' },
   { href: '/systems', label: 'Currents', icon: 'currents' },
-  { href: '/cosmos', label: 'Cosmos', icon: 'cosmos' },
   { href: '/dashboard', label: 'You', icon: 'you' },
 ] as const;
 
@@ -29,6 +29,8 @@ function Icon({ name, active }: { name: string; active: boolean }) {
       return <svg {...common}><path d="M3 8.5c3-3 5 3 8 0s5-3 9 0" /><path d="M3 13c3-3 5 3 8 0s5-3 9 0" /><path d="M3 17.5c3-3 5 3 8 0s5-3 9 0" /></svg>;
     case 'cosmos': // sparkle
       return <svg {...common}><path d="M12 3l1.6 6.4L20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6z" fill={active ? 'rgba(227,192,122,0.18)' : 'none'} /></svg>;
+    case 'match': // two overlapping resonance rings
+      return <svg {...common}><circle cx="9" cy="12" r="5.5" /><circle cx="15" cy="12" r="5.5" fill={active ? 'rgba(224,112,143,0.18)' : 'none'} /></svg>;
     case 'you': // person
       return <svg {...common}><circle cx="12" cy="8" r="3.2" /><path d="M5.5 19.5c0-3.4 2.9-5.8 6.5-5.8s6.5 2.4 6.5 5.8" /></svg>;
     default:
@@ -41,13 +43,21 @@ export default function BottomNav() {
   const path = usePathname() || '/';
   const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 
-  // Pending bond requests → a badge on the "You" tab so it's never missed.
+  // Pending bond requests → a badge on the "You" tab; incoming sparks → on Match.
   const [bondReqs, setBondReqs] = useState(0);
+  const [sparks, setSparks] = useState(0);
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data } = await browserClient().rpc('my_incoming_bond_requests');
-      if (alive) setBondReqs(Array.isArray(data) ? data.length : 0);
+      const sb = browserClient();
+      const [b, s] = await Promise.all([
+        sb.rpc('my_incoming_bond_requests'),
+        sb.rpc('my_incoming_sparks'),
+      ]);
+      if (alive) {
+        setBondReqs(Array.isArray(b.data) ? b.data.length : 0);
+        setSparks(Array.isArray(s.data) ? s.data.length : 0);
+      }
     })();
     return () => { alive = false; };
   }, [path]);
@@ -74,6 +84,11 @@ export default function BottomNav() {
                 {t.icon === 'you' && bondReqs > 0 && (
                   <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-[#e3c07a] text-[#0a0b12] text-[10px] font-bold leading-none">
                     {bondReqs > 9 ? '9+' : bondReqs}
+                  </span>
+                )}
+                {t.icon === 'match' && sparks > 0 && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 grid place-items-center rounded-full bg-[#e0708f] text-[#0a0b12] text-[10px] font-bold leading-none">
+                    {sparks > 9 ? '9+' : sparks}
                   </span>
                 )}
               </span>
