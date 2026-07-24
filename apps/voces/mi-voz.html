@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Mi Voz · Voces para el Alma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --lino:#F7F2E9; --pergamino:#FCFAF4; --oro:#B68A3E; --oro-claro:#CBA15A;
+    --salvia:#7E9078; --salvia-tenue:#E5EAE0; --pizarra:#4C6072; --tinta:#2C2722;
+    --tinta-60:rgba(44,39,34,.62); --linea:rgba(44,39,34,.14);
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --r:14px;
+    --ok:#3f7d59; --warn:#b5762a; --bad:#a4493e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--tinta);background:var(--lino);line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
+  a{color:var(--pizarra)}
+  button{font-family:var(--sans);cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-weight:500;font-size:14px;padding:9px 16px;border-radius:100px;border:1px solid transparent;transition:.2s}
+  .btn-primary{background:var(--tinta);color:var(--lino)}
+  .btn-primary:hover{background:var(--oro)}
+  .btn-primary:disabled{opacity:.55}
+  .btn-ghost{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+  .btn-ghost:hover{border-color:var(--tinta)}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  input,select,textarea{font-family:var(--sans);font-size:14px;color:var(--tinta);background:var(--pergamino);
+    border:1px solid var(--linea);border-radius:10px;padding:10px 12px;width:100%}
+  textarea{min-height:90px;resize:vertical}
+  label{display:block;font-size:12px;font-weight:600;color:var(--tinta-60);margin:0 0 5px}
+  :focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+
+  #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .gate-card{background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:38px;max-width:440px;width:100%}
+  .gate-card .ring{display:block;text-align:center;margin-bottom:12px}
+  .gate-card h1{font-size:26px;text-align:center;margin-bottom:6px}
+  .gate-card p.sub{color:var(--tinta-60);font-size:14px;margin-bottom:20px;text-align:center}
+  .gate-card .field{margin-bottom:12px}
+  .claim-hero{display:flex;gap:14px;align-items:center;background:var(--lino);border:1px solid var(--linea);border-radius:16px;padding:14px;margin-bottom:18px}
+  .claim-hero .ph{width:60px;height:60px;border-radius:50%;background:var(--salvia-tenue) center/cover no-repeat;flex:none}
+  .msg{margin-top:12px;font-size:13.5px;min-height:18px}
+
+  #app{display:none;min-height:100vh}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    height:62px;padding:0 22px;background:rgba(247,242,233,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--linea)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:18px}
+  .top-right{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--tinta-60)}
+  .bell{position:relative}
+  .bell .dot{position:absolute;top:-4px;right:-4px;background:var(--oro);color:#fff;font-size:10px;font-weight:600;min-width:16px;height:16px;border-radius:100px;display:none;align-items:center;justify-content:center;padding:0 4px}
+  .bell .dot.on{display:flex}
+  .layout{display:flex;align-items:flex-start;max-width:960px;margin:0 auto;width:100%}
+  .nav{position:sticky;top:62px;flex:none;width:190px;padding:22px 14px;height:calc(100vh - 62px);overflow:auto}
+  .nav button{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:10px;font-size:14.5px;color:var(--tinta-60);font-weight:500}
+  .nav button:hover{background:rgba(44,39,34,.05);color:var(--tinta)}
+  .nav button.active{background:var(--tinta);color:var(--lino)}
+  .main{flex:1;min-width:0;padding:26px 26px 80px}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+  .sec-head h2{font-size:24px}
+  .hint{color:var(--tinta-60);font-size:13.5px;margin:-4px 0 18px;max-width:62ch}
+  .card{background:var(--pergamino);border:1px solid var(--linea);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .card h4{font-size:16px;margin-bottom:3px}
+  .card .meta{font-size:12.5px;color:var(--tinta-60)}
+  .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em}
+  .pill.published{background:#e3efe7;color:var(--ok)}
+  .pill.pending{background:#f4e9d8;color:var(--warn)}
+  .pill.info{background:#e6eef4;color:var(--pizarra)}
+  .pill.hidden{background:#f3e2df;color:var(--bad)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{margin-bottom:14px}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chkgroup{display:flex;gap:14px;flex-wrap:wrap}
+  .chk{display:flex;align-items:center;gap:7px;font-size:14px}
+  .chk input{width:auto}
+  .unread{border-left:3px solid var(--oro)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:var(--lino);
+    padding:12px 20px;border-radius:100px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .empty{color:var(--tinta-60);font-size:14px;padding:26px;text-align:center;border:1px dashed var(--linea);border-radius:var(--r)}
+  @media(max-width:760px){ .nav{position:static;width:100%;height:auto;display:flex;gap:6px;overflow:auto;border-bottom:1px solid var(--linea)}
+    .layout{flex-direction:column}.row2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- GATE: claim onboarding OR password login -->
+<div id="gate">
+  <div class="gate-card" id="gateCard">
+    <span class="ring"><svg width="44" height="44" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/><circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/><circle cx="17" cy="17" r="4.6" fill="#B68A3E"/></svg></span>
+    <h1>Mi Voz</h1>
+    <p class="sub">Tu espacio en Voces para el Alma.</p>
+    <div id="gateBody"></div>
+    <div class="msg" id="gateMsg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/><circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/><circle cx="17" cy="17" r="4.6" fill="#B68A3E"/></svg>
+      <span>Mi Voz</span>
+    </div>
+    <div class="top-right">
+      <a href="/" target="_blank">Ver sitio ↗</a>
+      <span id="whoami"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="layout">
+    <nav class="nav" id="nav"></nav>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth:{ detectSessionInUrl:false, persistSession:true, autoRefreshToken:true } });
+const FN_BASE = SUPABASE_URL + "/functions/v1/";
+
+const $=id=>document.getElementById(id);
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+const usd=c=>"$"+((Number(c)||0)/100).toLocaleString("en-US",{maximumFractionDigits:2})+" USD";
+let toastTimer; function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),3000); }
+const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
+const KINDS=Object.keys(KIND_ES);
+const PHOTO_BASE=SUPABASE_URL+"/storage/v1/object/public/vpa-photos/";
+function img(n){ return !n?"":(String(n).startsWith("http")?n:PHOTO_BASE+n); }
+
+let ME=null;     // vpa_my_profile()
+let PLANS=[];
+
+/* ============ GATE (claim / login) ============ */
+const claimToken = new URLSearchParams(location.search).get("claim");
+
+async function initGate(){
+  if(claimToken){ await renderClaim(); }
+  else renderLogin();
+}
+function renderLogin(){
+  $("gateBody").innerHTML=`
+    <form onsubmit="doLogin(event)">
+      <div class="field"><label>Correo</label><input id="lg_email" type="email" required autocomplete="username"></div>
+      <div class="field"><label>Contraseña</label><input id="lg_pass" type="password" required autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Entrar</button>
+    </form>
+    <p class="sub" style="margin-top:14px">¿Aún no tienes tu perfil? <a href="/crear-perfil">Súmate aquí</a>. Si el equipo de Voces te compartió un enlace de reclamo, ábrelo para activar tu cuenta.</p>`;
+}
+async function renderClaim(){
+  $("gateMsg").textContent="Verificando enlace…";
+  const { data:info, error } = await sb.rpc("vpa_claim_info",{ p_token:claimToken });
+  $("gateMsg").textContent="";
+  if(error || !info || !info.valid){
+    $("gateBody").innerHTML=`<p class="sub">Este enlace de reclamo ya no es válido (expiró, se usó o el perfil ya fue reclamado).</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="location.href='/mi-voz'">Ir a iniciar sesión</button>`;
+    return;
+  }
+  $("gateBody").innerHTML=`
+    <div class="claim-hero">
+      <div class="ph" style="background-image:url('${info.photo_url?esc(img(info.photo_url)):""}')"></div>
+      <div><b>${esc(info.name)}</b><div class="meta" style="font-size:12.5px;color:var(--tinta-60)">${esc(info.role_es||"")}</div>
+        <div style="font-size:12px;color:var(--oro);font-weight:600">Este perfil es tuyo — actívalo</div></div>
+    </div>
+    <form onsubmit="doClaim(event)">
+      <div class="field"><label>Tu correo</label><input id="cl_email" type="email" required autocomplete="email"></div>
+      <div class="field"><label>Crea una contraseña (mín. 8)</label><input id="cl_pass" type="password" minlength="8" required autocomplete="new-password"></div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Activar mi perfil</button>
+    </form>
+    <p class="sub" style="margin-top:12px">Al activar, tu perfil queda ligado a tu cuenta y podrás administrar tu oferta, tus datos de cobro y tus mensajes con Voces.</p>`;
+}
+async function doLogin(e){
+  e.preventDefault();
+  $("gateMsg").style.color=""; $("gateMsg").textContent="Entrando…";
+  const { error } = await sb.auth.signInWithPassword({ email:$("lg_email").value.trim(), password:$("lg_pass").value });
+  if(error){ $("gateMsg").style.color="var(--bad)"; $("gateMsg").textContent="Error: "+error.message; return; }
+  $("gateMsg").textContent=""; boot();
+}
+async function doClaim(e){
+  e.preventDefault();
+  const email=$("cl_email").value.trim(), password=$("cl_pass").value;
+  $("gateMsg").style.color=""; $("gateMsg").textContent="Activando tu perfil…";
+  try{
+    const r=await fetch(FN_BASE+"vpa-claim",{ method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+SUPABASE_ANON },
+      body:JSON.stringify({ token:claimToken, email, password }) });
+    const j=await r.json();
+    if(!r.ok || !j.ok){ throw new Error(j.error==="claim_invalid"?"El enlace ya no es válido.":(j.error||"No se pudo activar")); }
+    // cuenta creada+confirmada por la función → iniciar sesión con la misma contraseña
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    history.replaceState({},"", "/mi-voz");
+    $("gateMsg").textContent=""; boot();
+  }catch(err){ $("gateMsg").style.color="var(--bad)"; $("gateMsg").textContent="Error: "+err.message; }
+}
+async function logout(){ await sb.auth.signOut(); location.href="/mi-voz"; }
+
+/* ============ BOOT ============ */
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ $("gate").style.display="flex"; $("app").style.display="none"; return; }
+  const { data:prof } = await sb.rpc("vpa_my_profile");
+  if(!prof){
+    $("gate").style.display="flex"; $("app").style.display="none";
+    $("gateBody").innerHTML=`<p class="sub">Tu cuenta (${esc(session.user.email)}) no tiene un perfil de especialista ligado todavía. Si ya te sumaste, pide a Voces tu enlace de reclamo; o <a href="/crear-perfil">crea tu perfil</a>.</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="logout()">Salir</button>`;
+    return;
+  }
+  ME=prof;
+  const { data:plans } = await sb.from("app_vpa_plans").select("*").order("sort_order"); PLANS=plans||[];
+  $("gate").style.display="none"; $("app").style.display="block";
+  $("whoami").textContent=session.user.email;
+  buildNav(); await refreshBell(); go("perfil");
+}
+
+const SECTIONS=[["perfil","Mi perfil"],["mensajes","Mensajes"],["oferta","Mi oferta"],["cobros","Cobros"],["membresia","Membresía"],["referir","Refiere y gana"]];
+function buildNav(){
+  $("nav").innerHTML=SECTIONS.map(([k,l])=>`<button data-sec="${k}" onclick="go('${k}')">${l}${k==="mensajes"?` <span class="bell"><span class="dot" id="bellDot"></span></span>`:""}</button>`).join("");
+}
+function go(sec){ document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.sec===sec)); RENDER[sec](); }
+
+async function refreshBell(){
+  const { count } = await sb.from("app_vpa_notifications").select("*",{count:"exact",head:true}).is("read_at",null);
+  const d=$("bellDot"); if(d){ if(count){ d.textContent=count; d.classList.add("on"); } else d.classList.remove("on"); }
+}
+
+/* ============ MI PERFIL (propone cambios; Voces aprueba) ============ */
+const RENDER={};
+RENDER.perfil=async ()=>{
+  const s=ME; const share=location.origin+"/?voz="+(s.slug||s.id);
+  $("main").innerHTML=`<div class="sec-head"><h2>Mi perfil</h2>
+      <button class="btn btn-ghost btn-sm" onclick="copyShare('${esc(s.slug||s.id)}')">Compartir mi perfil</button></div>
+    <div class="hint">Edita tu información y envía los cambios a Voces. <b>Se publican cuando el equipo los aprueba</b> y te avisamos aquí. Tu enlace para redes: <a href="${esc(share)}" target="_blank">${esc(share)}</a></div>
+    <div class="card">
+      <div class="field"><label>Nombre</label><input id="p_name" value="${esc(s.name||"")}"></div>
+      <div class="row2">
+        <div class="field"><label>Título profesional (ES)</label><input id="p_role_es" value="${esc(s.role_es||"")}"></div>
+        <div class="field"><label>Título (EN)</label><input id="p_role_en" value="${esc(s.role_en||"")}"></div>
+      </div>
+      <div class="field"><label>Biografía (ES)</label><textarea id="p_bio_es">${esc(s.bio_es||"")}</textarea></div>
+      <div class="field"><label>Bio (EN)</label><textarea id="p_bio_en">${esc(s.bio_en||"")}</textarea></div>
+      <div class="row2">
+        <div class="field"><label>Áreas de enfoque (ES, coma)</label><input id="p_focus_es" value="${esc((s.focus_es||[]).join(', '))}" placeholder="Inspiradora, Líder, Conexión"></div>
+        <div class="field"><label>Focus (EN, coma)</label><input id="p_focus_en" value="${esc((s.focus_en||[]).join(', '))}"></div>
+      </div>
+      <div class="field"><label>Certificaciones</label><textarea id="p_certs_es" style="min-height:70px">${esc(s.certs_es||"")}</textarea></div>
+
+      <div class="field"><label>Tu foto de perfil (se muestra circular)</label>
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center">
+          <div id="photoPrev" role="img" aria-label="Tu foto"
+               style="width:150px;height:150px;border-radius:50%;background:#efe8db center/cover no-repeat;border:1px solid var(--linea);${s.photo_url?`background-image:url('${esc(s.photo_url)}')`:""}"></div>
+          <div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('photoFile').click()">Subir / cambiar foto</button>
+            <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" hidden onchange="pickPhoto(this.files[0])">
+            <p class="hint" style="margin-top:8px">Sube tu foto ya lista (JPG, PNG o WebP · máx 10 MB). Se muestra circular en el directorio y en tu perfil. Se publica cuando Voces aprueba tus cambios.</p>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="p_photo" value="${esc(s.photo_url||"")}">
+      <div class="field"><label class="chk"><input type="checkbox" id="p_avail" ${s.available_now?"checked":""}> Disponible ahora para nuevas personas</label></div>
+      <div class="bi" style="font-size:11px;color:var(--oro);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:6px 0">Contacto privado (se revela sólo a quien inicia sesión y lo solicita)</div>
+      <div class="row2">
+        <div class="field"><label>Correo de contacto</label><input id="p_cemail" value="${esc(s.contact_email||"")}"></div>
+        <div class="field"><label>WhatsApp / teléfono</label><input id="p_cphone" value="${esc(s.contact_phone||"")}"></div>
+      </div>
+      <div class="field"><label>Sitio web</label><input id="p_cweb" value="${esc(s.contact_web||"")}"></div>
+      <div class="acts"><button class="btn btn-primary" onclick="proposeProfile()">Enviar cambios a Voces</button></div>
+    </div>`;
+};
+
+/* ============ FOTO DE PERFIL (subida directa, se muestra circular) ============ */
+let newPhotoBlob=null;      // foto recién elegida (File)
+function pickPhoto(file){
+  if(!file) return;
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)){ toast("Usa JPG, PNG o WebP"); return; }
+  if(file.size>10*1024*1024){ toast("Máx 10 MB"); return; }
+  newPhotoBlob=file;
+  const url=URL.createObjectURL(file);
+  $("photoPrev").style.backgroundImage=`url('${url}')`;
+}
+
+function collectProfile(){
+  return { name:$("p_name").value.trim(), role_es:$("p_role_es").value.trim(), role_en:$("p_role_en").value.trim(),
+    bio_es:$("p_bio_es").value.trim(), bio_en:$("p_bio_en").value.trim(),
+    focus_es:$("p_focus_es").value.split(",").map(x=>x.trim()).filter(Boolean),
+    focus_en:$("p_focus_en").value.split(",").map(x=>x.trim()).filter(Boolean),
+    certs_es:$("p_certs_es").value.trim(), certs_en:$("p_certs_es").value.trim(),
+    photo_url:$("p_photo").value.trim(), available_now:$("p_avail").checked,
+    contact_email:$("p_cemail").value.trim(), contact_phone:$("p_cphone").value.trim(), contact_web:$("p_cweb").value.trim() };
+}
+async function proposeProfile(){
+  // Si hay foto nueva, súbela y usa su URL antes de calcular el diff
+  try{
+    if(newPhotoBlob){
+      const uid=(ME.id||crypto.randomUUID());
+      const ext=(newPhotoBlob.name.split(".").pop()||"jpg").toLowerCase();
+      const path="profiles/"+uid+"/photo-"+crypto.randomUUID()+"."+ext;
+      const { error:pe }=await sb.storage.from("vpa-photos").upload(path,newPhotoBlob,{contentType:newPhotoBlob.type,upsert:false});
+      if(pe) throw pe;
+      $("p_photo").value=PHOTO_BASE+path;
+      newPhotoBlob=null;
+    }
+  }catch(e){ toast("No se pudo subir la foto: "+e.message); return; }
+
+  const cur=collectProfile(); const changes={};
+  Object.keys(cur).forEach(k=>{
+    const a=cur[k], b=ME[k];
+    const na=Array.isArray(a)?JSON.stringify(a):(a==null?"":String(a));
+    const nb=Array.isArray(b)?JSON.stringify(b):(b==null?"":String(b));
+    if(na!==nb) changes[k]=a;
+  });
+  if(!Object.keys(changes).length){ toast("No hay cambios"); return; }
+  const message=prompt("¿Quieres dejar una nota para Voces sobre estos cambios? (opcional)")||"";
+  try{ const {error}=await sb.rpc("vpa_open_change",{payload:{kind:"edit",changes,message}}); if(error)throw error;
+    toast("Cambios enviados a Voces para aprobación ✓"); }catch(e){ toast("Error: "+e.message); }
+}
+async function copyShare(slug){ const url=location.origin+"/?voz="+slug; try{ await navigator.clipboard.writeText(url); toast("Enlace copiado ✓"); }catch(_){ prompt("Tu enlace:",url); } }
+
+/* ============ MENSAJES (notificaciones + hilos) ============ */
+RENDER.mensajes=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Mensajes</h2>
+      <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Marcar leídos</button></div>
+    <div class="hint">Notificaciones de Voces y conversaciones sobre tu perfil. Cuando Voces te sugiere un cambio, puedes <b>aceptarlo</b> (se publica) o responder para conversar.</div>
+    <div id="notifs"></div>
+    <h3 style="font-size:18px;margin:20px 0 10px">Conversaciones</h3>
+    <div id="threads"><div class="empty">Cargando…</div></div>`;
+  const { data:notifs } = await sb.from("app_vpa_notifications").select("*").order("created_at",{ascending:false}).limit(30);
+  $("notifs").innerHTML=(notifs&&notifs.length)?notifs.map(n=>`<div class="card ${n.read_at?"":"unread"}">
+      <h4>${esc(n.title)}</h4>${n.body?`<div class="meta" style="margin-top:3px;color:var(--tinta)">${esc(n.body)}</div>`:""}
+      <div class="meta" style="margin-top:4px">${new Date(n.created_at).toLocaleString("es-MX")}</div></div>`).join("")
+    :`<div class="empty">Sin notificaciones.</div>`;
+  const { data:reqs } = await sb.from("app_vpa_change_requests").select("*").order("created_at",{ascending:false}).limit(50);
+  if(!reqs||!reqs.length){ $("threads").innerHTML=`<div class="empty">Sin conversaciones todavía.</div>`; }
+  else{
+    const ids=reqs.map(r=>r.id);
+    const { data:msgs } = await sb.from("app_vpa_change_messages").select("*").in("request_id",ids).order("created_at");
+    const byReq={}; (msgs||[]).forEach(m=>(byReq[m.request_id]=byReq[m.request_id]||[]).push(m));
+    $("threads").innerHTML=reqs.map(r=>{
+      const fromVoces=r.opened_role==="super_admin";
+      const kindLbl={comment:"comentario",suggestion:"sugerencia",edit:"cambio propuesto"}[r.kind]||r.kind;
+      const chg=r.changes&&Object.keys(r.changes).length?Object.keys(r.changes).join(", "):"";
+      const thread=(byReq[r.id]||[]).map(m=>`<div style="margin:4px 0;font-size:13px"><b>${m.author_role==="super_admin"?"Voces":"Tú"}:</b> ${esc(m.body)}</div>`).join("");
+      const pill={open:"pending",applied:"published",rejected:"hidden",withdrawn:"info"}[r.status]||"pending";
+      let actions="";
+      if(r.status==="open"){
+        // Voces sugirió → puedo aceptar (se publica) o rechazar
+        if(fromVoces && chg && r.kind!=="comment"){ actions+=`<button class="btn btn-primary btn-sm" onclick="resolveMine('${r.id}','accept')">Aceptar y publicar</button>`;
+          actions+=`<button class="btn btn-ghost btn-sm" onclick="resolveMine('${r.id}','reject')">Rechazar</button>`; }
+        // yo lo abrí → puedo retirarlo
+        if(!fromVoces){ actions+=`<button class="btn btn-ghost btn-sm" onclick="resolveMine('${r.id}','withdraw')">Retirar</button>`; }
+        actions+=`<button class="btn btn-ghost btn-sm" onclick="replyMine('${r.id}')">Responder</button>`;
+      }
+      return `<div class="card"><h4>${fromVoces?"Voces":"Tú"} · ${kindLbl} <span class="pill ${pill}">${esc(r.status)}</span></h4>
+        <div class="meta">${new Date(r.created_at).toLocaleString("es-MX")}${chg?` · campos: ${esc(chg)}`:""}</div>
+        ${thread?`<div style="margin-top:8px">${thread}</div>`:""}
+        <div class="acts">${actions}</div></div>`;
+    }).join("");
+  }
+  await sb.rpc("vpa_mark_notifications_read"); refreshBell();
+};
+async function markAllRead(){ try{ await sb.rpc("vpa_mark_notifications_read"); toast("Listo"); refreshBell(); RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+async function resolveMine(id,action){ try{ const {error}=await sb.rpc("vpa_resolve_change",{p_request:id,p_action:action}); if(error)throw error;
+  toast(action==="accept"?"Publicado ✓":"Listo"); if(action==="accept"){ const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; } RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+async function replyMine(id){ const b=prompt("Tu respuesta:"); if(!b||!b.trim())return; try{ const {error}=await sb.rpc("vpa_reply_change",{p_request:id,p_body:b.trim()}); if(error)throw error; toast("Enviado"); RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ MI OFERTA ============ */
+RENDER.oferta=async ()=>{
+  const offs=ME.offerings||[];
+  $("main").innerHTML=`<div class="sec-head"><h2>Mi oferta</h2>
+      <button class="btn btn-primary btn-sm" onclick="editOffer()">+ Nueva oferta</button></div>
+    <div class="hint">Tus libros, sesiones, retiros, conferencias. Lo que agregues o edites queda <b>pendiente</b> hasta que Voces lo publica. Marca “vender vía Voces” para que aparezca en la tienda y se pueda comprar en el carrito.</div>
+    <div id="offForm"></div>
+    <div id="rows">${offs.length?offs.map(o=>`<div class="card"><h4>${esc(o.title)} <span class="pill ${o.status==="published"?"published":(o.status==="hidden"?"hidden":"pending")}">${esc(o.status)}</span></h4>
+      <div class="meta">${esc(KIND_ES[o.kind]||o.kind)}${o.price_cents!=null?" · $"+(o.price_cents/100).toLocaleString("es-MX")+" MXN":" · precio a convenir"}${o.sell_via_voces?" · vía Voces":""}${o.external_url?" · 🔗 externo":""}${o.in_progress?" · en proceso":""}</div>
+      ${o.description?`<div class="meta" style="margin-top:4px;color:var(--tinta)">${esc(o.description)}</div>`:""}
+      <div class="acts"><button class="btn btn-ghost btn-sm" onclick='editOffer(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button></div></div>`).join(""):`<div class="empty">Aún no tienes ofertas. Agrega la primera.</div>`}</div>`;
+};
+function editOffer(o){
+  o=o||{};
+  const kOpts=KINDS.map(k=>`<option value="${k}" ${o.kind===k?"selected":""}>${KIND_ES[k]}</option>`).join("");
+  $("offForm").innerHTML=`<div class="card">
+    <div class="row2"><div class="field"><label>Tipo</label><select id="of_kind">${kOpts}</select></div>
+      <div class="field"><label>Precio (MXN, vacío = a convenir)</label><input id="of_price" type="number" min="0" value="${o.price_cents!=null?o.price_cents/100:""}"></div></div>
+    <div class="field"><label>Título</label><input id="of_title" value="${esc(o.title||"")}"></div>
+    <div class="field"><label>Descripción</label><textarea id="of_desc">${esc(o.description||"")}</textarea></div>
+    <div class="field"><label>Enlace externo (Amazon / tu tienda) <small style="color:#a49a88">— opcional, o sube el archivo abajo</small></label><input id="of_url" value="${esc(o.external_url||"")}"></div>
+
+    <div class="row2">
+      <div class="field"><label>Imagen de portada</label>
+        <div id="of_coverPrev" style="width:100%;height:120px;border-radius:10px;background:#efe8db center/cover no-repeat;border:1px solid var(--linea);${o.cover_url?`background-image:url('${esc(o.cover_url)}')`:""}"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_coverFile').click()">Subir portada</button>
+        <input type="file" id="of_coverFile" accept="image/*" hidden onchange="uploadOfferMedia(this.files[0],'cover')">
+        <input type="hidden" id="of_cover" value="${esc(o.cover_url||"")}">
+      </div>
+      <div class="field"><label>Audio / muestra <small style="color:#a49a88">— mp3, m4a, wav</small></label>
+        <div id="of_audioPrev">${o.preview_url?`<audio controls src="${esc(o.preview_url)}" style="width:100%"></audio>`:`<div style="color:#a49a88;font-size:13px;padding:8px 0">Sin audio</div>`}</div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_audioFile').click()">Subir audio</button>
+        <input type="file" id="of_audioFile" accept="audio/*" hidden onchange="uploadOfferMedia(this.files[0],'preview')">
+        <input type="hidden" id="of_preview" value="${esc(o.preview_url||"")}">
+      </div>
+    </div>
+
+    <div class="field"><label>Archivo descargable <small style="color:#a49a88">— PDF, Word, ePub, ZIP…</small></label>
+      <div id="of_filePrev">${o.file_url?`<a href="${esc(o.file_url)}" target="_blank" rel="noopener">📄 ${esc(o.file_name||"Ver archivo")}</a>`:`<div style="color:#a49a88;font-size:13px;padding:4px 0">Sin archivo</div>`}</div>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_docFile').click()">Subir archivo</button>
+      <input type="file" id="of_docFile" hidden onchange="uploadOfferMedia(this.files[0],'file')">
+      <input type="hidden" id="of_file" value="${esc(o.file_url||"")}">
+      <input type="hidden" id="of_fileName" value="${esc(o.file_name||"")}">
+    </div>
+
+    <div class="field"><label class="chk"><input type="checkbox" id="of_via" ${o.sell_via_voces?"checked":""}> Vender a través de Voces (aparece en la tienda)</label></div>
+    <div class="field"><label class="chk"><input type="checkbox" id="of_wip" ${o.in_progress?"checked":""}> Obra en proceso</label></div>
+    <div class="acts"><button class="btn btn-primary" onclick="saveOffer('${o.id||""}')">Guardar</button>
+      <button class="btn btn-ghost" onclick="$('offForm').innerHTML=''">Cancelar</button></div>
+  </div>`;
+}
+const OFFER_BAD_EXT=["exe","bat","cmd","com","scr","msi","app","dll","js","mjs","jar","sh","bash","bin","apk","deb","dmg","pkg","svg","vbs","ps1","wsf","cpl","gadget","jse","msc"];
+async function uploadOfferMedia(file, slot){
+  if(!file) return;
+  const ext=(file.name.split(".").pop()||"").toLowerCase();
+  if(slot==="cover"){ if(!/^image\//.test(file.type)) return toast("Elige una imagen"); }
+  else if(slot==="preview"){ if(!/^audio\//.test(file.type)) return toast("Elige un audio"); }
+  else { if(OFFER_BAD_EXT.includes(ext)) return toast("Por seguridad no se permite ese tipo de archivo (ejecutable/script)."); }
+  const maxMB = slot==="cover"?8:60;
+  if(file.size>maxMB*1024*1024) return toast("Máx "+maxMB+" MB");
+  const safeExt=ext||(slot==="cover"?"jpg":slot==="preview"?"mp3":"pdf");
+  const path="offers/"+(ME.id||"anon")+"/"+slot+"-"+crypto.randomUUID()+"."+safeExt;
+  toast("Subiendo…");
+  try{
+    const { error }=await sb.storage.from("vpa-photos").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});
+    if(error) throw error;
+    const url=PHOTO_BASE+path;
+    if(slot==="cover"){ $("of_cover").value=url; $("of_coverPrev").style.backgroundImage=`url('${url}')`; }
+    else if(slot==="preview"){ $("of_preview").value=url; $("of_audioPrev").innerHTML=`<audio controls src="${url}" style="width:100%"></audio>`; }
+    else { $("of_file").value=url; if(!$("of_fileName").value.trim()) $("of_fileName").value=file.name;
+           $("of_filePrev").innerHTML=`<a href="${url}" target="_blank" rel="noopener">📄 ${esc(file.name)}</a>`; }
+    toast("Listo ✓");
+  }catch(e){ toast("Error al subir: "+e.message); }
+}
+async function saveOffer(id){
+  const price=$("of_price").value;
+  const p={ id:id||"", kind:$("of_kind").value, title:$("of_title").value.trim(), description:$("of_desc").value.trim(),
+    price_cents:price===""?"":Math.round(Number(price)*100), external_url:$("of_url").value.trim(),
+    cover_url:$("of_cover").value.trim(), preview_url:$("of_preview").value.trim(),
+    file_url:$("of_file").value.trim(), file_name:$("of_fileName").value.trim(),
+    sell_via_voces:$("of_via").checked, in_progress:$("of_wip").checked };
+  if(!p.title) return toast("Escribe un título");
+  try{ const {error}=await sb.rpc("vpa_upsert_offering",{payload:p}); if(error)throw error;
+    toast("Guardado — pendiente de publicación por Voces ✓");
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; $("offForm").innerHTML=""; RENDER.oferta(); }catch(e){ toast("Error: "+e.message); }
+}
+
+/* ============ COBROS ============ */
+RENDER.cobros=async ()=>{
+  const p=ME.payout||{};
+  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div>
+    <div class="hint">Tus datos para recibir tu parte de las ventas. Son privados; sólo tú y el equipo de Voces los ven. Cuánto recibes lo define tu acuerdo de reparto (ve a “Membresía y acuerdo”).</div>
+    <div class="card">
+      <div class="field"><label>¿Cómo prefieres recibir?</label>
+        <select id="pa_method">${["mercadopago","clabe","paypal"].map(m=>`<option value="${m}" ${p.preferred_method===m?"selected":""}>${m==="mercadopago"?"MercadoPago":(m==="clabe"?"Transferencia (CLABE)":"PayPal")}</option>`).join("")}</select></div>
+      <div class="field"><label>MercadoPago (correo de tu cuenta)</label><input id="pa_mp" value="${esc(p.mercadopago_email||"")}" placeholder="tu-correo@mercadopago"></div>
+      <div class="field"><label>Titular de la cuenta</label><input id="pa_holder" value="${esc(p.holder_name||"")}"></div>
+      <div class="row2"><div class="field"><label>Banco</label><input id="pa_bank" value="${esc(p.bank_name||"")}"></div>
+        <div class="field"><label>CLABE (18 dígitos)</label><input id="pa_clabe" value="${esc(p.clabe||"")}"></div></div>
+      <div class="row2"><div class="field"><label>PayPal (correo, opcional)</label><input id="pa_paypal" value="${esc(p.paypal_email||"")}"></div>
+        <div class="field"><label>SWIFT (internacional, opcional)</label><input id="pa_swift" value="${esc(p.swift||"")}"></div></div>
+      <div class="row2"><div class="field"><label>País</label><input id="pa_country" value="${esc(p.country||"MX")}"></div>
+        <div class="field"><label>Moneda</label><input id="pa_currency" value="${esc(p.currency||"MXN")}"></div></div>
+      <div class="field"><label>Notas</label><input id="pa_notes" value="${esc(p.notes||"")}"></div>
+      <div class="acts"><button class="btn btn-primary" onclick="savePayout()">Guardar datos de cobro</button></div>
+    </div>`;
+};
+async function savePayout(){
+  const p={ holder_name:$("pa_holder").value.trim(), bank_name:$("pa_bank").value.trim(), clabe:$("pa_clabe").value.trim(),
+    paypal_email:$("pa_paypal").value.trim(), swift:$("pa_swift").value.trim(), country:$("pa_country").value.trim()||"MX",
+    currency:$("pa_currency").value.trim()||"MXN", notes:$("pa_notes").value.trim(),
+    mercadopago_email:$("pa_mp").value.trim(), preferred_method:$("pa_method").value };
+  try{ const {error}=await sb.rpc("vpa_set_payout_account",{payload:p}); if(error)throw error;
+    toast("Datos de cobro guardados ✓"); const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; }catch(e){ toast("Error: "+e.message); }
+}
+
+/* ============ MEMBRESÍA ============ */
+RENDER.membresia=async ()=>{
+  const sub=ME.subscription; const cur=sub?sub.plan_id:"free";
+  const pts=ME.points||0, credits=ME.credits_cents||0;
+  // acuerdo de reparto vigente o propuesto
+  const { data:deals } = await sb.from("app_vpa_deals").select("*").order("created_at",{ascending:false}).limit(5);
+  const proposed=(deals||[]).find(d=>d.status==="proposed");
+  const agreed=(deals||[]).find(d=>d.status==="agreed");
+  $("main").innerHTML=`<div class="sec-head"><h2>Membresía y acuerdo</h2></div>
+    <div class="hint">Tu plan define tu exposición y tus créditos de marketing. Tu <b>acuerdo de reparto</b> define qué % de cada venta conservas. Para cambiar de plan, escríbele a Voces.</div>
+    ${proposed?`<div class="card unread">
+      <h4>Voces te propone un acuerdo de reparto</h4>
+      <div class="meta" style="margin-top:3px;color:var(--tinta)">Conservas el <b>${proposed.specialist_pct}%</b> de cada venta; el resto es para Voces por la exposición y las conexiones.${proposed.note?" — "+esc(proposed.note):""}</div>
+      <div class="acts"><button class="btn btn-primary btn-sm" onclick="respondDeal('accept')">Aceptar acuerdo</button>
+        <button class="btn btn-ghost btn-sm" onclick="respondDeal('decline')">Rechazar</button></div></div>`:""}
+    ${agreed?`<div class="card"><h4>Tu acuerdo vigente <span class="pill published">activo</span></h4>
+      <div class="meta">Conservas el <b>${agreed.specialist_pct}%</b> de cada venta. Se aplica automáticamente en cada compra.</div></div>`:
+      `<div class="card"><div class="meta">Sin acuerdo personalizado: aplica el reparto por defecto de tu plan.</div></div>`}
+    <div class="card" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <div><div class="meta">Tu plan actual</div><h3 style="font-size:22px">${esc((PLANS.find(p=>p.id===cur)||{}).name_es||cur)}</h3>
+        ${sub?`<div class="meta">${esc(sub.status)} · ${esc(sub.period||"")}</div>`:`<div class="meta">Gratis</div>`}</div>
+      <div style="margin-left:auto;text-align:right"><div class="meta">Voces Points</div><h3 style="font-size:22px">${pts}</h3></div>
+      <div style="text-align:right"><div class="meta">Créditos de marketing</div><h3 style="font-size:22px">${usd(credits)}</h3></div>
+    </div>
+    <div class="row2" style="grid-template-columns:1fr 1fr;gap:12px">
+      ${PLANS.map(p=>`<div class="card ${p.id===cur?"unread":""}">
+        <h4>${esc(p.name_es)} ${p.id===cur?'<span class="pill published">actual</span>':''}</h4>
+        <div class="meta">${p.monthly_cents?usd(p.monthly_cents)+"/mes · "+usd(p.yearly_cents)+"/año":"Gratis"}</div>
+        <div class="meta" style="margin-top:4px;color:var(--tinta)"><b>${p.commission_pct}%</b> de comisión en tus ventas</div>
+        <ul style="margin:8px 0 0 16px;font-size:12.5px;color:var(--tinta-60)">${(p.perks_es||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>`;
+};
+async function respondDeal(action){
+  try{ const {error}=await sb.rpc("vpa_deal_respond",{p_action:action}); if(error)throw error;
+    toast(action==="accept"?"Acuerdo aceptado ✓":"Acuerdo rechazado");
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; RENDER.membresia(); }catch(e){ toast("Error: "+e.message); }
+}
+
+/* ============ REFIERE Y GANA ============ */
+RENDER.referir=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Refiere y gana</h2></div>
+    <div class="hint">Comparte tu enlace personal. Cuando alguien se registra y activa su membresía con él, sumas Voces Points y queda ligado a ti. (Los descuentos son aparte: los activa Voces con códigos propios.)</div>
+    <div id="refBody"><div class="card"><div class="meta">Cargando tu enlace…</div></div></div>`;
+  const { data, error } = await sb.rpc("vpa_my_referral_code");
+  if(error || !data || !data.ok){ $("refBody").innerHTML=`<div class="card"><div class="meta">No se pudo cargar tu enlace${error?": "+esc(error.message):""}.</div></div>`; return; }
+  const link = location.origin + "/crear-perfil?ref=" + data.code;
+  window.__refLink=link;
+  const wa = "https://wa.me/?text=" + encodeURIComponent("Súmate a Voces para el Alma con mi enlace: " + link);
+  $("refBody").innerHTML=`
+    <div class="card" style="display:block">
+      <div class="meta">Tu código</div>
+      <h3 style="font-size:22px;letter-spacing:.03em">${esc(data.code)}</h3>
+      <div class="field" style="margin-top:12px"><label>Tu enlace de referido</label>
+        <input id="refLink" readonly value="${esc(link)}" onclick="this.select()"></div>
+      <div class="acts">
+        <button class="btn btn-primary btn-sm" onclick="copyRefLink()">Copiar enlace</button>
+        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${wa}">Compartir por WhatsApp</a>
+      </div>
+    </div>
+    <div class="card" style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">
+      <div><div class="meta">Referidos</div><h3 style="font-size:22px">${data.referrals||0}</h3></div>
+      <div><div class="meta">Usos del enlace</div><h3 style="font-size:22px">${data.uses||0}</h3></div>
+      <div style="margin-left:auto;text-align:right"><div class="meta">Puntos por referido</div><h3 style="font-size:22px">+${data.points_per_use||0}</h3></div>
+    </div>`;
+};
+function copyRefLink(){
+  const l=window.__refLink||"";
+  try{ navigator.clipboard.writeText(l); toast("Enlace copiado ✓"); }
+  catch(_){ const i=$("refLink"); if(i){ i.select(); try{document.execCommand("copy");}catch(e){} } toast("Enlace copiado ✓"); }
+}
+
+/* ============ INIT ============ */
+(async function(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session && !claimToken){ boot(); } else { $("gate").style.display="flex"; initGate(); }
+})();
+</script>
+</body>
+</html>

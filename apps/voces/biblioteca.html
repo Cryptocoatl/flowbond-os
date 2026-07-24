@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tu biblioteca · Voces para el Alma</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#F7F2E9;color:#2C2722;font-family:Inter,system-ui,sans-serif;
+    min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:22px}
+  .card{max-width:460px;width:100%;background:#FCFAF4;border:1px solid rgba(44,39,34,.12);border-radius:20px;padding:34px 28px;text-align:center;box-shadow:0 30px 70px -30px rgba(44,39,34,.35)}
+  .dot{width:14px;height:14px;border-radius:50%;background:#B68A3E;margin:0 auto 16px;box-shadow:0 0 0 6px rgba(203,161,90,.25),0 0 0 12px rgba(126,144,120,.15)}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:400;font-size:26px;margin:0 0 6px}
+  p.sub{color:#6b6257;font-size:14px;margin:0 0 20px;line-height:1.5}
+  label{display:block;text-align:left;font-size:13px;font-weight:600;color:#5a5348;margin:0 0 6px}
+  input{width:100%;font-family:Inter,sans-serif;font-size:16px;padding:14px 15px;border:1px solid rgba(44,39,34,.2);border-radius:12px;background:#fff;margin-bottom:14px}
+  input#code{text-align:center;letter-spacing:.35em;font-size:22px;font-weight:600}
+  button{font-family:Inter,sans-serif;font-size:16px;font-weight:600;color:#fff;background:#B01E2E;border:none;border-radius:999px;padding:15px 30px;cursor:pointer;width:100%;transition:.2s;touch-action:manipulation}
+  button:hover{background:#7C1420} button:disabled{opacity:.55;cursor:default}
+  .msg{margin-top:14px;font-size:13.5px;min-height:18px;line-height:1.5} .msg.err{color:#B01E2E} .msg.ok{color:#7E9078}
+  .dl{display:grid;gap:10px;margin-top:8px}
+  .dl a{display:block;background:#B01E2E;color:#fff;text-decoration:none;border-radius:999px;padding:15px 22px;font-weight:600;font-size:15px}
+  .wm{font-size:12px;color:#8a8378;margin-top:16px;line-height:1.5}
+  .link{margin-top:20px;font-size:13px} .link a{color:#B68A3E;text-decoration:none}
+  .back{background:none;border:none;color:#8a8378;font-size:13px;cursor:pointer;margin-top:14px;width:auto;padding:6px;text-decoration:underline}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="dot"></div>
+  <h1>Tu biblioteca</h1>
+
+  <!-- Paso 1: correo -->
+  <div id="step1">
+    <p class="sub">Escribe el correo con el que compraste. Te enviaremos un código para acceder a tus descargas de forma segura.</p>
+    <label for="email">Tu correo de compra</label>
+    <input id="email" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+    <button id="btn1" onclick="sendCode()">Enviar código</button>
+  </div>
+
+  <!-- Paso 2: código -->
+  <div id="step2" class="hidden">
+    <p class="sub">Revisa tu correo (y spam). Escribe el código de 6 dígitos que te enviamos. Vence en 10 minutos.</p>
+    <label for="code">Código de acceso</label>
+    <input id="code" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
+    <button id="btn2" onclick="verifyCode()">Ver mis descargas</button>
+    <button class="back" onclick="toStep1()">← Usar otro correo</button>
+  </div>
+
+  <!-- Paso 3: descargas -->
+  <div id="step3" class="hidden">
+    <p class="sub">Aquí están tus descargas. Los enlaces vencen en 1 hora.</p>
+    <div class="dl" id="dlList"></div>
+    <p class="wm">🔒 Cada archivo lleva tu correo impreso como licencia personal. No lo compartas: es tuyo y quedará marcado a tu nombre.</p>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <div class="link"><a href="https://voces.world">← Volver a Voces para el Alma</a></div>
+</div>
+<script>
+const SUPABASE_URL="https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+const $=id=>document.getElementById(id);
+let curEmail="";
+function show(step){ for(const s of ["step1","step2","step3"]) $(s).classList.toggle("hidden", s!==step); $("msg").className="msg"; $("msg").textContent=""; }
+function toStep1(){ show("step1"); }
+async function api(path, body){
+  const r=await fetch(SUPABASE_URL+"/functions/v1/"+path,{ method:"POST",
+    headers:{ "Content-Type":"application/json","apikey":ANON,"Authorization":"Bearer "+ANON },
+    body:JSON.stringify(body) });
+  return { ok:r.ok, status:r.status, data:await r.json().catch(()=>({})) };
+}
+async function sendCode(){
+  const em=($("email").value||"").trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ $("msg").className="msg err"; $("msg").textContent="Escribe un correo válido."; return; }
+  const b=$("btn1"); b.disabled=true; b.textContent="Enviando…";
+  try{ await api("vpa-biblioteca-request",{ email:em }); curEmail=em; show("step2");
+    $("msg").className="msg ok"; $("msg").textContent="Si compraste con ese correo, te enviamos un código."; }
+  catch(_){ $("msg").className="msg err"; $("msg").textContent="No se pudo enviar. Intenta de nuevo."; }
+  finally{ b.disabled=false; b.textContent="Enviar código"; }
+}
+async function verifyCode(){
+  const cd=($("code").value||"").trim();
+  if(!/^\d{6}$/.test(cd)){ $("msg").className="msg err"; $("msg").textContent="El código son 6 dígitos."; return; }
+  const b=$("btn2"); b.disabled=true; b.textContent="Verificando…";
+  try{
+    const { ok, data }=await api("vpa-biblioteca-verify",{ email:curEmail, code:cd });
+    if(!ok || data.error){
+      const m={ bad_code:"Código incorrecto. Revísalo e intenta de nuevo.", expired:"El código venció. Pide uno nuevo.", too_many:"Demasiados intentos. Pide un código nuevo.", no_code:"No hay un código activo. Pídelo de nuevo." };
+      $("msg").className="msg err"; $("msg").textContent=m[data.error]||"No se pudo verificar."; return;
+    }
+    if(!data.items || !data.items.length){ $("msg").className="msg err"; $("msg").textContent="No encontramos descargas para este correo."; return; }
+    const host=$("dlList"); host.innerHTML="";
+    data.items.forEach(it=>{ const a=document.createElement("a"); a.href=SUPABASE_URL+"/functions/v1/vpa-descarga-file?t="+encodeURIComponent(it.token);
+      a.textContent="⬇ Descargar "+(it.title||"eBook"); a.setAttribute("rel","noopener"); host.appendChild(a); });
+    show("step3");
+  }catch(_){ $("msg").className="msg err"; $("msg").textContent="No se pudo verificar. Intenta de nuevo."; }
+  finally{ b.disabled=false; b.textContent="Ver mis descargas"; }
+}
+// prefill email si viene ?email=
+const pe=new URLSearchParams(location.search).get("email"); if(pe) $("email").value=pe;
+</script>
+</body>
+</html>
