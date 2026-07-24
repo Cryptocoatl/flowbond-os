@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getT } from '../../lib/i18n/server';
-import { WHY, BASIS, SCORE_STEPS, SCORE_BANDS, SCORE_TRUTH, EXPLORE } from '../../lib/astro/guide';
+import { WHY, BASIS, SCORE_STEPS, SCORE_BANDS, SCORE_TRUTH, EXPLORE, WEAVE, SOURCES, ORCHESTRATION } from '../../lib/astro/guide';
 
 export const metadata: Metadata = {
   title: 'Guide — start here · AstralFlow',
@@ -32,8 +32,9 @@ export default async function GuidePage() {
 
       <nav className="flex flex-wrap gap-2 mt-5 text-[10px] uppercase tracking-[0.14em]">
         {[
-          ['#why', t('Why')], ['#chart', t('Your chart')], ['#traditions', t('The traditions')],
-          ['#number', t('The number')], ['#explore', t('Explore')],
+          ['#why', t('Why')], ['#chart', t('Your chart')], ['#depth', t('The depth')],
+          ['#traditions', t('The traditions')], ['#number', t('The number')],
+          ['#truth', t('What it is')], ['#explore', t('Explore')],
         ].map(([href, label]) => (
           <a key={href} href={href} className="px-3 py-1 rounded-full border border-[#242a3b] text-[#9698a8] hover:text-[#e3c07a] hover:border-[#e3c07a]/40 transition">
             {label}
@@ -77,6 +78,26 @@ export default async function GuidePage() {
           ))}
         </div>
         <Link href="/cosmos" className="af-btn af-btn-ghost mt-4 inline-flex">{t('📖 Study every symbol in Cosmos')}</Link>
+      </section>
+
+      {/* ── The depth — everything you can weave ── */}
+      <section id="depth" className="mt-12 scroll-mt-16">
+        <h2 className="text-2xl font-serif">{t('What you can weave')}</h2>
+        <p className="text-sm text-[#9698a8] leading-relaxed mt-2 mb-4">
+          {t('Your own chart is only the first layer. AstralFlow can bond and read the whole flow — people, groups, places and time — each with the same honest, plain-language depth.')}
+        </p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {WEAVE.map((w) => (
+            <Link key={w.name} href={w.where}
+              className="rounded-2xl border border-[#242a3b] bg-[#11131f]/85 p-4 hover:border-[#e3c07a]/40 transition block">
+              <div className="flex items-baseline gap-2.5">
+                <span className="text-2xl text-[#b6abec]" style={{ textShadow: '0 0 12px rgba(154,143,224,0.4)' }}>{w.glyph}</span>
+                <span className="font-serif text-lg">{t(w.name)}</span>
+              </div>
+              <p className="text-sm text-[#b6b3cf] leading-relaxed mt-2">{t(w.what)}</p>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* ── The traditions & their sources ── */}
@@ -133,6 +154,31 @@ export default async function GuidePage() {
         <p className="text-sm text-[#cfc8e8] leading-relaxed mt-5 border-l-2 border-[#e3c07a]/50 pl-4 italic">
           {t(SCORE_TRUTH)}
         </p>
+      </section>
+
+      {/* ── What this really is — the honest claim + the hope ── */}
+      <section id="truth" className="mt-12 scroll-mt-16">
+        <h2 className="text-2xl font-serif">{t(ORCHESTRATION.title)}</h2>
+        <p className="text-[15px] text-[#cfc8e8] leading-relaxed mt-3">{t(ORCHESTRATION.lead)}</p>
+        {ORCHESTRATION.body.map((p, i) => (
+          <p key={i} className="text-sm text-[#b6b3cf] leading-relaxed mt-3">{t(p)}</p>
+        ))}
+
+        <p className="text-[10px] uppercase tracking-[0.18em] text-[#b6abec] mt-6 mb-3">{t('The sources it orchestrates')}</p>
+        <div className="rounded-2xl border border-[#242a3b] bg-[#11131f]/85 divide-y divide-white/5">
+          {SOURCES.map((s, i) => (
+            <div key={i} className="flex items-start gap-3 p-3.5">
+              <span className="text-[#e3c07a] text-sm mt-0.5">✦</span>
+              <span className="text-sm text-[#b6b3cf] leading-relaxed">{t(s)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl p-[1px]" style={{ background: 'linear-gradient(135deg, rgba(154,143,224,0.5), rgba(227,192,122,0.3), rgba(123,208,198,0.4))' }}>
+          <div className="rounded-2xl bg-[#0e1020]/95 p-5">
+            <p className="text-[15px] font-serif text-[#ece9e0] leading-relaxed">{t(ORCHESTRATION.hope)}</p>
+          </div>
+        </div>
       </section>
 
       {/* ── Where to explore ── */}

@@ -11,6 +11,60 @@ export const guide: Record<string, string> = {
   'Read the full guide ✦': 'Lee la guía completa ✦',
   '📖 Guide': '📖 Guía',
 
+  // ── depth + honesty sections ──
+  'The depth': 'La profundidad',
+  'What it is': 'Qué es',
+  'What this really is': 'Qué es esto en realidad',
+  'What you can weave': 'Lo que puedes tejer',
+  'Your own chart is only the first layer. AstralFlow can bond and read the whole flow — people, groups, places and time — each with the same honest, plain-language depth.':
+    'Tu propia carta es apenas la primera capa. AstralFlow puede vincular y leer todo el flujo — personas, grupos, lugares y tiempo — cada uno con la misma profundidad honesta y en lenguaje claro.',
+  'Two people': 'Dos personas',
+  'A whole group': 'Un grupo entero',
+  Place: 'Lugar',
+  Time: 'Tiempo',
+  'New connection': 'Nueva conexión',
+  'Your own chart read through five living traditions at once — Western, Vedic, the Mayan Cholq’ij, the Chinese year animal and Gene Keys — plus your power places and the sky moving over you today.':
+    'Tu propia carta leída por cinco tradiciones vivas a la vez — Occidental, Védica, la Maya Cholq’ij, el animal del año chino y Gene Keys — más tus lugares de poder y el cielo moviéndose sobre ti hoy.',
+  'The currents between any two charts — what flows easily, what asks for work — weighed for the exact bond you care about: romance, friendship, living together, or building together.':
+    'Las corrientes entre dos cartas cualesquiera — lo que fluye fácil, lo que pide trabajo — ponderadas para el vínculo exacto que te importa: romance, amistad, convivir o construir juntos.',
+  'Weave three, five, a dozen people into a constellation with a shared purpose — a team, a family, a household, a crew — and read the group as one sky: the strongest bonds, the friction to tend, the base where everyone thrives.':
+    'Teje a tres, cinco, una docena de personas en una constelación con un propósito compartido — un equipo, una familia, una casa, una tripulación — y lee al grupo como un solo cielo: los vínculos más fuertes, la fricción a cuidar, la base donde todos florecen.',
+  'Your chart projected onto the Earth — the planetary lines crossing the planet for you, and the cities where your sky is strongest. Where two people’s lines cross is a shared power spot.':
+    'Tu carta proyectada sobre la Tierra — las líneas planetarias que cruzan el planeta para ti, y las ciudades donde tu cielo es más fuerte. Donde se cruzan las líneas de dos personas hay un punto de poder compartido.',
+  'The sky never stops moving. Live transits show this week’s weather over your chart, and real life cycles — your Saturn return, a Jupiter return — computed astronomically, not guessed from your age.':
+    'El cielo nunca deja de moverse. Los tránsitos en vivo muestran el clima de esta semana sobre tu carta, y los ciclos reales de vida — tu retorno de Saturno, un retorno de Júpiter — calculados astronómicamente, no adivinados por tu edad.',
+  'Opt in to what you’re open to and meet people open to the same. A mutual spark bonds you and opens the deep read — connection built on consent, from the first step.':
+    'Activa a qué estás abierto y conoce a personas abiertas a lo mismo. Una chispa mutua los vincula y abre la lectura profunda — conexión construida sobre el consentimiento, desde el primer paso.',
+  'What AstralFlow really is': 'Qué es AstralFlow en realidad',
+  'An orchestration of many sources — not a claim to know your future.':
+    'Una orquestación de muchas fuentes — no una pretensión de conocer tu futuro.',
+  'AstralFlow doesn’t claim to know your future, and it isn’t magic. It’s an orchestration — a careful weaving-together of many different sources of information about the moment you were born.':
+    'AstralFlow no pretende conocer tu futuro, y no es magia. Es una orquestación — un tejido cuidadoso de muchas fuentes distintas de información sobre el momento en que naciste.',
+  'The astronomy is exact. The meanings come from traditions that humans have refined over thousands of years — each one a different, valid language for talking about temperament, timing and how people fit together. AstralFlow computes them all precisely and translates them into plain words, so you don’t need to study any of them to feel seen.':
+    'La astronomía es exacta. Los significados vienen de tradiciones que la humanidad ha afinado durante miles de años — cada una un lenguaje distinto y válido para hablar del temperamento, los tiempos y cómo encajan las personas. AstralFlow las calcula todas con precisión y las traduce a palabras simples, para que no tengas que estudiar ninguna para sentirte visto.',
+  'None of it is destiny. Every reading is a mirror — a way to notice patterns you already live, and to have a kinder, clearer conversation about them.':
+    'Nada de esto es destino. Cada lectura es un espejo — una forma de notar patrones que ya vives, y de tener una conversación más amable y clara sobre ellos.',
+  'We hope it’s useful. Our wish is simple: that this helps people connect in a healthier way, understand each other with more grace, and find how everyone can work — and love, and live, and build — better together.':
+    'Esperamos que sea útil. Nuestro deseo es simple: que esto ayude a las personas a conectar de forma más sana, a entenderse con más gracia, y a encontrar cómo todos pueden trabajar — y amar, y vivir, y construir — mejor juntos.',
+  'The sources it orchestrates': 'Las fuentes que orquesta',
+  'Read how it works ✦': 'Lee cómo funciona ✦',
+  'Precise astronomy — Sun, Moon and planet positions computed to the degree (Meeus)':
+    'Astronomía precisa — posiciones del Sol, la Luna y los planetas calculadas al grado (Meeus)',
+  'Western astrology — the ~2,000-year Hellenistic tradition of signs, houses and aspects':
+    'Astrología occidental — la tradición helenística de ~2000 años de signos, casas y aspectos',
+  'Vedic Jyotish — the sidereal zodiac, the 27 nakshatras and the dasha life-cycles':
+    'Védica Jyotish — el zodiaco sideral, los 27 nakshatras y los ciclos de vida dasha',
+  'The Mayan Cholq’ij — the living 260-day count still kept by daykeepers in Guatemala':
+    'La Maya Cholq’ij — la cuenta viva de 260 días que aún guardan los guías en Guatemala',
+  'Chinese astrology — the 12 year-animals and 5 elements, from the real lunar New Year':
+    'Astrología china — los 12 animales del año y 5 elementos, desde el Año Nuevo lunar real',
+  'Gene Keys — the I Ching’s 64 hexagrams, read as shadow → gift → siddhi':
+    'Gene Keys — los 64 hexagramas del I Ching, leídos como sombra → don → siddhi',
+  'Astrocartography — your planetary lines mapped across the whole Earth':
+    'Astrocartografía — tus líneas planetarias mapeadas por toda la Tierra',
+  'Relationship synastry — classical aspect-weighting, tuned per kind of bond':
+    'Sinastría de relación — ponderación clásica de aspectos, ajustada por tipo de vínculo',
+
   // ── guide intro ──
   'Why this app exists, what it is based on, how the numbers are made, and where to explore. Deep but simple — written for any person on the planet.':
     'Por qué existe esta app, en qué se basa, cómo se hacen los números y dónde explorar. Profundo pero simple — escrito para cualquier persona del planeta.',
