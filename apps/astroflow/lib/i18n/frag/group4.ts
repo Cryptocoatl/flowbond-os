@@ -9,8 +9,8 @@ export const group4: Record<string, string> = {
   'Create your chart and every current opens for you.':
     'Crea tu carta astral y cada corriente se abre para ti.',
   'You, across every tradition': 'Tú, a través de cada tradición',
-  'The same birth moment, read through four living systems. Each page shows who you are in that current, with every symbol explained — so you can recognise yourself fast, in the language you already know or the one you want to learn.':
-    'El mismo momento de nacimiento, leído a través de cuatro sistemas vivos. Cada página muestra quién eres en esa corriente, con cada símbolo explicado — para que te reconozcas rápido, en el lenguaje que ya conoces o el que quieres aprender.',
+  'The same birth moment, read through five living systems. Each page shows who you are in that current, with every symbol explained — so you can recognise yourself fast, in the language you already know or the one you want to learn.':
+    'El mismo momento de nacimiento, leído a través de cinco sistemas vivos. Cada página muestra quién eres en esa corriente, con cada símbolo explicado — para que te reconozcas rápido, en el lenguaje que ya conoces o el que quieres aprender.',
   'Want the symbol library itself? Visit': '¿Quieres la biblioteca de símbolos en sí? Visita',
   '— every planet, sign, house and aspect explained.':
     '— cada planeta, signo, casa y aspecto explicado.',

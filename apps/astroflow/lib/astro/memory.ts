@@ -16,6 +16,7 @@ import { personLines } from './interpret';
 import { vedicChart, vedicSummary, vimshottariDasha, vedicDashaLine } from './vedic';
 import { mayanSummary } from './mayan';
 import { geneKeys, geneKeysSummary } from './genekeys';
+import { chineseSummary } from './chinese';
 import { strongestSpot, powerPlaces } from './acg-geo';
 import type { Chart } from './types';
 
@@ -28,6 +29,7 @@ export interface ChartFacts {
   vimshottari: ReturnType<typeof vimshottariDasha>;
   dasha: string; // the maha-dasha chapter of life running now
   mayan: ReturnType<typeof mayanSummary>;
+  chinese: string; // element + animal + polarity + allies/clash (year animal)
   geneKeys: ReturnType<typeof geneKeysSummary>;
   strongestSpot: ReturnType<typeof strongestSpot>;
   powerPlaces: ReturnType<typeof powerPlaces>;
@@ -36,7 +38,7 @@ export interface ChartFacts {
 /** Stable, cheap hash of the chart — changes iff a placement/angle/jd changes.
  *  FACTS_VERSION is folded in so a change to the fact SHAPE (e.g. adding the
  *  Vedic nakshatra depth + dasha line) invalidates every cached bundle once. */
-const FACTS_VERSION = 'v3-cholqij-nawal';
+const FACTS_VERSION = 'v4-chinese-year';
 export function hashChart(chart: Chart): string {
   const s = JSON.stringify({ v: FACTS_VERSION, b: chart.bodies, a: chart.asc, m: chart.mc, n: chart.node, jd: chart.jd });
   let h = 0;
@@ -57,6 +59,7 @@ export function buildFacts(chart: Chart, birthDate: string): ChartFacts {
     vimshottari: vimshottariDasha(chart),
     dasha: vedicDashaLine(chart),
     mayan: mayanSummary(chart.jd, birthDate),
+    chinese: chineseSummary(chart.jd).line,
     geneKeys: geneKeysSummary(geneKeys(chart)),
     strongestSpot: strongestSpot(chart),
     powerPlaces: powerPlaces(chart),

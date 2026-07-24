@@ -8,6 +8,7 @@ import { browserClient } from '../../lib/supabase';
 import ReadingPanel from './ReadingPanel';
 import BondInvite from './BondInvite';
 import FindFriends from './FindFriends';
+import ScoreExplainer from './ScoreExplainer';
 import Tour from './Tour';
 import { useT } from '../../lib/i18n/provider';
 
@@ -257,6 +258,13 @@ export default function Constellation({
                 </p>
               )}
               {pairPanorama && <p className="text-sm text-[#cfc8e8] mt-2 leading-relaxed">{pairPanorama.headline}</p>}
+              {avgScore !== null && (
+                <ScoreExplainer
+                  people={selectedProfiles.filter((p) => p.chart).map((p) => ({ name: p.displayName, chart: p.chart! }))}
+                  context={context}
+                  score={avgScore}
+                />
+              )}
               {selectedProfiles.length >= 2 && <ReadingPanel handles={selectedProfiles.map((p) => p.handle)} pair />}
               <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
                 <label className="text-[10px] uppercase tracking-[0.18em] text-[#5b5e72]">{t('Save as a constellation')}</label>
@@ -343,6 +351,7 @@ export default function Constellation({
           {myFbid && <Link href="/dashboard" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Dashboard')}</Link>}
           {myFbid && <Link href="/privacy" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">🛡 {t('Your data & privacy')}</Link>}
           {myFbid && <Link href="/dreams" className="block px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">✦ {t('Dreams — what should we build?')}</Link>}
+          <Link href="/guide" className="block px-4 py-3 text-sm text-[#e3c07a] border-b border-white/5 active:bg-white/5">📖 {t('The Guide — start here')}</Link>
           <button onClick={() => { setTour(true); setMenuOpen(false); }} className="w-full text-left px-4 py-3 text-sm text-[#cfc8e8] border-b border-white/5 active:bg-white/5">{t('Take the tour')}</button>
           {myFbid && (
             <button onClick={async () => { await browserClient().auth.signOut(); window.location.assign('/'); }} className="w-full text-left px-4 py-3 text-sm text-[#9698a8] active:bg-white/5">{t('Sign out')}</button>

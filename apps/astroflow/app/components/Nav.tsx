@@ -38,6 +38,7 @@ export default async function Nav() {
         </Link>
         <div className="ml-auto flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-4 text-xs uppercase tracking-[0.14em]">
+            <Link href="/guide" className="hover:text-[#e3c07a] transition">{t('Guide')}</Link>
             <Link href="/" className="hover:text-[#cfc8e8] transition">{t('Constellation')}</Link>
             <Link href="/today" className="hover:text-[#e3c07a] transition">{t('Today')}</Link>
             <Link href="/dashboard" className="hover:text-[#cfc8e8] transition">{t('Dashboard')}</Link>

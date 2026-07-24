@@ -5,6 +5,7 @@ import { myFbid } from '../../lib/astro/access';
 import { dreamspell } from '../../lib/astro/mayan';
 import { geneKeys } from '../../lib/astro/genekeys';
 import { vedicChart } from '../../lib/astro/vedic';
+import { chineseSummary } from '../../lib/astro/chinese';
 import { SYSTEMS } from '../../lib/astro/systems-ref';
 import type { Chart } from '../../lib/astro/types';
 
@@ -26,11 +27,13 @@ export default async function SystemsHub() {
   const ds = dreamspell(date);
   const gk = geneKeys(chart);
   const v = vedicChart(chart);
+  const cn = chineseSummary(chart.jd);
   const headline: Record<string, string> = {
     western: `${chart.bodies.Sun.sign} Sun · ${chart.bodies.Moon.sign} Moon${chart.asc ? ` · ${chart.asc.sign} Rising` : ''}`,
     mayan: `Kin ${ds.kin} · ${ds.color} ${ds.toneName} ${ds.sealName.split(' ').slice(1).join(' ')}`,
     vedic: `${v.asc ? `${v.asc.rashi} Lagna · ` : ''}Moon in ${v.bodies.Moon?.nakshatra ?? '—'}`,
     genekeys: `Profile ${gk.profile} · Life's Work Gate ${gk.spheres.lifesWork.gate}`,
+    chinese: `${cn.element.glyph} ${cn.element.name} ${cn.animal.name} ${cn.animal.glyph} · ${cn.year} · ${cn.yang ? 'yang' : 'yin'}`,
   };
 
   return (
@@ -41,7 +44,7 @@ export default async function SystemsHub() {
         {t('You, across every tradition')}
       </h1>
       <p className="text-[#9698a8] leading-relaxed mb-6">
-        {t('The same birth moment, read through four living systems. Each page shows who you are in that current, with every symbol explained — so you can recognise yourself fast, in the language you already know or the one you want to learn.')}
+        {t('The same birth moment, read through five living systems. Each page shows who you are in that current, with every symbol explained — so you can recognise yourself fast, in the language you already know or the one you want to learn.')}
       </p>
 
       <div className="grid sm:grid-cols-2 gap-3">

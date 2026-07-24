@@ -6,7 +6,7 @@
  */
 
 export interface SystemMeta {
-  key: 'western' | 'mayan' | 'vedic' | 'genekeys';
+  key: 'western' | 'mayan' | 'vedic' | 'genekeys' | 'chinese';
   title: string;
   glyph: string;
   color: string;
@@ -34,6 +34,11 @@ export const SYSTEMS: SystemMeta[] = [
     key: 'genekeys', title: 'Gene Keys · Human Design', glyph: '🧬', color: '#7bd0c6',
     tagline: 'your evolutionary code — 64 keys',
     about: 'Four prime gifts drawn from your conscious and unconscious sky, each an arc from shadow through gift to siddhi — the contemplative path of your becoming.',
+  },
+  {
+    key: 'chinese', title: 'Chinese · Year Animal', glyph: '🐉', color: '#e05e6a',
+    tagline: 'your shēngxiào — animal, element, polarity',
+    about: 'The twelve-animal cycle with its five elements, computed from the REAL Chinese New Year (the second new moon after the winter solstice) — so January births get their true animal. Allies, clash and secret friend included.',
   },
 ];
 
