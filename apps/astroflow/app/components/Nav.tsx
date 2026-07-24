@@ -41,6 +41,7 @@ export default async function Nav() {
             <Link href="/guide" className="hover:text-[#e3c07a] transition">{t('Guide')}</Link>
             <Link href="/" className="hover:text-[#cfc8e8] transition">{t('Constellation')}</Link>
             <Link href="/today" className="hover:text-[#e3c07a] transition">{t('Today')}</Link>
+            <Link href="/match" className="hover:text-[#e0708f] transition">{t('Match')}</Link>
             <Link href="/dashboard" className="hover:text-[#cfc8e8] transition">{t('Dashboard')}</Link>
             <Link href="/atlas" className="hover:text-[#cfc8e8] transition">{t('Atlas')}</Link>
             <Link href="/systems" className="hover:text-[#cfc8e8] transition">{t('Currents')}</Link>
