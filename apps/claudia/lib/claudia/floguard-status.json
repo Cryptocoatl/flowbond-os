@@ -1,24 +1,24 @@
 {
   "_comment": "FloGuard status snapshot for the ClaudIA dashboard. Regenerated each FloGuard round from apps/claudia/operator/floguard/BACKLOG.md. NEVER contains secret values — operational metadata only.",
-  "generated": "2026-07-13",
-  "lastAudit": "2026-07-13",
+  "generated": "2026-07-27",
+  "lastAudit": "2026-07-27",
   "cadence": "semanal · lun 09:00",
-  "posture": "alto",
-  "advisors": { "errors": 8, "warn": 449, "info": 119 },
+  "posture": "medio",
+  "advisors": { "errors": 10, "warn": 651, "info": 188 },
   "critical": 0,
-  "counts": { "total": 36, "open": 5, "inProgress": 5, "blocked": 22, "done": 4 },
+  "counts": { "total": 35, "open": 5, "inProgress": 5, "blocked": 21, "done": 4 },
   "rotationsQueued": 16,
+  "headline": "10 ERRORs nuevos (vistas SECURITY DEFINER) · 651 avisos · 6 nuevos items · migration 007 en PR",
   "active": [
-    { "id": "FG-025", "sev": "p2", "status": "blocked", "title": "8 vistas SECURITY DEFINER app_vpa_* (ERRORs advisors) — recrear como SECURITY INVOKER" },
-    { "id": "FG-043", "sev": "p2", "status": "blocked", "title": "Admin middleware: secreto JWT hardcoded como fallback en código público" },
-    { "id": "FG-044", "sev": "p2", "status": "blocked", "title": "grantflow: SUPABASE_SERVICE_ROLE_KEY en Edge middleware (cada request)" },
-    { "id": "FG-030", "sev": "headers", "status": "in-progress", "title": "Cabeceras de seguridad — 9 apps cableadas en PR · claudia + 5 apps pendientes" },
-    { "id": "FG-022", "sev": "hardening", "status": "in-progress", "title": "search_path flowbond_role_rank — migración 009 en PR (aplicar)" },
-    { "id": "FG-023", "sev": "hardening", "status": "in-progress", "title": "Deny policies banoseco_donations/deposits — migración 009 en PR (aplicar)" },
-    { "id": "FG-026", "sev": "hardening", "status": "in-progress", "title": "search_path vpa__is_service — migración 009 en PR (aplicar)" },
-    { "id": "FG-005", "sev": "p2", "status": "open", "title": "RPCs admin anon-alcanzables protegidos solo por secreto (admin_*/mt_*)" },
-    { "id": "FG-020", "sev": "hardening", "status": "open", "title": "7 políticas INSERT always-true en tablas de captura" },
-    { "id": "FG-042", "sev": "hygiene", "status": "open", "title": "Sin gitleaks pre-commit — agregar backstop de escaneo de secretos" }
-  ],
-  "headline": "8 nuevos ERRORs (vistas SECURITY DEFINER app_vpa_*) · 449 warn · 9 apps recibiendo cabeceras HTTP seguras vía PR"
+    { "id": "FG-025", "sev": "p2",       "status": "open",        "title": "9 vistas SECURITY DEFINER en ERROR — v_ff_funding_progress + 8 app_vpa_*_public" },
+    { "id": "FG-027", "sev": "p2",       "status": "open",        "title": "Superficie RPC anon ampliada: mt_admin_*(8), tevo_admin_*(7+), tulumcoin/vpa p_key" },
+    { "id": "FG-030", "sev": "headers",  "status": "in-progress", "title": "Cabeceras de seguridad (@flowbond/security) — cero apps configuradas" },
+    { "id": "FG-026", "sev": "hardening","status": "in-progress", "title": "12 funciones search_path mutable → migration 007 PR (FG-026)" },
+    { "id": "FG-042", "sev": "hygiene",  "status": "in-progress", "title": "Gitleaks pre-commit backstop (.gitleaks.toml + PR)" },
+    { "id": "FG-022", "sev": "hardening","status": "in-progress", "title": "search_path de flowbond_role_rank — migration 006 pendiente de aplicar" },
+    { "id": "FG-023", "sev": "hardening","status": "in-progress", "title": "Deny policies banoseco_donations/deposits — migration 006 pendiente de aplicar" },
+    { "id": "FG-005", "sev": "p2",       "status": "open",        "title": "RPCs admin anon con p_key/p_secreto (admin_*/mt_*) — ver también FG-027" },
+    { "id": "FG-028", "sev": "hardening","status": "open",        "title": "188 tablas RLS-activo/sin-política en astroflow, fbgame, grantflow, lvb y otros" },
+    { "id": "FG-020", "sev": "hardening","status": "open",        "title": "7 políticas INSERT always-true en tablas de captura de leads" }
+  ]
 }
