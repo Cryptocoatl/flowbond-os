@@ -1,0 +1,8 @@
+# tuestratega.mx
+# El interruptor real de indexación es LISTO_PARA_INDEXAR en src/lib/content.ts:
+# mientras sea false, cada página sale con <meta name="robots" content="noindex,
+# nofollow"> y este archivo no la contradice — se permite rastrear, no indexar.
+User-agent: *
+Allow: /
+
+Sitemap: https://tuestratega.mx/sitemap.xml

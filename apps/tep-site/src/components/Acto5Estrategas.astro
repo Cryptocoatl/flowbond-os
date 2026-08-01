@@ -1,0 +1,254 @@
+---
+/* Acto 5 — personas reales, con nombre. Bios y retratos son Pendientes hasta que
+ * la firma los entregue: escribir aquí una trayectoria verosímil sería fabricar
+ * credenciales de una persona real. Un retrato sí puede ser real cuando la firma
+ * lo entrega; una foto de stock en la bio de una persona identificable, nunca.
+ *
+ * El acto se adapta al número de socios. Con uno (`solo`), el retrato y el texto
+ * van lado a lado y llenan el ancho — nada de media pantalla vacía. Con varios,
+ * vuelve a la retícula de tarjetas. Volver a agregar a alguien es sólo añadir un
+ * objeto en content.ts. */
+import { estrategas, esPendiente, MOSTRAR_PENDIENTES } from '../lib/content';
+import Slot from './Slot.astro';
+import Logo from './Logo.astro';
+
+const solo = estrategas.socios.length === 1;
+
+/* Sin bio escrita por la firma se publica el nombre, el retrato real y el
+ * enlace a LinkedIn — nada más. Ninguna trayectoria inferida. */
+---
+
+<section class="act" id="estrategas">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{estrategas.meta}</p>
+      <h2 class="display display--l estrategas__titulo">{estrategas.titulo}</h2>
+      <p class="lede estrategas__lede">{estrategas.lede}</p>
+    </div>
+  </div>
+
+  {
+    solo ? (
+      <div class="shell estrategas__solo reveal">
+        {estrategas.socios.map((socio) => (
+          <>
+            <div class="socio__retrato socio__retrato--solo">
+              {esPendiente(socio.retrato) ? (
+                <div class="retrato-vacio" role="img" aria-label={`Retrato pendiente de ${socio.nombre}`}>
+                  <Logo variante="isotipo" class="retrato-vacio__marca" />
+                  <span class="retrato-vacio__tag">Retrato pendiente</span>
+                </div>
+              ) : (
+                <img
+                  src={socio.retrato.src}
+                  alt={`Retrato de ${socio.nombre}`}
+                  width="720"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </div>
+
+            <div class="socio__texto socio__texto--solo">
+              <h3 class="display display--m socio__nombre">{socio.nombre}</h3>
+              {esPendiente(socio.bio) ? (
+                MOSTRAR_PENDIENTES && <Slot dato={socio.bio} />
+              ) : (
+                <p class="socio__bio">{socio.bio.texto}</p>
+              )}
+              {socio.linkedin && (
+                <a class="socio__linkedin" href={socio.linkedin} target="_blank" rel="noopener noreferrer">
+                  LinkedIn
+                </a>
+              )}
+            </div>
+          </>
+        ))}
+      </div>
+    ) : (
+      <div class="shell estrategas__lista">
+        {estrategas.socios.map((socio) => (
+          <article class="socio reveal">
+            <div class="socio__retrato">
+              {esPendiente(socio.retrato) ? (
+                <div class="retrato-vacio" role="img" aria-label={`Retrato pendiente de ${socio.nombre}`}>
+                  <Logo variante="isotipo" class="retrato-vacio__marca" />
+                  <span class="retrato-vacio__tag">Retrato pendiente</span>
+                </div>
+              ) : (
+                <img
+                  src={socio.retrato.src}
+                  alt={`Retrato de ${socio.nombre}`}
+                  width="720"
+                  height="900"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </div>
+
+            <div class="socio__texto">
+              <h3 class="display display--m socio__nombre">{socio.nombre}</h3>
+              {esPendiente(socio.bio) ? (
+                MOSTRAR_PENDIENTES && <Slot dato={socio.bio} />
+              ) : (
+                <p class="socio__bio">{socio.bio.texto}</p>
+              )}
+              {socio.linkedin && (
+                <a class="socio__linkedin" href={socio.linkedin} target="_blank" rel="noopener noreferrer">
+                  LinkedIn
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .estrategas__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 16ch;
+  }
+
+  .estrategas__lede {
+    margin-top: clamp(1.5rem, 3vh, 2rem);
+    color: var(--plata-tenue);
+  }
+
+  /* ---- Solo: retrato | texto, lado a lado ---- */
+  .estrategas__solo {
+    margin-top: clamp(3.5rem, 8vh, 6rem);
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+  }
+
+  .socio__retrato--solo {
+    max-width: 30rem;
+  }
+
+  .socio__texto--solo {
+    max-width: 42ch;
+  }
+
+  /* ---- Varios: retícula de tarjetas ---- */
+  .estrategas__lista {
+    margin-top: clamp(3.5rem, 8vh, 6rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 5vw, 4.5rem);
+  }
+
+  .socio__retrato {
+    aspect-ratio: 4 / 5;
+    background: var(--azul-alto);
+    overflow: hidden;
+  }
+
+  .socio__retrato img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* B/N de alto contraste: acompaña al azul sin traer una temperatura ajena
+       a la paleta. */
+    filter: grayscale(1) contrast(1.06);
+    transition: filter 400ms ease;
+  }
+
+  /* En hover, la foto recupera su color real (sutil, no un truco). */
+  .socio__retrato:hover img {
+    filter: grayscale(0) contrast(1.02);
+  }
+
+  .retrato-vacio {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 5;
+    position: relative;
+    background: var(--azul-alto);
+    border: 1px solid var(--linea);
+    display: flex;
+    align-items: flex-end;
+    padding: 1.25rem;
+    overflow: hidden;
+  }
+
+  .retrato-vacio__marca {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -54%);
+    font-size: 2.25rem;
+    color: var(--plata);
+    opacity: 0.09;
+    pointer-events: none;
+  }
+
+  .retrato-vacio__tag {
+    position: relative;
+    font-family: var(--body);
+    font-weight: 500;
+    font-size: 0.625rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--titanio);
+  }
+
+  .socio__nombre {
+    margin: clamp(1.25rem, 2.5vh, 1.75rem) 0 1.25rem;
+  }
+
+  .socio__texto--solo .socio__nombre {
+    margin-top: 0;
+  }
+
+  .socio__bio {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--plata-tenue);
+  }
+
+  .socio__linkedin {
+    display: inline-block;
+    margin-top: 1.25rem;
+    min-height: 2.75rem;
+    line-height: 2.75rem;
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--titanio);
+    text-decoration: none;
+    border-bottom: 1px solid var(--linea);
+    transition:
+      color 200ms ease,
+      border-color 200ms ease;
+  }
+
+  .socio__linkedin:hover {
+    color: var(--plata);
+    border-bottom-color: var(--linea-fuerte);
+  }
+
+  @media (max-width: 60rem) {
+    .estrategas__solo {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+    .socio__retrato--solo {
+      max-width: 24rem;
+    }
+    .estrategas__lista {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+</style>

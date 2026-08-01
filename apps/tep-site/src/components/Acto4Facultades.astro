@@ -1,0 +1,67 @@
+---
+/* Acto 4 — BLOQUEANTE (§9). Mientras `estado === 'sin-confirmar'` este acto sólo
+ * afirma lo que hoy es cierto: que la firma entrega su situación por escrito.
+ * No afirma registro, ni supervisión, ni usa la frase regulada "asesoría en
+ * inversiones". No suavizar esto hasta convertirlo en un claim implícito.
+ *
+ * Va en Plata Niebla —el color que el manual asocia a "claridad, honestidad y
+ * transparencia"— porque es el acto donde la marca declara lo que no sabe. */
+import { facultades, esPendiente, MOSTRAR_PENDIENTES } from '../lib/content';
+import Slot from './Slot.astro';
+
+/* El acto sigue sin afirmar registro alguno: `cuerpoSinConfirmar` es lo único
+ * que se publica. Lo que desaparece en producción es el recuadro que le anuncia
+ * al visitante que falta el dictamen del abogado. */
+const mostrarSlot = esPendiente(facultades.claimRegulatorio) && MOSTRAR_PENDIENTES;
+---
+
+<section class="act claro" id="facultades">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{facultades.meta}</p>
+      <h2 class="display display--l facultades__titulo">
+        Lo que sí somos, <span class="display--fuerte">por escrito</span>.
+      </h2>
+    </div>
+
+    <div class="facultades__cuerpo reveal">
+      <div class="prose">
+        {facultades.cuerpoSinConfirmar.map((p) => <p>{p}</p>)}
+      </div>
+
+      {
+        mostrarSlot && (
+          <div class="facultades__slot">
+            <Slot dato={facultades.claimRegulatorio} bloqueante />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .facultades__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 12ch;
+  }
+
+  .facultades__cuerpo {
+    grid-column: 6 / 12;
+    padding-top: clamp(2rem, 6vh, 5rem);
+  }
+
+  .facultades__slot {
+    margin-top: clamp(2rem, 4vh, 3rem);
+  }
+
+  @media (max-width: 60rem) {
+    .facultades__cuerpo {
+      grid-column: 1 / -1;
+      padding-top: 0;
+      margin-top: 2rem;
+    }
+  }
+</style>

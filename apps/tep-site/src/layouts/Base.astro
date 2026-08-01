@@ -1,0 +1,89 @@
+---
+/* Cinzel + Inter: las dos tipografías del Manual de Identidad. */
+import '@fontsource-variable/cinzel';
+import '@fontsource-variable/inter';
+import '../styles/tokens.css';
+import { sitio, LISTO_PARA_INDEXAR } from '../lib/content';
+
+interface Props {
+  titulo?: string;
+  descripcion?: string;
+}
+
+const { titulo, descripcion = sitio.descripcion } = Astro.props;
+const title = titulo ? `${titulo} · ${sitio.nombre}` : `${sitio.nombre} — ${sitio.tesis}`;
+const og = new URL('/media/hero-poster.jpg', Astro.site).href;
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={descripcion} />
+    <link rel="canonical" href={sitio.url} />
+
+    {/* Placeholder bios + an unvalidated regulatory position must not be
+        indexed against these people's real names. Lifts with LISTO_PARA_INDEXAR. */}
+    {!LISTO_PARA_INDEXAR && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:image" content={og} />
+    <meta property="og:locale" content="es_MX" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {/* Azul Imperial: el manual lo fija como el color predominante de la identidad. */}
+    <meta name="theme-color" content="#0e1a2b" />
+
+    {/* schema.org FinancialService stays off until the firm's legal standing is
+        confirmed (BUILD_PROMPT §6/§9) — structured data is a claim, not decoration. */}
+
+    <link rel="preload" as="image" href="/media/hero-poster.jpg" fetchpriority="high" />
+  </head>
+
+  <body>
+    <a class="skip" href="#solicitud">Ir a solicitar conversación</a>
+    <slot />
+
+    <script>
+      // Reveal once, then stop observing. Honour reduced-motion by not running.
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const targets = document.querySelectorAll<HTMLElement>('.reveal');
+
+      if (reduce.matches) {
+        targets.forEach((el) => el.classList.add('is-in'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.classList.add('is-in');
+              io.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -12% 0px', threshold: 0.1 },
+        );
+        targets.forEach((el) => io.observe(el));
+      }
+    </script>
+
+    <style>
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 50;
+        background: var(--plata);
+        color: var(--azul);
+        padding: 1rem 1.5rem;
+        text-decoration: none;
+        font-size: 0.875rem;
+      }
+      .skip:focus {
+        left: 0;
+      }
+    </style>
+  </body>
+</html>

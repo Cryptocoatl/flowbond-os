@@ -1,0 +1,96 @@
+---
+/* Acto 3 — las cuatro fases sobre Azul Imperial, el fondo por defecto.
+ * Sin numeración decorativa: cada fase se marca con su nombre y una regla. */
+import { metodo } from '../lib/content';
+---
+
+<section class="act" id="metodo">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{metodo.meta}</p>
+      <h2 class="display display--l metodo__titulo">{metodo.titulo}</h2>
+      <p class="lede metodo__lede">{metodo.lede}</p>
+    </div>
+  </div>
+
+  <div class="shell metodo__fases">
+    {
+      metodo.fases.map((fase) => (
+        <article class="fase reveal">
+          <div class="fase__nombre">
+            <h3 class="display display--m">{fase.nombre}</h3>
+          </div>
+          <div class="fase__texto">
+            <p class="fase__entregable">
+              <span class="sr-only">Entregable: </span>
+              {fase.entregable}
+            </p>
+            <p class="fase__cuerpo">{fase.cuerpo}</p>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .metodo__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 16ch;
+  }
+
+  .metodo__lede {
+    margin-top: clamp(1.5rem, 3vh, 2rem);
+    color: var(--plata-tenue);
+  }
+
+  .metodo__fases {
+    margin-top: clamp(3.5rem, 8vh, 6rem);
+  }
+
+  .fase {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--gut);
+    padding-block: clamp(2rem, 4vh, 3rem);
+    position: relative;
+  }
+
+  /* La regla se desvanece hacia la derecha: marca el corte sin cerrar la caja. */
+  .fase + .fase::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(to right, var(--linea-fuerte) 0%, var(--linea) 55%, transparent 100%);
+  }
+
+  .fase__entregable {
+    font-family: var(--body);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--titanio);
+    margin: 0 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--linea);
+    display: inline-block;
+  }
+
+  .fase__cuerpo {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--plata-tenue);
+  }
+
+  @media (max-width: 60rem) {
+    .fase {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

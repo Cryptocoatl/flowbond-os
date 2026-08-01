@@ -1,0 +1,108 @@
+---
+/* Acto 6 — autoridad por umbral. La columna del "no" pesa lo mismo que la del
+ * "sí": esa simetría es todo el argumento. Verde Salvia, como la tesis: son los
+ * dos actos donde la marca piensa en voz alta. */
+import { criterio } from '../lib/content';
+---
+
+<section class="act verde" id="criterio">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{criterio.meta}</p>
+      <h2 class="display display--l criterio__titulo">
+        No trabajamos con todos. <span class="display--fuerte">Aquí está el criterio.</span>
+      </h2>
+      <p class="lede criterio__lede">{criterio.lede}</p>
+    </div>
+  </div>
+
+  <div class="shell criterio__cols">
+    {
+      [criterio.si, criterio.no].map((col) => (
+        <div class="criterio__col reveal">
+          <h3 class="criterio__colTitulo">{col.titulo}</h3>
+          <ul class="criterio__lista">
+            {col.puntos.map((p) => (
+              <li>{p}</li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="shell">
+    <p class="criterio__promesa display display--m display--fuerte reveal">{criterio.promesa}</p>
+  </div>
+</section>
+
+<style>
+  .criterio__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 15ch;
+  }
+
+  .criterio__lede {
+    margin-top: clamp(1.5rem, 3vh, 2rem);
+    color: var(--plata-tenue);
+  }
+
+  .criterio__cols {
+    margin-top: clamp(3rem, 7vh, 5rem);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+
+  .criterio__colTitulo {
+    font-family: var(--body);
+    font-weight: 500;
+    font-size: 0.6875rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--titanio);
+    margin: 0 0 1.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--linea-fuerte);
+  }
+
+  .criterio__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .criterio__lista li {
+    padding: 1rem 0 1rem 1.5rem;
+    position: relative;
+    border-bottom: 1px solid var(--linea);
+    max-width: 46ch;
+    color: var(--plata-tenue);
+  }
+
+  /* Un tick duro de luz: ni bullet ni emoji. */
+  .criterio__lista li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.7em;
+    width: 8px;
+    height: 1px;
+    background: var(--titanio);
+  }
+
+  .criterio__promesa {
+    margin: clamp(3rem, 7vh, 5rem) 0 0;
+    max-width: 26ch;
+    color: var(--plata);
+  }
+
+  @media (max-width: 60rem) {
+    .criterio__cols {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,135 @@
+---
+/* Acto 1 — la torre.
+ *
+ * El clip no es decoración de stock: es el isotipo de la marca —la torre de
+ * ajedrez— filmado en Azul Imperial. Por eso el hero puede ser arquitectura y
+ * no una foto de familia de banco de imágenes, que es lo que el manual muestra
+ * como estilo fotográfico pero que content.ts prohíbe explícitamente hasta que
+ * la firma entregue retratos reales.
+ *
+ * El clip es palíndromo (va y vuelve), así que `loop` no corta nunca.
+ */
+import { hero } from '../lib/content';
+import Logo from './Logo.astro';
+---
+
+<header class="hero">
+  <video
+    class="hero__film"
+    poster="/media/hero-poster.jpg"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    aria-hidden="true"
+    tabindex="-1">
+    <source src="/media/hero.webm" type="video/webm" />
+    <source src="/media/hero.mp4" type="video/mp4" />
+  </video>
+
+  {/* El clip ya es azul profundo; esto sólo asienta el tipo, no lava el muro. */}
+  <div class="hero__legibilidad" aria-hidden="true"></div>
+
+  <div class="shell hero__nav">
+    <Logo class="hero__logo" />
+  </div>
+
+  <div class="shell hero__inner">
+    <div class="hero__type">
+      <p class="meta hero__meta">{hero.meta}</p>
+      <h1 class="display display--xl hero__titulo">
+        {hero.titulo}<br /><span class="display--fuerte">{hero.tituloAcento}</span>
+      </h1>
+      <p class="lede hero__lede">{hero.lede}</p>
+      <a class="cta hero__cta" href="#solicitud">{hero.cta}</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    background: var(--azul);
+  }
+
+  .hero__film {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.02);
+  }
+
+  /* La torre del clip cae a la derecha del encuadre; el tipo vive a la
+     izquierda. La cortina va en diagonal para no tapar la piedra. */
+  .hero__legibilidad {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(14, 26, 43, 0.92) 0%, rgba(14, 26, 43, 0.1) 55%),
+      linear-gradient(to right, rgba(14, 26, 43, 0.85) 0%, rgba(14, 26, 43, 0) 62%);
+  }
+
+  .hero__nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-nav);
+    padding-block: clamp(1.25rem, 3vh, 2rem);
+  }
+
+  .hero__logo {
+    color: var(--plata);
+    font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: var(--z-overlay);
+    padding-block: clamp(3rem, 9vh, 6rem);
+    width: 100%;
+  }
+
+  .hero__type {
+    max-width: 24ch;
+  }
+
+  .hero__meta {
+    color: var(--titanio);
+    margin-bottom: clamp(1.25rem, 3vh, 2rem);
+  }
+
+  .hero__titulo {
+    color: var(--plata);
+    max-width: none;
+  }
+
+  .hero__lede {
+    color: var(--plata-tenue);
+    margin: clamp(1.5rem, 3.5vh, 2.25rem) 0 0;
+    max-width: 32ch;
+  }
+
+  .hero__cta {
+    margin-top: clamp(1.75rem, 4vh, 2.75rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__film {
+      display: none;
+    }
+    .hero {
+      background:
+        linear-gradient(to top, rgba(14, 26, 43, 0.92), rgba(14, 26, 43, 0.1) 55%),
+        linear-gradient(to right, rgba(14, 26, 43, 0.85), rgba(14, 26, 43, 0) 62%),
+        url('/media/hero-poster.jpg') center / cover no-repeat;
+    }
+  }
+</style>

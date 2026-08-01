@@ -1,0 +1,90 @@
+---
+/* Acto 2 — Verde Salvia. El manual le asigna a este color "reflexión, previsión
+ * y visión a largo plazo": es literalmente el argumento de este acto. */
+import { tesis, esPendiente, MOSTRAR_PENDIENTES } from '../lib/content';
+import Slot from './Slot.astro';
+
+/* Sin cifra confirmada por la firma, el acto se publica sin cifra: el argumento
+ * de los tres párrafos se sostiene solo. No se inventa un número. */
+const anclaPendiente = esPendiente(tesis.anclaDato);
+const mostrarAncla = !anclaPendiente || MOSTRAR_PENDIENTES;
+---
+
+<section class="act verde" id="tesis">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{tesis.meta}</p>
+      <h2 class="display display--l tesis__titulo">
+        La categoría se equivoca <span class="display--fuerte">de pregunta</span>.
+      </h2>
+    </div>
+
+    <div class="tesis__cuerpo reveal">
+      <div class="prose">
+        {tesis.cuerpo.map((p) => <p>{p}</p>)}
+      </div>
+
+      {
+        mostrarAncla && (
+          <div class="tesis__ancla">
+            {esPendiente(tesis.anclaDato) ? (
+              <Slot dato={tesis.anclaDato} />
+            ) : (
+              <figure class="ancla">
+                <p class="ancla__cifra display display--l">{tesis.anclaDato.cifra}</p>
+                <figcaption class="ancla__fuente">{tesis.anclaDato.fuente}</figcaption>
+              </figure>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .tesis__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 14ch;
+  }
+
+  .tesis__cuerpo {
+    grid-column: 6 / 12;
+    padding-top: clamp(2rem, 6vh, 5rem);
+  }
+
+  .tesis__ancla {
+    margin-top: clamp(2.5rem, 5vh, 3.5rem);
+  }
+
+  /* Sin color de acento en la paleta, la cifra se separa con una regla y aire,
+     no con un tono. */
+  .ancla {
+    margin: 0;
+    padding-left: clamp(1rem, 2vw, 1.5rem);
+    border-left: 1px solid var(--linea-fuerte);
+  }
+
+  .ancla__cifra {
+    color: var(--plata);
+    margin: 0;
+  }
+
+  .ancla__fuente {
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--titanio);
+    margin-top: 0.75rem;
+    max-width: 44ch;
+  }
+
+  @media (max-width: 60rem) {
+    .tesis__cuerpo {
+      grid-column: 1 / -1;
+      padding-top: 0;
+      margin-top: 2rem;
+    }
+  }
+</style>

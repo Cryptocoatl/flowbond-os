@@ -1,0 +1,24 @@
+{
+  "name": "@flowbond/tep-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumSeverity error",
+    "clean": "rm -rf dist .astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.2.1",
+    "@fontsource-variable/cinzel": "^5.2.8",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@supabase/supabase-js": "^2.48.1",
+    "astro": "^5.2.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.7.3"
+  }
+}

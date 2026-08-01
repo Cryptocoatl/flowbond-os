@@ -1,0 +1,99 @@
+---
+/* Un hueco visible y deliberado donde va el dato de la firma.
+ *
+ * Existe para que una pregunta sin responder del §9 se lea como sin responder.
+ * El modo de fallo que evita: lorem-ipsum, o una invención verosímil, sentada en
+ * la bio de una persona real o en un claim regulatorio hasta que alguien la
+ * publica por accidente. Está estilado para parecer intencional —es una
+ * superficie de revisión para el cliente— pero nunca imita copy terminado.
+ *
+ * Sin color de acento en la paleta, el bloqueante se marca con una barra sólida
+ * y borde continuo, no con rojo: la marca no tiene rojo, y meterlo aquí sería
+ * inventar un quinto color.
+ */
+import type { Pendiente } from '../lib/content';
+
+interface Props {
+  dato: Pendiente;
+  /** Marca insumos que bloquean la publicación (legal / regulatorio). */
+  bloqueante?: boolean;
+}
+
+const { dato, bloqueante = false } = Astro.props;
+---
+
+<div class:list={['slot', bloqueante && 'slot--bloqueante']}>
+  <p class="slot__tag">
+    {bloqueante ? 'Bloqueante · pendiente de la firma' : 'Pendiente de la firma'}
+  </p>
+  <p class="slot__pide">{dato.solicitado}</p>
+  <p class="slot__nota">{dato.nota}</p>
+</div>
+
+<style>
+  .slot {
+    border: 1px dashed var(--linea-fuerte);
+    padding: clamp(1.25rem, 2.5vw, 1.75rem);
+    background: transparent;
+    max-width: 52ch;
+  }
+
+  .slot--bloqueante {
+    border-style: solid;
+    border-color: var(--linea-fuerte);
+    border-left-width: 3px;
+    border-left-color: var(--plata);
+  }
+
+  .slot__tag {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.625rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--titanio);
+    margin: 0 0 0.75rem;
+  }
+
+  .slot--bloqueante .slot__tag {
+    color: var(--plata);
+  }
+
+  .slot__pide {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--plata);
+  }
+
+  .slot__nota {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    margin: 0.75rem 0 0;
+    color: var(--titanio);
+  }
+
+  /* Sobre Plata Niebla el titanio cae a ~2:1 contra el fondo: en claro todo el
+     apagado se hace con azul translúcido, no con gris. */
+  :global(.claro) .slot {
+    border-color: var(--linea-claro);
+  }
+
+  :global(.claro) .slot--bloqueante {
+    border-color: var(--linea-claro);
+    border-left-color: var(--azul);
+  }
+
+  :global(.claro) .slot__tag,
+  :global(.claro) .slot__nota {
+    color: var(--azul-tenue);
+  }
+
+  :global(.claro) .slot--bloqueante .slot__tag {
+    color: var(--azul);
+  }
+
+  :global(.claro) .slot__pide {
+    color: var(--azul);
+  }
+</style>

@@ -1,0 +1,111 @@
+---
+/* Pie del sitio: lockup + redes reales. Cierra la página en Azul Imperial, el
+ * color de la identidad. Los enlaces son cuentas verificadas (content.ts/redes),
+ * no placeholders. */
+import { sitio, redes } from '../lib/content';
+import Logo from './Logo.astro';
+
+const anio = new Date().getFullYear();
+---
+
+<footer class="pie">
+  <hr class="regla" />
+  <div class="shell pie__inner">
+    <Logo class="pie__logo" />
+
+    <nav class="pie__redes" aria-label="Redes sociales">
+      {
+        redes.map((r) => (
+          <a class="pie__red" href={r.url} target="_blank" rel="noopener noreferrer">
+            <span class="pie__redNombre">{r.red}</span>
+            <span class="pie__redHandle">{r.handle}</span>
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+
+  <div class="shell pie__legal">
+    <p>© {anio} {sitio.nombre}. México.</p>
+  </div>
+</footer>
+
+<style>
+  .pie {
+    background: var(--azul);
+    color: var(--plata);
+    padding-top: clamp(3rem, 7vh, 5rem);
+    padding-bottom: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .pie__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: clamp(2rem, 5vw, 4rem);
+    padding-top: clamp(2.5rem, 6vh, 4rem);
+  }
+
+  .pie__logo {
+    color: var(--plata);
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+  }
+
+  .pie__redes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .pie__red {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-decoration: none;
+    color: var(--plata);
+    min-height: 2.75rem;
+  }
+
+  .pie__redNombre {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--titanio);
+    transition: color 200ms ease;
+  }
+
+  .pie__red:hover .pie__redNombre {
+    color: var(--plata);
+  }
+
+  .pie__redHandle {
+    font-size: 0.9375rem;
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms ease;
+    align-self: flex-start;
+  }
+
+  .pie__red:hover .pie__redHandle {
+    border-bottom-color: var(--linea-fuerte);
+  }
+
+  .pie__legal {
+    margin-top: clamp(3rem, 7vh, 5rem);
+  }
+
+  .pie__legal p {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--titanio);
+  }
+
+  @media (max-width: 40rem) {
+    .pie__inner {
+      flex-direction: column;
+    }
+  }
+</style>

@@ -1,0 +1,148 @@
+---
+/* Acto 7 — the close. A mailto, not a form.
+ *
+ * The form used to POST to tep_submit_lead over PostgREST. Two things killed
+ * it: the firm has no signed aviso de privacidad (LFPDPPP — capturing name,
+ * email and financial motive on a Mexican wealth-advisory domain without one is
+ * real exposure), and the RPC only ever inserted a row into tep_leads, which
+ * nothing reads and nobody is notified about. A lead sent there was a lead
+ * lost. The table and the RPC stay applied in Supabase, unused, so the form can
+ * come back the day both problems are solved.
+ *
+ * A mailto has neither problem: the visitor's own client sends it, we capture
+ * nothing, and it lands in a mailbox someone opens.
+ */
+import { solicitud, esPendiente } from '../lib/content';
+
+/* Same rule the form had: a CTA that goes nowhere is worse than no CTA. Without
+   a confirmed mailbox the act still publishes its argument, minus the button. */
+const correo = esPendiente(solicitud.correo) ? null : solicitud.correo;
+const href = correo && `mailto:${correo}?subject=${encodeURIComponent(solicitud.asunto)}`;
+---
+
+<section class="act claro solicitud" id="solicitud">
+  <div class="arco" aria-hidden="true"></div>
+
+  <div class="shell grid12">
+    <div class="col-text reveal">
+      <p class="meta">{solicitud.meta}</p>
+      <h2 class="display display--l solicitud__titulo">
+        Solicitar <span class="display--fuerte">conversación</span>
+      </h2>
+      <p class="lede solicitud__lede">{solicitud.lede}</p>
+      <p class="solicitud__promesa">{solicitud.promesa}</p>
+    </div>
+
+    <div class="solicitud__cierre reveal">
+      {
+        href ? (
+          <div class="cierre">
+            <a class="cta" href={href}>Escribir a la firma</a>
+            {/* La dirección visible y seleccionable: en escritorio sin cliente
+                de correo configurado, el mailto no hace nada y el visitante se
+                queda sin a dónde escribir. */}
+            <p class="cierre__correo">
+              <a href={href}>{correo}</a>
+            </p>
+          </div>
+        ) : (
+          <div class="cierre cierre--off">
+            <p class="cierre__off">
+              El cierre se publica cuando la firma confirme el buzón que recibe
+              las solicitudes. Se define en <code>solicitud.correo</code>.
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .solicitud__titulo {
+    margin-top: clamp(1.25rem, 3vh, 2rem);
+    max-width: 12ch;
+  }
+
+  .solicitud__lede {
+    margin-top: clamp(1.5rem, 3vh, 2rem);
+  }
+
+  .solicitud__promesa {
+    margin-top: clamp(1.5rem, 3vh, 2rem);
+    max-width: 34ch;
+    color: var(--azul-tenue);
+    font-size: 0.9375rem;
+    line-height: 1.7;
+  }
+
+  /* Cruza el corte, como todo panel de esta retícula. */
+  .solicitud__cierre {
+    grid-column: 8 / 13;
+    align-self: start;
+  }
+
+  .cierre {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(1.25rem, 2.5vh, 1.75rem);
+  }
+
+  /* La misma regla de 1px que el resto de la página, no una caja. */
+  .cierre__correo {
+    margin: 0;
+    padding-top: clamp(1.25rem, 2.5vh, 1.75rem);
+    border-top: 1px solid var(--linea-claro);
+    width: 100%;
+    max-width: 34ch;
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+  }
+
+  .cierre__correo a {
+    color: var(--azul);
+    text-decoration: none;
+    border-bottom: 1px solid var(--linea-claro);
+    padding-bottom: 2px;
+    transition: border-color 200ms ease;
+    /* Direcciones largas no rompen la retícula en móvil. */
+    overflow-wrap: anywhere;
+  }
+
+  .cierre__correo a:hover,
+  .cierre__correo a:focus-visible {
+    border-bottom-color: var(--azul);
+  }
+
+  .cierre__correo a:focus-visible {
+    outline: 2px solid var(--azul);
+    outline-offset: 4px;
+  }
+
+  .cierre--off {
+    border: 1px dashed var(--linea-claro);
+    padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+
+  .cierre__off {
+    margin: 0;
+    max-width: 44ch;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--azul-tenue);
+  }
+
+  .cierre__off code {
+    font-size: 0.8125rem;
+    color: var(--azul);
+  }
+
+  @media (max-width: 60rem) {
+    .solicitud__cierre {
+      grid-column: 1 / -1;
+      margin-top: clamp(2.5rem, 6vh, 4rem);
+    }
+  }
+</style>

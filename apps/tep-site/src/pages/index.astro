@@ -1,0 +1,32 @@
+---
+/* The whole site is this one page: seven acts, in order, no router.
+ *
+ * Section tone alternates deliberately — muro (hero) · tinta · muro · piedra ·
+ * muro · tinta · piedra. Two dark acts carry the two arguments that need
+ * weight (the tesis and the criterio); reordering these breaks that rhythm.
+ */
+import Base from '../layouts/Base.astro';
+import Acto1Hero from '../components/Acto1Hero.astro';
+import Acto2Tesis from '../components/Acto2Tesis.astro';
+import Acto3Metodo from '../components/Acto3Metodo.astro';
+import Acto4Facultades from '../components/Acto4Facultades.astro';
+import Acto5Estrategas from '../components/Acto5Estrategas.astro';
+import Acto6Criterio from '../components/Acto6Criterio.astro';
+import Acto7Solicitud from '../components/Acto7Solicitud.astro';
+import Reel from '../components/Reel.astro';
+import PieRedes from '../components/PieRedes.astro';
+---
+
+<Base>
+  <main>
+    <Acto1Hero />
+    <Acto2Tesis />
+    <Acto3Metodo />
+    <Acto4Facultades />
+    <Acto5Estrategas />
+    <Acto6Criterio />
+    <Acto7Solicitud />
+    <Reel />
+  </main>
+  <PieRedes />
+</Base>

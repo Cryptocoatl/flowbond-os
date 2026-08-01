@@ -1,0 +1,69 @@
+---
+/* El reel real de la firma, embebido con el widget oficial de Instagram.
+ *
+ * embed.js renderiza el póster y el botón de play del lado del cliente (Instagram
+ * se lo sirve al navegador), así que no hace falta descargar la miniatura —que
+ * además IG bloquea a fetch. El único costo es el script externo de Instagram,
+ * aceptable para una vista que el cliente revisa.
+ *
+ * La tarjeta de IG es blanca por naturaleza; va centrada y contenida sobre Azul
+ * Imperial, con encabezado propio, para que se lea como una cita y no como un
+ * banner pegado.
+ */
+const permalink = 'https://www.instagram.com/reel/DUULcKyDloc/';
+---
+
+<section class="reel act" id="reel">
+  <div class="arco" aria-hidden="true"></div>
+  <div class="shell reel__inner">
+    <p class="meta reel__meta">En sus palabras</p>
+    <h2 class="display display--m reel__titulo">
+      El seguro de vida, <span class="display--fuerte">bien entendido</span>.
+    </h2>
+
+    <div class="reel__marco">
+      <blockquote
+        class="instagram-media"
+        data-instgrm-permalink={permalink}
+        data-instgrm-version="14"
+      >
+        <a href={permalink} target="_blank" rel="noopener noreferrer">
+          Ver este reel en Instagram
+        </a>
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+<script async src="https://www.instagram.com/embed.js" is:inline></script>
+
+<style>
+  .reel__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .reel__titulo {
+    margin: clamp(1rem, 2.5vh, 1.5rem) 0 clamp(2.5rem, 6vh, 4rem);
+    max-width: 20ch;
+    color: var(--plata);
+  }
+
+  /* Contiene la tarjeta blanca de Instagram al ancho nativo del reel y le da un
+     borde para que asiente sobre el azul en lugar de flotar. */
+  .reel__marco {
+    width: 100%;
+    max-width: 340px;
+    border: 1px solid var(--linea);
+    padding: 0.75rem;
+    background: var(--azul-alto);
+  }
+
+  .reel__marco :global(.instagram-media) {
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+</style>

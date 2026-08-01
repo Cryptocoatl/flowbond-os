@@ -1,0 +1,80 @@
+---
+/* El lockup del manual: isotipo (torre) + nombre en dos líneas.
+ *
+ * La torre viene trazada del PDF del manual, no redibujada a ojo. El nombre va
+ * como texto Cinzel vivo, no como imagen: el manual fija Cinzel como principal,
+ * así que el logotipo y los titulares comparten la misma fuente y el nombre
+ * queda seleccionable y legible por lector de pantalla.
+ *
+ * Hereda color con `currentColor` — plata sobre azul, azul sobre plata. Son las
+ * dos únicas versiones que autoriza el manual (positivo y negativo).
+ */
+import torre from '../../public/media/torre.svg?raw';
+
+interface Props {
+  /** `isotipo` = sólo la torre, para espacios reducidos (manual, §Variaciones). */
+  variante?: 'lockup' | 'isotipo';
+  class?: string;
+}
+
+const { variante = 'lockup', class: clase } = Astro.props;
+---
+
+<span class:list={['logo', `logo--${variante}`, clase]}>
+  <span class="logo__torre" set:html={torre} />
+  {
+    variante === 'lockup' && (
+      <span class="logo__nombre">
+        <span class="logo__linea1">Tu Estratega</span>
+        <span class="logo__linea2">Patrimonial</span>
+      </span>
+    )
+  }
+  {variante === 'isotipo' && <span class="sr-only">Tu Estratega Patrimonial</span>}
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    color: inherit;
+    line-height: 1;
+  }
+
+  .logo__torre {
+    display: block;
+    flex: none;
+    /* La torre se escala con el tamaño de fuente del contexto, para que el
+       lockup entero crezca en bloque. */
+    width: auto;
+    height: 2.9em;
+  }
+
+  .logo__torre :global(svg) {
+    display: block;
+    height: 100%;
+    width: auto;
+  }
+
+  .logo__nombre {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--display);
+    font-weight: 400;
+    text-transform: uppercase;
+    /* El manual centra "PATRIMONIAL" bajo "TU ESTRATEGA" y lo abre en tracking
+       hasta que ambas líneas miden casi lo mismo. Esa es la firma del lockup. */
+    align-items: center;
+  }
+
+  .logo__linea1 {
+    font-size: 1em;
+    letter-spacing: 0.03em;
+  }
+
+  .logo__linea2 {
+    font-size: 0.66em;
+    letter-spacing: 0.1em;
+  }
+</style>

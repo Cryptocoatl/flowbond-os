@@ -1,0 +1,27 @@
+;; tuestratega.mx — réplica EXACTA de la zona en IONOS, capturada 2026-08-01T07:55:45Z
+;; Importar en Cloudflare ANTES de tocar los NS en el registrador (InterNetX/IONOS).
+;; El correo de la firma (Google Workspace) vive en estos registros: si la zona
+;; se activa sin ellos, la bandeja se apaga en silencio.
+;;
+;; Los A de apex y www apuntan a IONOS A PROPOSITO: primero se migra la zona
+;; sin cambiar nada, se verifica que el correo fluye, y DESPUES se apunta el
+;; web a Pages. Son dos cambios separados, nunca uno.
+
+tuestratega.mx.            300  IN  A      74.208.236.13
+www.tuestratega.mx.        300  IN  A      74.208.236.13
+
+;; --- CORREO · Google Workspace · NO TOCAR ---
+tuestratega.mx.           3600  IN  MX     1 aspmx.l.google.com.
+tuestratega.mx.           3600  IN  MX     5 alt1.aspmx.l.google.com.
+tuestratega.mx.           3600  IN  MX     5 alt2.aspmx.l.google.com.
+tuestratega.mx.           3600  IN  MX     10 alt3.aspmx.l.google.com.
+tuestratega.mx.           3600  IN  MX     10 alt4.aspmx.l.google.com.
+tuestratega.mx.           3600  IN  TXT    "v=spf1 include:_spf.google.com ~all"
+google._domainkey.tuestratega.mx. 3600 IN TXT "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDouFod4szv+cznDOV2D+m1XI0j+DRaXwKm7cSwKeSWEOzVdZ0J9OpKRNLn1E6PHCqbf41y5dRGC/895L3l4ae+z/3qeHN2iLsIsCL2LYd/MYofucWXsiwQeFx5RCCRrPGvI4W2vcpRsHhUcGKsDZV2OwXvlqwdHM4W9EbXRqnyowIDAQAB"
+_dmarc.tuestratega.mx.    3600  IN  TXT    "v=DMARC1; p=quarantine; rua=mailto:reports-dmarc@tuestratega.mx; ruf=mailto:reports-dmarc@tuestratega.mx; fo=1"
+
+;; --- Outlook/IONOS autodiscover ---
+autodiscover.tuestratega.mx. 3600 IN CNAME adsredir.1and1.info.
+
+;; --- IONOS Domain Connect (se puede omitir tras migrar) ---
+_domainconnect.tuestratega.mx. 3600 IN TXT "api.domainconnect.ionos.com"
