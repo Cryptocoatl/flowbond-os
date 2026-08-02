@@ -1,7 +1,17 @@
-// VPA pay — crea una preferencia de MercadoPago (Checkout Pro) para una orden.
-// El comprador (anon JWT) pide el link de pago de SU orden; la fn valida la orden
-// con service_role, lee el token MP desde Vault (vpa__payment_config) y devuelve
-// el init_point (o sandbox si el token es TEST-). external_reference = order_id.
+// VPA pay v5 — crea una preferencia de MercadoPago (Checkout Pro) para una orden.
+//
+// POR QUÉ v5: el `marketplace_fee` (split por autor) hace que MercadoPago OCULTE
+// métodos de pago en Checkout Pro. Verificado 2026-07-25 comparando dos preferencias
+// sobre el MISMO collector: con split ofrece MENOS métodos que sin split. Por eso
+// había compradores que llegaban al checkout y no podían pagar con su tarjeta.
+//
+// Ahora el comprador ELIGE el riel y la fn enruta:
+//   method="card"  → cuenta del AUTOR + marketplace_fee (split automático, probado OK)
+//   method="other" → cuenta PLATAFORMA (VOCESPARAELALMA) SIN split → los 11 métodos
+//                    quedan disponibles (OXXO, SPEI/CLABE, saldo MP y cualquier tarjeta).
+//                    La parte del autor queda registrada en order_items.specialist_cents
+//                    y se le deposita desde Voces (payout manual).
+// El riel "transferencia directa" no pasa por aquí: es vpa_declare_transfer (RPC).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SITE = "https://voces.world";
@@ -21,6 +31,8 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
   const orderId = String(body.order_id || "").trim();
   if (!UUID.test(orderId)) return json({ error: "invalid order" }, 400);
+  // riel: "card" (split del autor) | "other" (plataforma, todos los métodos)
+  const method = String(body.method || "card").trim() === "other" ? "other" : "card";
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { autoRefreshToken: false, persistSession: false } });
@@ -36,9 +48,10 @@ Deno.serve(async (req) => {
   const totalCents = Number(order.total_cents) || 0;
   if (totalCents <= 0) return json({ error: "zero_total" }, 400);
 
-  // MARKETPLACE: si la orden es de UN autor conectado y la app está configurada,
-  // se cobra a la cuenta del AUTOR y Voces retiene su comisión (marketplace_fee).
-  // Si no se cumple, fallback al token de plataforma (comportamiento actual, sin split).
+  // MARKETPLACE (sólo riel "card"): si la orden es de UN autor conectado y la app está
+  // configurada, se cobra a la cuenta del AUTOR y Voces retiene su comisión.
+  // En el riel "other" NUNCA se aplica split — ese es justo el punto: sin split
+  // MercadoPago muestra todos los métodos de pago.
   let payToken = token;
   let split = false, splitFee = 0, splitPct = 0, splitSpecialist = "", authorName = "";
   try {
@@ -46,21 +59,24 @@ Deno.serve(async (req) => {
     if (specialist) {
       const { data: sname } = await admin.from("app_vpa_specialists").select("name").eq("id", specialist).maybeSingle();
       authorName = sname?.name || "";
-      const { data: ready } = await admin.rpc("vpa_mp_marketplace_ready");
-      const { data: authorTok } = await admin.rpc("vpa__mp_author_token", { p_specialist: specialist });
-      if (ready && authorTok) {
-        const { data: pct } = await admin.rpc("vpa_mp_commission_pct", { p_specialist: specialist });
-        payToken = authorTok;
-        splitPct = Number(pct) || 0;
-        splitFee = Math.round(totalCents * splitPct / 100) / 100; // en MXN (unidad, no cents)
-        split = true;
+      if (method === "card") {
+        const { data: ready } = await admin.rpc("vpa_mp_marketplace_ready");
+        const { data: authorTok } = await admin.rpc("vpa__mp_author_token", { p_specialist: specialist });
+        if (ready && authorTok) {
+          const { data: pct } = await admin.rpc("vpa_mp_commission_pct", { p_specialist: specialist });
+          payToken = authorTok;
+          splitPct = Number(pct) || 0;
+          splitFee = Math.round(totalCents * splitPct / 100) / 100; // en MXN (unidad, no cents)
+          split = true;
+          splitSpecialist = String(specialist);
+        }
+      } else {
         splitSpecialist = String(specialist);
       }
     }
   } catch (_) { /* fallback a plataforma */ }
 
   // Una línea = total exacto de la orden (evita descuadres por descuento).
-  const shortId = orderId.slice(0, 8);
   const items = Array.isArray((order as Record<string, unknown>).items) ? (order as Record<string, { title?: string }[]>).items : [];
   const itemTitle = order.is_test
     ? "Voces — pago de prueba"
@@ -81,13 +97,19 @@ Deno.serve(async (req) => {
     external_reference: orderId,
     back_urls: {
       success: `${SITE}/?paid=${orderId}`,
-      failure: `${SITE}/?pay=failed`,
-      pending: `${SITE}/?pay=pending`,
+      failure: `${SITE}/?pay=failed&order=${orderId}`,
+      pending: `${SITE}/?pay=pending&order=${orderId}`,
     },
     auto_return: "approved",
     notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/vpa-mp-webhook`,
     statement_descriptor: "VOCES ALMA",
-    metadata: { order_id: orderId, is_test: !!order.is_test, split, specialist: splitSpecialist },
+    // Sin exclusiones + meses sin intereses habilitados: máxima aceptación de tarjeta.
+    payment_methods: {
+      excluded_payment_methods: [],
+      excluded_payment_types: [],
+      installments: 12,
+    },
+    metadata: { order_id: orderId, is_test: !!order.is_test, split, specialist: splitSpecialist, rail: method },
     ...(split ? { marketplace_fee: splitFee } : {}),
   };
 
@@ -100,9 +122,10 @@ Deno.serve(async (req) => {
   if (!r.ok) return json({ error: "mp_error", detail: pj?.message || pj }, 502);
 
   await admin.rpc("vpa__order_set_preference", { p_order: orderId, p_pref: String(pj.id) });
+  await admin.rpc("vpa__order_set_method", { p_order: orderId, p_method: method });
   const mode = String(payToken).startsWith("TEST-") ? "test" : "live";
   return json({
-    ok: true, mode,
+    ok: true, mode, rail: method,
     preference_id: pj.id,
     init_point: pj.init_point,
     sandbox_init_point: pj.sandbox_init_point,
