@@ -206,7 +206,9 @@
       width:5px;height:5px;border-radius:50%;background:var(--oro)}
   .cal-day.sel{background:var(--oro);border-color:var(--oro);color:#fff}
   .cal-day.sel::after{background:#fff}
-  .cal-list{margin-top:22px;border-top:1px solid var(--linea);padding-top:18px}
+  .cal-tz{margin-top:14px;font-size:12px;color:var(--tinta-60);text-align:center}
+  .cal-ev .hh small{display:block;font-family:var(--sans);font-size:10.5px;color:var(--tinta-60);letter-spacing:.02em;margin-top:2px}
+  .cal-list{margin-top:18px;border-top:1px solid var(--linea);padding-top:18px}
   .cal-list .cal-day-title{font-family:var(--serif);font-size:17px;margin-bottom:12px;text-transform:capitalize}
   .cal-ev{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--linea)}
   .cal-ev:last-child{border-bottom:none}
@@ -638,6 +640,7 @@
         </div>
       </div>
       <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-tz" id="calTz"></div>
       <div class="cal-list" id="calList"></div>
     </div>
   </div>
@@ -790,7 +793,7 @@ const I18N = {
     "cal.sub":"Talleres y conferencias con fecha confirmada. Toca un día para ver todo lo que sucede ese día.",
     "cal.none":"No hay eventos programados este día.",
     "cal.nonemonth":"Todavía no hay eventos con fecha en este mes. Usa las flechas para ver otros meses.",
-    "cal.open":"Ver detalle","cal.free":"Sin costo","cal.online":"En línea",
+    "cal.open":"Ver detalle","cal.free":"Sin costo","cal.online":"En línea","cal.tz":"Horarios en tu hora local",
     "cal.dow":"D,L,M,M,J,V,S","cal.today":"Hoy",
     "hero.eyebrow":"Bienestar emocional, mental y humano","hero.title1":"Voces para el","hero.title2":"Alma","hero.soul":"Voices for the Soul",
     "hero.lead":"Conectamos voces que sanan con almas que buscan transformarse. Encuentra al especialista que tu momento necesita.",
@@ -841,7 +844,7 @@ const I18N = {
     "cal.sub":"Workshops and talks with a confirmed date. Tap a day to see everything happening then.",
     "cal.none":"No events scheduled on this day.",
     "cal.nonemonth":"No dated events this month yet. Use the arrows to browse other months.",
-    "cal.open":"See details","cal.free":"Free","cal.online":"Online",
+    "cal.open":"See details","cal.free":"Free","cal.online":"Online","cal.tz":"Times shown in your local time",
     "cal.dow":"S,M,T,W,T,F,S","cal.today":"Today",
     "hero.eyebrow":"Emotional, mental & human wellbeing","hero.title1":"Voices for the","hero.title2":"Soul","hero.soul":"Voces para el Alma",
     "hero.lead":"We connect voices that heal with souls seeking transformation. Find the specialist your moment calls for.",
@@ -1171,6 +1174,21 @@ function renderWorkshops(){
 let calY=null, calM=null, calSel=null;
 const calKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const calLoc = () => lang==="es" ? "es-MX" : "en-US";
+/* Zona horaria: el sitio es internacional y `event_at` es un instante absoluto,
+   así que cada visitante ve la hora en LA SUYA. Sin decírselo, un evento de las
+   19:00 de CDMX aparece a las 03:00 del día SIGUIENTE en Madrid y nadie entiende
+   por qué. Se etiqueta siempre. */
+function tzZone(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||""; }catch(_){ return ""; } }
+function tzAbbr(d){
+  for(const style of ["shortOffset","short"]){
+    try{
+      const p=new Intl.DateTimeFormat(calLoc(),{timeZoneName:style}).formatToParts(d||new Date());
+      const x=p.find(q=>q.type==="timeZoneName");
+      if(x&&x.value) return x.value;
+    }catch(_){}
+  }
+  return "";
+}
 function calEvents(){
   const evs=[];
   (WORKSHOPS||[]).forEach(w=>{ if(!w.at) return;
@@ -1187,13 +1205,14 @@ function calEvents(){
 function calEvRow(e, withDate){
   const time = e.at.toLocaleTimeString(calLoc(),{hour:"2-digit",minute:"2-digit"});
   const date = withDate ? e.at.toLocaleDateString(calLoc(),{day:"numeric",month:"short"})+" · " : "";
+  const abbr = tzAbbr(e.at);
   const meta = [e.kind,
                 e.by ? ((lang==="es"?"Con ":"With ")+e.by) : "",
                 e.place,
                 e.price!=null ? (e.price>0 ? money(e.price) : t("cal.free")) : ""
                ].filter(Boolean).join(" · ");
   return `<div class="cal-ev">
-      <div class="hh">${esc(date+time)}</div>
+      <div class="hh">${esc(date+time)}${abbr?`<small>${esc(abbr)}</small>`:""}</div>
       <div class="ev-main"><b>${esc(e.title)}</b><div class="ev-meta">${esc(meta)}</div></div>
       <button type="button" class="ev-open" onclick="calOpen('${esc(e.type)}','${esc(String(e.id||""))}')">${t("cal.open")}</button>
     </div>`;
@@ -1227,6 +1246,9 @@ function renderCalendar(){
   grid.innerHTML=html;
   const mh=document.getElementById("calMonth");
   if(mh) mh.textContent = first.toLocaleDateString(calLoc(),{month:"long",year:"numeric"});
+  const tzEl=document.getElementById("calTz");
+  if(tzEl){ const z=tzZone(), a=tzAbbr();
+    tzEl.textContent = t("cal.tz") + (z? " · "+z : "") + (a? " ("+a+")" : ""); }
 
   // Debajo: el día elegido, o —si no hay ninguno— todo lo del mes a la vista.
   const box=document.getElementById("calList"); if(!box) return;
