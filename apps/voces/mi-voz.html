@@ -492,7 +492,7 @@ function editOffer(o){
 
     <div class="field"><label>📅 Fecha y hora del evento <small style="color:#a49a88">— sólo talleres y conferencias</small></label>
       <input id="of_eventAt" type="datetime-local" value="${toLocalInput(o.event_at)}">
-      <div class="hint">Si pones fecha, tu taller o conferencia aparece en el <b>calendario público</b> de la página principal, visible para cualquier visitante. Déjalo vacío en libros, audios o sesiones que se agendan después de contratar.</div></div>
+      <div class="hint">Si pones fecha, tu taller o conferencia aparece en el <b>calendario público</b> de la página principal, visible para cualquier visitante. Déjalo vacío en libros, audios o sesiones que se agendan después de contratar.<br><b>La hora se guarda en tu zona horaria</b> y cada visitante la ve en la suya — si tu público está en otro país, dilo también en la descripción.</div></div>
     <div class="row2">
       <div class="field"><label>Fin del evento <small style="color:#a49a88">— opcional</small></label>
         <input id="of_eventEnd" type="datetime-local" value="${toLocalInput(o.event_ends_at)}"></div>
