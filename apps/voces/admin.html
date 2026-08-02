@@ -426,7 +426,7 @@ const CFG = {
       {k:"status_pill",t:"select",l:"Píldora de estado (cómo se anuncia en la tienda)",
        opts:[["","Automático (Próximamente sólo si está en proceso)"],["disponible","Disponible ahora"],["reserva","Reserva ahora"],["proximamente","Próximamente"],["ninguna","Sin píldora"]]},
       {k:"event_at",t:"datetime",l:"📅 Fecha y hora del evento (talleres y conferencias)",
-       hint:"Sólo con fecha aparece en el <b>calendario público</b> de la página principal. Déjalo vacío en libros, ebooks o sesiones que se agendan después de contratar."},
+       hint:"Sólo con fecha aparece en el <b>calendario público</b> de la página principal. Déjalo vacío en libros, ebooks o sesiones que se agendan después de contratar.<br><b>Se captura en la zona horaria de este navegador</b> y cada visitante la ve en la suya (un evento de las 19:00 de CDMX sale a las 03:00 del día siguiente en Madrid)."},
       {k:"event_ends_at",t:"datetime",l:"Fin del evento (opcional)"},
       {k:"event_location",t:"text",l:"Sede / lugar o enlace del evento (opcional)"},
       {k:"sell_via_voces",t:"chk",l:"Se vende a través de Voces"},
