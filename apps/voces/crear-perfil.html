@@ -57,6 +57,18 @@
 
   .card{background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:36px}
   .card h2{font-size:26px;margin-bottom:6px}
+  /* Carta de presentación (pantalla intermedia) */
+  .carta h2{font-size:25px;margin-bottom:18px}
+  .carta p{font-size:15px;line-height:1.72;color:var(--tinta);margin-bottom:16px}
+  .carta p.lead{font-size:16px}
+  .carta h3{font-family:var(--serif);font-size:18px;margin:26px 0 12px}
+  .carta ul{list-style:none;margin:0 0 8px;padding:0}
+  .carta ul li{position:relative;padding-left:26px;margin-bottom:16px;font-size:14.5px;line-height:1.7;color:var(--tinta-60)}
+  .carta ul li::before{content:"";position:absolute;left:4px;top:9px;width:8px;height:8px;border-radius:50%;
+      background:var(--oro);box-shadow:0 0 0 4px rgba(203,161,90,.18)}
+  .carta ul li b{color:var(--tinta)}
+  .carta .close{border-top:1px solid var(--linea);margin-top:22px;padding-top:20px;font-size:15px;line-height:1.72}
+  .carta .close b{color:var(--oro-oscuro,#8a6a25)}
   .card .sub{color:var(--tinta-60);font-size:14.5px;margin-bottom:26px}
   .field{margin-bottom:18px}
   .field label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
@@ -178,7 +190,12 @@
       </div>
       <div class="field" id="passField"><label><span data-i18n="s1.pass">Contraseña</span> <span class="hint-req">*</span> <small data-i18n="s1.passEx">— mín. 8 caracteres; la usarás para entrar a tu panel</small></label><input id="f_pass" type="password" minlength="8" autocomplete="new-password"></div>
       <div class="row2">
+        <div class="field"><label><span data-i18n="s1.country">País donde vives</span> <span class="hint-req">*</span>
+          <small data-i18n="s1.countryEx">— con esto te ofrecemos la forma de cobrar más rápida para ti</small></label>
+          <select id="f_country"></select></div>
         <div class="field"><label data-i18n="s1.phone">Teléfono / WhatsApp</label><input id="f_phone" type="tel" maxlength="40" autocomplete="tel"></div>
+      </div>
+      <div class="row2">
         <div class="field"><label data-i18n="s1.langs">Idiomas en los que atiendes</label>
           <div class="chkgroup" style="padding-top:10px">
             <label class="chk"><input type="checkbox" data-grp="langs" value="es" checked> Español</label>
@@ -194,6 +211,18 @@
         </div>
       </div>
       <input class="hp" type="text" id="f_company" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </section>
+
+    <!-- CARTA DE PRESENTACIÓN — pantalla intermedia entre el paso 1 y el resto.
+         No es un paso numerado: sólo la ve quien ya empezó el registro de verdad,
+         para que las condiciones y beneficios no queden a la vista de cualquiera
+         que entre por curiosidad. -->
+    <section class="card carta" id="carta" hidden>
+      <div id="cartaBody"></div>
+      <div class="wizard-nav" style="margin-top:26px">
+        <button class="btn btn-ghost" onclick="cartaBack()" data-i18n="nav.back">← Atrás</button>
+        <button class="btn btn-primary" onclick="cartaNext()" data-i18n="carta.next">Siguiente →</button>
+      </div>
     </section>
 
     <!-- PASO 2: TU FOTOGRAFÍA -->
@@ -244,6 +273,9 @@
         <div class="field"><label data-i18n="s3.web">Sitio web</label><input id="f_website" type="url" maxlength="300" placeholder="https://…"></div>
         <div class="field"><label>Instagram</label><input id="f_ig" type="text" maxlength="120" placeholder="@tucuenta"></div>
       </div>
+      <div class="field"><label><span data-i18n="s3.linkedin">LinkedIn</span>
+          <small data-i18n="s3.linkedinEx">— enlace a tu perfil; nos ayuda a validar tu trayectoria profesional</small></label>
+        <input id="f_linkedin" type="url" maxlength="300" placeholder="https://www.linkedin.com/in/…"></div>
     </section>
 
     <!-- PASO 4: TU OFERTA -->
@@ -260,6 +292,9 @@
       <h2 data-i18n="s5.t">Revisa y envía</h2>
       <p class="sub" data-i18n="s5.sub">Así se ve tu información. Al enviarla, nuestro equipo la revisará y te contactará al correo que dejaste.</p>
       <div id="review"></div>
+      <!-- Comisión: leyenda + aceptación explícita ANTES de pasar al cobro. -->
+      <div id="commBox" style="margin-top:22px;border:1px solid #d9b25a;background:rgba(203,161,90,.10);
+           border-radius:14px;padding:15px 17px;color:#5c4a1e;font-size:14px;line-height:1.62"></div>
       <label class="chk" style="margin-top:20px;align-items:flex-start">
         <input type="checkbox" id="f_consent" style="margin-top:4px;flex:none">
         <span style="font-size:13.5px;color:var(--tinta-60)" data-i18n="s5.consent">Acepto que Voces para el Alma revise y publique esta información en el directorio, y que me contacte sobre mi perfil y mi oferta. Mi correo y teléfono no se muestran públicamente.</span>
@@ -297,7 +332,7 @@ const I18N = {
     "intro.sub":"Crea tu perfil y tu cuenta, comparte tu misión y ofrece tus libros, sesiones, retiros y conferencias. Al terminar eliges tu membresía y, en cuanto se activa el pago, tu perfil se publica en el directorio.",
     "st.1":"Quién eres","st.2":"Tu foto","st.3":"Tu voz","st.4":"Tu oferta","st.5":"Cuenta y pago",
     "s1.t":"Quién eres","s1.sub":"Lo esencial para conocerte y crear tu cuenta. Tu correo y teléfono no se publican: se comparten sólo con quien pide tu contacto dentro de la plataforma.",
-    "s1.name":"Nombre completo","s1.email":"Correo electrónico","s1.pass":"Contraseña","s1.passEx":"— mín. 8 caracteres; la usarás para entrar a tu panel","s1.phone":"Teléfono / WhatsApp","s1.langs":"Idiomas en los que atiendes","s1.mod":"¿Cómo trabajas?",
+    "s1.name":"Nombre completo","s1.email":"Correo electrónico","s1.pass":"Contraseña","s1.passEx":"— mín. 8 caracteres; la usarás para entrar a tu panel","s1.phone":"Teléfono / WhatsApp","s1.country":"País donde vives","s1.countryEx":"— con esto te ofrecemos la forma de cobrar más rápida para ti","s1.langs":"Idiomas en los que atiendes","s1.mod":"¿Cómo trabajas?",
     "mod.online":"En línea","mod.presencial":"Presencial","mod.hibrido":"Híbrido",
     "s2.t":"Tu fotografía","s2.sub":"Tu foto es lo primero que verá quien busca ayuda. Sube una imagen tuya real — nada de logos ni fotos de archivo.",
     "s2.drop1":"Toca para subir tu foto","s2.drop2":"o arrástrala aquí · JPG, PNG o WebP · máx 5 MB",
@@ -313,8 +348,10 @@ const I18N = {
     "s3.what":"¿Qué haces?","s3.whatEx":"— tu trabajo, tu enfoque, a quién ayudas",
     "s3.mission":"¿Cuál es tu misión?","s3.missionEx":"— qué te mueve, qué transformación buscas en las personas",
     "s3.certs":"Certificaciones y formación","s3.certsEx":"— títulos, certificaciones, años de experiencia","s3.web":"Sitio web",
+    "s3.linkedin":"LinkedIn","s3.linkedinEx":"— enlace a tu perfil; nos ayuda a validar tu trayectoria profesional",
     "s4.t":"Tu oferta","s4.sub":"Agrega todo lo que ofreces: libros, ebooks, audiolibros, cursos, coaching, sesiones individuales o grupales, retiros, conferencias. Si ya lo vendes en Amazon u otra tienda, comparte el enlace; si quieres venderlo a través de Voces —o tienes una obra a medio camino y quieres apoyo para terminarla— márcalo y lo vemos contigo.",
     "s4.add":"Agrega lo que ofreces tocando un tipo:","s4.title":"Título","s4.desc":"Descripción breve","s4.price":"Precio (MXN, opcional)",
+    "s4.eventAt":"Fecha y hora del evento","s4.eventPlace":"Sede / lugar o enlace","s4.eventNote":"Si pones fecha, tu taller o conferencia aparece en el calendario público de la página principal, visible para cualquier visitante.",
     "s4.link":"Enlace donde se vende hoy","s4.linkEx":"— Amazon, tu sitio, otra tienda (opcional)",
     "s4.via":"Quiero venderlo a través de Voces","s4.viaEx":"la plataforma se encarga del cobro y la entrega",
     "s4.wip":"Está en proceso — quiero apoyo de Voces para terminarlo","s4.wipEx":"edición, publicación, producción; definimos el plan contigo",
@@ -323,23 +360,27 @@ const I18N = {
     "s5.t":"Revisa y continúa","s5.sub":"Así se ve tu información. Al crear tu cuenta pasas a elegir tu membresía y pagar; tu perfil se publica en cuanto el pago se confirma.",
     "s5.consent":"Acepto que Voces para el Alma publique esta información en el directorio al activarse mi membresía, y que me contacte sobre mi perfil y mi oferta. Mi correo y teléfono no se muestran públicamente.",
     "rev.contact":"Contacto (privado)","rev.voice":"Tu voz","rev.mission":"Misión","rev.certs":"Certificaciones","rev.web":"Web y redes","rev.offers":"Tu oferta","rev.noPhoto":"Sin foto — la puedes enviar después","rev.noOffers":"Sin ofertas por ahora",
-    "nav.back":"← Atrás","nav.next":"Continuar →","nav.send":"Crear cuenta y continuar al pago →","nav.pay":"Continuar al pago →",
+    "nav.back":"← Atrás","nav.next":"Continuar →","carta.next":"Siguiente →","nav.send":"Crear cuenta y continuar al pago →","nav.pay":"Continuar al pago →",
     "ok.t":"Tu voz está en camino","ok.sub":"Recibimos tu perfil. Nuestro equipo lo revisará con cuidado y te contactará por correo cuando esté aprobado y publicado en el directorio.","ok.cta":"Volver al inicio",
     "err.name":"Escribe tu nombre completo.","err.email":"Escribe un correo válido.","err.pass":"Crea una contraseña de al menos 8 caracteres.","err.cat":"Elige tu especialidad.","err.what":"Cuéntanos qué haces — es lo más importante de tu perfil.",
-    "err.consent":"Marca la casilla de consentimiento para continuar.","err.photoType":"Formato no válido. Usa JPG, PNG o WebP.","err.photoSize":"La imagen pasa de 5 MB incluso optimizada. Prueba con otra.",
+    "err.consent":"Marca la casilla de consentimiento para continuar.","err.comm":"Marca la casilla de aceptación de la comisión para continuar.","err.photoType":"Formato no válido. Usa JPG, PNG o WebP.","err.photoSize":"La imagen pasa de 5 MB incluso optimizada. Prueba con otra.",
     "err.send":"No se pudo crear tu cuenta. Revisa tu conexión e intenta de nuevo.","err.rate":"Espera unos minutos antes de intentar de nuevo.","err.emailExists":"Ese correo ya tiene cuenta. Escribe tu contraseña correcta para entrar y continuar.",
     "sending":"Creando tu cuenta…","redirecting":"¡Listo! Vamos al pago…","photoReady":"Foto lista ✓",
     "s2.badgeT":"Así se verá tu tarjeta Voces","s2.badgeNote":"Se genera con tu foto, tu nombre y tus descriptores (paso siguiente). El equipo de Voces la afina y publica al aprobar tu perfil.",
     "s3.desc":"Descriptores de tu tarjeta","s3.descEx":"— hasta 7 palabras/frases cortas que aparecen en tu badge (ej. Inspiradora, Líder, Conexión)","s3.descSuggest":"Sugerir",
-    "k.libro":"Libro","k.ebook":"Ebook","k.audiolibro":"Audiolibro","k.audio":"Audio","k.curso":"Curso","k.coaching":"Coaching",
-    "k.sesion_individual":"Sesión individual","k.sesion_grupal":"Sesión grupal","k.retiro":"Retiro","k.conferencia":"Conferencia","k.otro":"Otro"
+    "k.libro":"Libro","k.ebook":"Ebook","k.audiolibro":"Audiolibro","k.audio":"Audio","k.test":"Test","k.curso":"Curso","k.coaching":"Coaching",
+    "k.sesion_individual":"Sesión individual","k.sesion_grupal":"Sesión grupal","k.retiro":"Retiro","k.conferencia":"Conferencia","k.otro":"Otro",
+    "s4.linkOff":"— función no disponible por ahora",
+    "s4.book":"Enlace de agenda (Calendly)","s4.bookReq":"El enlace de agenda es OBLIGATORIO para sesiones individuales y grupales. Puedes guardar el resto, pero tu oferta no se publicará hasta que lo agregues.",
+    "s4.bookNote":"Tu link no será compartido, para evitar reservas sin pago por este medio. El usuario verá directamente tu calendario y elegirá la fecha. Voces te enviará un correo con la confirmación de la reserva, el nombre del usuario y la confirmación de pago.",
+    "s4.pill":"Píldora de estado","s4.pillAuto":"Automático","s4.pillDisp":"Disponible ahora","s4.pillRes":"Reserva ahora","s4.pillProx":"Próximamente","s4.pillNo":"Sin píldora"
   },
   en:{
     "intro.eyebrow":"Join as a specialist","intro.t1":"Your voice has a","intro.t2":"place here",
     "intro.sub":"Create your profile and your account, share your mission and offer your books, sessions, retreats and talks. When you finish you choose your membership and, once payment is active, your profile is published in the directory.",
     "st.1":"Who you are","st.2":"Your photo","st.3":"Your voice","st.4":"Your offer","st.5":"Account & payment",
     "s1.t":"Who you are","s1.sub":"The essentials to know you and create your account. Your email and phone are never published: they are shared only with people who request your contact inside the platform.",
-    "s1.name":"Full name","s1.email":"Email","s1.pass":"Password","s1.passEx":"— min. 8 characters; you'll use it to sign in to your dashboard","s1.phone":"Phone / WhatsApp","s1.langs":"Languages you work in","s1.mod":"How do you work?",
+    "s1.name":"Full name","s1.email":"Email","s1.pass":"Password","s1.passEx":"— min. 8 characters; you'll use it to sign in to your dashboard","s1.phone":"Phone / WhatsApp","s1.country":"Country you live in","s1.countryEx":"— so we can offer you the fastest way to get paid","s1.langs":"Languages you work in","s1.mod":"How do you work?",
     "mod.online":"Online","mod.presencial":"In person","mod.hibrido":"Hybrid",
     "s2.t":"Your photo","s2.sub":"Your photo is the first thing a help-seeker sees. Upload a real photo of yourself — no logos or stock images.",
     "s2.drop1":"Tap to upload your photo","s2.drop2":"or drag it here · JPG, PNG or WebP · max 5 MB",
@@ -355,8 +396,10 @@ const I18N = {
     "s3.what":"What do you do?","s3.whatEx":"— your work, your approach, who you help",
     "s3.mission":"What is your mission?","s3.missionEx":"— what moves you, the transformation you seek in people",
     "s3.certs":"Credentials & training","s3.certsEx":"— degrees, certifications, years of experience","s3.web":"Website",
+    "s3.linkedin":"LinkedIn","s3.linkedinEx":"— link to your profile; it helps us verify your professional track record",
     "s4.t":"Your offer","s4.sub":"Add everything you offer: books, ebooks, audiobooks, courses, coaching, individual or group sessions, retreats, speaking. If it's already on Amazon or another store, share the link; if you'd like to sell it through Voces — or you have a half-finished work and want support to complete it — check the box and we'll work it out with you.",
     "s4.add":"Add what you offer by tapping a type:","s4.title":"Title","s4.desc":"Short description","s4.price":"Price (MXN, optional)",
+    "s4.eventAt":"Event date & time","s4.eventPlace":"Venue / place or link","s4.eventNote":"If you set a date, your workshop or talk shows up on the public calendar of the home page, visible to every visitor.",
     "s4.link":"Link where it's sold today","s4.linkEx":"— Amazon, your site, another store (optional)",
     "s4.via":"I want to sell it through Voces","s4.viaEx":"the platform handles checkout and delivery",
     "s4.wip":"It's a work in progress — I'd like Voces' support to finish it","s4.wipEx":"editing, publishing, production; we define the plan with you",
@@ -365,16 +408,20 @@ const I18N = {
     "s5.t":"Review & continue","s5.sub":"This is how your information looks. When you create your account you move on to choose your membership and pay; your profile is published as soon as the payment is confirmed.",
     "s5.consent":"I agree that Voces para el Alma may publish this information in the directory once my membership is active, and contact me about my profile and offer. My email and phone are never shown publicly.",
     "rev.contact":"Contact (private)","rev.voice":"Your voice","rev.mission":"Mission","rev.certs":"Credentials","rev.web":"Web & socials","rev.offers":"Your offer","rev.noPhoto":"No photo — you can send one later","rev.noOffers":"No offers yet",
-    "nav.back":"← Back","nav.next":"Continue →","nav.send":"Create account & continue to payment →","nav.pay":"Continue to payment →",
+    "nav.back":"← Back","nav.next":"Continue →","carta.next":"Next →","nav.send":"Create account & continue to payment →","nav.pay":"Continue to payment →",
     "ok.t":"Your voice is on its way","ok.sub":"We received your profile. Our team will review it carefully and contact you by email once it's approved and published in the directory.","ok.cta":"Back to home",
     "err.name":"Please write your full name.","err.email":"Please write a valid email.","err.pass":"Create a password with at least 8 characters.","err.cat":"Choose your specialty.","err.what":"Tell us what you do — it's the heart of your profile.",
-    "err.consent":"Check the consent box to continue.","err.photoType":"Invalid format. Use JPG, PNG or WebP.","err.photoSize":"The image exceeds 5 MB even optimized. Try another one.",
+    "err.consent":"Check the consent box to continue.","err.comm":"Check the commission acceptance box to continue.","err.photoType":"Invalid format. Use JPG, PNG or WebP.","err.photoSize":"The image exceeds 5 MB even optimized. Try another one.",
     "err.send":"Could not create your account. Check your connection and try again.","err.rate":"Please wait a few minutes before trying again.","err.emailExists":"That email already has an account. Enter your correct password to sign in and continue.",
     "sending":"Creating your account…","redirecting":"Done! Taking you to payment…","photoReady":"Photo ready ✓",
     "s2.badgeT":"This is how your Voces card will look","s2.badgeNote":"Generated from your photo, name and descriptors (next step). The Voces team refines and publishes it when your profile is approved.",
     "s3.desc":"Your card descriptors","s3.descEx":"— up to 7 short words/phrases shown on your badge (e.g. Inspiring, Leader, Connection)","s3.descSuggest":"Suggest",
-    "k.libro":"Book","k.ebook":"Ebook","k.audiolibro":"Audiobook","k.audio":"Audio","k.curso":"Course","k.coaching":"Coaching",
-    "k.sesion_individual":"1-on-1 session","k.sesion_grupal":"Group session","k.retiro":"Retreat","k.conferencia":"Speaking","k.otro":"Other"
+    "k.libro":"Book","k.ebook":"Ebook","k.audiolibro":"Audiobook","k.audio":"Audio","k.test":"Test","k.curso":"Course","k.coaching":"Coaching",
+    "k.sesion_individual":"1-on-1 session","k.sesion_grupal":"Group session","k.retiro":"Retreat","k.conferencia":"Speaking","k.otro":"Other",
+    "s4.linkOff":"— not available for now",
+    "s4.book":"Booking link (Calendly)","s4.bookReq":"The booking link is REQUIRED for 1-on-1 and group sessions. You can save everything else, but your offering will not be published until you add it.",
+    "s4.bookNote":"Your link is never shared, so nobody can book without paying. The person sees your calendar inside Voces and picks a date. Voces emails you the booking confirmation, the buyer name and the payment confirmation.",
+    "s4.pill":"Status pill","s4.pillAuto":"Automatic","s4.pillDisp":"Available now","s4.pillRes":"Book now","s4.pillProx":"Coming soon","s4.pillNo":"No pill"
   }
 };
 let lang="es";
@@ -384,7 +431,8 @@ function setLang(l){
   document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active",b.dataset.lang===l));
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.dataset.i18n); });
   renderSteps(); renderKinds(); renderOffers(); updateNavBtns();
-  if(step===5) renderReview();
+  const ca=$("carta"); if(ca && !ca.hidden) renderCarta();
+  if(step===5){ renderReview(); renderCommission(); }
 }
 
 const $=id=>document.getElementById(id);
@@ -401,12 +449,132 @@ async function loadCats(){
   }catch(_){ CATS=[]; }
   fillCats();
 }
+/* País de la voz. Define qué formas de cobro tienen sentido para ella:
+   sin esto le ofrecíamos CLABE a alguien en Argentina y PayPal (que tarda días)
+   a todo el mundo. La banderita se arma con el código, sin imágenes. */
+const COUNTRIES=[
+ ["MX","México"],["AR","Argentina"],["CO","Colombia"],["CL","Chile"],["PE","Perú"],
+ ["ES","España"],["US","Estados Unidos"],["UY","Uruguay"],["EC","Ecuador"],["BO","Bolivia"],
+ ["PY","Paraguay"],["VE","Venezuela"],["BR","Brasil"],["CR","Costa Rica"],["PA","Panamá"],
+ ["GT","Guatemala"],["SV","El Salvador"],["HN","Honduras"],["NI","Nicaragua"],
+ ["DO","República Dominicana"],["CU","Cuba"],["PR","Puerto Rico"],["CA","Canadá"],
+ ["GB","Reino Unido"],["FR","Francia"],["DE","Alemania"],["IT","Italia"],["PT","Portugal"],
+ ["NL","Países Bajos"],["BE","Bélgica"],["CH","Suiza"],["AT","Austria"],["IE","Irlanda"],
+ ["SE","Suecia"],["NO","Noruega"],["DK","Dinamarca"],["PL","Polonia"],["GR","Grecia"],
+ ["AU","Australia"],["NZ","Nueva Zelanda"],["JP","Japón"],["IN","India"],["ZA","Sudáfrica"],
+ ["AE","Emiratos Árabes Unidos"],["IL","Israel"],["SG","Singapur"],["MA","Marruecos"],
+ ["TR","Turquía"],["PH","Filipinas"],["ID","Indonesia"]
+];
+function flagOf(c){
+  if(!c || c.length!==2) return "🌍";
+  try{ return String.fromCodePoint(...[...c.toUpperCase()].map(ch=>0x1F1E6+ch.charCodeAt(0)-65)); }
+  catch(_){ return "🌍"; }
+}
+function fillCountries(){
+  const sel=$("f_country"); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=COUNTRIES.map(([c,n])=>`<option value="${c}">${flagOf(c)} ${esc(n)}</option>`).join("");
+  // Sugerimos el país del navegador; la voz lo puede cambiar.
+  let guess="MX";
+  try{ const r=(new Intl.Locale(navigator.language).region)||(navigator.language.split("-")[1]||"").toUpperCase();
+       if(r && COUNTRIES.some(([c])=>c===r)) guess=r; }catch(_){}
+  sel.value = cur || guess;
+}
+
 function fillCats(){
   const sel=$("f_category"); const cur=sel.value;
   sel.innerHTML = `<option value="">${lang==="es"?"— elige una —":"— choose one —"}</option>` +
     CATS.map(c=>`<option value="${esc(c.id)}">${esc(lang==="es"?c.name_es:c.name_en)}</option>`).join("");
   if(cur) sel.value=cur;
 }
+
+/* ============ COMISIÓN ============
+   Se muestra en la última pantalla, antes de pasar al cobro, con una casilla
+   obligatoria. Al crear el perfil queda registrado quién aceptó, cuándo y bajo
+   qué porcentaje (app_vpa_commission_terms). */
+let COMM_PCT=20;
+async function loadCommissionPct(){
+  try{
+    const { data } = await sb.from("app_vpa_settings_public").select("value").eq("key","default_commission_pct").maybeSingle();
+    const n=Number(data&&data.value);
+    if(n>=0&&n<=100) COMM_PCT=n;
+  }catch(_){}
+}
+function commissionText(pct){
+  return lang==="es"
+    ? `Por cada venta que realices a través de Voces, la plataforma retiene una comisión del <b>${pct}%</b>. `
+      + `Es la misma lógica que aplica en cualquier plataforma: a cambio, recibes exposición internacional, herramientas de gestión y cobro, `
+      + `y un espacio donde tu trabajo puede crecer sin límite de fronteras. No te estamos dando un lugar donde publicar, `
+      + `te estamos proponiendo un negocio en conjunto, con depósitos prácticamente inmediatos según la forma de cobro que hayas configurado.`
+    : `For every sale you make through Voces, the platform keeps a <b>${pct}%</b> commission. `
+      + `It is the same logic as any platform: in return you get international exposure, management and payment tools, `
+      + `and a space where your work can grow with no borders. We are not giving you somewhere to publish, `
+      + `we are proposing a business together, with practically immediate deposits according to the payout method you set up.`;
+}
+function renderCommission(){
+  const box=$("commBox"); if(!box) return;
+  const prev=(document.getElementById("f_commOk")||{}).checked;
+  box.innerHTML = commissionText(COMM_PCT)
+    + `<label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;font-weight:600">
+         <input type="checkbox" id="f_commOk" style="margin-top:3px;flex:none">
+         <span>${lang==="es"
+            ? `Entiendo y acepto la comisión del ${COMM_PCT}% aplicable a mi cuenta.`
+            : `I understand and accept the ${COMM_PCT}% commission that applies to my account.`}</span>
+       </label>`;
+  if(prev){ const c=document.getElementById("f_commOk"); if(c) c.checked=true; }
+}
+
+/* ============ CARTA DE PRESENTACIÓN ============
+   Se muestra DESPUÉS de "Continuar" en el paso 1 y ANTES del resto del
+   cuestionario: quien sólo entra por curiosidad nunca ve las condiciones
+   ni los beneficios pensados para especialistas. */
+let cartaSeen=false;
+const CARTA={
+  es:{
+    hi:n=>`Estimado/a ${n||"especialista"},`,
+    lead:`Bienvenido/a a <b>Voces para el Alma / Voices for the Soul</b>, la plataforma internacional de referencia que conecta, de manera confiable, segura y eficiente, a personas, empresas e instituciones con profesionales y especialistas de excelencia.`,
+    p2:`No te estamos invitando a sumarte a un directorio más, te estamos invitando a formar parte de un <b>ecosistema global</b> donde el talento, el conocimiento y la experiencia convergen para generar resultados extraordinarios, y a posicionar tu voz, tu marca personal y tu trabajo ante una audiencia internacional que hoy no tiene fronteras.`,
+    h:`Al unirte a Voces, tendrás acceso a:`,
+    b1:`<b>Exposición internacional integral.</b> No solo tu perfil y tu marca personal ganan visibilidad ante personas, empresas y organizaciones de distintos países, cada producto o servicio que ofrezcas se posiciona con el mismo alcance: sesiones uno a uno, material digital descargable, conferencias presenciales o digitales, y talleres o cursos. Además, cada producto cuenta con su propio link para compartir, y tu perfil se convierte así en tu <b>tienda personal</b>, por fin todo tu trabajo reunido en un solo lugar. El material que subas debe ser de tu autoría y coherente con la temática de tu perfil, para mantener la calidad y confiabilidad que distingue a Voces.`,
+    b2:`<b>Una plataforma de alto nivel, sin competencia interna.</b> Cada especialista pasa por un proceso de verificación antes de integrarse a la comunidad, lo que garantiza que compartes espacio únicamente con profesionales de excelencia. La visibilidad dentro de la plataforma depende del tipo de membresía que contrates (Básica o Pro), y dentro de tu nivel, apareces en las búsquedas que se hacen en internet exactamente ante el perfil de mercado correcto: si un empresario busca una conferencia de alto nivel, encuentra tu propuesta, si un estudiante busca acompañamiento en un momento difícil, encuentra la tuya. Esto sin depender de un algoritmo que favorece a unos sobre otros dentro de un mismo nivel de membresía, y sin importar el precio de tus productos o servicios, desde opciones más accesibles hasta propuestas de alto valor (<i>high ticket</i>), porque cada uno llega directamente a quien realmente lo está buscando.`,
+    b3:`<b>Infraestructura lista para gestionar y monetizar tu conocimiento.</b> Pagos internacionales, agenda automatizada y un calendario de tus talleres y cursos visible para quienes quieran inscribirse, con registro y pago integrados directamente en la plataforma, sin que tengas que ocuparte de la logística administrativa. Además, tus eventos con fecha ya definida aparecen en el <b>calendario público de la página principal</b>, visible para cualquier visitante: puedes anunciar un gran evento con meses de anticipación, promocionarlo con descuentos por <i>early bird</i>, y saber que ya está agendado y visible desde el primer día. Así, tú te enfocas únicamente en lo que mejor sabes hacer: transformar vidas.`,
+    close:`Más que conectar personas con profesionales, en Voces gestionamos relaciones de confianza que convierten cada necesidad en una solución, y cada encuentro en una oportunidad de crecimiento, para quien lo recibe, y para ti, como el liderazgo detrás de esa transformación.`,
+    cta:`<b>Continúa para conocer los siguientes pasos y poder evaluar tu perfil.</b>`
+  },
+  en:{
+    hi:n=>`Dear ${n||"specialist"},`,
+    lead:`Welcome to <b>Voces para el Alma / Voices for the Soul</b>, the leading international platform that connects people, companies and institutions with outstanding professionals and specialists — reliably, safely and efficiently.`,
+    p2:`We are not inviting you to join yet another directory. We are inviting you into a <b>global ecosystem</b> where talent, knowledge and experience converge to create extraordinary results, and to position your voice, your personal brand and your work before an international audience with no borders.`,
+    h:`By joining Voces, you get:`,
+    b1:`<b>Complete international exposure.</b> It is not only your profile and personal brand that gain visibility before people, companies and organizations across countries — every product or service you offer is positioned with the same reach: one-to-one sessions, downloadable digital material, in-person or online talks, workshops and courses. Each product also gets its own shareable link, so your profile becomes your <b>personal store</b>: at last, all of your work in one place. What you upload must be your own and consistent with your profile's theme, to keep the quality and trust that set Voces apart.`,
+    b2:`<b>A high-level platform, with no internal competition.</b> Every specialist goes through a verification process before joining the community, so you share the space only with outstanding professionals. Visibility inside the platform depends on the membership you choose (Basic or Pro) and, within your tier, you show up in web searches in front of exactly the right audience: if a business leader is looking for a high-level talk, they find your proposal; if a student is looking for support through a hard time, they find theirs. No algorithm favours some over others within the same tier, and the price of your products makes no difference — from the most accessible options to <i>high-ticket</i> proposals — because each one reaches whoever is genuinely looking for it.`,
+    b3:`<b>Infrastructure ready to manage and monetize your knowledge.</b> International payments, automated booking, and a calendar of your workshops and courses visible to anyone who wants to enrol, with registration and payment built into the platform, so you never deal with the admin logistics. Your dated events also appear on the <b>public calendar on the home page</b>, visible to every visitor: you can announce a major event months ahead, promote it with <i>early bird</i> discounts, and know it is booked and visible from day one. That way you focus only on what you do best: transforming lives.`,
+    close:`More than connecting people with professionals, at Voces we cultivate relationships of trust that turn every need into a solution and every encounter into an opportunity to grow — for whoever receives it, and for you, as the leadership behind that transformation.`,
+    cta:`<b>Continue to see the next steps and have your profile evaluated.</b>`
+  }
+};
+function renderCarta(){
+  const c=CARTA[lang]||CARTA.es;
+  const name=($("f_name").value||"").trim().split(/\s+/)[0]||"";
+  $("cartaBody").innerHTML=`
+    <h2>${esc(c.hi(name))}</h2>
+    <p class="lead">${c.lead}</p>
+    <p>${c.p2}</p>
+    <h3>${esc(c.h)}</h3>
+    <ul><li>${c.b1}</li><li>${c.b2}</li><li>${c.b3}</li></ul>
+    <div class="close"><p>${c.close}</p><p style="margin-bottom:0">${c.cta}</p></div>`;
+}
+function mainNav(){ return $("backBtn").closest(".wizard-nav"); }
+function showCarta(){
+  document.querySelectorAll("[data-step]").forEach(s=>s.hidden=true);
+  const nv=mainNav(); if(nv) nv.hidden=true;
+  $("stepErr").textContent="";
+  $("carta").hidden=false;
+  renderCarta();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function cartaNext(){ cartaSeen=true; $("carta").hidden=true; step=2; showStep(); saveDraft(); }
+function cartaBack(){ $("carta").hidden=true; step=1; showStep(); }
 
 /* ============ WIZARD ============ */
 let step=1; const LAST=5;
@@ -415,11 +583,13 @@ function renderSteps(){
     `<div class="step-dot ${n===step?'active':''} ${n<step?'done':''}"><span class="n">${n<step?'✓':n}</span><span class="lbl">${t('st.'+n)}</span></div>`).join("");
 }
 function showStep(){
+  $("carta").hidden=true;
+  const nv=mainNav(); if(nv) nv.hidden=false;
   document.querySelectorAll("[data-step]").forEach(s=>s.hidden = Number(s.dataset.step)!==step);
   $("stepErr").textContent="";
   renderSteps(); updateNavBtns();
   if(step===3) fillCats();
-  if(step===5) renderReview();
+  if(step===5){ renderReview(); renderCommission(); }
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function updateNavBtns(){
@@ -438,12 +608,15 @@ function validateStep(){
     if(!$("f_what").value.trim()) return t("err.what");
   }
   if(step===5 && !$("f_consent").checked) return t("err.consent");
+  if(step===5){ const c=document.getElementById("f_commOk"); if(!c||!c.checked) return t("err.comm"); }
   return null;
 }
 async function nav(dir){
   if(dir>0){
     const err=validateStep();
     if(err){ $("stepErr").textContent=err; return; }
+    // Paso 1 → carta de presentación → resto del cuestionario.
+    if(step===1 && !cartaSeen){ showCarta(); return; }
     if(step===LAST){ await submit(); return; }
     step++;
   } else if(step>1){ step--; }
@@ -481,7 +654,7 @@ async function handlePhoto(file){
 }
 
 /* ============ OFFERINGS ============ */
-const KINDS=["libro","ebook","audiolibro","audio","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
+const KINDS=["libro","ebook","audiolibro","audio","test","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
 const KICON={
   libro:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22H20v-2.5"/>',
   ebook:'<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 7h6M9 11h6"/>',
@@ -493,9 +666,16 @@ const KICON={
   sesion_grupal:'<circle cx="8" cy="8.5" r="2.8"/><circle cx="16" cy="8.5" r="2.8"/><path d="M2.5 19.5c0-3 2.5-5.4 5.5-5.4s5.5 2.4 5.5 5.4M13 15.2a5.5 5.5 0 0 1 8.5 4.3"/>',
   retiro:'<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
   conferencia:'<path d="M12 2a4 4 0 0 0-4 4v5a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4Z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/>',
+  test:'<path d="M9 3h6l1 3H8Z"/><rect x="4" y="6" width="16" height="15" rx="2"/><path d="m8.5 12.5 2 2 4-4.5"/>',
   otro:'<circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/>'
 };
 let OFFERS=[];
+// Sesión individual / grupal: siempre se agenda y siempre pasa por el pago.
+const SESSION_KINDS=["sesion_individual","sesion_grupal"];
+// Lo que puede tener una fecha fija y por lo tanto entrar al calendario público.
+const EVENT_KINDS=["conferencia","curso","retiro","sesion_grupal"];
+const PILL_OPTS=[["","s4.pillAuto"],["disponible","s4.pillDisp"],["reserva","s4.pillRes"],
+  ["proximamente","s4.pillProx"],["ninguna","s4.pillNo"]];
 function renderKinds(){
   $("kindGrid").innerHTML = KINDS.map(k=>
     `<button type="button" class="kind" onclick="addOffer('${k}')">
@@ -505,7 +685,7 @@ function renderKinds(){
 const HELP_TYPES=["maquetacion","publicacion","registro_autor","estructura_taller","otro"];
 function addOffer(kind){
   if(OFFERS.length>=20) return;
-  OFFERS.push({kind,title:"",description:"",price_mxn:"",external_url:"",sell_via_voces:false,in_progress:false,wants_help:false,help_types:[],help_other:""});
+  OFFERS.push({kind,title:"",description:"",price_mxn:"",external_url:"",booking_url:"",status_pill:"",event_at:"",event_location:"",sell_via_voces:false,in_progress:false,wants_help:false,help_types:[],help_other:""});
   renderOffers();
   const cards=document.querySelectorAll(".offer-card"); const last=cards[cards.length-1];
   if(last){ last.scrollIntoView({behavior:"smooth",block:"center"}); const inp=last.querySelector("input"); if(inp) inp.focus(); }
@@ -537,8 +717,23 @@ function renderOffers(){
         <div class="field"><label>${esc(t("s4.price"))}</label><input type="number" min="0" max="9999999" value="${esc(o.price_mxn)}" oninput="upOffer(${i},'price_mxn',this)"></div>
       </div>
       <div class="field"><label>${esc(t("s4.desc"))}</label><textarea maxlength="2000" style="min-height:70px" oninput="upOffer(${i},'description',this)">${esc(o.description)}</textarea></div>
-      <div class="field"><label>${esc(t("s4.link"))} <small style="font-weight:400;color:var(--tinta-60)">${esc(t("s4.linkEx"))}</small></label>
-        <input type="url" maxlength="500" placeholder="https://amazon.com.mx/…" value="${esc(o.external_url)}" oninput="upOffer(${i},'external_url',this)"></div>
+      <div class="field"><label>${esc(t("s4.link"))} <small style="font-weight:400;color:var(--tinta-60)">${esc(t("s4.linkOff"))}</small></label>
+        <input type="url" maxlength="500" placeholder="https://amazon.com.mx/…" value="${esc(o.external_url)}" disabled
+          style="background:#efeae1;color:#a49a88;cursor:not-allowed"></div>
+      ${SESSION_KINDS.includes(o.kind)?`<div class="help-box" style="border-color:#d9b25a;background:rgba(203,161,90,.12);color:#7a5a12;font-size:13px;line-height:1.5">${esc(t("s4.bookReq"))}</div>`:""}
+      <div class="field"><label>${esc(t("s4.book"))}${SESSION_KINDS.includes(o.kind)?" *":""}</label>
+        <input type="url" maxlength="500" placeholder="https://calendly.com/tu-usuario/sesion" value="${esc(o.booking_url||"")}" oninput="upOffer(${i},'booking_url',this)">
+        <small style="display:block;margin-top:5px;font-weight:400;color:var(--tinta-60);line-height:1.45">${esc(t("s4.bookNote"))}</small></div>
+      <div class="field"><label>${esc(t("s4.pill"))}</label>
+        <select onchange="upOffer(${i},'status_pill',this)">${PILL_OPTS.map(([v,k])=>`<option value="${v}" ${(o.status_pill||"")===v?"selected":""}>${esc(t(k))}</option>`).join("")}</select></div>
+      ${EVENT_KINDS.includes(o.kind)?`
+      <div class="row2">
+        <div class="field"><label>${esc(t("s4.eventAt"))}</label>
+          <input type="datetime-local" value="${esc(o.event_at||"")}" onchange="upOffer(${i},'event_at',this)"></div>
+        <div class="field"><label>${esc(t("s4.eventPlace"))}</label>
+          <input type="text" maxlength="200" value="${esc(o.event_location||"")}" oninput="upOffer(${i},'event_location',this)"></div>
+      </div>
+      <small style="display:block;margin:-8px 0 14px;font-weight:400;color:var(--tinta-60);line-height:1.45">${esc(t("s4.eventNote"))}</small>`:""}
       <div class="offer-flags">
         <label class="chk"><input type="checkbox" ${o.sell_via_voces?"checked":""} onchange="upOffer(${i},'sell_via_voces',this)">
           <span>${esc(t("s4.via"))} <small>— ${esc(t("s4.viaEx"))}</small></span></label>
@@ -570,17 +765,83 @@ function renderReview(){
     <div class="rev-block"><h4>${esc(t("rev.contact"))}</h4><p>${esc($("f_email").value)}${$("f_phone").value?" · "+esc($("f_phone").value):""} · ${grp("langs").join(", ").toUpperCase()} · ${grp("modalities").map(m=>esc(t("mod."+m))).join(", ")}</p></div>
     <div class="rev-block"><h4>${esc(t("rev.voice"))}</h4><p>${esc($("f_what").value)}</p></div>
     ${$("f_mission").value.trim()?`<div class="rev-block"><h4>${esc(t("rev.mission"))}</h4><p>${esc($("f_mission").value)}</p></div>`:""}
-    ${$("f_certs").value.trim()?`<div class="rev-block"><h4>${esc(t("rev.certs"))}</h4><p>${esc($("f_certs").value)}</p></div>`:""}
-    ${($("f_website").value.trim()||$("f_ig").value.trim())?`<div class="rev-block"><h4>${esc(t("rev.web"))}</h4><p>${esc($("f_website").value)}${$("f_ig").value?" · "+esc($("f_ig").value):""}</p></div>`:""}
+    ${$("f_certs").value.trim()?`<div class="rev-block"><h4>${esc(t("rev.certs"))}</h4><p style="white-space:pre-line">${esc($("f_certs").value)}</p></div>`:""}
+    ${($("f_website").value.trim()||$("f_ig").value.trim()||$("f_linkedin").value.trim())?`<div class="rev-block"><h4>${esc(t("rev.web"))}</h4><p>${esc($("f_website").value)}${$("f_ig").value?" · "+esc($("f_ig").value):""}${$("f_linkedin").value?" · "+esc($("f_linkedin").value):""}</p></div>`:""}
     <div class="rev-block"><h4>${esc(t("rev.offers"))}</h4>
       ${offers.length?offers.map(o=>`<p>• <b>${esc(t('k.'+o.kind))}:</b> ${esc(o.title)}${o.price_mxn?` · $${esc(o.price_mxn)} MXN`:""}${o.external_url?" · 🔗":""}${o.sell_via_voces?` · ${lang==="es"?"vía Voces":"via Voces"}`:""}${o.wants_help||o.in_progress?` · ${lang==="es"?"en proceso":"in progress"}`:""}${o.wants_help&&(o.help_types||[]).length?`<br><span style="font-size:12px;color:var(--oro)">${lang==="es"?"apoyo":"support"}: ${o.help_types.map(h=>esc(t("help."+h))).join(", ")}</span>`:""}</p>`).join("")
         :`<p style="font-style:italic">${esc(t("rev.noOffers"))}</p>`}
     </div>`;
 }
 
+/* ============ BORRADOR — que nadie pierda lo que escribió ============
+   Si se les cae la página, se va la luz o cierran sin querer, al volver está todo.
+   Se guarda en SU navegador a cada tecla (con un respiro de 400ms).
+   NUNCA se guarda la contraseña ni la foto: la primera por seguridad, la segunda
+   porque no cabe en localStorage. */
+const DRAFT_KEY="vpa_perfil_draft", DRAFT_TTL_DAYS=30;
+function draftFields(){
+  return [...document.querySelectorAll('[id^="f_"]')]
+    .filter(el=>["INPUT","SELECT","TEXTAREA"].includes(el.tagName))
+    .filter(el=>el.type!=="password" && el.type!=="file" && el.id!=="f_company");
+}
+// Hasta que no se intentó restaurar, guardar sería pisar el borrador con campos vacíos.
+let draftReady=false, draftTimer=null;
+function saveDraft(){
+  if(!draftReady) return;
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+    try{
+      const fields={};
+      draftFields().forEach(el=>{ fields[el.id]=(el.type==="checkbox"||el.type==="radio")?el.checked:el.value; });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({at:Date.now(), step, fields, offers:OFFERS}));
+    }catch(_){}
+  },400);
+}
+function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(_){} }
+function readDraft(){
+  try{
+    const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");
+    if(!d||!d.at) return null;
+    if(Date.now()-d.at > DRAFT_TTL_DAYS*864e5){ clearDraft(); return null; }
+    const algo=Object.values(d.fields||{}).some(v=>typeof v==="string"&&v.trim()) || (d.offers||[]).length;
+    return algo ? d : null;
+  }catch(_){ return null; }
+}
+function restoreDraft(d){
+  draftFields().forEach(el=>{
+    if(!(d.fields||{}).hasOwnProperty(el.id)) return;
+    const v=d.fields[el.id];
+    if(el.type==="checkbox"||el.type==="radio") el.checked=!!v;
+    else if(!el.readOnly) el.value=v;
+  });
+  if(Array.isArray(d.offers)) OFFERS=d.offers;
+  step=Math.min(Math.max(Number(d.step)||1,1),LAST);
+  if(step>1) cartaSeen=true;   // ya pasó por la carta antes de perder la página
+  renderOffers(); showStep();
+}
+function draftBanner(d){
+  const host=document.querySelector("[data-step='1']"); if(!host) return;
+  const when=new Date(d.at).toLocaleString(lang==="es"?"es-MX":"en-US",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  const bar=document.createElement("div");
+  bar.style.cssText="margin:0 0 16px;padding:11px 14px;border-radius:12px;background:rgba(126,144,120,.14);border:1px solid rgba(126,144,120,.45);font-size:13.5px;line-height:1.5;display:flex;gap:10px;align-items:center;flex-wrap:wrap";
+  const txt=document.createElement("span");
+  txt.style.flex="1";
+  txt.textContent = lang==="es"
+    ? `Recuperamos lo que habías escrito (${when}). Sigue donde te quedaste.`
+    : `We recovered what you had written (${when}). Pick up where you left off.`;
+  const btn=document.createElement("button");
+  btn.type="button"; btn.className="btn btn-ghost";
+  btn.style.cssText="padding:6px 12px;font-size:12.5px";
+  btn.textContent = lang==="es" ? "Empezar de cero" : "Start over";
+  btn.onclick=()=>{ clearDraft(); location.reload(); };
+  bar.appendChild(txt); bar.appendChild(btn);
+  host.insertBefore(bar, host.firstChild);
+}
+
 /* ============ SUBMIT (crear cuenta + perfil → pago) ============ */
 let sending=false;
 function goToPay(){
+  clearDraft();   // ya quedó guardado en su perfil: el borrador local sobra
   const ref=(localStorage.getItem("vpa_ref")||"").trim();
   location.href = "/unete" + (ref?("?ref="+encodeURIComponent(ref)):"");
 }
@@ -598,16 +859,20 @@ async function submit(){
       if(upErr) throw upErr;
     }
     const socials={}; const ig=$("f_ig").value.trim(); if(ig) socials.instagram=ig;
+    const li=$("f_linkedin").value.trim(); if(li) socials.linkedin=li;
     const email=$("f_email").value.trim().toLowerCase(), password=$("f_pass").value;
     const payload={
       name:$("f_name").value.trim(), email, phone:$("f_phone").value.trim(),
+      country:($("f_country")||{}).value||"MX",
       category_id:$("f_category").value||"", headline:$("f_headline").value.trim(),
       what_do:$("f_what").value.trim(), mission:$("f_mission").value.trim(),
       website:$("f_website").value.trim(), socials, certifications:$("f_certs").value.trim(),
-      langs:grp("langs"), modalities:grp("modalities"), photo_path,
+      langs:grp("langs"), modalities:grp("modalities"), photo_path, accept_commission:true,
       offerings:OFFERS.filter(o=>o.title.trim()).map(o=>({
         kind:o.kind, title:o.title, description:o.description,
         price_mxn:String(o.price_mxn||""), external_url:o.external_url,
+        booking_url:(o.booking_url||"").trim(), status_pill:o.status_pill||"",
+        event_at:o.event_at?new Date(o.event_at).toISOString():"", event_location:(o.event_location||"").trim(),
         sell_via_voces:!!o.sell_via_voces, in_progress:!!(o.in_progress||o.wants_help), wants_help:!!o.wants_help }))
     };
 
@@ -662,7 +927,22 @@ async function submit(){
       const em=$("f_email"); if(em){ em.value=session.user.email||""; em.readOnly=true; }
     }
   }catch(_){}
-  renderSteps(); renderKinds(); renderOffers(); showStep(); loadCats(); updateNavBtns();
+  renderSteps(); renderKinds(); renderOffers(); showStep(); updateNavBtns();
+
+  // Las categorías se cargan ANTES de restaurar: si no, el <select> todavía no
+  // tiene la opción guardada y se perdería justo el dato de la temática.
+  fillCountries();
+  loadCommissionPct();
+  await loadCats();
+  const d=readDraft();
+  if(d){ restoreDraft(d); draftBanner(d); }
+  draftReady=true;
+
+  // A partir de aquí, cada cambio se guarda solo. El 'click' cubre agregar/quitar
+  // ofertas y el avance de paso, que no disparan 'input'.
+  document.addEventListener("input", saveDraft, true);
+  document.addEventListener("change", saveDraft, true);
+  document.addEventListener("click", ()=>setTimeout(saveDraft,50), true);
 })();
 </script>
 </body>

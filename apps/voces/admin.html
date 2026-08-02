@@ -89,6 +89,12 @@
   .chk input{width:auto}
   .chkgroup{display:flex;gap:14px;flex-wrap:wrap}
   .bi{font-size:11px;color:var(--oro);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+  /* Selector de ícono de temática (antes había que pegar SVG a mano) */
+  .ico-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:8px}
+  .ico-opt{display:flex;align-items:center;justify-content:center;height:52px;cursor:pointer;
+       background:#fff;border:1px solid var(--linea);border-radius:12px;color:var(--pizarra)}
+  .ico-opt:hover{border-color:var(--oro)}
+  .ico-opt.sel{border-color:var(--oro);border-width:2px;background:#fdf7ec;color:var(--oro)}
 
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:var(--lino);
     padding:12px 20px;border-radius:100px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
@@ -146,6 +152,10 @@
   <div class="drawer-head"><h3 id="drawerTitle">Editar</h3>
     <button class="btn btn-ghost btn-sm" onclick="closeDrawer()">Cerrar</button></div>
   <div class="drawer-body" id="drawerBody"></div>
+  <!-- Los errores de guardado se quedan a la vista: el toast desaparece solo y
+       parecía que la pantalla "se quedaba cargando". -->
+  <div id="formError" hidden style="margin:0 20px 12px;padding:10px 12px;border-radius:10px;
+       background:#fdecec;border:1px solid #f3c2c2;color:#8c2b2b;font-size:13.5px;line-height:1.5"></div>
   <div class="drawer-foot">
     <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
     <button class="btn btn-ghost" id="suggestBtn" style="display:none" onclick="saveAsSuggestion()">Proponer a la voz</button>
@@ -177,6 +187,18 @@ let PLANS=[];   // planes de membresía (cache)
 const STATUS_PUB = ["published","hidden","pending","draft"];
 const STATUS_SPEC = ["published","verified","pending","hidden"];
 const MOD = ["presencial","online","hibrido"];
+// País de residencia (ISO-2, lo que guarda app_vpa_specialists.country).
+const COUNTRIES = [["","— Sin especificar —"],
+  ["MX","México"],["AR","Argentina"],["BO","Bolivia"],["BR","Brasil"],["CA","Canadá"],["CL","Chile"],
+  ["CO","Colombia"],["CR","Costa Rica"],["CU","Cuba"],["DO","República Dominicana"],["EC","Ecuador"],
+  ["SV","El Salvador"],["ES","España"],["US","Estados Unidos"],["GT","Guatemala"],["GQ","Guinea Ecuatorial"],
+  ["HN","Honduras"],["NI","Nicaragua"],["PA","Panamá"],["PY","Paraguay"],["PE","Perú"],["PR","Puerto Rico"],
+  ["UY","Uruguay"],["VE","Venezuela"],
+  ["DE","Alemania"],["AU","Australia"],["AT","Austria"],["BE","Bélgica"],["CH","Suiza"],["CN","China"],
+  ["FR","Francia"],["GB","Reino Unido"],["IE","Irlanda"],["IL","Israel"],["IN","India"],["IT","Italia"],
+  ["JP","Japón"],["MA","Marruecos"],["NL","Países Bajos"],["NZ","Nueva Zelanda"],["PT","Portugal"],
+  ["SE","Suecia"],["ZA","Sudáfrica"],["OT","Otro país"]];
+const countryName = c => { if(!c) return "sin especificar"; const f=COUNTRIES.find(x=>x[0]===c); return f?f[1]:c; };
 
 /* ============ AUTH ============ */
 // Primary path: email + password, no email round-trip, no hub. Instant.
@@ -242,13 +264,15 @@ sb.auth.onAuthStateChange((_e,_s)=>{});
 /* ============ NAV ============ */
 const SECTIONS = [
   ["guia","✦ Guía rápida"],
+  ["claudia","✨ Pregúntale a ClaudIA"],
+  ["approvals","⏳ Aprobaciones"],
   ["applications","Solicitudes de perfil"],["specialists","Especialistas"],["changes","Cambios y comentarios"],
   ["offerings","Ofertas"],["categories","Temáticas"],["workshops","Talleres"],["products","Tienda"],
-  ["pagos","Pagos"],["orders","Pedidos"],["memberships","Membresías"],["codes","Códigos y referidos"],["points","Puntos y créditos"],
+  ["pagos","Pagos"],["comisiones","% Comisiones"],["payouts","💸 Pagos a las voces"],["orders","Pedidos"],["memberships","Membresías"],["codes","Códigos y referidos"],["points","Puntos y créditos"],
   ["testimonials","Testimonios"],["inquiries","Postulaciones"],["members","Miembros"],["settings","Inicio / Contacto"]
 ];
-const KINDS=["libro","ebook","audiolibro","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
-const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",curso:"Curso",coaching:"Coaching",
+const KINDS=["libro","ebook","audiolibro","audio","test","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
+const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",
   sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
 const PHOTO_BASE = SUPABASE_URL + "/storage/v1/object/public/vpa-photos/";
 function buildNav(){
@@ -278,6 +302,32 @@ function specName(id){ const s=SPECS.find(x=>x.id===id); return s?s.name:"—"; 
 function catOptions(extra){ return (extra?[["","— sin asignar —"]]:[]).concat(CATS.map(c=>[c.id,c.name_es])); }
 function specOptions(){ return [["","— Plataforma —"]].concat(SPECS.map(s=>[s.id,s.name])); }
 
+/* Íconos de temática — mismo estilo de línea (outline) que los que ya existen.
+   Antes había que pegar SVG a mano en un textarea, y por eso "Perdón y Duelo"
+   se guardó con el círculo vacío. Ahora se elige con un clic. */
+const CAT_ICONS = [
+  ["Anillo (genérico)", '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/>'],
+  ["Corazón",           '<path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/>'],
+  ["Corazón sostenido", '<path d="M12 15.4S7.1 12.7 5.7 9.7A3.4 3.4 0 0 1 12 7a3.4 3.4 0 0 1 6.3 2.7c-1.4 3-6.3 5.7-6.3 5.7Z"/><path d="M4 15.3c1.7 3 4.7 4.9 8 4.9s6.3-1.9 8-4.9"/>'],
+  ["Corazón que sana",  '<path d="M12 21s-7-4-9-9a5 5 0 0 1 9-2 5 5 0 0 1 9 2c-2 5-9 9-9 9Z"/><path d="m9 11 2 2 4-4"/>'],
+  ["Mente",             '<path d="M12 4a4 4 0 0 0-4 4 3 3 0 0 0-1 5.8V16a3 3 0 0 0 6 0V4Z"/><path d="M12 4a4 4 0 0 1 4 4 3 3 0 0 1 1 5.8V16a3 3 0 0 1-6 0"/>'],
+  ["Equilibrio",        '<path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/>'],
+  ["Rueda",             '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>'],
+  ["Estrella",          '<path d="m12 2 2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6Z"/>'],
+  ["Personas",          '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.5"/>'],
+  ["Brújula",           '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/>'],
+  ["Diana",             '<circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="3.6"/><path d="m11 13 9-9"/><path d="M16.5 4H20v3.5"/>'],
+  ["Portafolio",        '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6.2A2.2 2.2 0 0 1 11.2 4h1.6A2.2 2.2 0 0 1 15 6.2V8"/><path d="M3 13.2h18"/>'],
+  ["Moneda",            '<circle cx="12" cy="12" r="9"/><path d="M12 6.6v10.8"/><path d="M14.9 9.4a3 3 0 0 0-2.9-1.6c-1.7 0-2.9 1-2.9 2.3 0 3 5.9 1.7 5.9 4.7 0 1.4-1.2 2.4-3 2.4a3.3 3.3 0 0 1-3.1-1.7"/>'],
+  ["Hoja",              '<path d="M20 4c.7 7.7-3.8 13.2-9.5 13.2A5.5 5.5 0 0 1 5 11.7C5 6.6 11.6 4 20 4Z"/><path d="M9.8 20c.3-4.8 3-8.7 7.2-11"/>'],
+  ["Libro",             '<path d="M4 4.5h6a2.5 2.5 0 0 1 2 2.5v12a2 2 0 0 0-2-1.6H4Z"/><path d="M20 4.5h-6a2.5 2.5 0 0 0-2 2.5v12a2 2 0 0 1 2-1.6h6Z"/>'],
+  ["Mundo",             '<circle cx="12" cy="12" r="9"/><path d="M3.2 9.5h17.6M3.2 14.5h17.6"/><path d="M12 3c-2.6 2.4-4 5.4-4 9s1.4 6.6 4 9c2.6-2.4 4-5.4 4-9s-1.4-6.6-4-9Z"/>'],
+  ["Sol",               '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6m0 13.8v2.6M2.5 12h2.6m13.8 0h2.6M5.3 5.3l1.9 1.9m9.6 9.6 1.9 1.9M18.7 5.3l-1.9 1.9m-9.6 9.6-1.9 1.9"/>'],
+  ["Diálogo",           '<path d="M20 14.5a2.5 2.5 0 0 1-2.5 2.5H8l-4 3.5v-14A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5Z"/>'],
+  ["Escudo",            '<path d="M12 3.2 20 6v6c0 4.6-3.3 7.7-8 8.8C7.3 19.7 4 16.6 4 12V6Z"/><path d="m9 12 2 2 4-4"/>'],
+  ["Manos",             '<path d="M12 20.5 4.8 15A4 4 0 0 1 3 11.7V7.5a1.6 1.6 0 0 1 3.2 0v3"/><path d="M12 20.5 19.2 15A4 4 0 0 0 21 11.7V7.5a1.6 1.6 0 0 0-3.2 0v3"/><path d="M9.4 10.5V5.6a1.6 1.6 0 0 1 3.2 0v4.9m0-3.6a1.6 1.6 0 0 1 3.2 0v3.6"/>']
+];
+
 const CFG = {
   specialists:{
     title:"especialista", table:"app_vpa_specialists", rpc:"vpa_upsert_specialist", order:"sort_order",
@@ -289,14 +339,21 @@ const CFG = {
       {k:"bio_es",t:"textarea",l:"Biografía",bi:"es"},{k:"bio_en",t:"textarea",l:"Bio",bi:"en"},
       {k:"focus_es",t:"text",l:"Áreas de enfoque (separadas por coma)",bi:"es",arr:true},
       {k:"focus_en",t:"text",l:"Focus areas (comma separated)",bi:"en",arr:true},
-      {k:"certs_es",t:"text",l:"Certificaciones",bi:"es"},{k:"certs_en",t:"text",l:"Credentials",bi:"en"},
+      {k:"certs_es",t:"textarea",l:"Certificaciones",bi:"es",hint:"Puedes usar Enter: cada certificación en su propio renglón se ve así en el perfil público."},
+      {k:"certs_en",t:"textarea",l:"Credentials",bi:"en"},
       {k:"photo_url",t:"upload",media:"image",l:"Foto de perfil (se muestra circular)"},
       {k:"langs",t:"chkgroup",l:"Idiomas",opts:[["es","ES"],["en","EN"]]},
       {k:"modalities",t:"chkgroup",l:"Modalidades",opts:MOD.map(m=>[m,m])},
       {k:"available_now",t:"chk",l:"Disponible ahora"},
+      {k:"country",t:"select",l:"País de residencia",opts:COUNTRIES},
       {k:"contact_email",t:"text",l:"Correo de contacto (privado, se revela con login)"},
       {k:"contact_phone",t:"text",l:"Teléfono / WhatsApp (privado)"},
       {k:"contact_web",t:"text",l:"Sitio web (privado)"},
+      {k:"linkedin",t:"text",json:"contact_socials",l:"LinkedIn (perfil profesional)",
+       hint:"Sirve para validar el posicionamiento profesional. Pega el enlace completo del perfil."},
+      {k:"instagram",t:"text",json:"contact_socials",l:"Instagram"},
+      {k:"commission_pct",t:"number",l:"Comisión de Voces (%) — vacío = la del plan o el 20% por defecto",
+       hint:"Es el porcentaje que retiene Voces en cada venta de esta voz. Se negocia caso por caso; queda auditado."},
       {k:"sort_order",t:"number",l:"Orden"}
     ],
     list:i=>({thumb:i.photo_url,title:i.name,meta:(i.role_es||"")+" · "+catName(i.category_id),status:i.status}),
@@ -305,10 +362,10 @@ const CFG = {
   categories:{
     title:"categoría", table:"app_vpa_categories", rpc:"vpa_upsert_category", order:"sort_order",
     fields:()=>[
-      {k:"name_es",t:"text",l:"Nombre",bi:"es",req:true},{k:"name_en",t:"text",l:"Name",bi:"en",req:true},
-      {k:"slug",t:"text",l:"Slug (único, sin espacios)",req:true},
-      {k:"desc_es",t:"textarea",l:"Descripción",bi:"es"},{k:"desc_en",t:"textarea",l:"Description",bi:"en"},
-      {k:"icon",t:"textarea",l:"Ícono (contenido SVG: <path …/>)"},
+      {k:"name_es",t:"text",l:"Nombre",bi:"es",req:true},{k:"name_en",t:"text",l:"Name",bi:"en"},
+      {k:"slug",t:"text",l:"Slug (para el enlace)",hint:"Déjalo vacío y se genera solo a partir del nombre. Si se repite, se numera solo."},
+      {k:"desc_es",t:"textarea",l:"Subtítulo (se ve bajo el nombre)",bi:"es"},{k:"desc_en",t:"textarea",l:"Subtitle",bi:"en"},
+      {k:"icon",t:"icon",l:"Ícono",hint:"Elige uno. Si no eliges, la temática se guarda con el ícono genérico (nunca queda el círculo vacío)."},
       {k:"sort_order",t:"number",l:"Orden"},
       {k:"status",t:"select",l:"Estado",opts:[["published","published"],["hidden","hidden"]]}
     ],
@@ -357,22 +414,33 @@ const CFG = {
       {k:"title",t:"text",l:"Título",req:true},
       {k:"description",t:"textarea",l:"Descripción"},
       {k:"price_mxn",t:"number",l:"Precio (MXN, vacío = a convenir)"},
-      {k:"external_url",t:"text",l:"Enlace externo (Amazon / tienda) — opcional, o sube el archivo abajo"},
+      {k:"external_url",t:"text",dis:true,l:"Enlace externo (Amazon / tienda) — deshabilitado por ahora",
+       hint:"Esta función todavía no está definida. El campo queda visible pero no editable hasta nuevo aviso."},
       {k:"file_url",t:"upload",media:"file",l:"📄 Archivo descargable — SUBE AQUÍ tu PDF, Word, ePub, ZIP…"},
       {k:"file_name",t:"text",l:"Nombre del archivo (visible para el comprador)"},
       {k:"cover_url",t:"upload",media:"image",l:"🖼️ Portada — solo imágenes (JPG, PNG, WebP)"},
       {k:"preview_url",t:"upload",media:"audio",l:"🎧 Audio / muestra (mp3, m4a, wav)"},
+      {k:"booking_url",t:"text",l:"🗓 Enlace de agenda (Calendly u otro)",
+       hint:"<b>Obligatorio en «Sesión individual» y «Sesión grupal»</b>: sin él la oferta no se puede publicar.<br>El link no se comparte, para evitar reservas sin pago por ese medio. El usuario ve el calendario embebido dentro de Voces y elige la fecha. Voces le envía a la voz un correo con el nombre del comprador y la confirmación del pago."},
+      {k:"booking_label",t:"text",l:"Leyenda del botón de agenda — ej. «Reserva tu sesión gratuita con Mónica» (vacío = leyenda por defecto)"},
+      {k:"status_pill",t:"select",l:"Píldora de estado (cómo se anuncia en la tienda)",
+       opts:[["","Automático (Próximamente sólo si está en proceso)"],["disponible","Disponible ahora"],["reserva","Reserva ahora"],["proximamente","Próximamente"],["ninguna","Sin píldora"]]},
+      {k:"event_at",t:"datetime",l:"📅 Fecha y hora del evento (talleres y conferencias)",
+       hint:"Sólo con fecha aparece en el <b>calendario público</b> de la página principal. Déjalo vacío en libros, ebooks o sesiones que se agendan después de contratar."},
+      {k:"event_ends_at",t:"datetime",l:"Fin del evento (opcional)"},
+      {k:"event_location",t:"text",l:"Sede / lugar o enlace del evento (opcional)"},
       {k:"sell_via_voces",t:"chk",l:"Se vende a través de Voces"},
       {k:"in_progress",t:"chk",l:"Obra en proceso"},
       {k:"wants_help",t:"chk",l:"Pide apoyo de Voces para terminarla (privado)"},
-      {k:"sort_order",t:"number",l:"Orden"},
+      {k:"sort_order",t:"number",l:"Orden (sólo Voces — la voz no ve este campo)"},
       {k:"status",t:"select",l:"Estado",opts:[["published","published"],["pending","pending"],["hidden","hidden"],["draft","draft"]]}
     ],
     list:i=>({thumb:i.cover_url,title:i.title,
       meta:(KIND_ES[i.kind]||i.kind)+" · "+specName(i.specialist_id)
         +(i.price_cents!=null?" · $"+(i.price_cents/100)+" MXN":" · precio a convenir")
         +(i.sell_via_voces?" · vía Voces":"")+(i.external_url?" · 🔗 externo":"")
-        +(i.wants_help?" · ⚠ pide apoyo":""),
+        +(i.wants_help?" · ⚠ pide apoyo":"")
+        +(["sesion_individual","sesion_grupal"].includes(i.kind)&&!i.booking_url?" · ⚠ SIN enlace de agenda":""),
       status:i.status}),
     statusRpc:(id,st)=>sb.rpc("vpa_set_status",{p_entity:"offering",p_id:id,p_status:st}), statusOpts:STATUS_PUB
   },
@@ -561,9 +629,10 @@ function openForm(sec,item){
   if(item && item.price_cents!=null && item.price_mxn===undefined) item.price_mxn=item.price_cents/100;
   $("drawerTitle").textContent=(item?"Editar ":"Nuevo ")+cfg.title;
   const f=cfg.fields();
-  $("drawerBody").innerHTML=f.map(fd=>fieldHtml(fd,item?item[fd.k]:undefined)).join("");
+  $("drawerBody").innerHTML=f.map(fd=>fieldHtml(fd,fieldVal(item,fd))).join("");
   // "Proponer a la voz" sólo tiene sentido al editar un perfil/oferta existente
   $("suggestBtn").style.display = (item && (sec==="specialists"||sec==="offerings")) ? "" : "none";
+  showFormError("");
   openDrawer();
 }
 // diff del payload vs. el item original (para proponer sólo lo que cambió)
@@ -593,6 +662,12 @@ async function saveAsSuggestion(){
   catch(e){ toast("Error: "+e.message); }
   finally{ btn.disabled=false; }
 }
+// Un campo puede vivir dentro de un jsonb (fd.json), p. ej. contact_socials.linkedin
+function fieldVal(item,fd){
+  if(!item) return undefined;
+  if(fd.json){ const o=item[fd.json]; return (o&&typeof o==="object")?o[fd.k]:undefined; }
+  return item[fd.k];
+}
 function fieldHtml(fd,val){
   const id="f_"+fd.k; const bi=fd.bi?`<span class="bi">${fd.bi}</span> `:"";
   let inner="";
@@ -604,6 +679,18 @@ function fieldHtml(fd,val){
   else if(fd.t==="chkgroup"){
     const arr=Array.isArray(val)?val:[];
     return `<div class="field"><label>${esc(fd.l)}</label><div class="chkgroup">${fd.opts.map(o=>`<label class="chk"><input type="checkbox" data-grp="${fd.k}" value="${o[0]}" ${arr.includes(o[0])?"checked":""}> ${esc(o[1])}</label>`).join("")}</div></div>`;
+  }
+  else if(fd.t==="icon"){
+    const cur = val!=null ? String(val) : "";
+    const known = CAT_ICONS.some(o=>o[1]===cur);
+    const cell = (label,svg)=>`<button type="button" class="ico-opt${svg===cur?" sel":""}" title="${esc(label)}"
+        onclick="pickIcon('${fd.k}',this)" data-svg="${esc(svg)}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">${svg}</svg></button>`;
+    return `<div class="field"><label>${bi}${esc(fd.l)}</label>
+      <div class="ico-grid">${CAT_ICONS.map(o=>cell(o[0],o[1])).join("")}</div>
+      ${cur && !known ? `<div style="font-size:12px;color:#8a8378;margin-top:6px">Esta temática usa un ícono propio; se conserva si no eliges otro.</div>` : ""}
+      <input type="hidden" id="${id}" value="${esc(cur)}">
+      ${fd.hint?`<div style="font-size:12px;color:#8a8378;margin-top:5px;line-height:1.45">${fd.hint}</div>`:""}</div>`;
   }
   else if(fd.t==="upload"){
     const media=fd.media||"image"; const cur=val!=null?String(val):"";
@@ -622,14 +709,30 @@ function fieldHtml(fd,val){
   }
   else { // text, arr
     const v=fd.arr&&Array.isArray(val)?val.join(", "):(val!=null?val:"");
-    inner=`<input id="${id}" type="text" value="${esc(v)}">`;
+    inner=`<input id="${id}" type="text" value="${esc(v)}"${fd.dis?' disabled style="background:#efeae1;color:#a49a88;cursor:not-allowed"':''}>`;
   }
-  return `<div class="field"><label>${bi}${esc(fd.l)}${fd.req?" *":""}</label>${inner}</div>`;
+  const hint=fd.hint?`<div style="font-size:12px;color:#8a8378;margin-top:5px;line-height:1.45">${fd.hint}</div>`:"";
+  return `<div class="field"><label>${bi}${esc(fd.l)}${fd.req?" *":""}</label>${inner}${hint}</div>`;
+}
+function pickIcon(key,btn){
+  const grid=btn.parentElement;
+  grid.querySelectorAll(".ico-opt").forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+  $("f_"+key).value = btn.dataset.svg;
 }
 function collect(){
-  const cfg=current.cfg; const p={};
+  const cfg=current.cfg; const p={}; const bags={};
   if(current.item&&current.item.id) p.id=current.item.id;
   cfg.fields().forEach(fd=>{
+    // Campos que viven dentro de un jsonb: se parte del valor actual para no
+    // borrar las redes que el formulario no muestra.
+    if(fd.json){
+      const el=$("f_"+fd.k); if(!el) return;
+      if(!bags[fd.json]) bags[fd.json]=Object.assign({}, (current.item&&current.item[fd.json])||{});
+      const v=el.value.trim();
+      if(v) bags[fd.json][fd.k]=v; else delete bags[fd.json][fd.k];
+      return;
+    }
     if(fd.t==="chk"){ p[fd.k]=$("f_"+fd.k).checked; return; }
     if(fd.t==="chkgroup"){ p[fd.k]=[...document.querySelectorAll(`[data-grp="${fd.k}"]:checked`)].map(e=>e.value); return; }
     if(fd.t==="upload"){ const el=$("f_"+fd.k); p[fd.k]= el?el.value.trim():""; return; }
@@ -639,18 +742,42 @@ function collect(){
     if(fd.t==="number"){ p[fd.k]= v===""?null:Number(v); return; }
     p[fd.k]=v;
   });
+  Object.keys(bags).forEach(k=>{ p[k]=bags[k]; });
   // price_mxn -> price_cents (null se conserva: ofertas "a convenir")
   if("price_mxn" in p){ p.price_cents = p.price_mxn==null ? null : Math.round((Number(p.price_mxn)||0)*100); delete p.price_mxn; }
   return p;
 }
+// Traduce el error crudo de la base a algo que se entienda sin ser programador.
+function saveErrorText(msg){
+  msg = msg || "";
+  if(/booking_required/.test(msg))
+    return "Falta el enlace de agenda (Calendly): las sesiones individuales y grupales no se pueden publicar sin él.";
+  if(/category_name_required/.test(msg))
+    return "Falta el nombre de la temática.";
+  if(/duplicate key|already exists|unique/i.test(msg))
+    return "Ya existe otro registro con ese mismo dato único (normalmente el slug). Cámbialo o déjalo vacío para que se genere solo.";
+  if(/permission denied|vpa_require|not_allowed/i.test(msg))
+    return "Tu sesión no tiene permiso para esto. Cierra sesión y vuelve a entrar.";
+  return "No se pudo guardar: " + msg;
+}
+function showFormError(text){
+  const box=$("formError");
+  if(!box){ toast(text); return; }
+  if(!text){ box.hidden=true; box.textContent=""; return; }
+  box.textContent=text; box.hidden=false; box.scrollIntoView({block:"nearest"});
+}
 async function saveForm(){
   const cfg=current.cfg; const payload=collect();
+  showFormError("");
   $("saveBtn").disabled=true; $("saveBtn").textContent="Guardando…";
   try{
     const { error } = await sb.rpc(cfg.rpc,{ payload });
     if(error) throw error;
     toast("Guardado"); closeDrawer(); await preload(); RENDER[current.entity]();
-  }catch(e){ toast("Error: "+e.message); }
+  }catch(e){
+    const text = saveErrorText(e && e.message);
+    showFormError(text); toast(text);
+  }
   finally{ $("saveBtn").disabled=false; $("saveBtn").textContent="Guardar"; }
 }
 function openDrawer(){ $("drawer").classList.add("open"); $("drawerBg").classList.add("open"); }
@@ -684,7 +811,7 @@ RENDER.applications=async ()=>{
           <div style="font-size:13.5px;margin-top:8px">
             <p><b>¿Qué hace?</b><br>${esc(a.what_do||"—")}</p>
             ${a.mission?`<p style="margin-top:6px"><b>Misión</b><br>${esc(a.mission)}</p>`:""}
-            ${a.certifications?`<p style="margin-top:6px"><b>Certificaciones</b><br>${esc(a.certifications)}</p>`:""}
+            ${a.certifications?`<p style="margin-top:6px;white-space:pre-line"><b>Certificaciones</b><br>${esc(a.certifications)}</p>`:""}
             ${a.website?`<p style="margin-top:6px"><b>Web:</b> <a href="${esc(a.website)}" target="_blank" rel="noopener noreferrer">${esc(a.website)}</a></p>`:""}
             ${socials?`<p style="margin-top:6px"><b>Redes:</b> ${socials}</p>`:""}
             <p style="margin-top:6px"><b>Oferta (${offers.length})</b></p>${offHtml}
@@ -767,10 +894,74 @@ async function setRole(fbid,role){ try{ const {error}=await sb.rpc("vpa_set_memb
 async function grantRole(){ const fbid=$("newFbid").value.trim(),role=$("newRole").value; if(!fbid)return toast("Ingresa un FBID");
   try{ const {error}=await sb.rpc("vpa_set_member_role",{p_fbid:fbid,p_role:role}); if(error)throw error; toast("Rol otorgado"); RENDER.members(); }catch(e){ toast("Error: "+e.message);} }
 
+/* ============ COMISIONES POR ESPECIALISTA ============
+   Un solo lugar donde Mónica ve y ajusta el % que retiene Voces por cada voz,
+   y comprueba quién ya aceptó su porcentaje (respaldo formal). */
+RENDER.comisiones=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>% Comisiones</h2></div>
+    <div class="hint">La comisión es el porcentaje que <b>retiene Voces</b> en cada venta de esa voz.
+      Si la dejas vacía, se usa la de su plan de membresía y, si no tiene, el <b>20% por defecto</b>.
+      Cambiarla aquí queda auditado y aplica a las ventas siguientes (las ya cobradas conservan su reparto).
+      La columna <b>Aceptación</b> muestra la casilla que la voz palomeó antes de poder vender.</div>
+    <div class="card" style="display:block">
+      <label>Comisión por defecto de la plataforma (%)</label>
+      <div class="row2" style="margin-top:6px">
+        <input id="defComm" type="number" min="0" max="100" placeholder="20">
+        <button class="btn btn-primary btn-sm" onclick="saveDefaultCommission()">Guardar default</button>
+      </div>
+      <div class="meta" style="margin-top:6px">Aplica a toda voz que no tenga porcentaje propio ni plan activo.</div>
+    </div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  try{
+    const [{ data:st }, ov] = await Promise.all([
+      sb.from("app_vpa_settings").select("value").eq("key","default_commission_pct").maybeSingle(),
+      sb.rpc("vpa_commissions_overview")
+    ]);
+    if(st && st.value!=null) $("defComm").value = st.value;
+    if(ov.error) throw ov.error;
+    const rows = ov.data||[];
+    $("rows").innerHTML = rows.map(r=>{
+      const acc = r.accepted_at
+        ? (r.accepted_pct===r.effective_pct
+            ? `<span style="color:#4c7a4c;font-weight:600">✓ ${r.accepted_pct}% · ${new Date(r.accepted_at).toLocaleDateString("es-MX")}</span>`
+            : `<span style="color:#b8860b;font-weight:600">aceptó ${r.accepted_pct}%, hoy es ${r.effective_pct}%</span>`)
+        : `<span style="color:#a49a88">sin aceptar</span>`;
+      const src = r.assigned_pct!=null ? "asignada" : (r.plan ? "plan "+r.plan : "default");
+      return `<div class="card"><div class="grow">
+        <h4>${esc(r.name||"—")}</h4>
+        <div class="meta">${esc(r.status)} · comisión vigente <b>${r.effective_pct}%</b> (${esc(src)})
+          ${r.sells?" · vende por Voces":""}<br>Aceptación: ${acc}</div></div>
+        <div class="acts" style="display:flex;gap:6px;align-items:center">
+          <input type="number" min="0" max="100" value="${r.assigned_pct!=null?r.assigned_pct:""}" placeholder="${r.effective_pct}"
+                 id="cm_${esc(r.specialist_id)}" style="width:78px;padding:6px;border-radius:8px;border:1px solid var(--linea)">
+          <button class="btn btn-primary btn-sm" onclick="saveCommission('${esc(r.specialist_id)}')">Guardar</button>
+        </div></div>`;
+    }).join("") || `<div class="empty">Sin especialistas.</div>`;
+  }catch(e){ $("rows").innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; }
+};
+async function saveCommission(id){
+  const el=$("cm_"+id); if(!el) return;
+  const v=el.value.trim();
+  if(v===""){ toast("Escribe un porcentaje (0–100). Para volver al default, usa 20."); return; }
+  const n=Number(v);
+  if(!(n>=0&&n<=100)){ toast("El porcentaje debe estar entre 0 y 100"); return; }
+  try{ const {error}=await sb.rpc("vpa_mp_set_commission",{p_specialist:id,p_commission_pct:Math.round(n)});
+    if(error) throw error; toast("Comisión guardada ✓"); RENDER.comisiones();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function saveDefaultCommission(){
+  const n=Number($("defComm").value);
+  if(!(n>=0&&n<=100)){ toast("El default debe estar entre 0 y 100"); return; }
+  try{ const {error}=await sb.rpc("vpa_update_settings",{p_key:"default_commission_pct",p_value:Math.round(n)});
+    if(error) throw error; toast("Default actualizado ✓"); RENDER.comisiones();
+  }catch(e){ toast("Error: "+e.message); }
+}
+
 /* ============ PAGOS (MercadoPago) ============ */
 RENDER.pagos=async ()=>{
   $("main").innerHTML=`<div class="sec-head"><h2>Pagos</h2></div>
     <div class="hint">Conecta <b>tu MercadoPago</b> para cobrar en el sitio (por ahora a tu cuenta personal; luego la de la empresa). Pega tu <b>Access Token</b> de MercadoPago (Producción para cobros reales, o TEST para pruebas). Se guarda cifrado en el vault, nunca en el sitio. Los pagos entran a tu cuenta; a cada expositor se le registra su parte según su acuerdo y su método de cobro.</div>
+    <div id="payOverview" class="card" style="display:block">Cargando integraciones…</div>
     <div id="payStatus" class="card">Cargando estado…</div>
     <div class="card" style="display:block">
       <h4 style="margin-bottom:10px">Conectar / actualizar MercadoPago</h4>
@@ -805,7 +996,79 @@ RENDER.pagos=async ()=>{
         </div>
       </details>
       <div id="mktBody" class="meta">Cargando…</div>
+    </div>
+    <div class="card" style="display:block;margin-top:14px">
+      <h4 style="margin-bottom:6px">Stripe · membresías y pagos internacionales</h4>
+      <div class="meta" style="margin-bottom:10px">MercadoPago rechaza los cobros recurrentes por antifraude (<code>cc_rejected_high_risk</code>), por eso las membresías cobran por <b>Stripe</b>: acepta Amex, tarjetas del extranjero y Apple Pay. El dinero de las membresías entra a la cuenta de <b>Voces</b>. Las ventas de productos siguen por MercadoPago con reparto al autor.</div>
+      <div id="stripeStatus" class="meta" style="margin-bottom:10px">Cargando estado…</div>
+      <details open style="margin:0 0 12px;background:rgba(182,138,62,.08);border:1px solid rgba(182,138,62,.35);border-radius:12px;padding:12px 14px">
+        <summary style="cursor:pointer;font-weight:600;color:#8a5a12">🔑 Cómo sacar la Secret key (leer antes — Stripe cambió sus pantallas)</summary>
+        <div class="meta" style="margin-top:10px;line-height:1.7">
+          <div style="padding:8px 10px;background:rgba(179,38,30,.08);border-radius:8px;margin-bottom:10px">
+            <b>Ojo:</b> <b>ya no existe el botón "Revelar"</b> para una clave vieja — Stripe solo la muestra una vez, al crearla. Crea una nueva; no rompe nada.<br>
+            Y Stripe ahora <b>pide elegir permisos</b> aunque la crees desde "Standard". Es normal: abajo está la lista exacta.
+          </div>
+          <ol style="margin:0;padding-left:20px">
+            <li>Abre <a href="https://dashboard.stripe.com/apikeys" target="_blank" rel="noopener"><b>dashboard.stripe.com/apikeys</b> ↗</a></li>
+            <li>Arriba a la derecha, revisa que <b>NO</b> esté encendido el <b>"Modo de prueba"</b>.</li>
+            <li>Pulsa <b>"+ Crear clave secreta"</b>. Nombre: <b>Voces</b>.</li>
+            <li>Cuando pida permisos, usa el buscador y pon <b>estos 7</b> (lo demás déjalo en <i>Ninguna</i>):</li>
+          </ol>
+          <div style="margin:8px 0 8px 20px;padding:10px 12px;background:#fff;border:1px solid rgba(0,0,0,.12);border-radius:10px">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px">
+              <b>Checkout Sessions</b><span style="color:#8a5a12"><b>Escritura</b></span>
+              <b>Customers</b><span style="color:#8a5a12"><b>Escritura</b></span>
+              <b>Products</b><span style="color:#8a5a12"><b>Escritura</b></span>
+              <b>Prices</b><span style="color:#8a5a12"><b>Escritura</b></span>
+              <b>Webhook Endpoints</b><span style="color:#8a5a12"><b>Escritura</b></span>
+              <b>Subscriptions</b><span style="color:#2e7d32"><b>Lectura</b></span>
+              <b>Account (info. de la cuenta)</b><span style="color:#2e7d32"><b>Lectura</b></span>
+            </div>
+          </div>
+          <ol start="5" style="margin:0;padding-left:20px">
+            <li>Pulsa <b>Crear clave</b> y copia la clave completa — <b>solo se ve esa vez</b>.</li>
+            <li>Pégala aquí abajo y pulsa <b>Guardar llaves de Stripe</b>.</li>
+          </ol>
+          <div style="margin-top:8px">Empieza con <code>sk_live_</code> o <code>rk_live_</code> — <b>las dos sirven</b>. El webhook lo damos de alta nosotros: <b>no necesitas tocar esa pantalla</b>.</div>
+        </div>
+      </details>
+      <div class="field"><label>Secret key (empieza con <code>sk_live_</code>)</label>
+        <input id="stripe_sk" type="password" placeholder="sk_live_…" autocomplete="off"></div>
+      <div class="field"><label>Signing secret del webhook (empieza con <code>whsec_</code>)</label>
+        <input id="stripe_wh" type="password" placeholder="whsec_…" autocomplete="off"></div>
+      <button class="btn btn-primary btn-sm" onclick="saveStripe()">Guardar llaves de Stripe</button>
+      <span id="stripeMsg" style="margin-left:12px;font-size:13px"></span>
+      <details style="margin-top:12px;background:rgba(182,138,62,.08);border:1px solid rgba(182,138,62,.35);border-radius:12px;padding:12px 14px">
+        <summary style="cursor:pointer;font-weight:600;color:#8a5a12">⚙️ Cómo obtener el webhook (una sola vez)</summary>
+        <div class="meta" style="margin-top:10px;line-height:1.6">
+          <ol style="margin:0;padding-left:20px">
+            <li>En Stripe → <b>Developers → Webhooks → Add endpoint</b>.</li>
+            <li>Pega esta URL:</li>
+          </ol>
+          <div style="display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap">
+            <code id="stripeHook" style="background:#fff;border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:8px 10px;word-break:break-all;flex:1;min-width:220px">https://fgsrcxxccdjqyrpkitmk.supabase.co/functions/v1/vpa-stripe-webhook</code>
+            <button class="btn btn-ghost btn-sm" onclick="copyStripeHook()">Copiar</button>
+          </div>
+          <div>3 · Selecciona los eventos: <code>checkout.session.completed</code>, <code>invoice.paid</code>, <code>customer.subscription.updated</code>, <code>customer.subscription.deleted</code>.</div>
+          <div style="margin-top:6px">4 · Copia el <b>Signing secret</b> (<code>whsec_…</code>) y pégalo arriba.</div>
+        </div>
+      </details>
+    </div>
+    <div class="card" style="display:block;margin-top:14px">
+      <h4 style="margin-bottom:6px">Transferencia directa (SPEI) · red de respaldo</h4>
+      <div class="meta" style="margin-bottom:10px">Si a alguien MercadoPago le rechaza la tarjeta, esta opción aparece en el checkout: le mostramos tu CLABE, transfiere, avisa, y tú confirmas el depósito en <b>Pedidos</b> para entregarle su compra. Sin procesador de por medio — no se puede bloquear. <b>Actívala sólo si quieres recibir transferencias.</b></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer">
+        <input id="tr_enabled" type="checkbox"> <span>Activar transferencia directa en el checkout</span></label>
+      <div class="field"><label>Banco</label><input id="tr_bank" type="text" placeholder="Ej. BBVA"></div>
+      <div class="field"><label>CLABE (18 dígitos)</label><input id="tr_clabe" type="text" inputmode="numeric" maxlength="18" placeholder="012345678901234567"></div>
+      <div class="field"><label>Beneficiario (nombre en la cuenta)</label><input id="tr_benef" type="text" placeholder="Mónica Salgado"></div>
+      <div class="field"><label>Nota para el comprador (opcional)</label><input id="tr_note" type="text" placeholder="Envía tu comprobante por WhatsApp si quieres que lo confirmemos más rápido."></div>
+      <button class="btn btn-primary btn-sm" onclick="saveTransferInfo()">Guardar datos de transferencia</button>
+      <span id="trMsg" style="margin-left:12px;font-size:13px"></span>
     </div>`;
+  loadPayOverview();
+  loadTransferSettings();
+  loadStripeStatus();
   try{
     const { data } = await sb.rpc("vpa_payment_status");
     const s=data||{};
@@ -916,6 +1179,307 @@ async function runPayTest(){
   }catch(e){ msg.style.color="var(--bad)"; msg.textContent="Error: "+e.message; }
 }
 
+/* ============ PAGOS A LAS VOCES (payouts multi-riel) ============ */
+/* El reparto ya quedó congelado en cada venta. Aquí sólo sacas el saldo acumulado
+   de cada voz por el riel que ella conectó: PayPal/Wise por API, el resto a mano. */
+const PO_KIND={mercadopago:"MercadoPago",paypal:"PayPal",wise:"Wise",payoneer:"Payoneer (USD · EUR · GBP)",dolarapp:"DolarApp / ARQ",
+  usdc:"USDC (cripto)",clabe:"SPEI / CLABE",bank_intl:"Banco internacional",credit:"Crédito en Voces"};
+const pmx=c=>"$"+((c||0)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+RENDER.payouts=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>💸 Pagos a las voces</h2></div>
+    <div class="hint">Lo que le debes a cada voz por sus ventas. <b>El reparto ya está calculado y congelado en cada pedido</b> — aquí sólo envías el saldo por el método que cada quien conectó en su panel.
+    En las compras con tarjeta el dinero ya le llegó directo (columna “directo”), por eso no aparece como pendiente.</div>
+    <div id="poFx"></div><div id="poProv"></div><div id="poRows"><div class="empty">Cargando…</div></div>
+    <div class="sec-head" style="margin-top:1.4rem"><h3>Historial de pagos enviados</h3></div>
+    <div id="poHist"><div class="empty">Cargando…</div></div>`;
+
+  const [{data:prov},{data:bal,error},{data:hist},{data:fx}]=await Promise.all([
+    sb.rpc("vpa_payout_providers_status"), sb.rpc("vpa_payout_balances"), sb.rpc("vpa_payouts_list"),
+    sb.rpc("vpa_fx_rates")]);
+  if(error){ $("poRows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+
+  const R=(fx&&fx.rates)||{}, mxnUsd=Number(R.MXN)||0;
+  const per=c=>(Number(R[c])&&mxnUsd)?(Number(R[c])/mxnUsd):null;
+  const show=[["USD","dólar"],["EUR","euro"],["ARS","peso argentino"],["COP","peso colombiano"],["BRL","real"]];
+  $("poFx").innerHTML=`<div class="card">
+    <h4>Tipo de cambio ${fx&&fx.stale?`<span class="pill hidden">desactualizado</span>`:`<span class="pill published">al día</span>`}</h4>
+    <div class="hint">Base <b>dólar (USD)</b>. Se actualiza solo dos veces al día y se usa para mostrar precios en la moneda de cada visitante y para convertir los pagos a las voces.
+    ${fx&&fx.fetched_at?`Última actualización: <b>${new Date(fx.fetched_at).toLocaleString("es-MX")}</b>.`:""}</div>
+    ${mxnUsd?`<div class="hint" style="margin-top:.4rem">1 USD = <b>${mxnUsd.toFixed(2)} MXN</b> · ${show.filter(([c])=>c!=="USD"&&per(c)).map(([c,n])=>`1 MXN = ${per(c).toFixed(c==="ARS"||c==="COP"?2:4)} ${c}`).join(" · ")}</div>`:``}
+    ${fx&&fx.stale?`<div class="hint" style="color:var(--bad)">Las tasas llevan más de 3 días sin refrescarse: mientras tanto el sitio muestra los precios sólo en pesos, para no enseñar un número equivocado.</div>`:``}
+    <div class="acts"><button class="btn" onclick="refreshFx()">Actualizar tipo de cambio ahora</button></div>
+    <div id="fxMsg" class="hint"></div></div>`;
+
+  $("poProv").innerHTML=`<div class="card">
+    <h4>Rieles automáticos</h4>
+    <div class="hint">Con estos dos, Voces envía el dinero sola. Los demás (DolarApp/ARQ, USDC, SPEI, banco) los mandas tú desde tu cuenta y los confirmas aquí —
+    el de <b>USDC se verifica solo contra la blockchain</b> cuando pegas el hash.</div>
+    <div class="row2" style="margin-top:.5rem">
+
+      <div><b>PayPal</b> — ${prov?.paypal?.configured?`<span class="pill published">conectado (${esc(prov.paypal.mode)})</span>`:`<span class="pill hidden">sin conectar</span>`}
+        <div class="field" style="margin-top:.4rem"><label>Client ID</label><input id="pp_id" placeholder="AQ..."></div>
+        <div class="field"><label>Secret</label><input id="pp_sec" type="password" placeholder="EL..."></div>
+        <div class="field"><label>Modo</label><select id="pp_mode">
+          <option value="live" ${prov?.paypal?.mode!=="sandbox"?"selected":""}>Producción (dinero real)</option>
+          <option value="sandbox" ${prov?.paypal?.mode==="sandbox"?"selected":""}>Sandbox (pruebas)</option></select></div>
+        <div class="acts">
+          <button class="btn btn-primary" onclick="savePayoutCred('paypal')">Guardar</button>
+          <button class="btn" onclick="testProvider('paypal')">Probar conexión</button></div>
+        <div id="pp_msg" class="hint"></div>
+        <details style="margin-top:.4rem"><summary class="hint">¿De dónde saco esto?</summary>
+          <div class="hint">1. Necesitas una cuenta <b>PayPal Business</b>.<br>
+          2. Entra a <b>developer.paypal.com → Apps &amp; Credentials → Live → Create App</b>.<br>
+          3. Copia el <b>Client ID</b> y el <b>Secret</b> de esa app.<br>
+          4. En la misma app, en <b>Features</b>, activa <b>Payouts</b> — PayPal tiene que aprobarlo.
+          Sin ese permiso el botón "Probar conexión" te lo va a avisar.</div></details></div>
+
+      <div><b>Wise</b> — ${prov?.wise?.configured?`<span class="pill published">conectado (${esc(prov.wise.mode)})</span>`:`<span class="pill hidden">sin conectar</span>`}
+        <div class="field" style="margin-top:.4rem"><label>API token</label><input id="ws_tok" type="password"></div>
+        <div class="field"><label>Profile ID <span class="hint">(lo detecto solo al probar)</span></label><input id="ws_prof" placeholder="12345678"></div>
+        <div class="field"><label>Modo</label><select id="ws_mode">
+          <option value="live" ${prov?.wise?.mode!=="sandbox"?"selected":""}>Producción (dinero real)</option>
+          <option value="sandbox" ${prov?.wise?.mode==="sandbox"?"selected":""}>Sandbox (pruebas)</option></select></div>
+        <div class="acts">
+          <button class="btn btn-primary" onclick="savePayoutCred('wise')">Guardar</button>
+          <button class="btn" onclick="testProvider('wise')">Probar y detectar perfil</button></div>
+        <div id="ws_msg" class="hint"></div>
+        <details style="margin-top:.4rem"><summary class="hint">¿De dónde saco esto?</summary>
+          <div class="hint">1. Necesitas una cuenta <b>Wise Business</b> (la personal no puede pagar a terceros por API).<br>
+          2. Entra a <b>wise.com → Settings → API tokens</b> y crea un token de <b>escritura</b>.<br>
+          3. Pega el token aquí y dale "Probar y detectar perfil": yo te lleno el Profile ID.<br>
+          4. Wise paga <b>desde tu saldo</b>, así que la cuenta debe tener fondos.</div></details></div>
+    </div></div>`;
+
+  const rows=bal||[];
+  $("poRows").innerHTML=rows.length?rows.map(b=>{
+    const m=b.method;
+    return `<div class="card">
+      <div style="display:flex;gap:.8rem;align-items:center">
+        ${b.photo_url?`<img src="${esc(b.photo_url)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover">`:``}
+        <div style="flex:1">
+          <b>${esc(b.name||"—")}</b>
+          <div class="hint">Por pagar <b>${pmx(b.available_cents)}</b> · en camino ${pmx(b.paying_cents)} · ya pagado ${pmx(b.paid_cents)} · directo ${pmx(b.auto_split_cents)}</div>
+          <div class="hint">${m?`Cobra por <b>${esc(PO_KIND[m.kind]||m.kind)}</b>${m.email?` · ${esc(m.email)}`:``}${m.chain?` · red ${esc(String(m.chain).toUpperCase())}`:``}`:`<span style="color:var(--bad)">Todavía no tiene método de cobro</span>`}</div>
+          ${b.linked===false?`<div class="hint">Sin cuenta ligada — no puede entrar a /mi-voz a ponerlo ella; regístraselo tú aquí.</div>`:``}
+        </div>
+      </div>
+      <div class="acts">
+        ${b.available_cents>0&&m?`<button class="btn btn-primary" onclick="doPayout('${b.specialist_id}')">Pagar ${pmx(b.available_cents)}</button>
+        <button class="btn" onclick="doPayout('${b.specialist_id}',true)">Pagar otra cantidad…</button>`:``}
+        <button class="btn" onclick="poMethodForm('${b.specialist_id}','${esc(b.name||"")}')">${m?"Cambiar método de cobro":"Registrar método de cobro"}</button>
+      </div>
+      <div id="po_form_${b.specialist_id}"></div>
+      <div id="po_msg_${b.specialist_id}" class="hint"></div>
+    </div>`;}).join(""):`<div class="empty">Todavía no hay saldos por pagar.</div>`;
+
+  $("poHist").innerHTML=(hist||[]).length?(hist||[]).map(p=>`<div class="card">
+    <b>${esc(p.name||"—")}</b> · ${pmx(p.amount_cents)} · ${esc(PO_KIND[p.kind]||p.kind)} ·
+    <span class="pill ${p.status==="paid"?"published":(p.status==="failed"?"hidden":"pending")}">${
+      p.status==="paid"?"pagado":(p.status==="processing"?"en camino":(p.status==="failed"?"falló":(p.status==="canceled"?"cancelado":"pendiente")))}</span>
+    ${p.provider_ref?`<div class="hint">Ref: ${esc(p.provider_ref)}</div>`:``}
+    ${p.error?`<div class="hint" style="color:var(--bad)">${esc(p.error)}</div>`:``}
+    <div class="hint">${new Date(p.created_at).toLocaleString("es-MX")}${p.paid_at?` · pagado ${new Date(p.paid_at).toLocaleDateString("es-MX")}`:``}</div>
+    ${p.status!=="paid"&&p.status!=="canceled"?`<div class="acts">
+      ${(p.kind==="usdc"||(p.kind==="dolarapp"&&p.destination&&p.destination.wallet_address))?`<button class="btn btn-primary" onclick="verifyUsdcPayout('${p.id}')">⛓ Confirmar con el hash</button>`:``}
+      ${p.kind==="paypal"?`<button class="btn btn-primary" onclick="syncPaypalPayout('${p.id}')">Consultar estado en PayPal</button>`:``}
+      <button class="btn" onclick="showDest('${p.id}')">Ver datos para enviar</button>
+      <button class="btn" onclick="markPaid('${p.id}')">✓ Marcar pagado</button>
+      <button class="btn" onclick="cancelPayout('${p.id}')">Cancelar</button></div>
+      <div id="dest_${p.id}" class="hint"></div>`:``}
+  </div>`).join(""):`<div class="empty">Todavía no has enviado ningún pago.</div>`;
+};
+
+/* Registrar el método de cobro EN NOMBRE de una voz. Necesario para las voces que
+   todavía no tienen cuenta ligada (no pueden entrar a /mi-voz a ponerlo ellas). */
+const PO_FIELDS={
+  mercadopago:["email"], paypal:["email","holder_name"], wise:["email","holder_name"],
+  payoneer:["holder_name","account_number","routing","iban","swift","bank_name","email"],
+  dolarapp:["clabe","wallet_address","chain","account_id","email"], usdc:["wallet_address","chain"],
+  clabe:["clabe","bank_name","holder_name"],
+  bank_intl:["holder_name","iban","account_number","swift","routing","bank_name"], credit:[]};
+const PO_FLBL={email:"Correo de la cuenta",holder_name:"Titular",account_id:"Tag / usuario",
+  clabe:"CLABE (18 dígitos)",bank_name:"Banco",wallet_address:"Dirección de wallet",chain:"Red",
+  iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
+const PO_CHAINS=["base","polygon","solana","ethereum","arbitrum","optimism","tron"];
+
+function poMethodForm(spec,name,kind){
+  kind=kind||"paypal";
+  const box=$("po_form_"+spec);
+  box.innerHTML=`<div class="card" style="margin-top:.5rem">
+    <div class="hint">Método de cobro de <b>${esc(name)}</b>. Úsalo sólo si la voz no puede ponerlo ella misma desde su panel — son sus datos bancarios.</div>
+    <div class="field"><label>Método</label>
+      <select id="pof_kind_${spec}" onchange="poMethodForm('${spec}','${esc(name)}',this.value)">
+        ${Object.keys(PO_FIELDS).map(k=>`<option value="${k}" ${k===kind?"selected":""}>${PO_KIND[k]}</option>`).join("")}
+      </select></div>
+    ${(PO_FIELDS[kind]||[]).map(f=>f==="chain"
+      ?`<div class="field"><label>${PO_FLBL[f]}</label><select id="pof_${f}_${spec}">${PO_CHAINS.map(c=>`<option value="${c}">${c.toUpperCase()}</option>`).join("")}</select></div>`
+      :`<div class="field"><label>${PO_FLBL[f]}</label><input id="pof_${f}_${spec}"></div>`).join("")}
+    <div class="row2">
+      <div class="field"><label>País</label><input id="pof_country_${spec}" value="${kind==="payoneer"?"US":"MX"}"></div>
+      <div class="field"><label>Moneda</label><input id="pof_currency_${spec}" value="${kind==="payoneer"?"USD":"MXN"}"></div>
+    </div>
+    ${kind==="usdc"?`<div class="hint" style="color:var(--bad)">⚠️ Verifica la red y la dirección carácter por carácter. Un envío por la red equivocada no se recupera.</div>`:``}
+    ${kind==="payoneer"?`<div class="hint">Son los datos de su <b>cuenta receptora</b> de Payoneer (en la app: Recibir → Datos de la cuenta): dólares = número de cuenta + routing · libras = número de cuenta + sort code (va en “Routing number”) · euros = IBAN + BIC. El <b>titular tiene que ir exacto</b> o Payoneer rechaza el depósito. Pon la moneda que corresponda (USD, EUR o GBP). Payoneer no tiene envío automático: tú haces la transferencia y la confirmas aquí.</div>`:``}
+    <div class="acts">
+      <button class="btn btn-primary" onclick="savePoMethod('${spec}')">Guardar método</button>
+      <button class="btn" onclick="document.getElementById('po_form_${spec}').innerHTML=''">Cancelar</button>
+    </div></div>`;
+}
+async function savePoMethod(spec){
+  const kind=$("pof_kind_"+spec).value;
+  const p={specialist_id:spec, kind, is_default:true,
+    country:($("pof_country_"+spec).value||"MX").trim(),
+    currency:($("pof_currency_"+spec).value||"MXN").trim()};
+  (PO_FIELDS[kind]||[]).forEach(f=>{ const el=$(`pof_${f}_${spec}`); if(el&&el.value.trim()) p[f]=el.value.trim(); });
+  try{ const {error}=await sb.rpc("vpa_save_payout_method",{payload:p}); if(error)throw error;
+    toast("Método de cobro guardado ✓"); RENDER.payouts(); }catch(e){ toast("Error: "+e.message); }
+}
+
+async function savePayoutCred(which){
+  try{
+    if(which==="paypal"){
+      const id=$("pp_id").value.trim(), sec=$("pp_sec").value.trim(), mode=$("pp_mode").value;
+      if(!id||!sec) return toast("Pon el Client ID y el Secret");
+      let r=await sb.rpc("vpa_set_payment_secret",{p_provider:"paypal_client_id",p_token:id}); if(r.error)throw r.error;
+      r=await sb.rpc("vpa_set_payment_secret",{p_provider:"paypal_secret",p_token:sec}); if(r.error)throw r.error;
+      r=await sb.rpc("vpa_set_payment_secret",{p_provider:"paypal_mode",p_token:mode}); if(r.error)throw r.error;
+    }else{
+      const tok=$("ws_tok").value.trim(), prof=$("ws_prof").value.trim(), mode=$("ws_mode").value;
+      if(!tok) return toast("Pon el API token de Wise");
+      let r=await sb.rpc("vpa_set_payment_secret",{p_provider:"wise_api_token",p_token:tok}); if(r.error)throw r.error;
+      if(prof){ r=await sb.rpc("vpa_set_payment_secret",{p_provider:"wise_profile_id",p_token:prof}); if(r.error)throw r.error; }
+      r=await sb.rpc("vpa_set_payment_secret",{p_provider:"wise_mode",p_token:mode}); if(r.error)throw r.error;
+    }
+    toast("Guardado ✓ — ahora dale «Probar conexión»");
+    await testProvider(which);
+  }catch(e){ toast("Error: "+e.message); }
+}
+
+/* Llama a la API real del proveedor y dice exactamente qué falta. Vale mucho más que
+   un "guardado ✓": aquí se descubre si falta el permiso de Payouts o el perfil Business. */
+async function payoutTool(body){
+  const { data:{ session } } = await sb.auth.getSession();
+  const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-payout-tools",{method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+(session?session.access_token:SUPABASE_ANON)},
+    body:JSON.stringify(body)});
+  return await r.json();
+}
+async function testProvider(which){
+  const box=$(which==="paypal"?"pp_msg":"ws_msg");
+  box.textContent="Consultando al proveedor…";
+  try{
+    const j=await payoutTool({action: which==="paypal"?"test_paypal":"test_wise"});
+    if(j.error) throw new Error(j.error);
+    if(!j.ok){ box.innerHTML=`<span style="color:var(--bad)">${esc(j.note||"No se pudo conectar")}</span>`; return; }
+    let extra="";
+    if(which==="wise"){
+      if(j.suggested_profile){ $("ws_prof").value=j.suggested_profile;
+        await sb.rpc("vpa_set_payment_secret",{p_provider:"wise_profile_id",p_token:String(j.suggested_profile)});
+        extra+=`<br>Perfil detectado y guardado: <b>${esc(String(j.suggested_profile))}</b>`;
+      }
+      if(j.profiles&&j.profiles.length) extra+=`<br>Perfiles: ${j.profiles.map(p=>`${esc(p.name||"—")} (${esc(p.type)})`).join(" · ")}`;
+      extra+= (j.balances&&j.balances.length)
+        ? `<br>Saldo disponible: ${j.balances.map(b=>`${Number(b.amount).toLocaleString()} ${esc(b.currency)}`).join(" · ")}`
+        : `<br><span style="color:var(--bad)">Sin saldo en Wise — el pago sale de ahí, hay que fondear la cuenta.</span>`;
+    }
+    if(which==="paypal" && j.can_payout===false) extra+=`<br><span style="color:var(--bad)">Falta activar «Payouts» en la app de PayPal.</span>`;
+    box.innerHTML=`<span style="color:${(which==="paypal"&&j.can_payout===false)?"var(--bad)":"var(--ok)"}">${esc(j.note)}</span>${extra}`;
+  }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+/* PayPal responde "en proceso" y confirma después: esto pregunta cómo quedó el lote. */
+async function syncPaypalPayout(id){
+  const box=$("dest_"+id); box.textContent="Consultando a PayPal…";
+  try{ const j=await payoutTool({action:"sync_paypal",payout:id});
+    box.innerHTML=`<span style="color:${j.status==="failed"?"var(--bad)":"var(--ok)"}">${esc(j.note||"")}</span>`;
+    if(j.status==="paid"||j.status==="failed") setTimeout(()=>RENDER.payouts(),1100);
+  }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+/* USDC: Mónica envía desde SU wallet (Voces nunca guarda llaves) y aquí se comprueba
+   contra la blockchain que el monto correcto llegó a la dirección correcta. */
+async function verifyUsdcPayout(id){
+  const hash=prompt("Pega el hash de la transacción (0x…):");
+  if(!hash) return;
+  const box=$("dest_"+id); box.textContent="Verificando en la blockchain…";
+  try{ const j=await payoutTool({action:"verify_usdc",payout:id,tx_hash:hash.trim()});
+    const link=j.explorer?` <a href="${esc(j.explorer)}" target="_blank" rel="noopener">ver en el explorador ↗</a>`:"";
+    box.innerHTML=`<span style="color:${j.ok?"var(--ok)":"var(--bad)"}">${esc(j.note||j.error||"")}</span>${link}`;
+    if(j.ok) setTimeout(()=>RENDER.payouts(),1300);
+  }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+async function doPayout(spec, ask){
+  const msg=$("po_msg_"+spec); let cents=null;
+  if(ask){ const v=prompt("¿Cuánto le envías? (en pesos)"); if(!v) return;
+    cents=Math.round(parseFloat(v.replace(/[^0-9.]/g,""))*100);
+    if(!cents||cents<=0) return toast("Cantidad inválida"); }
+  msg.textContent="Preparando el pago…";
+  try{
+    const { data:pid, error } = await sb.rpc("vpa_create_payout",
+      {p_specialist:spec, p_method:null, p_amount_cents:cents, p_notes:null});
+    if(error) throw error;
+    const { data:{ session } } = await sb.auth.getSession();
+    const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-payout",{ method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+(session?session.access_token:SUPABASE_ANON) },
+      body:JSON.stringify({ payout:pid }) });
+    const j=await r.json();
+    if(j.manual){
+      msg.innerHTML=`<b>Envíalo tú:</b> ${esc(j.instructions)}<br>Cuando lo hayas mandado, dale <b>✓ Marcar pagado</b> abajo en el historial.`;
+    }else if(j.not_configured){
+      msg.innerHTML=`${esc(j.note)}`;
+    }else if(!j.ok){
+      msg.innerHTML=`<span style="color:var(--bad)">No se pudo enviar: ${esc(j.error||"error")}</span> — el saldo volvió a quedar disponible.`;
+    }else{
+      msg.innerHTML=`Pago enviado ✓ ${j.ref?`(ref ${esc(j.ref)})`:""}`;
+    }
+    RENDER.payouts();
+  }catch(e){ msg.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+async function refreshFx(){
+  const m=$("fxMsg"); m.textContent="Consultando tipo de cambio…";
+  try{
+    const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-fx",{method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON},body:"{}"});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||"no se pudo actualizar");
+    m.innerHTML=`Actualizado ✓ ${j.stored} monedas · 1 USD = ${Number(j.mxn_per_usd).toFixed(2)} MXN · fuente ${esc(j.source)}`;
+    setTimeout(()=>RENDER.payouts(),900);
+  }catch(e){ m.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+async function showDest(id){
+  const box=$("dest_"+id); box.textContent="Cargando…";
+  try{ const {data,error}=await sb.rpc("vpa_payout_destination",{p_id:id}); if(error)throw error;
+    const f=[["Titular",data.holder_name],["Correo",data.email],["Tag/usuario",data.account_id],
+      ["CLABE",data.clabe],["Banco",data.bank_name],["SWIFT",data.swift],["IBAN",data.iban],
+      ["Cuenta",data.account_number],["Routing",data.routing],["Wallet",data.wallet_address],
+      ["Red",data.chain&&String(data.chain).toUpperCase()],["País",data.country]]
+      .filter(([,v])=>v).map(([k,v])=>`<div><b>${k}:</b> ${esc(String(v))}</div>`).join("");
+    const conv=(data.fx_ok&&data.currency_target&&data.currency_target!==data.currency)
+      ? `<div class="hint" style="margin-top:.5rem">Envía <b>${Number(data.suggested_amount).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})} ${esc(data.currency_target)}</b>
+           — equivalen a ${pmx(data.amount_cents)} al tipo de cambio de hoy (1 ${esc(data.currency)} = ${Number(data.fx_rate).toFixed(4)} ${esc(data.currency_target)}).</div>`
+      : `<div class="hint" style="margin-top:.5rem">Envía <b>${pmx(data.amount_cents)}</b>.</div>`;
+    const warn=(!data.fx_ok&&data.currency_target&&data.currency_target!==data.currency)
+      ? `<div class="hint" style="color:var(--bad)">No hay tipo de cambio fresco: el monto se queda en pesos. Actualiza el tipo de cambio arriba antes de enviar.</div>`:``;
+    box.innerHTML=`<div class="card" style="margin-top:.4rem">${f}${conv}${warn}<div class="hint">Cuando lo hayas enviado, marca el pago como pagado.</div></div>`;
+  }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
+}
+
+async function markPaid(id){
+  const ref=prompt("Referencia del pago (folio, hash, número de operación). Puedes dejarlo vacío:");
+  if(ref===null) return;
+  try{ const {error}=await sb.rpc("vpa_mark_payout_paid",{p_id:id,p_ref:ref||null}); if(error)throw error;
+    toast("Pago registrado ✓ — le avisamos a la voz"); RENDER.payouts(); }catch(e){ toast("Error: "+e.message); }
+}
+async function cancelPayout(id){
+  if(!confirm("¿Cancelar este pago? El saldo vuelve a quedar disponible.")) return;
+  try{ const {error}=await sb.rpc("vpa_cancel_payout",{p_id:id,p_reason:"cancelado desde el panel"}); if(error)throw error;
+    toast("Cancelado — el saldo volvió a estar disponible"); RENDER.payouts(); }catch(e){ toast("Error: "+e.message); }
+}
+
 /* ============ CAMBIOS Y COMENTARIOS (moderación) ============ */
 const CH_PILL={open:"pending",applied:"published",rejected:"hidden",withdrawn:"draft"};
 const CH_KIND={comment:"comentario",suggestion:"sugerencia",edit:"edición propuesta"};
@@ -951,7 +1515,8 @@ async function resolveChange(id,action){ try{ const {error}=await sb.rpc("vpa_re
 async function replyChange(id){ const b=prompt("Tu respuesta:"); if(!b||!b.trim())return; try{ const {error}=await sb.rpc("vpa_reply_change",{p_request:id,p_body:b.trim()}); if(error)throw error; toast("Respuesta enviada"); RENDER.changes(); }catch(e){ toast("Error: "+e.message);} }
 
 /* ============ PEDIDOS ============ */
-const ORD_PILL={awaiting_payment:"pending",paid:"verified",fulfilled:"published",canceled:"hidden",refunded:"hidden"};
+const ORD_PILL={awaiting_payment:"pending",awaiting_review:"pending",paid:"verified",fulfilled:"published",canceled:"hidden",refunded:"hidden"};
+const RAIL_LBL={card:"tarjeta",other:"efectivo/SPEI/saldo",transfer:"transferencia directa"};
 RENDER.orders=async ()=>{
   $("main").innerHTML=`<div class="sec-head"><h2>Pedidos</h2></div>
     <div class="hint">Pedidos del carrito (productos, ofertas y talleres). El cobro se procesa en MXN. Marca <b>Pagado</b> al confirmar el pago: se avisa a cada voz y se otorgan puntos. El reparto por venta se calcula según la membresía de cada voz (50/30/20/10%).</div>
@@ -964,18 +1529,235 @@ RENDER.orders=async ()=>{
   const byG={}; (items||[]).forEach(it=>(byG[it.group_id]=byG[it.group_id]||[]).push(it));
   $("rows").innerHTML=groups.map(g=>{
     const its=(byG[g.id]||[]).map(it=>`<div style="font-size:13px;margin:3px 0">• ${it.qty}× ${esc(it.title)} — ${mxn(it.unit_cents*it.qty)} <span class="meta">(${esc(it.item_type)}${it.specialist_id?` · ${esc(specName(it.specialist_id))} · voz recibe ${mxn(it.specialist_cents)} · plataforma ${mxn(it.platform_cents)}`:` · plataforma 100%`})</span></div>`).join("");
-    const stSel=["awaiting_payment","paid","fulfilled","canceled","refunded"].map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("");
+    const stSel=["awaiting_payment","awaiting_review","paid","fulfilled","canceled","refunded"].map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("");
+    // Transferencia declarada por el comprador: hay que verificar el depósito a mano.
+    const review = g.status==="awaiting_review" ? `<div style="margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(182,138,62,.10);border:1px solid rgba(182,138,62,.35)">
+        <b>⚠️ Transferencia declarada — falta tu confirmación.</b>
+        <div class="meta" style="margin-top:4px">Referencia del comprador: <b>${esc(g.payment_ref||"(no la escribió)")}</b>. Revisa tu cuenta; si el depósito llegó, pulsa Confirmar pago para entregarle su compra.</div>
+        <button class="btn-sm" style="margin-top:8px" onclick="setOrderStatus('${g.id}','paid')">✓ Confirmar pago y entregar</button>
+      </div>` : "";
     return `<div class="card" style="align-items:flex-start;flex-direction:column">
       <div class="grow"><h4>Pedido ${esc(g.id.slice(0,8))} <span class="pill ${ORD_PILL[g.status]||"pending"}">${esc(g.status)}</span></h4>
-        <div class="meta">${esc(g.buyer_email)}${g.buyer_name?" · "+esc(g.buyer_name):""} · ${new Date(g.created_at).toLocaleString("es-MX")}${g.code?" · código "+esc(g.code):""}</div>
+        <div class="meta">${esc(g.buyer_email)}${g.buyer_name?" · "+esc(g.buyer_name):""} · ${new Date(g.created_at).toLocaleString("es-MX")}${g.code?" · código "+esc(g.code):""}${g.pay_method?" · vía "+esc(RAIL_LBL[g.pay_method]||g.pay_method):""}</div>
         <div style="margin-top:8px">${its}</div>
-        <div class="meta" style="margin-top:6px">Subtotal ${mxn(g.subtotal_cents)}${g.discount_cents?` · desc. −${mxn(g.discount_cents)}`:""} · <b>Total ${mxn(g.total_cents)}</b></div></div>
+        <div class="meta" style="margin-top:6px">Subtotal ${mxn(g.subtotal_cents)}${g.discount_cents?` · desc. −${mxn(g.discount_cents)}`:""} · <b>Total ${mxn(g.total_cents)}</b></div>
+        ${review}</div>
       <div class="acts" style="margin-top:10px">
         <select class="btn-sm" style="padding:6px;border-radius:8px" onchange="setOrderStatus('${g.id}',this.value)">${stSel}</select>
       </div></div>`;
   }).join("");
 };
 async function setOrderStatus(id,st){ try{ const {error}=await sb.rpc("vpa_set_order_status",{p_id:id,p_status:st}); if(error)throw error; toast("Pedido actualizado"); RENDER.orders(); }catch(e){ toast("Error: "+e.message);} }
+/* --- CLAUDIA: asistente del panel. Consulta sola; para CAMBIAR algo pide confirmación
+   (publicar un perfil lo hace público, marcar pagado entrega producto). --- */
+let CHAT = [];           // historial visible {role, content}
+let PENDING = null;      // acción esperando el sí de Mónica
+RENDER.claudia = async () => {
+  $("main").innerHTML = `<div class="sec-head"><h2>✨ Pregúntale a ClaudIA</h2></div>
+    <div class="hint">Pregúntale lo que quieras de tu plataforma: quién pagó, quién falta por aprobar, si los cobros están bien, qué pasó con una persona. Ella consulta tus datos de verdad — no inventa. <b>Si va a cambiar algo, primero te pregunta.</b></div>
+    <div id="chatBox" style="background:#fff;border:1px solid rgba(0,0,0,.10);border-radius:14px;padding:16px;min-height:280px;max-height:52vh;overflow-y:auto"></div>
+    <div id="chatPending"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input id="chatIn" type="text" placeholder="Ej.: ¿quién pagó y falta por aprobar?" style="flex:1;padding:11px 14px;border:1px solid rgba(0,0,0,.15);border-radius:10px;font:inherit"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend();}">
+      <button class="btn btn-primary" id="chatBtn" onclick="chatSend()">Enviar</button>
+    </div>
+    <div class="meta" style="margin-top:8px">Ideas: «¿Diana ya pagó?» · «¿cómo van los cobros?» · «publica a Mario Monroy» · «últimos pedidos»</div>`;
+  drawChat();
+};
+function drawChat(){
+  const box = $("chatBox"); if(!box) return;
+  if(!CHAT.length){
+    box.innerHTML = `<div class="empty">Escríbele abajo. Por ejemplo: <i>«¿quién está esperando que lo apruebe?»</i></div>`;
+    return;
+  }
+  box.innerHTML = CHAT.map(m=>{
+    const mine = m.role === "user";
+    return `<div style="display:flex;justify-content:${mine?"flex-end":"flex-start"};margin-bottom:10px">
+      <div style="max-width:82%;padding:10px 13px;border-radius:13px;font-size:14px;line-height:1.55;white-space:pre-wrap;
+        background:${mine?"rgba(126,144,120,.16)":"rgba(182,138,62,.10)"};border:1px solid ${mine?"rgba(126,144,120,.35)":"rgba(182,138,62,.30)"}">
+        ${esc(m.content).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>")}
+      </div></div>`;
+  }).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function drawPending(){
+  const el = $("chatPending"); if(!el) return;
+  if(!PENDING){ el.innerHTML=""; return; }
+  el.innerHTML = `<div style="margin-top:12px;padding:13px 15px;border-radius:12px;background:rgba(182,138,62,.12);border:1.5px solid var(--oro)">
+    <div style="font-weight:600;margin-bottom:4px">⚠️ ¿Confirmas este cambio?</div>
+    <div class="meta" style="margin-bottom:10px">${esc(PENDING.resumen)}</div>
+    <button class="btn btn-primary btn-sm" onclick="chatConfirm(true)">Sí, hazlo</button>
+    <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="chatConfirm(false)">No, cancela</button>
+  </div>`;
+}
+async function chatSend(texto, confirmar){
+  const input = $("chatIn"), btn = $("chatBtn");
+  const msg = texto !== undefined ? texto : (input ? input.value.trim() : "");
+  if(!msg && !confirmar) return;
+  if(msg){ CHAT.push({role:"user", content:msg}); if(input) input.value=""; }
+  PENDING = null; drawPending(); drawChat();
+  if(btn){ btn.disabled = true; btn.textContent = "…"; }
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL+"/functions/v1/vpa-claudia", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "apikey":SUPABASE_ANON, "Authorization":"Bearer "+session.access_token },
+      body: JSON.stringify({ messages: CHAT, confirm: confirmar || null }),
+    });
+    const j = await r.json();
+    if(!r.ok || j.error){ CHAT.push({role:"assistant", content:"No pude responder: "+(j.note||j.error||"error")}); }
+    else {
+      CHAT.push({role:"assistant", content: j.reply || "…"});
+      if(j.pending_action) PENDING = j.pending_action;
+    }
+  }catch(e){ CHAT.push({role:"assistant", content:"Se cayó la conexión: "+e.message}); }
+  if(btn){ btn.disabled = false; btn.textContent = "Enviar"; }
+  drawChat(); drawPending();
+}
+function chatConfirm(si){
+  if(!PENDING) return;
+  const p = PENDING; PENDING = null; drawPending();
+  if(!si){ CHAT.push({role:"assistant", content:"Listo, no hice nada."}); drawChat(); return; }
+  chatSend("Sí, confirmo.", { tool:p.tool, input:p.input });
+}
+/* --- APROBACIONES: pagaron, pero NO salen al directorio hasta que Mónica los apruebe.
+   El pago ya no publica solo (regla de Steph 2026-07-27). --- */
+RENDER.approvals=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>⏳ Aprobaciones</h2></div>
+    <div class="hint">Estas personas <b>ya pagaron su membresía</b>, pero su perfil <b>NO es público todavía</b>: espera tu revisión. Ábrelo, revisa que la información y la foto estén bien, y publícalo. Si algo falta, usa <b>Especialistas → Editar</b> para proponerle cambios antes de publicar.</div>
+    <div id="rows"><div class="empty">Cargando…</div></div>`;
+  let list=[];
+  try{
+    const { data, error } = await sb.rpc("vpa_pending_approvals");
+    if(error) throw error;
+    list = data||[];
+  }catch(e){ $("rows").innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`; return; }
+  if(!list.length){
+    $("rows").innerHTML=`<div class="empty">Nada pendiente por ahora. Cuando alguien pague su membresía, aparece aquí para que lo revises. ✓</div>`;
+    return;
+  }
+  $("rows").innerHTML=list.map(a=>{
+    const pagado = a.paid_at ? new Date(a.paid_at).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+    const renueva = a.renews_at ? new Date(a.renews_at).toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"}) : "—";
+    const foto = a.photo_url ? `<img src="${esc(PHOTO(a.photo_url))}" alt="" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex:0 0 64px">` : "";
+    return `<div class="card" style="align-items:flex-start;flex-direction:column">
+      <div style="display:flex;gap:14px;align-items:flex-start;width:100%">
+        ${foto}
+        <div class="grow">
+          <h4>${esc(a.name||"(sin nombre)")} <span class="pill pending">en revisión</span></h4>
+          <div class="meta">${esc(a.role_es||"")}${a.email?" · "+esc(a.email):""}</div>
+          <div class="meta" style="margin-top:6px">
+            Plan <b>${esc((a.plan||"").toUpperCase())}</b> ${a.period==="yearly"?"anual":"mensual"} ·
+            <b>${mxn(a.price_cents)}</b> · vía ${esc(a.provider||"—")}<br>
+            Pagó: <b>${esc(pagado)}</b> · renueva: ${esc(renueva)}
+          </div>
+          <div class="meta" style="margin-top:6px">
+            País: <b>${esc(countryName(a.country))}</b>
+            ${a.linkedin?` · <a href="${esc(a.linkedin)}" target="_blank" rel="noopener">LinkedIn ↗</a>`:` · <span style="color:#b3261e">sin LinkedIn</span>`}
+            ${a.instagram?` · <a href="${esc(a.instagram)}" target="_blank" rel="noopener">Instagram ↗</a>`:""}
+            ${a.website?` · <a href="${esc(a.website)}" target="_blank" rel="noopener">Web ↗</a>`:""}
+          </div>
+        </div>
+      </div>
+      <div class="acts" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="approveProfile('${a.specialist_id}','${esc((a.name||'').replace(/'/g,''))}')">✓ Aprobar y publicar</button>
+        <button class="btn btn-ghost btn-sm" onclick="go('specialists')">Ver / editar perfil</button>
+      </div></div>`;
+  }).join("");
+};
+async function approveProfile(id, name){
+  if(!confirm("¿Publicar el perfil de "+name+" en el directorio público?")) return;
+  try{
+    const { error } = await sb.rpc("vpa_set_specialist_status",{ p_id:id, p_status:"published" });
+    if(error) throw error;
+    toast("Perfil publicado ✓");
+    RENDER.approvals();
+  }catch(e){ toast("Error: "+e.message); }
+}
+/* --- Vista única: qué riel de cobro está vivo y qué le falta a cada uno --- */
+async function loadPayOverview(){
+  const el=$("payOverview"); if(!el) return;
+  try{
+    const { data, error } = await sb.rpc("vpa_payments_overview");
+    if(error) throw error;
+    const row=(d)=>{
+      const ok=!!d.ok;
+      return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(44,39,34,.10)">
+        <span style="font-size:17px;line-height:1.2">${ok?"✅":"⚠️"}</span>
+        <div class="grow">
+          <div style="font-weight:600;font-size:14px">${esc(d.rail)}</div>
+          ${ok
+            ? `<div class="meta" style="color:#2e7d32">Funcionando${d.mode&&d.mode!=="—"?" · modo "+esc(d.mode):""}${d.autores_conectados!=null?" · "+d.autores_conectados+" autor(es) conectado(s)":""}</div>`
+            : `<div class="meta" style="color:#b3261e">Falta: <b>${esc(d.falta||"configurar")}</b></div>`}
+        </div></div>`;
+    };
+    const s=data.suscripciones||{};
+    el.innerHTML=`<h4 style="margin-bottom:4px">Estado de tus cobros</h4>
+      <div class="meta" style="margin-bottom:8px">Cada riel cobra cosas distintas. Si uno está en ⚠️, eso NO se puede cobrar hoy.</div>
+      ${row(data.productos)}${row(data.membresias)}${row(data.transferencia)}
+      <div class="meta" style="margin-top:10px">Membresías: <b>${s.activas||0}</b> activas · <b>${s.pendientes||0}</b> pendientes (sin pagar).</div>`;
+  }catch(e){ el.textContent="No se pudo leer el estado: "+e.message; }
+}
+/* --- Stripe (membresías + internacional) --- */
+function copyStripeHook(){ try{ navigator.clipboard.writeText($("stripeHook").textContent.trim()); toast("URL copiada"); }catch(_){} }
+async function loadStripeStatus(){
+  const el=$("stripeStatus"); if(!el) return;
+  try{
+    const { data, error } = await sb.rpc("vpa_stripe_status");
+    if(error) throw error;
+    const ok=!!(data&&data.configured), hook=!!(data&&data.webhook_configured);
+    const mode=(data&&data.mode)||"—";
+    el.innerHTML = ok
+      ? `<b style="color:#2e7d32">✓ Stripe conectado</b> · modo <b>${esc(mode)}</b> · webhook ${hook?"<b style='color:#2e7d32'>configurado ✓</b>":"<b style='color:#b3261e'>FALTA ⚠️</b>"}`
+      : `<b style="color:#b3261e">⚠️ Stripe no conectado</b> — las membresías no se pueden cobrar hasta pegar la secret key.`;
+  }catch(e){ el.textContent="No se pudo leer el estado: "+e.message; }
+}
+async function saveStripe(){
+  const sk=($("stripe_sk").value||"").trim(), wh=($("stripe_wh").value||"").trim();
+  if(!sk && !wh){ $("stripeMsg").textContent="Pega al menos una llave."; return; }
+  try{
+    if(sk){
+      if(!/^(sk|rk)_/.test(sk)) throw new Error("la secret key empieza con sk_ (o rk_)");
+      const {error}=await sb.rpc("vpa_set_payment_secret",{p_provider:"stripe",p_token:sk});
+      if(error) throw error;
+    }
+    if(wh){
+      if(!/^whsec_/.test(wh)) throw new Error("el signing secret empieza con whsec_");
+      const {error}=await sb.rpc("vpa_set_payment_secret",{p_provider:"stripe_webhook",p_token:wh});
+      if(error) throw error;
+    }
+    $("stripe_sk").value=""; $("stripe_wh").value="";
+    $("stripeMsg").textContent="Guardado ✓";
+    toast("Stripe guardado en el vault");
+    loadStripeStatus();
+  }catch(e){ $("stripeMsg").textContent="Error: "+e.message; }
+}
+/* --- Datos de transferencia directa (riel de respaldo del checkout) --- */
+async function loadTransferSettings(){
+  try{
+    const { data } = await sb.from("app_vpa_settings").select("*").eq("key","payments_transfer").maybeSingle();
+    const v=(data&&data.value)||{};
+    if($("tr_enabled")) $("tr_enabled").checked = !!v.enabled;
+    if($("tr_bank"))    $("tr_bank").value  = v.bank||"";
+    if($("tr_clabe"))   $("tr_clabe").value = v.clabe||"";
+    if($("tr_benef"))   $("tr_benef").value = v.beneficiary||"";
+    if($("tr_note"))    $("tr_note").value  = v.note||"";
+  }catch(_){}
+}
+async function saveTransferInfo(){
+  const clabe=($("tr_clabe").value||"").replace(/\D/g,"");
+  const on=$("tr_enabled").checked;
+  if(on && clabe.length!==18){ $("trMsg").textContent="La CLABE debe tener 18 dígitos."; return; }
+  const v={ enabled:on, bank:($("tr_bank").value||"").trim(), clabe, beneficiary:($("tr_benef").value||"").trim(), note:($("tr_note").value||"").trim() };
+  try{
+    const {error}=await sb.rpc("vpa_update_settings",{p_key:"payments_transfer",p_value:v});
+    if(error) throw error;
+    $("tr_clabe").value=clabe;
+    $("trMsg").textContent = on ? "Guardado ✓ — ya aparece en el checkout." : "Guardado ✓ — desactivada.";
+    toast("Datos de transferencia guardados");
+  }catch(e){ $("trMsg").textContent="Error: "+e.message; }
+}
 
 /* ============ MEMBRESÍAS ============ */
 RENDER.memberships=async ()=>{
