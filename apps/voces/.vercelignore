@@ -1,0 +1,4 @@
+.env.local
+.env*
+supabase
+voces-template.png
