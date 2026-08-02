@@ -108,12 +108,15 @@
   .wave-divider{display:block;width:120px;height:22px;margin:0 auto 4px;overflow:visible}
 
   /* ---- MISSION / VISION ---- */
-  .mv-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px}
-  .mv-card{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:42px;position:relative;overflow:hidden}
-  .mv-card .ico{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-       background:var(--salvia-tenue);color:var(--salvia);margin-bottom:22px}
-  .mv-card h3{font-size:27px;font-style:italic;margin-bottom:12px}
-  .mv-card p{color:var(--tinta-60);font-size:16.5px}
+  /* Visión · Misión · Objetivo Estratégico van en un mismo renglón (3 columnas).
+     El tamaño de letra y el ancho están ajustados para que los tres textos
+     terminen con el mismo número de líneas y el renglón se vea parejo. */
+  .mv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  .mv-card{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:32px 28px;position:relative;overflow:hidden}
+  .mv-card .ico{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       background:var(--salvia-tenue);color:var(--salvia);margin-bottom:18px}
+  .mv-card h3{font-size:24px;font-style:italic;margin-bottom:10px}
+  .mv-card p{color:var(--tinta-60);font-size:15.3px;line-height:1.64;text-wrap:pretty}
   .values{display:flex;flex-wrap:wrap;gap:10px;margin-top:56px;justify-content:center}
   .value-pill{border:1px solid var(--linea);border-radius:100px;padding:10px 20px;font-size:14px;font-weight:500;background:var(--lino);
        display:flex;gap:8px;align-items:center}
@@ -151,7 +154,16 @@
   .spec-body .cat-tag{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--oro);font-weight:600}
   .spec-body h4{font-size:22px;margin:7px 0 4px}
   .spec-body .role{font-size:14px;color:var(--pizarra);font-weight:500;margin-bottom:12px}
-  .spec-body p{font-size:14px;color:var(--tinta-60);line-height:1.5}
+  /* Bios de largo muy distinto descuadraban las tarjetas: se recortan a 10 líneas
+     para que el directorio se vea parejo. La bio completa vive en el modal. */
+  .spec-body p{font-size:14px;color:var(--tinta-60);line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:10;line-clamp:10;-webkit-box-orient:vertical;overflow:hidden}
+  /* Modal: 10 líneas + "Ver más". */
+  .bio-wrap{position:relative}
+  .bio-wrap p.clamped{display:-webkit-box;-webkit-line-clamp:10;line-clamp:10;-webkit-box-orient:vertical;overflow:hidden}
+  .bio-more{background:none;border:0;padding:4px 0 0;cursor:pointer;font:inherit;font-size:13.5px;
+    font-weight:600;color:var(--oro);text-decoration:underline;text-underline-offset:3px}
+  .bio-more:hover{opacity:.75}
   .spec-langs{display:flex;gap:6px;margin-top:14px;justify-content:center;flex-wrap:wrap}
   .lang-chip{font-size:11px;font-weight:600;border:1px solid var(--linea);border-radius:6px;padding:3px 8px;color:var(--tinta-60)}
   .empty{grid-column:1/-1;text-align:center;padding:60px;color:var(--tinta-60);font-style:italic;font-family:var(--serif)}
@@ -172,23 +184,79 @@
   .badge.online{background:rgba(76,96,114,.12);color:var(--pizarra)}
   .badge.hibrido{background:rgba(203,161,90,.16);color:var(--oro)}
   .ws-action{text-align:right}
+  /* ---- Calendario público (siempre visible, sin registro) ---- */
+  .cal-card{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:26px 26px 22px;
+      box-shadow:0 14px 34px -26px rgba(44,39,34,.4)}
+  .cal-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
+  .cal-month{font-family:var(--serif);font-size:22px;text-transform:capitalize}
+  .cal-nav{display:flex;gap:8px}
+  .cal-nav button{width:34px;height:34px;border-radius:50%;border:1px solid var(--linea);background:#fff;color:var(--tinta);
+      cursor:pointer;font-size:15px;line-height:1;transition:.2s}
+  .cal-nav button:hover{border-color:var(--oro);color:var(--oro)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .cal-dow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-60);text-align:center;
+      font-weight:600;padding-bottom:6px}
+  .cal-day{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;border-radius:10px;
+      font-size:14px;color:var(--tinta);background:transparent;border:1px solid transparent;cursor:default;transition:.15s}
+  .cal-day.out{color:#c9c1b3}
+  .cal-day.today{border-color:var(--oro-claro);font-weight:600}
+  .cal-day.has{cursor:pointer;background:#fff;border-color:var(--linea);font-weight:600}
+  .cal-day.has:hover{border-color:var(--oro)}
+  .cal-day.has::after{content:"";position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+      width:5px;height:5px;border-radius:50%;background:var(--oro)}
+  .cal-day.sel{background:var(--oro);border-color:var(--oro);color:#fff}
+  .cal-day.sel::after{background:#fff}
+  .cal-list{margin-top:22px;border-top:1px solid var(--linea);padding-top:18px}
+  .cal-list .cal-day-title{font-family:var(--serif);font-size:17px;margin-bottom:12px;text-transform:capitalize}
+  .cal-ev{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px dashed var(--linea)}
+  .cal-ev:last-child{border-bottom:none}
+  .cal-ev .hh{font-family:var(--serif);font-size:15px;color:var(--oro);flex:none;min-width:64px}
+  .cal-ev .ev-main{flex:1;min-width:0}
+  .cal-ev .ev-main b{font-family:var(--serif);font-size:16px;font-weight:400;display:block}
+  .cal-ev .ev-meta{font-size:12.5px;color:var(--tinta-60);margin-top:3px}
+  .cal-ev .ev-open{flex:none;font-size:12.5px;font-weight:600;color:var(--oro);background:none;border:1px solid var(--oro-claro);
+      border-radius:100px;padding:5px 13px;cursor:pointer}
+  .cal-ev .ev-open:hover{background:rgba(203,161,90,.1)}
+  .cal-empty{font-size:14px;color:var(--tinta-60)}
   .ws-price{font-family:var(--serif);font-size:24px;margin-bottom:10px;display:block}
   .ws-price small{font-family:var(--sans);font-size:12px;color:var(--tinta-60)}
 
   /* ---- STORE ---- */
   .store-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
   .prod{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
-  .prod-cover{height:170px;background-size:cover;background-position:center;position:relative}
+  /* La portada era un rectángulo muy alargado y ninguna portada de las voces
+     encajaba. Sigue siendo horizontal, sólo un poco más alta (3:2). */
+  .prod-cover{aspect-ratio:3/2;background-size:cover;background-position:center;position:relative}
   .prod-cover .ptype{position:absolute;top:12px;left:12px;background:rgba(44,39,34,.82);color:var(--lino);font-size:11px;font-weight:600;
        border-radius:100px;padding:5px 12px;letter-spacing:.04em}
   .prod-body{padding:22px;display:flex;flex-direction:column;flex:1}
   .prod-body h4{font-size:19px;margin-bottom:6px}
-  .prod-body p{font-size:13.5px;color:var(--tinta-60);flex:1}
+  .prod-body p{font-size:13.5px;color:var(--tinta-60)}
+  /* Descripciones de largo muy dispar rompían la cuadrícula: se recorta a 4
+     líneas y el texto completo se despliega con "Ver más". No se pierde nada. */
+  .prod-desc-wrap{flex:1}
+  .prod-desc{white-space:pre-line}
+  .prod-desc.clamped{display:-webkit-box;-webkit-line-clamp:4;line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .prod-more{background:none;border:0;padding:4px 0 0;cursor:pointer;font:inherit;font-size:12.5px;
+       font-weight:600;color:var(--oro);text-decoration:underline;text-underline-offset:3px}
+  .prod-more:hover{opacity:.75}
   .prod-foot{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
   .prod-foot .pp{font-family:var(--serif);font-size:22px}
   .add{background:var(--salvia-tenue);color:var(--salvia);border:none;border-radius:100px;width:44px;height:44px;cursor:pointer;
        display:flex;align-items:center;justify-content:center;transition:.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .add:hover{background:var(--salvia);color:#fff}
+  .prod-foot .acts{display:flex;align-items:center;gap:8px}
+  /* botón compartir: mismo gesto que "añadir", en tono oro y un punto más discreto */
+  .share{background:transparent;color:var(--oro);border:1.5px solid var(--oro-claro);border-radius:100px;width:40px;height:40px;cursor:pointer;
+       display:flex;align-items:center;justify-content:center;transition:.2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .share:hover{background:var(--oro);border-color:var(--oro);color:#fff}
+  /* enlace del nombre de la voz en "Ofrecido por" */
+  .byline a{color:inherit;text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px;cursor:pointer}
+  .byline a:hover{text-decoration-thickness:2px}
+  /* resaltado al llegar por un enlace compartido (?oferta= / ?producto=) */
+  .hl{outline:2px solid var(--oro);outline-offset:3px;border-radius:12px;animation:hlPulse 2.4s ease-out}
+  @keyframes hlPulse{0%{background:rgba(182,138,62,.22)}100%{background:transparent}}
+  @media (prefers-reduced-motion:reduce){ .hl{animation:none} }
 
   /* ---- TESTIMONIALS ---- */
   .test-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
@@ -258,7 +326,9 @@
   .modal-info p{font-size:15px;color:var(--tinta-60);margin-bottom:18px}
   .focus-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
   .focus-list span{font-size:12.5px;background:var(--salvia-tenue);color:var(--salvia);border-radius:100px;padding:5px 12px;font-weight:500}
-  .certs{font-size:13.5px;color:var(--tinta-60);margin-bottom:24px}
+  /* Certificaciones y descripciones se escriben en varias líneas: se respetan
+     tal cual las capturó la voz (antes se veían como un bloque corrido). */
+  .certs{font-size:13.5px;color:var(--tinta-60);margin-bottom:24px;white-space:pre-line}
   .certs b{color:var(--tinta);font-weight:600}
   .offers{margin:0 0 22px;border-top:1px solid var(--linea);padding-top:16px}
   .offers h5{font-family:var(--sans);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-weight:600;margin-bottom:10px}
@@ -269,7 +339,7 @@
   .offer-row .okind{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
       background:var(--salvia-tenue);color:var(--salvia);border-radius:100px;padding:2px 9px;margin-right:7px;vertical-align:middle}
   .offer-row b{font-family:var(--serif);font-size:15.5px;font-weight:400}
-  .offer-row p{font-size:12.5px;color:var(--tinta-60);margin:3px 0 0!important;line-height:1.4}
+  .offer-row p{font-size:12.5px;color:var(--tinta-60);margin:3px 0 0!important;line-height:1.4;white-space:pre-line}
   .offer-row .ofile{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--oro);text-decoration:none;border:1px solid var(--oro-claro);border-radius:8px;padding:5px 11px}
   .offer-row .ofile:hover{background:rgba(203,161,90,.1)}
   .offer-row .owip{display:inline-block;font-size:10.5px;font-weight:600;color:var(--oro);border:1px dashed var(--oro-claro);border-radius:100px;padding:2px 9px;margin-top:5px}
@@ -277,6 +347,26 @@
   .offer-row .oprice{display:block;font-family:var(--serif);font-size:16px;margin-bottom:5px}
   .offer-row .obtn{padding:6px 13px;font-size:12px}
   .offer-row .ovia{font-size:11.5px;color:var(--pizarra);font-weight:600}
+  /* Píldora de estado elegida por la voz (Disponible ahora / Reserva ahora / Próximamente) */
+  .opill{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    border-radius:100px;padding:3px 10px;border:1px solid transparent}
+  .opill.disponible{color:#4b6b45;background:rgba(126,144,120,.18);border-color:rgba(126,144,120,.45)}
+  .opill.reserva{color:#8a5a12;background:rgba(203,161,90,.18);border-color:var(--oro-claro)}
+  .opill.proximamente{color:var(--tinta-60);background:rgba(44,39,34,.06);border-color:var(--linea)}
+  .pill-row{margin:0 0 8px}
+  .offer-row .pill-row{margin:6px 0 0}
+  /* Punto 3 · la oferta compartida va aparte, arriba, claramente marcada */
+  .shared-offer{border:1.5px solid var(--oro-claro);border-radius:16px;padding:14px 16px;
+    background:rgba(203,161,90,.08);margin:18px 0 6px}
+  .shared-offer .shared-eyebrow{display:block;font-size:10.5px;font-weight:700;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--oro);margin-bottom:8px}
+  .shared-offer .offer-row{border-bottom:none;padding-top:0}
+  .more-sep{display:flex;align-items:center;gap:12px;margin:22px 0 4px;
+    font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta-60)}
+  .more-sep::before,.more-sep::after{content:"";flex:1;height:1px;background:var(--linea)}
+  .sess-note{font-size:12px;color:var(--tinta-60);margin-top:5px}
+  /* Calendario embebido tras el pago — nunca un enlace copiable */
+  .cal-embed{width:100%;height:min(78vh,760px);border:1px solid var(--linea);border-radius:14px;background:#fff;display:block}
   .contact-reveal{border:1px dashed var(--oro-claro);border-radius:14px;padding:18px;background:rgba(203,161,90,.07)}
   .contact-reveal .note{font-size:12.5px;color:var(--tinta-60);margin-bottom:12px}
   .contact-data{display:none;flex-direction:column;gap:9px}
@@ -321,6 +411,9 @@
 
   /* ---- RESPONSIVE ---- */
   @media(max-width:980px){
+    /* En pantallas chicas los tres bloques se apilan; los textos ya son cortos
+       para que no se sientan pesados en ese formato. */
+    .mv-grid{grid-template-columns:1fr;max-width:620px;margin-left:auto;margin-right:auto}
     .cat-grid{grid-template-columns:repeat(2,1fr)}
     .spec-grid,.store-grid,.test-grid{grid-template-columns:repeat(2,1fr)}
     .about-grid,.contact-grid{grid-template-columns:1fr;gap:38px}
@@ -337,6 +430,11 @@
     .ws{grid-template-columns:1fr;gap:16px;text-align:left}
     .ws-date{border:none;padding:0;display:flex;gap:10px;align-items:baseline}
     .ws-action{text-align:left}
+    .cal-card{padding:18px 14px 16px}
+    .cal-grid{gap:3px}
+    .cal-day{font-size:12.5px;border-radius:8px}
+    .cal-ev{flex-wrap:wrap}
+    .cal-ev .hh{min-width:0}
     .foot-grid{grid-template-columns:1fr}
     .band{padding:74px 0}
     .wrap{padding:0 20px}
@@ -387,6 +485,7 @@
       <a href="#especialidades" data-i18n="nav.cats">Temáticas</a>
       <a href="#directorio" data-i18n="nav.dir">Especialistas</a>
       <a href="#talleres" data-i18n="nav.ws">Talleres</a>
+      <a href="#calendario" data-i18n="nav.cal">Calendario</a>
       <a href="#tienda" data-i18n="nav.store">Tienda</a>
       <a href="#nosotros" data-i18n="nav.about">Nosotros</a>
       <a href="#contacto" data-i18n="nav.contact">Contacto</a>
@@ -435,24 +534,31 @@
       <span class="eyebrow" data-i18n="mv.eyebrow">Por qué existimos</span>
       <h2 data-i18n="mv.title">Un espacio donde el conocimiento llega al alma</h2>
     </div>
+    <!-- Tres bloques en un mismo renglón: la parte alta de la página se sentía
+         saturada de texto, así que Visión / Misión / Objetivo van en columnas. -->
     <div class="mv-grid">
-      <div class="mv-card reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/></svg></div>
-        <h3 data-i18n="mv.m.t">Misión</h3>
-        <p data-i18n="mv.m.b">Conectar a personas que buscan bienestar, sanación y crecimiento con especialistas de alto nivel en desarrollo humano, en un espacio seguro, inclusivo y profesional donde la voz del conocimiento llega directo a quien la necesita.</p>
-      </div>
       <div class="mv-card reveal">
         <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/></svg></div>
         <h3 data-i18n="mv.v.t">Visión</h3>
-        <p data-i18n="mv.v.b">Ser la plataforma líder del mundo de habla hispana —y referente internacional— en democratizar el bienestar humano: una comunidad global donde cada persona, sin importar su origen o condición, acceda a las voces que transforman su vida desde adentro.</p>
+        <p data-i18n="mv.v.b">Ser la plataforma internacional de referencia que conecta a personas y empresas con profesionales de excelencia, para generar bienestar, armonía y transformación en cada encuentro.</p>
+      </div>
+      <div class="mv-card reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/></svg></div>
+        <h3 data-i18n="mv.m.t">Misión</h3>
+        <p data-i18n="mv.m.b">Gestionamos un ecosistema donde el talento y el conocimiento convergen en servicios de calidad, con procesos ágiles, transparentes y confiables que acompañan tu desarrollo personal y profesional.</p>
+      </div>
+      <div class="mv-card reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="13" r="8"/><circle cx="11" cy="13" r="3.6"/><path d="m11 13 9-9"/><path d="M16.5 4H20v3.5"/></svg></div>
+        <h3 data-i18n="mv.o.t">Objetivo Estratégico</h3>
+        <p data-i18n="mv.o.b">Construimos encuentros que transforman. Ofrecemos a los especialistas exposición internacional de excelencia, y a cada persona, un espacio confiable para sanar, crecer y llegar más lejos de lo que alguna vez imaginó.</p>
       </div>
     </div>
     <div class="values reveal">
       <div class="value-pill"><b data-i18n="mv.val1.t">Inclusión</b> <span data-i18n="mv.val1.b">sin distinciones</span></div>
-      <div class="value-pill"><b data-i18n="mv.val2.t">Profesionalismo</b> <span data-i18n="mv.val2.b">solo especialistas certificados</span></div>
+      <div class="value-pill"><b data-i18n="mv.val2.t">Profesionalismo</b> <span data-i18n="mv.val2.b">profesionales de excelencia</span></div>
       <div class="value-pill"><b data-i18n="mv.val3.t">Autenticidad</b> <span data-i18n="mv.val3.b">cada voz es genuina</span></div>
-      <div class="value-pill"><b data-i18n="mv.val4.t">Transformación</b> <span data-i18n="mv.val4.b">cambio real</span></div>
-      <div class="value-pill"><b data-i18n="mv.val5.t">Paz</b> <span data-i18n="mv.val5.b">sostenible para todos</span></div>
+      <div class="value-pill"><b data-i18n="mv.val4.t">Transformación</b> <span data-i18n="mv.val4.b">trascendental</span></div>
+      <div class="value-pill"><b data-i18n="mv.val5.t">Paz</b> <span data-i18n="mv.val5.b">plenitud y armonía</span></div>
     </div>
   </div>
 </section>
@@ -462,7 +568,7 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow" data-i18n="cat.eyebrow">Disciplinas</span>
-      <h2 data-i18n="cat.title">Ocho caminos hacia el bienestar</h2>
+      <h2 data-i18n="cat.title">Caminos hacia el bienestar</h2>
       <p data-i18n="cat.sub">Cada especialidad reúne a voces dedicadas a una dimensión del desarrollo humano. Elige por dónde empezar.</p>
     </div>
     <div class="cat-grid" id="catGrid"></div>
@@ -508,6 +614,32 @@
       <p data-i18n="ws.sub">Inscríbete y paga de forma segura desde la plataforma. Recibe confirmación y recordatorios por correo.</p>
     </div>
     <div class="shop-list" id="wsList"></div>
+  </div>
+</section>
+
+<!-- ============ CALENDARIO PÚBLICO ============ -->
+<!-- Siempre visible, sin registro. Sólo entran los eventos con FECHA fijada por
+     la voz al publicarlos (talleres y conferencias); las sesiones que se agendan
+     después de contratar siguen su propio camino (Calendly tras el pago). -->
+<section class="band" id="calendario">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow" data-i18n="cal.eyebrow">Calendario</span>
+      <h2 data-i18n="cal.title">Qué viene en Voces</h2>
+      <p data-i18n="cal.sub">Talleres y conferencias con fecha confirmada. Toca un día para ver todo lo que sucede ese día.</p>
+    </div>
+    <div class="cal-card reveal">
+      <div class="cal-top">
+        <div class="cal-month" id="calMonth"></div>
+        <div class="cal-nav">
+          <button type="button" onclick="calNav(-1)" aria-label="←">‹</button>
+          <button type="button" onclick="calToday()" title="Hoy" aria-label="Hoy">•</button>
+          <button type="button" onclick="calNav(1)" aria-label="→">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-list" id="calList"></div>
+    </div>
   </div>
 </section>
 
@@ -603,6 +735,7 @@
         <li><a href="#especialidades" data-i18n="nav.cats">Temáticas</a></li>
         <li><a href="#directorio" data-i18n="nav.dir">Especialistas</a></li>
         <li><a href="#talleres" data-i18n="nav.ws">Talleres</a></li>
+        <li><a href="#calendario" data-i18n="nav.cal">Calendario</a></li>
         <li><a href="#tienda" data-i18n="nav.store">Tienda</a></li>
       </ul></div>
       <div><h5 data-i18n="foot.org">Proyecto</h5><ul>
@@ -652,15 +785,22 @@
 ============================================================ */
 const I18N = {
   es:{
-    "nav.cats":"Temáticas","nav.dir":"Especialistas","nav.ws":"Talleres","nav.store":"Tienda","nav.about":"Nosotros","nav.contact":"Contacto",
+    "nav.cats":"Temáticas","nav.dir":"Especialistas","nav.ws":"Talleres","nav.cal":"Calendario","nav.store":"Tienda","nav.about":"Nosotros","nav.contact":"Contacto",
+    "cal.eyebrow":"Calendario","cal.title":"Qué viene en Voces",
+    "cal.sub":"Talleres y conferencias con fecha confirmada. Toca un día para ver todo lo que sucede ese día.",
+    "cal.none":"No hay eventos programados este día.",
+    "cal.nonemonth":"Todavía no hay eventos con fecha en este mes. Usa las flechas para ver otros meses.",
+    "cal.open":"Ver detalle","cal.free":"Sin costo","cal.online":"En línea",
+    "cal.dow":"D,L,M,M,J,V,S","cal.today":"Hoy",
     "hero.eyebrow":"Bienestar emocional, mental y humano","hero.title1":"Voces para el","hero.title2":"Alma","hero.soul":"Voices for the Soul",
     "hero.lead":"Conectamos voces que sanan con almas que buscan transformarse. Encuentra al especialista que tu momento necesita.",
     "hero.cta1":"Explorar especialistas →","hero.cta2":"Ver talleres",
     "mv.eyebrow":"Por qué existimos","mv.title":"Un espacio donde el conocimiento llega al alma",
-    "mv.m.t":"Misión","mv.m.b":"Conectar a personas que buscan bienestar, sanación y crecimiento con especialistas de alto nivel en desarrollo humano, en un espacio seguro, inclusivo y profesional donde la voz del conocimiento llega directo a quien la necesita.",
-    "mv.v.t":"Visión","mv.v.b":"Ser la plataforma líder del mundo de habla hispana —y referente internacional— en democratizar el bienestar humano: una comunidad global donde cada persona, sin importar su origen o condición, acceda a las voces que transforman su vida desde adentro.",
-    "mv.val1.t":"Inclusión","mv.val1.b":"sin distinciones","mv.val2.t":"Profesionalismo","mv.val2.b":"solo especialistas certificados",
-    "mv.val3.t":"Autenticidad","mv.val3.b":"cada voz es genuina","mv.val4.t":"Transformación","mv.val4.b":"cambio real","mv.val5.t":"Paz","mv.val5.b":"sostenible para todos",
+    "mv.v.t":"Visión","mv.v.b":"Ser la plataforma internacional de referencia que conecta a personas y empresas con profesionales de excelencia, para generar bienestar, armonía y transformación en cada encuentro.",
+    "mv.m.t":"Misión","mv.m.b":"Gestionamos un ecosistema donde el talento y el conocimiento convergen en servicios de calidad, con procesos ágiles, transparentes y confiables que acompañan tu desarrollo personal y profesional.",
+    "mv.o.t":"Objetivo Estratégico","mv.o.b":"Construimos encuentros que transforman. Ofrecemos a los especialistas exposición internacional de excelencia, y a cada persona, un espacio confiable para sanar, crecer y llegar más lejos de lo que alguna vez imaginó.",
+    "mv.val1.t":"Inclusión","mv.val1.b":"sin distinciones","mv.val2.t":"Profesionalismo","mv.val2.b":"profesionales de excelencia",
+    "mv.val3.t":"Autenticidad","mv.val3.b":"cada voz es genuina","mv.val4.t":"Transformación","mv.val4.b":"trascendental","mv.val5.t":"Paz","mv.val5.b":"plenitud y armonía",
     "cat.eyebrow":"Temáticas","cat.title":"Caminos hacia el bienestar","cat.sub":"Cada temática reúne a voces dedicadas a una dimensión del desarrollo humano. Elige por dónde empezar.",
     "dir.eyebrow":"Directorio","dir.title":"Encuentra tu voz","dir.sub":"El contacto es directo entre tú y el especialista. La plataforma no intermedia ni cobra comisión por sesiones individuales — solo facilita el encuentro.",
     "dir.search":"Buscar por nombre o tema…",
@@ -676,25 +816,42 @@ const I18N = {
     "foot.tag":"Conectando voces que sanan con almas que buscan transformarse.","foot.explore":"Explorar","foot.org":"Proyecto","foot.join":"Súmate","foot.legal":"Legal",
     "foot.privacy":"Aviso de privacidad","foot.terms":"Términos de uso","foot.disclaimer":"Descargo profesional","foot.made":"Hecho con cuidado para tu bienestar",
     "cart.title":"Tu carrito","cart.total":"Total","cart.checkout":"Pagar de forma segura","cart.empty":"Tu carrito está en silencio. Añade algo que nutra tu alma.",
-    "modal.focus":"Áreas de enfoque","modal.certs":"Certificaciones","modal.reveal":"Mostrar contacto directo","modal.note":"El contacto es directo. La plataforma no interviene en las sesiones individuales.","modal.book":"Contactar especialista",
+    "modal.focus":"Áreas de enfoque","modal.certs":"Certificaciones",
     "modal.offers":"Su oferta","offer.buy":"Ver / Comprar ↗","offer.via":"Disponible vía Voces","offer.wip":"Próximamente","offer.add":"Añadir al carrito",
-    "modal.session":"Solicitar sesión individual","modal.share":"Compartir perfil","modal.shared":"Enlace copiado ✓","modal.sessNote":"Escribe tu correo y le haremos llegar tu solicitud de sesión a la voz. El contacto es directo, sin comisión.",
+    "modal.session":"Solicitar sesión individual","modal.share":"Compartir perfil","modal.shared":"Enlace copiado ✓",
+    "pill.disponible":"Disponible ahora","pill.reserva":"Reserva ahora","pill.proximamente":"Próximamente",
+    "shared.this":"El producto que te compartieron","shared.more":"Más productos que ofrece",
+    "sess.pick":"Elige la sesión que quieres agendar","sess.pickNote":"Reservas tu lugar al pagar; enseguida eliges el día y la hora.",
+    "sess.soon":"Agenda en preparación","offer.sessNote":"Al pagar eliges día y hora en el calendario de la voz.",
+    "sess.none":"Por el momento este especialista no ofrece este servicio en esta plataforma.",
+    "book.embedLead":"Elige tu día y hora aquí mismo:","book.mailNote":"También te llega un correo con la confirmación de tu pago.",
     "toast.add":"Añadido al carrito","toast.rm":"Eliminado del carrito","toast.checkout":"Redirigiendo a pago seguro…","toast.sent":"Mensaje enviado. Te responderemos pronto.","toast.reg":"Inscripción iniciada — redirigiendo a pago…",
     "toast.sessSent":"Solicitud enviada. La voz te contactará directo.","toast.orderOk":"Pedido recibido — te enviamos las instrucciones de pago.","toast.orderErr":"No se pudo completar el pedido. Intenta de nuevo.",
-    "cart.by":"por","cart.qty":"Cantidad","cart.checkoutTitle":"Finalizar pedido","cart.email":"Tu correo","cart.name":"Tu nombre","cart.code":"Código de descuento","cart.apply":"Aplicar","cart.place":"Confirmar pedido","cart.fx":"Precios convertidos como referencia; el cobro se procesa en pesos mexicanos (MXN).","cart.back":"← Seguir explorando",
+    "bio.more":"Ver más","bio.less":"Ver menos","cart.by":"por","cart.qty":"Cantidad","cart.checkoutTitle":"Finalizar pedido","cart.email":"Tu correo","cart.name":"Tu nombre","cart.code":"Código de descuento","cart.apply":"Aplicar","cart.place":"Confirmar pedido","cart.fx":"Precios convertidos como referencia; el cobro se procesa en pesos mexicanos (MXN).","cart.back":"← Seguir explorando",
+    "pay.how":"¿Cómo quieres pagar?","pay.card":"Tarjeta de crédito o débito","pay.cardSub":"Pago inmediato y entrega al instante.","pay.other":"Efectivo, SPEI o saldo MercadoPago","pay.otherSub":"OXXO, transferencia SPEI, saldo MP y cualquier tarjeta. Si tu tarjeta fue rechazada, usa esta opción.","pay.transfer":"Transferencia directa (SPEI)","pay.transferSub":"Te damos la CLABE y confirmamos tu depósito a mano.","pay.trTitle":"Transferencia directa","pay.trIntro":"Haz la transferencia por este monto y luego pulsa el botón. Confirmamos tu depósito y liberamos tu compra.","pay.trBank":"Banco","pay.trClabe":"CLABE","pay.trBenef":"Beneficiario","pay.trConcept":"Concepto / referencia","pay.trRefLabel":"Referencia de tu transferencia (opcional)","pay.trDone":"Ya transferí","pay.trOk":"¡Gracias! Recibimos tu aviso. En cuanto confirmemos el depósito te llega tu compra por correo.","pay.copy":"Copiar","pay.copied":"Copiado","pay.failTitle":"Ese medio de pago no se pudo procesar","pay.failIntro":"No es tu culpa y tu pedido sigue guardado. Elige otra forma de pagar:","pay.retryOther":"Pagar con efectivo, SPEI o saldo","pay.retryCard":"Reintentar con tarjeta","pay.needTransfer":"Escríbenos y te pasamos los datos de transferencia.",
     "avail.now":"Disponible","avail.soon":"Agenda limitada","mod.all":"Todas las modalidades","mod.presencial":"Presencial","mod.online":"En línea","mod.hibrido":"Híbrido",
-    "lang.all":"Todos los idiomas","catfilter.all":"Todas las temáticas","ws.spots":"por persona","store.by":"Ofrecido por"
+    "lang.all":"Todos los idiomas","catfilter.all":"Todas las temáticas","ws.spots":"por persona","store.by":"Ofrecido por",
+    "share.item":"Compartir","share.title":"Compartir esta oferta",
+    "book.now":"Agendar ahora →","book.default":"Reserva tu sesión","book.paidTitle":"¡Pago recibido!",
+    "book.paidLead":"Ahora elige el día y la hora de tu sesión.","book.redirect":"Te llevamos a la agenda en","book.close":"Cerrar"
   },
   en:{
-    "nav.cats":"Themes","nav.dir":"Specialists","nav.ws":"Workshops","nav.store":"Shop","nav.about":"About","nav.contact":"Contact",
+    "nav.cats":"Themes","nav.dir":"Specialists","nav.ws":"Workshops","nav.cal":"Calendar","nav.store":"Shop","nav.about":"About","nav.contact":"Contact",
+    "cal.eyebrow":"Calendar","cal.title":"What's coming at Voces",
+    "cal.sub":"Workshops and talks with a confirmed date. Tap a day to see everything happening then.",
+    "cal.none":"No events scheduled on this day.",
+    "cal.nonemonth":"No dated events this month yet. Use the arrows to browse other months.",
+    "cal.open":"See details","cal.free":"Free","cal.online":"Online",
+    "cal.dow":"S,M,T,W,T,F,S","cal.today":"Today",
     "hero.eyebrow":"Emotional, mental & human wellbeing","hero.title1":"Voices for the","hero.title2":"Soul","hero.soul":"Voces para el Alma",
     "hero.lead":"We connect voices that heal with souls seeking transformation. Find the specialist your moment calls for.",
     "hero.cta1":"Explore specialists →","hero.cta2":"See workshops",
     "mv.eyebrow":"Why we exist","mv.title":"A space where knowledge reaches the soul",
-    "mv.m.t":"Mission","mv.m.b":"To connect people seeking wellbeing, healing and growth with top specialists in human development — in a safe, inclusive and professional space where the voice of knowledge reaches the one who needs it.",
-    "mv.v.t":"Vision","mv.v.b":"To be the leading platform in the Spanish-speaking world — and an international reference — in democratizing human wellbeing: a global community where every person, regardless of origin or condition, can access the voices that transform life from within.",
-    "mv.val1.t":"Inclusion","mv.val1.b":"no distinctions","mv.val2.t":"Professionalism","mv.val2.b":"only certified specialists",
-    "mv.val3.t":"Authenticity","mv.val3.b":"every voice is genuine","mv.val4.t":"Transformation","mv.val4.b":"real change","mv.val5.t":"Peace","mv.val5.b":"sustainable for all",
+    "mv.v.t":"Vision","mv.v.b":"To be the leading international platform connecting people and companies with professionals of excellence, generating wellbeing, harmony and transformation in every encounter.",
+    "mv.m.t":"Mission","mv.m.b":"We run an ecosystem where talent and knowledge converge into quality services, with agile, transparent and trustworthy processes that support your personal and professional growth.",
+    "mv.o.t":"Strategic Objective","mv.o.b":"We build encounters that transform. We offer specialists international exposure of excellence, and every person a trustworthy space to heal, grow and go further than they ever imagined.",
+    "mv.val1.t":"Inclusion","mv.val1.b":"no distinctions","mv.val2.t":"Professionalism","mv.val2.b":"professionals of excellence",
+    "mv.val3.t":"Authenticity","mv.val3.b":"every voice is genuine","mv.val4.t":"Transformation","mv.val4.b":"transcendental","mv.val5.t":"Peace","mv.val5.b":"fullness and harmony",
     "cat.eyebrow":"Themes","cat.title":"Paths to wellbeing","cat.sub":"Each theme gathers voices devoted to one dimension of human development. Choose where to begin.",
     "dir.eyebrow":"Directory","dir.title":"Find your voice","dir.sub":"Contact is direct between you and the specialist. The platform does not mediate or charge commission on individual sessions — it only makes the encounter possible.",
     "dir.search":"Search by name or topic…",
@@ -710,14 +867,24 @@ const I18N = {
     "foot.tag":"Connecting voices that heal with souls seeking transformation.","foot.explore":"Explore","foot.org":"Project","foot.join":"Join us","foot.legal":"Legal",
     "foot.privacy":"Privacy notice","foot.terms":"Terms of use","foot.disclaimer":"Professional disclaimer","foot.made":"Made with care for your wellbeing",
     "cart.title":"Your cart","cart.total":"Total","cart.checkout":"Pay securely","cart.empty":"Your cart is quiet. Add something that nourishes your soul.",
-    "modal.focus":"Focus areas","modal.certs":"Credentials","modal.reveal":"Show direct contact","modal.note":"Contact is direct. The platform does not take part in individual sessions.","modal.book":"Contact specialist",
+    "modal.focus":"Focus areas","modal.certs":"Credentials",
     "modal.offers":"Their offer","offer.buy":"View / Buy ↗","offer.via":"Available via Voces","offer.wip":"Coming soon","offer.add":"Add to cart",
-    "modal.session":"Request a 1-on-1 session","modal.share":"Share profile","modal.shared":"Link copied ✓","modal.sessNote":"Enter your email and we'll pass your session request to the voice. Contact is direct, with no commission.",
+    "modal.session":"Book a 1-on-1 session","modal.share":"Share profile","modal.shared":"Link copied ✓",
+    "pill.disponible":"Available now","pill.reserva":"Book now","pill.proximamente":"Coming soon",
+    "shared.this":"The offering shared with you","shared.more":"More from",
+    "sess.pick":"Choose the session you'd like to book","sess.pickNote":"You reserve your place when you pay; then you pick the day and time.",
+    "sess.soon":"Calendar being set up","offer.sessNote":"After paying you pick the day and time on the voice's calendar.",
+    "sess.none":"This specialist does not currently offer this service on this platform.",
+    "book.embedLead":"Pick your day and time right here:","book.mailNote":"You'll also get an email confirming your payment.",
     "toast.add":"Added to cart","toast.rm":"Removed from cart","toast.checkout":"Redirecting to secure checkout…","toast.sent":"Message sent. We'll be in touch soon.","toast.reg":"Registration started — redirecting to payment…",
     "toast.sessSent":"Request sent. The voice will reach out directly.","toast.orderOk":"Order received — we've emailed your payment instructions.","toast.orderErr":"Could not place the order. Please try again.",
-    "cart.by":"by","cart.qty":"Qty","cart.checkoutTitle":"Complete your order","cart.email":"Your email","cart.name":"Your name","cart.code":"Discount code","cart.apply":"Apply","cart.place":"Place order","cart.fx":"Prices shown for reference; payment is processed in Mexican pesos (MXN).","cart.back":"← Keep exploring",
+    "bio.more":"Read more","bio.less":"Read less","cart.by":"by","cart.qty":"Qty","cart.checkoutTitle":"Complete your order","cart.email":"Your email","cart.name":"Your name","cart.code":"Discount code","cart.apply":"Apply","cart.place":"Place order","cart.fx":"Prices shown for reference; payment is processed in Mexican pesos (MXN).","cart.back":"← Keep exploring",
+    "pay.how":"How would you like to pay?","pay.card":"Credit or debit card","pay.cardSub":"Instant payment and instant delivery.","pay.other":"Cash, bank transfer or MercadoPago balance","pay.otherSub":"OXXO, SPEI transfer, MP balance and any card. If your card was declined, use this option.","pay.transfer":"Direct bank transfer (SPEI)","pay.transferSub":"We give you the account details and confirm your deposit by hand.","pay.trTitle":"Direct transfer","pay.trIntro":"Transfer this amount, then tap the button. We confirm your deposit and release your purchase.","pay.trBank":"Bank","pay.trClabe":"CLABE","pay.trBenef":"Account holder","pay.trConcept":"Reference","pay.trRefLabel":"Your transfer reference (optional)","pay.trDone":"I've transferred","pay.trOk":"Thank you! We got your notice. As soon as we confirm the deposit your purchase arrives by email.","pay.copy":"Copy","pay.copied":"Copied","pay.failTitle":"That payment method couldn't be processed","pay.failIntro":"It's not your fault and your order is safe. Pick another way to pay:","pay.retryOther":"Pay with cash, transfer or balance","pay.retryCard":"Try card again","pay.needTransfer":"Write to us and we'll send you the transfer details.",
     "avail.now":"Available","avail.soon":"Limited slots","mod.all":"All formats","mod.presencial":"In person","mod.online":"Online","mod.hibrido":"Hybrid",
-    "lang.all":"All languages","catfilter.all":"All themes","ws.spots":"per person","store.by":"Offered by"
+    "lang.all":"All languages","catfilter.all":"All themes","ws.spots":"per person","store.by":"Offered by",
+    "share.item":"Share","share.title":"Share this offering",
+    "book.now":"Book now →","book.default":"Book your session","book.paidTitle":"Payment received!",
+    "book.paidLead":"Now pick the day and time for your session.","book.redirect":"Taking you to the calendar in","book.close":"Close"
   }
 };
 
@@ -739,35 +906,74 @@ const esc = s => (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":
    We detect the visitor's currency (IP → locale fallback) and show
    an approximate converted price with a static FX table.
 ============================================================ */
-const FX_FROM_MXN = { MXN:1, USD:0.055, EUR:0.051, GBP:0.043, CAD:0.075, COP:225, ARS:52, CLP:52, PEN:0.20, BRL:0.30, GTQ:0.43, AUD:0.083 };
-const CCY_BY_COUNTRY = { MX:"MXN", US:"USD", CA:"CAD", GB:"GBP", ES:"EUR", FR:"EUR", DE:"EUR", IT:"EUR", CO:"COP", AR:"ARS", CL:"CLP", PE:"PEN", BR:"BRL", GT:"GTQ", AU:"AUD" };
+/* Tasas REALES con base USD, servidas por vpa_fx_rates() y refrescadas 2×/día por cron
+   (edge fn vpa-fx). Antes había aquí una tabla fija MXN-base que se quedó vieja: ARS iba
+   -39% y COP +22%, o sea un comprador argentino veía el precio 40% más barato del real.
+   El respaldo de abajo SÓLO se usa si la red falla, y en ese caso no se muestra conversión
+   para las monedas volátiles: más vale enseñar el precio en MXN que un número inventado. */
+const FX_FALLBACK_PER_USD = { USD:1, MXN:17.34, EUR:0.87, GBP:0.75, CAD:1.37, AUD:1.52, CHF:0.80, BRL:5.07, CLP:927, PEN:3.40, GTQ:7.63, UYU:40.0, COP:3203, ARS:1488, JPY:157, SEK:9.6, NOK:10.5, DKK:6.5, PLN:3.7, NZD:1.66, ILS:3.6, ZAR:18.0, INR:85, AED:3.67, SGD:1.34, HKD:7.8, CRC:512, DOP:60, PYG:7600, BOB:6.9, HNL:25, NIO:36.8, VES:50 };
+/* Monedas con inflación alta: si sólo tenemos el respaldo (sin datos frescos), no convertimos. */
+const FX_VOLATILE = ["ARS","VES","NGN","TRY","LBP","SYP","ZWL"];
+const CCY_BY_COUNTRY = { MX:"MXN", US:"USD", CA:"CAD", GB:"GBP", ES:"EUR", FR:"EUR", DE:"EUR", IT:"EUR", PT:"EUR", NL:"EUR", IE:"EUR", AT:"EUR", BE:"EUR", GR:"EUR", CO:"COP", AR:"ARS", CL:"CLP", PE:"PEN", BR:"BRL", GT:"GTQ", AU:"AUD", UY:"UYU", CR:"CRC", DO:"DOP", PY:"PYG", BO:"BOB", HN:"HNL", NI:"NIO", PA:"USD", SV:"USD", EC:"USD", VE:"VES", CH:"CHF", JP:"JPY", SE:"SEK", NO:"NOK", DK:"DKK", PL:"PLN", NZ:"NZD", IL:"ILS", ZA:"ZAR", IN:"INR", AE:"AED", SG:"SGD", HK:"HKD" };
+
+let FX = { base:"USD", rates:{ ...FX_FALLBACK_PER_USD }, live:false, fetched_at:null };
 let CUR = { code:"MXN", rate:1 };
-function setCurrency(code){ if(FX_FROM_MXN[code]){ CUR={ code, rate:FX_FROM_MXN[code] }; } }
+
+/* rate = cuántas unidades de `code` vale 1 MXN, siempre calculado pasando por USD. */
+function fxRateFromMXN(code){
+  const per = FX.rates, mxn = Number(per.MXN), tgt = Number(per[code]);
+  if(!mxn || !tgt || !isFinite(mxn) || !isFinite(tgt)) return null;
+  return tgt / mxn;
+}
+function setCurrency(code){
+  if(code === "MXN"){ CUR = { code:"MXN", rate:1 }; return true; }
+  if(!FX.live && FX_VOLATILE.includes(code)) return false;   // sin datos frescos no adivinamos
+  const r = fxRateFromMXN(code);
+  if(!r) return false;
+  CUR = { code, rate:r }; return true;
+}
+async function loadFxRates(){
+  if(!sb) return;   // sin cliente Supabase nos quedamos con el respaldo
+  try{
+    const ctrl = new AbortController(); const to = setTimeout(()=>ctrl.abort(), 2500);
+    const { data, error } = await sb.rpc("vpa_fx_rates").abortSignal(ctrl.signal);
+    clearTimeout(to);
+    if(error || !data || !data.rates || !data.rates.MXN) return;
+    // `stale` lo marca el servidor si nadie refrescó en 3 días: mejor no convertir.
+    FX = { base:"USD", rates:data.rates, live:!data.stale, fetched_at:data.fetched_at };
+  }catch(_){/* nos quedamos con el respaldo */}
+}
 async function detectCurrency(){
+  await loadFxRates();
   try{
     const saved = localStorage.getItem("vpa_ccy");
-    if(saved && FX_FROM_MXN[saved]){ setCurrency(saved); return; }
-    // locale region first (instant, offline)
+    if(saved && setCurrency(saved)) return;
+    // región del navegador primero (instantáneo, sin red)
     const reg = (new Intl.Locale(navigator.language).region) || (navigator.language.split("-")[1]||"").toUpperCase();
     if(reg && CCY_BY_COUNTRY[reg]) setCurrency(CCY_BY_COUNTRY[reg]);
-    // then refine by IP (best effort, short timeout — never blocks render)
+    // luego se afina por IP (mejor esfuerzo, timeout corto — nunca bloquea el render)
     const ctrl = new AbortController(); const to=setTimeout(()=>ctrl.abort(),1500);
     const r = await fetch("https://ipapi.co/json/",{signal:ctrl.signal}); clearTimeout(to);
-    if(r.ok){ const j=await r.json(); const c=j.currency||CCY_BY_COUNTRY[j.country_code]; if(c&&FX_FROM_MXN[c]) setCurrency(c); }
-  }catch(_){/* keep whatever we have */}
+    if(r.ok){ const j=await r.json(); const c=j.currency||CCY_BY_COUNTRY[j.country_code]; if(c) setCurrency(c); }
+  }catch(_){/* nos quedamos con lo que ya haya */}
 }
-// pesos (MXN, whole units) → formatted string in the visitor's currency
+/* pesos (MXN, unidades enteras) → texto en la moneda del visitante.
+   El cobro SIEMPRE se procesa en MXN, por eso el "≈" y la nota al pie del carrito. */
 function money(pesos){
   const v = Number(pesos)||0;
   if(CUR.code==="MXN") return `$${v.toLocaleString("es-MX")} MXN`;
   const conv = v * CUR.rate;
-  const dp = conv < 100 ? (conv<10?2:0) : 0;
-  try{ return "≈ "+new Intl.NumberFormat(lang==="es"?"es-MX":"en-US",{style:"currency",currency:CUR.code,maximumFractionDigits:dp}).format(conv); }
-  catch(_){ return `≈ ${Math.round(conv).toLocaleString()} ${CUR.code}`; }
+  if(!isFinite(conv) || conv<=0) return `$${v.toLocaleString("es-MX")} MXN`;
+  try{
+    // Intl ya sabe cuántos decimales lleva cada moneda (JPY/CLP/COP van sin decimales).
+    const opts = { style:"currency", currency:CUR.code };
+    if(conv >= 1000) { opts.maximumFractionDigits = 0; }
+    return "≈ "+new Intl.NumberFormat(lang==="es"?"es-MX":"en-US",opts).format(conv);
+  }catch(_){ return `≈ ${Math.round(conv).toLocaleString()} ${CUR.code}`; }
 }
 const OKIND = {
-  es:{libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"},
-  en:{libro:"Book",ebook:"Ebook",audiolibro:"Audiobook",audio:"Audio",curso:"Course",coaching:"Coaching",sesion_individual:"1-on-1 session",sesion_grupal:"Group session",retiro:"Retreat",conferencia:"Speaking",otro:"Other"}
+  es:{libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"},
+  en:{libro:"Book",ebook:"Ebook",audiolibro:"Audiobook",audio:"Audio",test:"Test",curso:"Course",coaching:"Coaching",sesion_individual:"1-on-1 session",sesion_grupal:"Group session",retiro:"Retreat",conferencia:"Speaking",otro:"Other"}
 };
 
 let CATEGORIES = [
@@ -775,10 +981,13 @@ let CATEGORIES = [
   {id:"emocional", icon:'<path d="M12 22s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z"/>', es:{t:"Inteligencia Emocional",d:"Reconoce, regula y habita tus emociones."},en:{t:"Emotional Intelligence",d:"Recognize, regulate and inhabit your emotions."}},
   {id:"integral", icon:'<path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/>', es:{t:"Bienestar y Salud Integral",d:"Cuerpo, mente y energía en equilibrio."},en:{t:"Integral Wellbeing & Health",d:"Body, mind and energy in balance."}},
   {id:"filosofias", icon:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>', es:{t:"Filosofías y Tradiciones",d:"Mindfulness y sabiduría aplicada, sin afiliación religiosa."},en:{t:"Philosophies & Traditions",d:"Mindfulness and applied wisdom, with no religious affiliation."}},
-  {id:"liderazgo", icon:'<path d="m12 2 2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6Z"/>', es:{t:"Liderazgo y Desarrollo",d:"Crece como persona y como profesional."},en:{t:"Leadership & Development",d:"Grow as a person and as a professional."}},
-  {id:"sanacion", icon:'<path d="M12 21s-7-4-9-9a5 5 0 0 1 9-2 5 5 0 0 1 9 2c-2 5-9 9-9 9Z"/><path d="m9 11 2 2 4-4"/>', es:{t:"Sanación de Heridas",d:"Libera el peso del pasado y sana de raíz."},en:{t:"Healing Emotional Wounds",d:"Release the weight of the past and heal at the root."}},
+  {id:"liderazgo", icon:'<path d="m12 2 2.4 7.4H22l-6 4.4 2.3 7.2L12 16.6 5.7 21l2.3-7.2-6-4.4h7.6Z"/>', es:{t:"Liderazgo y Desarrollo Personal",d:"Crece como persona y como profesional."},en:{t:"Leadership & Personal Development",d:"Grow as a person and as a professional."}},
+  {id:"perdon-duelo", icon:'<path d="M12 15.4S7.1 12.7 5.7 9.7A3.4 3.4 0 0 1 12 7a3.4 3.4 0 0 1 6.3 2.7c-1.4 3-6.3 5.7-6.3 5.7Z"/><path d="M4 15.3c1.7 3 4.7 4.9 8 4.9s6.3-1.9 8-4.9"/>', es:{t:"Perdón y Duelo",d:"Libera el peso del pasado y sana tus heridas desde la raíz."},en:{t:"Forgiveness & Grief",d:"Release the weight of the past and heal your wounds at the root."}},
   {id:"familia", icon:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 20c0-2.5 1.5-4.5 4-4.5"/>', es:{t:"Familia y Relaciones",d:"Construye vínculos sanos y duraderos."},en:{t:"Family & Relationships",d:"Build healthy, lasting bonds."}},
-  {id:"proposito", icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/>', es:{t:"Propósito y Proyecto de Vida",d:"Encuentra tu dirección y dale sentido a tu camino."},en:{t:"Purpose & Life Project",d:"Find your direction and give meaning to your path."}}
+  {id:"proposito", icon:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/>', es:{t:"Propósito y Proyecto de Vida",d:"Encuentra tu dirección y dale sentido a tu camino."},en:{t:"Purpose & Life Project",d:"Find your direction and give meaning to your path."}},
+  {id:"consultoria-empresarial", icon:'<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6.2A2.2 2.2 0 0 1 11.2 4h1.6A2.2 2.2 0 0 1 15 6.2V8"/><path d="M3 13.2h18"/>', es:{t:"Consultoría Empresarial",d:"Lidera con propósito: construye negocios que también transforman vidas."},en:{t:"Business Consulting",d:"Lead with purpose: build businesses that also transform lives."}},
+  {id:"finanzas-nueva-economia", icon:'<circle cx="12" cy="12" r="9"/><path d="M12 6.6v10.8"/><path d="M14.9 9.4a3 3 0 0 0-2.9-1.6c-1.7 0-2.9 1-2.9 2.3 0 3 5.9 1.7 5.9 4.7 0 1.4-1.2 2.4-3 2.4a3.3 3.3 0 0 1-3.1-1.7"/>', es:{t:"Finanzas y Nueva Economía",d:"Construye abundancia y libertad financiera en la era digital."},en:{t:"Finance & the New Economy",d:"Build abundance and financial freedom in the digital era."}},
+  {id:"sostenibilidad-vida-consciente", icon:'<path d="M20 4c.7 7.7-3.8 13.2-9.5 13.2A5.5 5.5 0 0 1 5 11.7C5 6.6 11.6 4 20 4Z"/><path d="M9.8 20c.3-4.8 3-8.7 7.2-11"/>', es:{t:"Sostenibilidad y Vida Consciente",d:"Desde el alma, construimos y trabajamos por cuidar nuestro mundo."},en:{t:"Sustainability & Conscious Living",d:"From the soul, we build and work to care for our world."}}
 ];
 
 let SPECIALISTS = [];
@@ -795,20 +1004,27 @@ let TESTIMONIALS = [];
 const MONTHS = {es:["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"],
                 en:["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]};
 let OFFERINGS = [];   // todas las ofertas públicas (para modal + tienda)
+let SLUG_ALIAS = {};  // slug viejo → slug actual (los enlaces ya compartidos siguen vivos)
 async function loadData(){
   if(!window.sb) return false;
   try{
-    const [cats,specs,ws,prods,tests,offs] = await Promise.all([
+    const [cats,specs,ws,prods,tests,offs,alias] = await Promise.all([
       sb.from("app_vpa_categories_public").select("*").order("sort_order"),
       sb.from("app_vpa_specialists_public").select("*").order("sort_order"),
       sb.from("app_vpa_workshops_public").select("*").order("starts_at"),
       sb.from("app_vpa_products_public").select("*"),
       sb.from("app_vpa_testimonials_public").select("*").order("sort_order"),
-      sb.from("app_vpa_offerings_public").select("*").order("sort_order")
+      sb.from("app_vpa_offerings_public").select("*").order("sort_order"),
+      sb.from("app_vpa_slug_aliases_public").select("slug,specialist_id")
     ]);
     OFFERINGS = offs.data||[];
-    if(cats.data&&cats.data.length) CATEGORIES = cats.data.map(c=>({id:c.id,icon:c.icon,
-      es:{t:c.name_es,d:c.desc_es},en:{t:c.name_en,d:c.desc_en}}));
+    SLUG_ALIAS = {}; (alias.data||[]).forEach(a=>{ SLUG_ALIAS[a.slug]=a.specialist_id; });
+    // Red de seguridad: una temática recién creada sin ícono o sin inglés no
+    // debe salir con el círculo vacío ni con el nombre en blanco.
+    if(cats.data&&cats.data.length) CATEGORIES = cats.data.map(c=>({id:c.id,
+      icon:c.icon||'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/>',
+      es:{t:c.name_es,d:c.desc_es||""},
+      en:{t:c.name_en||c.name_es,d:c.desc_en||c.desc_es||""}}));
     if(specs.data&&specs.data.length) SPECIALISTS = specs.data.map(s=>({id:s.id,slug:s.slug,cat:s.category_id,
       photo:s.photo_url,badge:s.badge_url,availNow:s.available_now,langs:s.langs||["es"],mod:s.modalities||["online"],
       es:{name:s.name,role:s.role_es,bio:s.bio_es,focus:s.focus_es||[],certs:s.certs_es},
@@ -816,6 +1032,7 @@ async function loadData(){
     if(ws.data&&ws.data.length) WORKSHOPS = ws.data.map(w=>{const dt=new Date(w.starts_at);
       return {id:w.id,d:String(dt.getDate()).padStart(2,"0"),
         mes:{es:MONTHS.es[dt.getMonth()],en:MONTHS.en[dt.getMonth()]},
+        at:w.starts_at, ends:w.ends_at, place:w.location||"",
         mod:w.modality,by:w.specialist_name||"",price:Math.round(w.price_cents/100),
         es:{t:w.title_es},en:{t:w.title_en}};});
     if(prods.data&&prods.data.length) PRODUCTS = prods.data.map(p=>({id:p.id,cover:p.cover_url,
@@ -823,6 +1040,9 @@ async function loadData(){
       es:{t:p.title_es,d:p.desc_es},en:{t:p.title_en,d:p.desc_en}}));
     if(tests.data&&tests.data.length) TESTIMONIALS = tests.data.map(x=>({av:x.avatar_url,
       es:{q:x.quote_es,who:x.author,role:x.loc_es},en:{q:x.quote_en,who:x.author,role:x.loc_en}}));
+    // El calendario ya se pintó con datos vacíos: que vuelva a elegir el mes
+    // que de verdad tiene el próximo evento.
+    calY=null; calSel=null;
     applySettings();
     return true;
   }catch(e){ console.warn("VPA: usando datos semilla (fallback)", e); return false; }
@@ -859,7 +1079,7 @@ function setLang(l){
   document.querySelectorAll("[data-lang]").forEach(b=>b.classList.toggle("active", b.dataset.lang===l));
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.dataset.i18nPh); });
-  renderCategories(); renderSpecs(); renderWorkshops(); renderStore(); renderTestimonials();
+  renderCategories(); renderSpecs(); renderWorkshops(); renderCalendar(); renderStore(); renderTestimonials();
   renderCart(); buildFilters();
 }
 
@@ -942,36 +1162,167 @@ function renderWorkshops(){
   document.querySelectorAll('a[href="#talleres"]').forEach(a=>a.style.display=WORKSHOPS.length?"":"none");
 }
 
+/* ============================================================
+   CALENDARIO PÚBLICO (siempre visible, sin registro)
+   Sólo entra lo que YA tiene fecha fijada por la voz al publicarlo:
+   talleres (starts_at) y ofertas con event_at. Las sesiones que se agendan
+   DESPUÉS de contratar (Calendly) siguen su propio camino y no salen aquí.
+============================================================ */
+let calY=null, calM=null, calSel=null;
+const calKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const calLoc = () => lang==="es" ? "es-MX" : "en-US";
+function calEvents(){
+  const evs=[];
+  (WORKSHOPS||[]).forEach(w=>{ if(!w.at) return;
+    evs.push({at:new Date(w.at), title:(w[lang]||w.es||{}).t||"", by:w.by||"", place:w.place||"",
+              price:(w.price!=null?w.price:null), kind:t("nav.ws"), type:"workshop", id:w.id});
+  });
+  (OFFERINGS||[]).forEach(o=>{ if(!o.event_at) return;
+    evs.push({at:new Date(o.event_at), title:o.title||"", by:o.specialist_name||"", place:o.event_location||"",
+              price:(o.price_cents!=null?Math.round(o.price_cents/100):null),
+              kind:(OKIND[lang]||{})[o.kind]||o.kind, type:"offering", id:o.id, spec:o.specialist_id});
+  });
+  return evs.filter(e=>!isNaN(e.at.getTime())).sort((a,b)=>a.at-b.at);
+}
+function calEvRow(e, withDate){
+  const time = e.at.toLocaleTimeString(calLoc(),{hour:"2-digit",minute:"2-digit"});
+  const date = withDate ? e.at.toLocaleDateString(calLoc(),{day:"numeric",month:"short"})+" · " : "";
+  const meta = [e.kind,
+                e.by ? ((lang==="es"?"Con ":"With ")+e.by) : "",
+                e.place,
+                e.price!=null ? (e.price>0 ? money(e.price) : t("cal.free")) : ""
+               ].filter(Boolean).join(" · ");
+  return `<div class="cal-ev">
+      <div class="hh">${esc(date+time)}</div>
+      <div class="ev-main"><b>${esc(e.title)}</b><div class="ev-meta">${esc(meta)}</div></div>
+      <button type="button" class="ev-open" onclick="calOpen('${esc(e.type)}','${esc(String(e.id||""))}')">${t("cal.open")}</button>
+    </div>`;
+}
+function renderCalendar(){
+  const grid=document.getElementById("calGrid"); if(!grid) return;
+  const evs=calEvents();
+  const byDay={}; evs.forEach(e=>{ const k=calKey(e.at); (byDay[k]=byDay[k]||[]).push(e); });
+  const now=new Date();
+  if(calY==null){
+    // Abre en el mes que de verdad tiene algo próximo (si no hay nada, en el actual).
+    const from=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const next=evs.find(e=>e.at>=from);
+    const base=next?next.at:now;
+    calY=base.getFullYear(); calM=base.getMonth();
+    if(next) calSel=calKey(next.at);
+  }
+  const first=new Date(calY,calM,1);
+  const start=first.getDay(), days=new Date(calY,calM+1,0).getDate(), prevDays=new Date(calY,calM,0).getDate();
+  let html=t("cal.dow").split(",").map(d=>`<div class="cal-dow">${esc(d)}</div>`).join("");
+  for(let i=0;i<start;i++) html+=`<div class="cal-day out">${prevDays-start+1+i}</div>`;
+  for(let d=1;d<=days;d++){
+    const key=`${calY}-${String(calM+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const has=!!byDay[key];
+    const isToday=(now.getFullYear()===calY && now.getMonth()===calM && now.getDate()===d);
+    html+=`<div class="cal-day${has?" has":""}${isToday?" today":""}${calSel===key?" sel":""}"${
+      has?` onclick="calSelect('${key}')" role="button" tabindex="0" aria-label="${byDay[key].length}"`:""}>${d}</div>`;
+  }
+  const tail=(7-((start+days)%7))%7;
+  for(let i=1;i<=tail;i++) html+=`<div class="cal-day out">${i}</div>`;
+  grid.innerHTML=html;
+  const mh=document.getElementById("calMonth");
+  if(mh) mh.textContent = first.toLocaleDateString(calLoc(),{month:"long",year:"numeric"});
+
+  // Debajo: el día elegido, o —si no hay ninguno— todo lo del mes a la vista.
+  const box=document.getElementById("calList"); if(!box) return;
+  const pref=`${calY}-${String(calM+1).padStart(2,"0")}-`;
+  if(calSel && byDay[calSel] && calSel.startsWith(pref)){
+    const d=new Date(calSel+"T12:00:00");
+    box.innerHTML=`<div class="cal-day-title">${esc(d.toLocaleDateString(calLoc(),{weekday:"long",day:"numeric",month:"long"}))}</div>`
+      + byDay[calSel].map(e=>calEvRow(e,false)).join("");
+  }else{
+    const monthEvs=evs.filter(e=>calKey(e.at).startsWith(pref));
+    box.innerHTML = monthEvs.length
+      ? monthEvs.map(e=>calEvRow(e,true)).join("")
+      : `<div class="cal-empty">${t("cal.nonemonth")}</div>`;
+  }
+}
+function calSelect(key){ calSel=(calSel===key?null:key); renderCalendar(); }
+function calNav(delta){
+  if(calY==null) return;
+  calM+=delta; if(calM<0){calM=11;calY--;} if(calM>11){calM=0;calY++;}
+  calSel=null; renderCalendar();
+}
+function calToday(){ const n=new Date(); calY=n.getFullYear(); calM=n.getMonth(); calSel=calKey(n); renderCalendar(); }
+function calOpen(type,id){
+  if(type==="offering"){
+    const o=OFFERINGS.find(x=>String(x.id)===String(id));
+    const i=o?SPECIALISTS.findIndex(s=>String(s.id)===String(o.specialist_id)):-1;
+    if(i>=0){ openModal(i, o.id); setTimeout(()=>flashEl(document.querySelector(".shared-offer")),320); return; }
+  }
+  document.getElementById("talleres")?.scrollIntoView({behavior:"smooth"});
+}
+
 // Unified store = digital products + specialist offerings marked "sell via Voces".
 // Each entry is a self-contained cart descriptor (type+id decide the line).
 let STORE = [];
+// Sesión individual / grupal: siempre se agenda, nunca es un "contacto suelto".
+const SESSION_KINDS = ["sesion_individual","sesion_grupal"];
+const isSession = o => SESSION_KINDS.includes(o.kind);
+// Una sesión sin enlace de agenda no se puede vender: el comprador acabaría en
+// una pantalla en blanco después de pagar. Se muestra, pero no entra al carrito.
+const sellable = o => o.sell_via_voces && !o.in_progress && o.price_cents!=null
+                      && !(isSession(o) && !o.has_booking);
+// Píldora de estado: la elige la voz; si no eligió, se comporta como siempre.
+function offerPill(o){
+  const p = o.status_pill || (o.in_progress ? "proximamente" : null);
+  if(!p || p==="ninguna") return null;
+  return {key:p, label:t("pill."+p)};
+}
 function buildStore(){
   const prods = PRODUCTS.map(p=>({type:"product", id:p.id||null, title:p[lang].t, desc:p[lang].d,
-    price:p.price, cover:p.cover, ptype:p.type[lang], by:null}));
-  const offs = OFFERINGS.filter(o=>o.sell_via_voces && !o.in_progress && o.price_cents!=null)
+    price:p.price, cover:p.cover, ptype:p.type[lang], by:null, bySlug:null, pill:null, slug:null}));
+  const offs = OFFERINGS.filter(sellable)
     .map(o=>({type:"offering", id:o.id, title:o.title, desc:o.description||"",
       price:Math.round(o.price_cents/100), cover:o.cover_url,
-      ptype:(OKIND[lang]||{})[o.kind]||o.kind, by:o.specialist_name}));
+      ptype:(OKIND[lang]||{})[o.kind]||o.kind, by:o.specialist_name,
+      bySlug:o.specialist_slug||o.specialist_id, pill:offerPill(o), slug:o.slug}));
   STORE = prods.concat(offs);
 }
 function renderStore(){
   buildStore();
   document.getElementById("storeGrid").innerHTML = STORE.map((p,i)=>`
-    <article class="prod reveal">
+    <article class="prod reveal" data-key="${esc(p.type+":"+(p.id||""))}">
       <div class="prod-cover" style="background-image:url('${PHOTO(p.cover)}')"><span class="ptype">${esc(p.ptype||"")}</span></div>
       <div class="prod-body">
         <h4>${esc(p.title)}</h4>
-        ${p.by?`<div style="font-size:12px;color:var(--oro);font-weight:600;margin-bottom:6px">${t("store.by")} ${esc(p.by)}</div>`:""}
-        <p>${esc(p.desc)}</p>
+        ${p.by?`<div class="byline" style="font-size:12px;color:var(--oro);font-weight:600;margin-bottom:6px">${t("store.by")} ${
+          p.bySlug?`<a href="/?voz=${encodeURIComponent(p.bySlug)}" onclick="return openVozLink(event,'${esc(p.bySlug)}')">${esc(p.by)}</a>`:esc(p.by)
+        }</div>`:""}
+        ${p.pill?`<div class="pill-row"><span class="opill ${esc(p.pill.key)}">${esc(p.pill.label)}</span></div>`:""}
+        <div class="prod-desc-wrap">
+          <p class="prod-desc clamped">${esc(p.desc)}</p>
+          <button type="button" class="prod-more" hidden onclick="toggleProdDesc(this)">${t("bio.more")}</button>
+        </div>
         <div class="prod-foot">
           <span class="pp">${money(p.price)}</span>
-          <button class="add" onclick="addToCart(${i})" aria-label="${esc(t("offer.add"))}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
+          <span class="acts">
+            ${p.id?`<button class="share" onclick="shareItem('${esc(p.type)}','${esc(String(p.id))}')" title="${esc(t("share.title"))}" aria-label="${esc(t("share.item"))}">${SHARE_SVG}</button>`:""}
+            <button class="add" onclick="addToCart(${i})" aria-label="${esc(t("offer.add"))}">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </span>
         </div>
       </div>
     </article>`).join("");
+  // El "Ver más" sólo aparece donde la descripción de verdad se recortó
+  // (si no, sería un enlace muerto en las descripciones cortas).
+  document.querySelectorAll("#storeGrid .prod-desc").forEach(el=>{
+    const btn = el.parentElement.querySelector(".prod-more");
+    if(btn) btn.hidden = el.scrollHeight <= el.clientHeight + 2;
+  });
   observeReveals();
+  flashPending();
+}
+function toggleProdDesc(btn){
+  const el = btn.parentElement.querySelector(".prod-desc"); if(!el) return;
+  const clamped = el.classList.toggle("clamped");
+  btn.textContent = clamped ? t("bio.more") : t("bio.less");
 }
 
 function renderTestimonials(){
@@ -986,9 +1337,15 @@ function renderTestimonials(){
 }
 
 /* ============================================================
-   SPECIALIST MODAL (direct-contact trust model)
+   PERFIL DE LA VOZ
+   Todo lo que se vende pasa por el carrito y paga comisión — incluidas las
+   sesiones individuales y grupales. Ya no hay contacto directo gratuito.
+   Si llegan por un enlace de oferta compartido, el orden de la vista es:
+     perfil → la oferta compartida (marcada) → "Más productos…" → el resto.
 ============================================================ */
-function openModal(i){
+let highlightOffer = null;   // id de la oferta que traía el enlace compartido
+function openModal(i, offeringId){
+  highlightOffer = offeringId || null;
   const s=SPECIALISTS[i]; currentSpec=s; const d=s[lang]; const catObj=CATEGORIES.find(c=>c.id===s.cat); const cat=catObj?catObj[lang].t:"";
   document.getElementById("modalContent").innerHTML=`
     <button class="modal-close" onclick="closeModal()" aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tinta)" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
@@ -997,56 +1354,102 @@ function openModal(i){
       <span class="cat-tag">${esc(cat)}</span>
       <h3>${esc(d.name)}</h3>
       <div class="role">${esc(d.role)}</div>
-      <p style="white-space:pre-line">${esc(d.bio)}</p>
+      <div class="bio-wrap">
+        <p id="modalBio" class="clamped" style="white-space:pre-line">${esc(d.bio)}</p>
+        <button type="button" class="bio-more" id="bioMore" hidden onclick="toggleBio(this)">${t("bio.more")}</button>
+      </div>
       <div class="focus-list">${d.focus.map(f=>`<span>${esc(f)}</span>`).join("")}</div>
       ${d.certs?`<div class="certs"><b>${t("modal.certs")}:</b> ${esc(d.certs)}</div>`:""}
       <div id="modalOffers"></div>
-      <div class="contact-reveal">
-        <div class="note">${t("modal.note")}</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="requestSession()">${t("modal.session")}</button>
-          <button class="btn btn-ghost" id="revealBtn" onclick="revealContact()">${t("modal.reveal")}</button>
-          <button class="btn btn-ghost" onclick="shareSpec()" aria-label="${esc(t("modal.share"))}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
-            ${t("modal.share")}
-          </button>
-        </div>
-        <div class="contact-data" id="contactData"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+        <button class="btn btn-primary" id="sessBtn" onclick="sessionCTA()">${t("modal.session")}</button>
+        <button class="btn btn-ghost" onclick="shareSpec()" aria-label="${esc(t("modal.share"))}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+          ${t("modal.share")}
+        </button>
       </div>
+      <div id="sessNone" class="sess-note" hidden style="margin-top:10px">${t("sess.none")}</div>
     </div>`;
   document.getElementById("modalBg").classList.add("open");
   document.body.style.overflow="hidden";
+  // El "Ver más" sólo aparece si la bio de verdad se recortó.
+  const bio=document.getElementById("modalBio"), more=document.getElementById("bioMore");
+  if(bio && more) more.hidden = bio.scrollHeight <= bio.clientHeight + 2;
   loadOffers(s);
+}
+function toggleBio(btn){
+  const bio=document.getElementById("modalBio"); if(!bio) return;
+  const clamped=bio.classList.toggle("clamped");
+  btn.textContent = clamped ? t("bio.more") : t("bio.less");
+}
+// Una fila de oferta dentro del perfil.
+function offerRow(o){
+  const kind=(OKIND[lang]||{})[o.kind]||o.kind;
+  const pesos=o.price_cents!=null?Math.round(o.price_cents/100):null;
+  const price=pesos!=null?money(pesos):"";
+  const safeUrl=(o.external_url&&/^https?:\/\//i.test(o.external_url))?o.external_url:null;
+  const canBuy=sellable(o);
+  let action="";
+  if(safeUrl) action=`<a class="btn btn-ghost obtn" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${t("offer.buy")}</a>`;
+  else if(canBuy) action=`<button class="btn btn-primary obtn" onclick="addOfferingToCart('${esc(o.id)}')">${t("offer.add")}</button>`;
+  else if(isSession(o) && !o.has_booking) action=`<span class="ovia">${t("sess.soon")}</span>`;
+  else if(o.sell_via_voces) action=`<span class="ovia">${t("offer.via")}</span>`;
+  const cover=(o.cover_url&&/^https?:\/\//i.test(o.cover_url))?o.cover_url:null;
+  const audio=(o.preview_url&&/^https?:\/\//i.test(o.preview_url))?o.preview_url:null;
+  const file=(o.file_url&&/^https?:\/\//i.test(o.file_url))?o.file_url:null;
+  const pill=offerPill(o);
+  return `<div class="offer-row" data-offer="${esc(String(o.id))}">
+    ${cover?`<img class="ocover" src="${esc(cover)}" alt="" loading="lazy">`:""}
+    <div class="oi"><span class="okind">${esc(kind)}</span><b>${esc(o.title)}</b>
+      ${o.description?`<p>${esc(o.description)}</p>`:""}
+      ${audio?`<audio controls preload="none" src="${esc(audio)}" style="width:100%;margin-top:8px"></audio>`:""}
+      ${file?`<a class="ofile" href="${esc(file)}" target="_blank" rel="noopener">📄 ${esc(o.file_name||(lang==="es"?"Descargar archivo":"Download file"))}</a>`:""}
+      ${isSession(o)&&canBuy?`<div class="sess-note">${t("offer.sessNote")}</div>`:""}
+      ${pill?`<div class="pill-row"><span class="opill ${esc(pill.key)}">${esc(pill.label)}</span></div>`:""}</div>
+    <div class="oa">${price?`<span class="oprice">${price}</span>`:""}${action}
+      <button class="share oshare" style="margin:8px 0 0 auto" onclick="shareItem('offering','${esc(String(o.id))}')" title="${esc(t("share.title"))}" aria-label="${esc(t("share.item"))}">${SHARE_SVG}</button>
+    </div>`+`</div>`;
 }
 function loadOffers(s){
   // offerings already loaded globally in loadData — filter to this voice
   const data = OFFERINGS.filter(o=>o.specialist_id===s.id);
   const box=document.getElementById("modalOffers");
-  if(!box || !data.length || currentSpec!==s) return;
-  box.innerHTML = `<div class="offers"><h5>${t("modal.offers")}</h5>` + data.map(o=>{
-    const kind=(OKIND[lang]||{})[o.kind]||o.kind;
-    const pesos=o.price_cents!=null?Math.round(o.price_cents/100):null;
-    const price=pesos!=null?money(pesos):"";
-    const safeUrl=(o.external_url&&/^https?:\/\//i.test(o.external_url))?o.external_url:null;
-    // sellable via Voces (has price, not a WIP) → add-to-cart button
-    const canBuy=o.sell_via_voces && !o.in_progress && pesos!=null;
-    let action="";
-    if(safeUrl) action=`<a class="btn btn-ghost obtn" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${t("offer.buy")}</a>`;
-    else if(canBuy) action=`<button class="btn btn-primary obtn" onclick="addOfferingToCart('${esc(o.id)}')">${t("offer.add")}</button>`;
-    else if(o.sell_via_voces) action=`<span class="ovia">${t("offer.via")}</span>`;
-    const cover=(o.cover_url&&/^https?:\/\//i.test(o.cover_url))?o.cover_url:null;
-    const audio=(o.preview_url&&/^https?:\/\//i.test(o.preview_url))?o.preview_url:null;
-    const file=(o.file_url&&/^https?:\/\//i.test(o.file_url))?o.file_url:null;
-    return `<div class="offer-row">
-      ${cover?`<img class="ocover" src="${esc(cover)}" alt="" loading="lazy">`:""}
-      <div class="oi"><span class="okind">${esc(kind)}</span><b>${esc(o.title)}</b>
-        ${o.description?`<p>${esc(o.description)}</p>`:""}
-        ${audio?`<audio controls preload="none" src="${esc(audio)}" style="width:100%;margin-top:8px"></audio>`:""}
-        ${file?`<a class="ofile" href="${esc(file)}" target="_blank" rel="noopener">📄 ${esc(o.file_name||(lang==="es"?"Descargar archivo":"Download file"))}</a>`:""}
-        ${o.in_progress?`<span class="owip">${t("offer.wip")}</span>`:""}</div>
-      <div class="oa">${price?`<span class="oprice">${price}</span>`:""}${action}</div>
-    </div>`;
-  }).join("") + `</div>`;
+  if(!box || currentSpec!==s) return;
+
+  // ¿Vino por un enlace de oferta compartido? Esa va arriba, sola y marcada.
+  const shared = highlightOffer ? data.find(o=>String(o.id)===String(highlightOffer)) : null;
+  const rest   = shared ? data.filter(o=>o!==shared) : data;
+  let html = "";
+  if(shared){
+    html += `<div class="shared-offer"><span class="shared-eyebrow">${t("shared.this")}</span>${offerRow(shared)}</div>`;
+    if(rest.length) html += `<div class="more-sep">${t("shared.more")} ${esc(s[lang].name)}</div>`;
+  }
+  if(rest.length){
+    html += `<div class="offers">${shared?"":`<h5>${t("modal.offers")}</h5>`}${rest.map(offerRow).join("")}</div>`;
+  }
+  box.innerHTML = html;
+}
+/* Punto 6.3 — "Solicitar sesión individual" ya NO es un contacto gratuito:
+   lleva al mismo carrito que todo lo demás. Una sola sesión entra directo;
+   si hay varias, la persona elige cuál.
+   El botón se ve en TODOS los perfiles: antes se ocultaba y, cuando la voz no
+   vendía sesiones, quedaba un botón inservible que parecía un error. Ahora,
+   si esta voz no ofrece el servicio, lo dice con todas sus letras. */
+function sessionCTA(){
+  if(!currentSpec) return;
+  const none = document.getElementById("sessNone");
+  const sessions = OFFERINGS.filter(o=>o.specialist_id===currentSpec.id && isSession(o) && sellable(o));
+  if(!sessions.length){
+    if(none){ none.hidden=false; none.scrollIntoView({behavior:"smooth", block:"nearest"}); }
+    return;
+  }
+  if(none) none.hidden = true;
+  if(sessions.length===1){ addOfferingToCart(sessions[0].id); return; }
+  const box=document.getElementById("modalOffers"); if(!box) return;
+  box.innerHTML = `<div class="shared-offer"><span class="shared-eyebrow">${t("sess.pick")}</span>
+      <div class="sess-note" style="margin:0 0 8px">${t("sess.pickNote")}</div>
+      ${sessions.map(offerRow).join("")}</div>` + box.innerHTML;
+  box.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
 // add a specialist offering to the cart straight from the modal
 function addOfferingToCart(id){
@@ -1063,53 +1466,99 @@ function shareSpec(){
   else if(navigator.clipboard){ navigator.clipboard.writeText(url).then(done).catch(()=>prompt("URL",url)); }
   else prompt("URL", url);
 }
-// request a 1-on-1 session — direct contact, logged as an inquiry (no commission)
-async function requestSession(){
-  if(!currentSpec) return;
-  const email = prompt(t("modal.sessNote"));
-  if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return;
-  try{
-    if(window.sb){
-      await sb.rpc("vpa_submit_inquiry",{ payload:{ kind:"general", name:"(sesión)", email:email.trim(),
-        discipline:currentSpec[lang].role||"", message:"Solicitud de sesión individual con "+currentSpec[lang].name } });
+
+/* ============================================================
+   COMPARTIR UNA OFERTA / PRODUCTO
+   Cada cosa que se vende tiene su enlace propio y directo:
+     /?oferta=<id>    → abre esa oferta dentro del perfil de su voz
+     /?producto=<id>  → lleva a la tienda y resalta ese producto
+   Sirve para cualquier voz, no sólo para Mónica.
+============================================================ */
+const SHARE_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+
+// Punto 2 · el enlace de una oferta se lee: /oferta/<voz>/<producto>
+// Dos voces pueden tener "Comenzar de Nuevo" sin chocar, porque el enlace
+// completo incluye a la voz. El ?oferta=<id> viejo sigue funcionando al entrar.
+function itemShareUrl(type, id){
+  if(type==="offering"){
+    const o=OFFERINGS.find(x=>String(x.id)===String(id));
+    if(o && o.specialist_slug && o.slug){
+      return location.origin + "/oferta/" + encodeURIComponent(o.specialist_slug) + "/" + encodeURIComponent(o.slug);
     }
-    toast(t("toast.sessSent"));
-  }catch(_){ toast(t("toast.orderErr")); }
+    return location.origin + "/?oferta=" + encodeURIComponent(id);
+  }
+  return location.origin + "/?producto=" + encodeURIComponent(id);
 }
-function contactRow(href,svg,label){ return `<a href="${href}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--oro)" stroke-width="1.7">${svg}</svg> ${label}</a>`; }
-function showContact(c){
-  const cd=document.getElementById("contactData"); if(!cd) return;
-  let html="";
-  if(c.email) html+=contactRow("mailto:"+c.email,'<path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/>',c.email);
-  if(c.phone) html+=contactRow("tel:"+String(c.phone).replace(/\s/g,""),'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/>',c.phone);
-  if(c.web) html+=contactRow(c.web,'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/>',String(c.web).replace(/^https?:\/\//,""));
-  cd.innerHTML = html || `<span style="color:var(--tinta-60)">${lang==="es"?"Sin datos de contacto.":"No contact details."}</span>`;
-  cd.classList.add("show");
-  const rb=document.getElementById("revealBtn"); if(rb) rb.style.display="none";
+function shareItem(type, id){
+  const url = itemShareUrl(type, id);
+  const it  = (STORE||[]).find(x=>x.type===type && String(x.id)===String(id));
+  const off = type==="offering" ? OFFERINGS.find(x=>String(x.id)===String(id)) : null;
+  const title = (it && it.title) || (off && off.title) || "Voces para el Alma";
+  if(navigator.share){ navigator.share({title, url}).catch(()=>{}); return; }
+  if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>toast(t("modal.shared"))).catch(()=>prompt("URL",url)); return; }
+  prompt("URL", url);
 }
-async function revealContact(){
-  const rb=document.getElementById("revealBtn");
-  if(!window.sb || !currentSpec || !currentSpec.id){ showContact({email:"contacto@vocesparaelalma.com"}); return; }
-  if(rb){ rb.disabled=true; rb.textContent=lang==="es"?"Verificando…":"Checking…"; }
-  try{
-    const { data:{ user } } = await sb.auth.getUser();
-    if(!user){
-      const email = prompt(lang==="es"?"Para mostrar el contacto directo, escribe tu correo y te enviaremos un enlace de acceso:":"To reveal direct contact, enter your email and we'll send you a sign-in link:");
-      if(email){
-        await sb.auth.signInWithOtp({ email: email.trim(), options:{ emailRedirectTo: location.href } });
-        toast(lang==="es"?"Revisa tu correo para entrar y vuelve a tocar Mostrar contacto.":"Check your email to sign in, then tap Show contact again.");
-      }
-      if(rb){ rb.disabled=false; rb.textContent=t("modal.reveal"); }
+// "Ofrecido por <voz>" abre el perfil sin recargar; el href real sigue vivo
+// para "abrir en pestaña nueva" o para cuando aún no cargaron los datos.
+// Resuelve una voz por su slug actual, por un slug viejo ya compartido, o por id.
+function specIndexBySlug(slug){
+  if(!slug) return -1;
+  let i = SPECIALISTS.findIndex(s=>s.slug===slug || String(s.id)===String(slug));
+  if(i<0 && SLUG_ALIAS[slug]) i = SPECIALISTS.findIndex(s=>String(s.id)===String(SLUG_ALIAS[slug]));
+  return i;
+}
+function openVozLink(ev, slug){
+  const i = specIndexBySlug(slug);
+  if(i<0) return true;
+  ev.preventDefault(); closeCart(); openModal(i);
+  return false;
+}
+function flashEl(el){
+  if(!el) return;
+  el.scrollIntoView({behavior:"smooth", block:"center"});
+  el.classList.add("hl"); setTimeout(()=>el.classList.remove("hl"), 2600);
+}
+// La tienda se vuelve a pintar cuando llega la moneda/idioma: si venimos de un
+// enlace compartido, el resaltado espera a que exista la tarjeta.
+let pendingHl=null;
+function flashPending(){
+  if(!pendingHl) return;
+  const el=document.querySelector(pendingHl);
+  if(el){ pendingHl=null; flashEl(el); }
+}
+// Llegada por enlace compartido: /oferta/<voz>/<producto> (nuevo, legible) o
+// ?oferta=<id> / ?producto=<id> (los que ya andan circulando).
+function offeringFromUrl(){
+  const m = location.pathname.match(/^\/oferta\/([^/]+)\/([^/]+)\/?$/);
+  if(m){
+    const vozSlug = decodeURIComponent(m[1]), offSlug = decodeURIComponent(m[2]);
+    const i = specIndexBySlug(vozSlug);
+    const spec = i>=0 ? SPECIALISTS[i] : null;
+    const o = spec ? OFFERINGS.find(x=>String(x.specialist_id)===String(spec.id) && x.slug===offSlug) : null;
+    return {o, id:o?o.id:null, fromPath:true};
+  }
+  const id = new URLSearchParams(location.search).get("oferta");
+  return {o: id ? OFFERINGS.find(x=>String(x.id)===String(id)) : null, id, fromPath:false};
+}
+function openItemFromUrl(){
+  const prodId = new URLSearchParams(location.search).get("producto");
+  const {o, id, fromPath} = offeringFromUrl();
+  if(!id && !prodId && !fromPath) return;
+  history.replaceState({},"","/");
+  if(o){
+    const i = SPECIALISTS.findIndex(s=>String(s.id)===String(o.specialist_id));
+    if(i>=0){
+      // Punto 3: perfil arriba, la oferta compartida marcada justo debajo,
+      // separador "Más productos…", y el resto del catálogo abajo.
+      openModal(i, o.id);
+      setTimeout(()=>flashEl(document.querySelector('.shared-offer')), 320);
       return;
     }
-    const { data, error } = await sb.rpc("vpa_reveal_contact", { p_specialist_id: currentSpec.id });
-    if(error) throw error;
-    showContact(data||{});
-  }catch(e){
-    console.warn("reveal", e);
-    toast(lang==="es"?"No se pudo mostrar el contacto.":"Could not reveal contact.");
-    if(rb){ rb.disabled=false; rb.textContent=t("modal.reveal"); }
   }
+  // Producto suelto (o una oferta cuya voz ya no está publicada): la tienda.
+  pendingHl='.prod[data-key="'+(id?"offering:"+id:"product:"+prodId)+'"]';
+  if(document.querySelector(pendingHl)) setTimeout(flashPending, 200);
+  else document.getElementById("tienda")?.scrollIntoView({behavior:"smooth"});
 }
 function closeModal(){ document.getElementById("modalBg").classList.remove("open"); document.body.style.overflow=""; }
 
@@ -1118,6 +1567,7 @@ function closeModal(){ document.getElementById("modalBg").classList.remove("open
 ============================================================ */
 // cart = array of line items {type,id,title,price(pesos),cover,ptype,by,qty}. Persisted.
 const CART_KEY="vpa_cart"; let cartMode="cart"; let cartDiscount=0; let cartCodeOk="";
+let payRail="card"; let transferInfo=null; let lastOrder=null;
 function cartLoad(){ try{ const c=JSON.parse(localStorage.getItem(CART_KEY)||"[]"); cart=Array.isArray(c)?c:[]; }catch(_){ cart=[]; } }
 function cartSave(){ try{ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }catch(_){} }
 let _lastAdd={sig:"",t:0};
@@ -1135,7 +1585,7 @@ function cartAdd(item){
 function cleanCart(){
   if(!cart.length) return;
   const before=cart.length;
-  const validOffer=new Set(OFFERINGS.filter(o=>o.sell_via_voces&&!o.in_progress&&o.price_cents!=null).map(o=>String(o.id)));
+  const validOffer=new Set(OFFERINGS.filter(sellable).map(o=>String(o.id)));
   cart=cart.filter(x=>{
     if(x.type==="offering") return validOffer.has(String(x.id));
     return x.price>0;            // productos/workshops: sólo con precio válido
@@ -1182,8 +1632,41 @@ function showCheckoutForm(){
     <div class="field"><label>${t("cart.code")}</label>
       <div style="display:flex;gap:8px"><input id="coCode" type="text" style="text-transform:uppercase" oninput="cartDiscount=0;cartCodeOk=''"><button class="btn btn-ghost" type="button" onclick="applyCode()">${t("cart.apply")}</button></div>
       <div id="coCodeMsg" style="font-size:12.5px;margin-top:6px"></div></div>
+    <div class="field" style="margin-top:16px"><label>${t("pay.how")}</label>
+      <div id="payRails"></div></div>
     <p style="font-size:12px;color:var(--tinta-60);margin-top:6px">${t("cart.fx")}</p>`;
+  renderRails();
   const b=footerBtn(); b.textContent=t("cart.place"); b.disabled=false;
+}
+/* ---- Rieles de pago -------------------------------------------------------
+   card  = MercadoPago con split al autor (pago inmediato).
+   other = MercadoPago SIN split por la cuenta plataforma → MP habilita TODOS
+           los métodos (OXXO, SPEI, saldo y cualquier tarjeta). El split con
+           split activo esconde métodos: por eso este riel existe.
+   transfer = SPEI directo a Voces, confirmado a mano. No depende de nadie.  */
+function railOption(id,title,sub){
+  const on = payRail===id;
+  return `<button type="button" onclick="setRail('${id}')" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px 14px;border-radius:12px;cursor:pointer;
+    border:1.5px solid ${on?"var(--oro)":"var(--tinta-15,rgba(44,39,34,.18))"};background:${on?"rgba(182,138,62,.08)":"transparent"}">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <span style="flex:0 0 16px;width:16px;height:16px;margin-top:2px;border-radius:50%;border:1.5px solid ${on?"var(--oro)":"var(--tinta-40,rgba(44,39,34,.4))"};background:${on?"var(--oro)":"transparent"};box-shadow:${on?"inset 0 0 0 3px var(--lino,#F7F2E9)":"none"}"></span>
+      <span><span style="display:block;font-weight:600;font-size:14.5px">${title}</span>
+      <span style="display:block;font-size:12.5px;color:var(--tinta-60);margin-top:2px;line-height:1.45">${sub}</span></span>
+    </div></button>`;
+}
+function renderRails(){
+  const el=document.getElementById("payRails"); if(!el) return;
+  let h = railOption("card",t("pay.card"),t("pay.cardSub"))
+        + railOption("other",t("pay.other"),t("pay.otherSub"));
+  if(transferInfo && transferInfo.enabled) h += railOption("transfer",t("pay.transfer"),t("pay.transferSub"));
+  el.innerHTML=h;
+}
+function setRail(r){ payRail=r; renderRails(); }
+async function loadTransferInfo(){
+  if(!window.sb) return;
+  try{ const {data}=await sb.rpc("vpa_transfer_info"); transferInfo=data||{enabled:false}; }
+  catch(_){ transferInfo={enabled:false}; }
+  renderRails();
 }
 async function applyCode(){
   const code=(document.getElementById("coCode").value||"").trim().toUpperCase();
@@ -1216,23 +1699,37 @@ async function placeOrder(){
     const { data, error } = await sb.rpc("vpa_checkout",{ payload:{ email, name, code, items } });
     if(error) throw error;
     const orderId = data && data.order_id;
-    // intenta llevar al comprador al pago (MercadoPago); si no está configurado,
-    // cae al mensaje "recibido, te enviamos instrucciones".
     let redirected=false;
     if(orderId){
+      lastOrder={order:orderId, email, name, total:cartSubtotal()-cartDiscount};
+      try{ localStorage.setItem("vpa_last_order", JSON.stringify({order:orderId, email})); }catch(_){}
+      // Riel "transferencia directa": no pasa por ningún procesador.
+      if(payRail==="transfer" && transferInfo && transferInfo.enabled){
+        cart=[]; cartSave(); updateCartBadge();
+        showTransferPanel(lastOrder);
+        return;
+      }
       try{
         const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-pay",{ method:"POST",
           headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+SUPABASE_ANON },
-          body:JSON.stringify({ order_id:orderId }) });
+          body:JSON.stringify({ order_id:orderId, method: payRail==="other"?"other":"card" }) });
         const pj=await r.json();
         if(r.ok && pj.checkout_url){
           cart=[]; cartSave(); updateCartBadge();
-          try{ localStorage.setItem("vpa_last_order", JSON.stringify({order:orderId, email})); }catch(_){}
           toast(t("toast.checkout"));
           location.href=pj.checkout_url;   // → MercadoPago
           redirected=true;
+        } else {
+          // El procesador rechazó crear el cobro: NUNCA dejar al comprador sin salida.
+          cart=[]; cartSave(); updateCartBadge();
+          showPayFallback(orderId, email);
+          return;
         }
-      }catch(_){ /* cae al mensaje de recibido */ }
+      }catch(_){
+        cart=[]; cartSave(); updateCartBadge();
+        showPayFallback(orderId, email);
+        return;
+      }
     }
     if(!redirected){
       cart=[]; cartSave(); updateCartBadge();
@@ -1243,6 +1740,80 @@ async function placeOrder(){
       toast(t("toast.orderOk"));
     }
   }catch(e){ console.warn("checkout",e); toast(t("toast.orderErr")); b.disabled=false; b.textContent=t("cart.place"); }
+}
+/* ---- Salida cuando un medio de pago falla --------------------------------
+   El pedido ya está guardado; ofrecemos los otros rieles en vez de un
+   callejón sin salida. Se usa tanto si vpa-pay falla como al volver de
+   MercadoPago con ?pay=failed.                                             */
+function showPayFallback(orderId, email){
+  cartMode="fallback";
+  const tr = (transferInfo && transferInfo.enabled)
+    ? `<button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="retryRail('transfer','${orderId}','${esc(email)}')">${t("pay.transfer")}</button>` : "";
+  document.getElementById("drawerItems").innerHTML=`
+    <div style="padding:18px 6px">
+      <div style="font-family:var(--serif);font-size:22px;margin-bottom:8px">${t("pay.failTitle")}</div>
+      <p style="color:var(--tinta-60);font-size:14px;line-height:1.6;margin-bottom:16px">${t("pay.failIntro")}</p>
+      <button class="btn" style="width:100%" onclick="retryRail('other','${orderId}','${esc(email)}')">${t("pay.retryOther")}</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="retryRail('card','${orderId}','${esc(email)}')">${t("pay.retryCard")}</button>
+      ${tr}
+      <p style="font-size:12px;color:var(--tinta-60);margin-top:14px">${lang==="es"?"Pedido":"Order"} ${orderId.slice(0,8)}</p>
+    </div>`;
+  footerBtn().style.display="none";
+  openCart();
+}
+async function retryRail(rail, orderId, email){
+  if(rail==="transfer"){ showTransferPanel({order:orderId, email}); return; }
+  try{
+    const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-pay",{ method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+SUPABASE_ANON },
+      body:JSON.stringify({ order_id:orderId, method: rail==="other"?"other":"card" }) });
+    const pj=await r.json();
+    if(r.ok && pj.checkout_url){ toast(t("toast.checkout")); location.href=pj.checkout_url; return; }
+  }catch(_){}
+  toast(t("toast.orderErr"));
+}
+/* ---- Riel de transferencia directa (SPEI) -------------------------------- */
+function showTransferPanel(o){
+  cartMode="transfer";
+  const i = transferInfo||{};
+  const row=(label,val,copyable)=> !val ? "" : `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(44,39,34,.10)">
+      <span style="font-size:12.5px;color:var(--tinta-60)">${label}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <b style="font-size:14px;letter-spacing:.02em">${esc(val)}</b>
+        ${copyable?`<button class="rm" type="button" onclick="copyVal(this,'${esc(val)}')">${t("pay.copy")}</button>`:""}
+      </span></div>`;
+  document.getElementById("drawerItems").innerHTML=`
+    <div style="padding:6px">
+      <div style="font-family:var(--serif);font-size:22px;margin-bottom:8px">${t("pay.trTitle")}</div>
+      <p style="color:var(--tinta-60);font-size:13.5px;line-height:1.6;margin-bottom:14px">${t("pay.trIntro")}</p>
+      <div style="background:rgba(182,138,62,.07);border:1px solid rgba(182,138,62,.28);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        ${row(lang==="es"?"Monto":"Amount", "$"+((o.total!=null?o.total:0)/100).toFixed(2)+" MXN", true)}
+        ${row(t("pay.trBank"), i.bank)}
+        ${row(t("pay.trClabe"), i.clabe, true)}
+        ${row(t("pay.trBenef"), i.beneficiary)}
+        ${row(t("pay.trConcept"), "VOCES-"+String(o.order).slice(0,8), true)}
+      </div>
+      ${i.note?`<p style="font-size:12.5px;color:var(--tinta-60);margin-bottom:12px">${esc(i.note)}</p>`:""}
+      <div class="field"><label>${t("pay.trRefLabel")}</label><input id="trRef" type="text" maxlength="120"></div>
+      <button class="btn" style="width:100%;margin-top:10px" onclick="declareTransfer('${o.order}','${esc(o.email)}')">${t("pay.trDone")}</button>
+    </div>`;
+  footerBtn().style.display="none";
+  openCart();
+}
+function copyVal(btn,val){
+  try{ navigator.clipboard.writeText(val); const o=btn.textContent; btn.textContent=t("pay.copied"); setTimeout(()=>btn.textContent=o,1400); }catch(_){}
+}
+async function declareTransfer(orderId, email){
+  const ref=(document.getElementById("trRef")||{}).value||"";
+  try{
+    const {data,error}=await sb.rpc("vpa_declare_transfer",{ p_order:orderId, p_email:email, p_reference:ref });
+    if(error) throw error;
+    if(!data || !data.ok) throw new Error(data&&data.error||"fail");
+    document.getElementById("drawerItems").innerHTML=`<div style="text-align:center;padding:40px 10px">
+      <div style="font-family:var(--serif);font-size:24px;margin-bottom:10px">${lang==="es"?"¡Gracias!":"Thank you!"}</div>
+      <p style="color:var(--tinta-60);line-height:1.6">${t("pay.trOk")}</p></div>`;
+  }catch(e){ console.warn("declareTransfer",e); toast(t("toast.orderErr")); }
 }
 function pulseCart(){ const c=document.getElementById("cartCount"); c.animate([{transform:"scale(1)"},{transform:"scale(1.5)"},{transform:"scale(1)"}],{duration:300}); }
 function openCart(){ if(cartMode!=="checkout") renderCart(); footerBtn().style.display=""; document.getElementById("drawer").classList.add("open"); document.getElementById("drawerBg").classList.add("open"); document.body.style.overflow="hidden"; }
@@ -1299,7 +1870,7 @@ function observeReveals(){
 function openVozFromUrl(){
   const p=new URLSearchParams(location.search); const voz=p.get("voz");
   if(!voz) return;
-  const i=SPECIALISTS.findIndex(s=>s.slug===voz || s.id===voz);
+  const i=specIndexBySlug(voz);
   if(i>=0){ openModal(i); setTimeout(()=>document.getElementById("directorio").scrollIntoView({behavior:"smooth"}),50); }
 }
 function captureRef(){
@@ -1315,8 +1886,14 @@ function captureRef(){
 function handlePayReturn(){
   const q=new URLSearchParams(location.search);
   if(q.get("paid")){ deliverEbooks(q.get("paid")); history.replaceState({},"",location.pathname); }
-  else if(q.get("pay")==="failed"){ setTimeout(()=>toast(lang==="es"?"El pago no se completó. Puedes intentarlo de nuevo.":"Payment didn't go through. You can try again."),400);
-    history.replaceState({},"",location.pathname); }
+  else if(q.get("pay")==="failed"){
+    // No dejamos al comprador varado: ofrecemos los otros rieles con su pedido intacto.
+    let o=q.get("order")||"", em="";
+    try{ const s=JSON.parse(localStorage.getItem("vpa_last_order")||"null"); if(s){ o=o||s.order; em=s.email||""; } }catch(_){}
+    history.replaceState({},"",location.pathname);
+    if(o) setTimeout(()=>showPayFallback(o,em),500);
+    else setTimeout(()=>toast(lang==="es"?"El pago no se completó. Puedes intentarlo de nuevo.":"Payment didn't go through. You can try again."),400);
+  }
 }
 // Entrega digital: tras el pago, si la orden incluye ebooks/archivos, muestra los enlaces de descarga.
 async function deliverEbooks(orderId){
@@ -1325,6 +1902,9 @@ async function deliverEbooks(orderId){
   try{ const s=JSON.parse(localStorage.getItem("vpa_last_order")||"{}"); if(s.order===orderId) email=s.email||""; }catch(_){}
   if(!email){ email=(prompt(lang==="es"?"Escribe el correo con el que compraste para acceder a tu contenido:":"Enter the email you purchased with to access your content:")||"").trim(); }
   if(!email) return;
+  // 0) ¿Alguna oferta de esta orden trae agenda propia (Calendly)? El enlace vive
+  //    en la oferta, no en el código: sirve igual para Mónica que para cualquier voz.
+  const booking = await orderBooking(orderId, email);
   // 1) ¿Es una compra del Test de Temperamentos? → acceso al Test (un solo uso, La Vida es Bella).
   try{
     let compat=null; try{ compat=localStorage.getItem("lvb_compat")||null; }catch(_){}
@@ -1333,32 +1913,101 @@ async function deliverEbooks(orderId){
       body:JSON.stringify({ p_order:orderId, p_email:email, p_compat:compat }) });
     const tj=await tr.json();
     if(tj && tj.ok && tj.url){
-      showTestAccess(tj.url);
+      showTestAccess(tj.url, booking);
       try{ localStorage.removeItem("vpa_last_order"); localStorage.removeItem("lvb_compat"); }catch(_){}
       return;
     }
   }catch(_){}
   // 2) Cualquier otra oferta con archivo: entrega digital normal.
+  let delivered=false;
   try{
     const r=await fetch(SUPABASE_URL+"/functions/v1/vpa-descarga",{ method:"POST",
       headers:{ "Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON,"apikey":SUPABASE_ANON },
       body:JSON.stringify({ order:orderId, email }) });
     const j=await r.json();
-    if(j && j.items && j.items.length){ showDownloads(j.items); try{ localStorage.removeItem("vpa_last_order"); }catch(_){} }
+    if(j && j.items && j.items.length){ delivered=true; showDownloads(j.items, booking); try{ localStorage.removeItem("vpa_last_order"); }catch(_){} }
   }catch(_){}
+  // 3) Compra sin archivo pero con agenda (p. ej. una sesión 1:1): al calendario.
+  if(!delivered && booking.length){ showBooking(booking); try{ localStorage.removeItem("vpa_last_order"); }catch(_){} }
+}
+/* ---- Agenda de la orden ---------------------------------------------------
+   Misma puerta que la descarga: sólo con la orden pagada y el correo que
+   coincide. El enlace nunca viaja en la vista pública, para que nadie agende
+   una sesión sin haberla pagado.                                            */
+async function orderBooking(orderId, email){
+  try{
+    const r=await fetch(SUPABASE_URL+"/rest/v1/rpc/vpa_order_booking",{ method:"POST",
+      headers:{ "Content-Type":"application/json","Authorization":"Bearer "+SUPABASE_ANON,"apikey":SUPABASE_ANON },
+      body:JSON.stringify({ p_order:orderId, p_email:email }) });
+    const j=await r.json();
+    return ((j&&j.items)||[]).filter(b=>b && /^https?:\/\//i.test(b.url||""));
+  }catch(_){ return []; }
+}
+/* El calendario se muestra EMBEBIDO dentro de Voces, nunca como enlace copiable
+   (punto 6.3.1): así el enlace de reserva no se reparte fuera de la plataforma
+   para agendar sin pagar. No es infalible — la voz puede compartir su Calendly
+   por su cuenta — pero cierra la fuga dentro del flujo de Voces.
+   Los enlaces que no son de Calendly no se pueden embeber (lo impiden con
+   X-Frame-Options), así que ésos siguen saliendo como botón. */
+const CAL_HOSTS = ["calendly.com","www.calendly.com"];
+function calEmbedUrl(url){
+  try{
+    const u=new URL(url);
+    if(!CAL_HOSTS.includes(u.hostname)) return null;
+    u.searchParams.set("embed_domain", location.hostname);
+    u.searchParams.set("embed_type", "Inline");
+    u.searchParams.set("hide_gdpr_banner", "1");
+    return u.toString();
+  }catch(_){ return null; }
+}
+function bookingItem(b){
+  const embed=calEmbedUrl(b.url);
+  const head=`<div style="font-family:var(--serif,Georgia);font-size:17px;line-height:1.35;margin-bottom:10px">🗓 ${esc(b.label || (t("book.default")+(b.title?": "+b.title:"")))}</div>`;
+  if(embed){
+    return `<div style="margin-top:12px">${head}
+      <div style="font-size:12.5px;color:var(--tinta-60,#6b6257);margin-bottom:8px">${t("book.embedLead")}</div>
+      <iframe class="cal-embed" src="${esc(embed)}" title="${esc(b.label||t("book.default"))}" loading="lazy"></iframe></div>`;
+  }
+  return `<div style="margin-top:12px">${head}
+    <a class="btn btn-primary" style="display:inline-block" href="${esc(b.url)}" target="_blank" rel="noopener">${t("book.now")}</a></div>`;
+}
+// Bloque de agenda que se añade bajo la descarga / el acceso al Test.
+function bookingBlock(items){
+  if(!items || !items.length) return "";
+  return `<div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(44,39,34,.14);text-align:left">`
+    + items.map(bookingItem).join("") + `</div>`;
+}
+// Compra que es sólo agenda (sesión 1:1 o grupal): gracias + calendario embebido.
+function showBooking(items){
+  const first=items[0];
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(20,15,25,.62);display:grid;place-items:start center;padding:20px;overflow:auto";
+  wrap.innerHTML=`<div style="max-width:760px;width:100%;background:var(--lino,#F7F2E9);border-radius:18px;padding:30px 26px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)">
+    <div style="font-size:40px">🗓</div>
+    <h3 style="font-family:var(--serif,Georgia);font-size:24px;margin:8px 0 6px">${t("book.paidTitle")}</h3>
+    <p style="color:var(--tinta-60,#6b6257);font-size:14px;margin-bottom:6px">${esc(first.label || t("book.paidLead"))}</p>
+    <div style="text-align:left">${items.map(bookingItem).join("")}</div>
+    <p style="color:var(--tinta-60,#6b6257);font-size:12.5px;margin:16px 0 0">${t("book.mailNote")}</p>
+    <button id="bkClose" style="margin-top:12px;background:none;border:none;color:var(--tinta-60,#6b6257);cursor:pointer;font-size:13px">${t("book.close")}</button>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.querySelector("#bkClose").onclick=()=>wrap.remove();
+  wrap.addEventListener("click",e=>{ if(e.target===wrap) wrap.remove(); });
 }
 // El Test de Temperamentos se entrega como un acceso web de un solo uso (no un PDF).
-function showTestAccess(url){
+function showTestAccess(url, booking){
   const es=lang==="es";
+  const wide=(booking||[]).some(b=>calEmbedUrl(b.url));
   const wrap=document.createElement("div");
-  wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(20,15,25,.62);display:grid;place-items:center;padding:20px";
-  wrap.innerHTML=`<div style="max-width:440px;width:100%;background:var(--lino,#F7F2E9);border-radius:18px;padding:34px 28px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)">
+  wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(20,15,25,.62);display:grid;place-items:"+(wide?"start":"center")+" center;padding:20px;overflow:auto";
+  wrap.innerHTML=`<div style="max-width:${wide?760:440}px;width:100%;background:var(--lino,#F7F2E9);border-radius:18px;padding:34px 28px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)">
     <div style="font-size:40px">🌅</div>
     <h3 style="font-family:var(--serif,Georgia);font-size:24px;margin:8px 0 6px">${es?"¡Tu Test está listo!":"Your Test is ready!"}</h3>
     <p style="color:var(--tinta-60,#6b6257);font-size:14px;margin-bottom:20px">${es?"Descubre tu temperamento y recibe tu guía completa. Este acceso es <b>personal y de un solo uso</b>: tómate un momento de calma y responde con tu instinto.":"Discover your temperament and get your full guide. This access is <b>personal and single-use</b>: take a calm moment and answer from your instinct."}</p>
     <div style="display:grid;gap:10px">
       <a id="taGo" class="btn btn-primary" href="${url}" target="_blank" rel="noopener">${es?"Empezar mi Test →":"Start my Test →"}</a>
     </div>
+    ${bookingBlock(booking)}
     <p style="color:var(--tinta-60,#6b6257);font-size:12px;margin:16px 0 0;line-height:1.5">${es?"Guarda este enlace. Si cierras la pestaña, vuelve aquí desde el mismo correo/compra para reabrirlo.":"Save this link. If you close the tab, reopen it from the same email/purchase."}</p>
     <button id="taClose" style="margin-top:14px;background:none;border:none;color:var(--tinta-60,#6b6257);cursor:pointer;font-size:13px">${es?"Cerrar":"Close"}</button>
   </div>`;
@@ -1366,15 +2015,17 @@ function showTestAccess(url){
   wrap.querySelector("#taClose").onclick=()=>wrap.remove();
   wrap.addEventListener("click",e=>{ if(e.target===wrap) wrap.remove(); });
 }
-function showDownloads(items){
+function showDownloads(items, booking){
   const es=lang==="es";
+  const wide=(booking||[]).some(b=>calEmbedUrl(b.url));
   const wrap=document.createElement("div");
-  wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(20,15,25,.62);display:grid;place-items:center;padding:20px";
-  wrap.innerHTML=`<div style="max-width:440px;width:100%;background:var(--lino,#F7F2E9);border-radius:18px;padding:34px 28px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)">
+  wrap.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(20,15,25,.62);display:grid;place-items:"+(wide?"start":"center")+" center;padding:20px;overflow:auto";
+  wrap.innerHTML=`<div style="max-width:${wide?760:440}px;width:100%;background:var(--lino,#F7F2E9);border-radius:18px;padding:34px 28px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)">
     <div style="font-size:40px">🌿</div>
     <h3 style="font-family:var(--serif,Georgia);font-size:24px;margin:8px 0 6px">${es?"¡Gracias por tu compra!":"Thank you for your purchase!"}</h3>
     <p style="color:var(--tinta-60,#6b6257);font-size:14px;margin-bottom:18px">${es?"Tu contenido está listo. Descárgalo aquí (el enlace vence en 1 hora).":"Your content is ready. Download it here (link expires in 1 hour)."}</p>
     <div id="dlBtns" style="display:grid;gap:10px"></div>
+    ${bookingBlock(booking)}
     <p style="color:var(--tinta-60,#6b6257);font-size:12px;margin:16px 0 0;line-height:1.5">${es?"📱 En celular se abre el PDF: toca <b>compartir/descargar</b> y elige <b>Guardar en Archivos</b>.<br>🔒 Tu archivo lleva tu correo impreso como licencia personal.<br>Podrás volver a descargarlo cuando quieras en <a href='/biblioteca' style='color:#B68A3E'>voces.world/biblioteca</a> con tu correo.":"📱 On mobile the PDF opens: tap <b>share/download</b> → <b>Save to Files</b>.<br>🔒 Your file carries your email as a personal license.<br>Re-download anytime at <a href='/biblioteca' style='color:#B68A3E'>voces.world/biblioteca</a> with your email."}</p>
     <button id="dlClose" style="margin-top:14px;background:none;border:none;color:var(--tinta-60,#6b6257);cursor:pointer;font-size:13px">${es?"Cerrar":"Close"}</button>
   </div>`;
@@ -1399,7 +2050,7 @@ cartLoad(); captureRef(); handlePayReturn();
 setLang("es");
 observeReveals();
 updateCartBadge();
-loadData().then(ok=>{ if(ok){ cleanCart(); setLang(lang); } openVozFromUrl(); buyFromUrl(); updateCartBadge(); });
+loadData().then(ok=>{ if(ok){ cleanCart(); setLang(lang); } openVozFromUrl(); openItemFromUrl(); buyFromUrl(); updateCartBadge(); loadTransferInfo(); });
 detectCurrency().then(()=>setLang(lang));
 </script>
 </body>

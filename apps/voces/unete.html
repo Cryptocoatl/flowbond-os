@@ -118,6 +118,9 @@
 
     <section class="plans" id="plans"></section>
 
+    <!-- Comisión: se ve ANTES de completar el pago, nunca después. -->
+    <div id="commNote" class="codebox" style="border-color:#d9b25a;background:rgba(203,161,90,.10);color:#5c4a1e;display:none"></div>
+
     <div class="codebox">
       <label for="codeInput">¿Tienes un código de descuento, de comunidad o de partner?</label>
       <div class="codebox-row">
@@ -216,6 +219,36 @@ function renderPlans(){
   }).join("");
 }
 
+/* ---- Comisión de la plataforma, visible antes de pagar --------------------
+   El % es el de la cuenta si ya hay perfil (vpa_my_commission) o el default
+   global de la plataforma si todavía no lo hay. */
+async function renderCommissionNote(){
+  const box=document.getElementById("commNote"); if(!box) return;
+  let pct=null, plan=null;
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ const { data } = await sb.rpc("vpa_my_commission"); if(data && data.ok) pct=data.commission_pct; }
+  }catch(_){}
+  if(pct==null){
+    try{
+      const { data } = await sb.from("app_vpa_settings_public").select("value").eq("key","default_commission_pct").maybeSingle();
+      const n=Number(data&&data.value); if(n>=0&&n<=100) pct=n;
+    }catch(_){}
+  }
+  const byPlan = PLANS.filter(p=>p.commission_pct!=null).map(p=>`${esc(p.name_es)} ${p.commission_pct}%`).join(" · ");
+  if(pct==null && !byPlan) return;
+  box.style.display="block";
+  box.innerHTML = `<b>Comisión de Voces en tus ventas${pct!=null?`: ${pct}%`:""}</b>
+    <div style="margin-top:7px;font-size:13.5px;line-height:1.6">
+      Por cada venta que realices a través de Voces, la plataforma retiene esa comisión.
+      Es la misma lógica que aplica en cualquier plataforma: a cambio, recibes exposición internacional,
+      herramientas de gestión y cobro, y un espacio donde tu trabajo puede crecer sin límite de fronteras.
+      No te estamos dando un lugar donde publicar, te estamos proponiendo un negocio en conjunto,
+      con depósitos prácticamente inmediatos según la forma de cobro que hayas configurado.
+      ${byPlan?`<br><span style="font-size:12.5px">Por plan: ${byPlan}.</span>`:""}
+    </div>`;
+}
+
 /* valida el CODE actual contra cada plan; devuelve si alguno es válido / con descuento */
 async function validateCode(){
   if(!CODE){ PLANS.forEach(p=>p._code=null); return {valid:false,disc:false}; }
@@ -252,6 +285,7 @@ async function loadPlans(){
   if(params.get("period")==="yearly") PERIOD="yearly";
   setPeriod(PERIOD);
   showCodeMsg(res);
+  renderCommissionNote();
 }
 
 /* ============ SUSCRIBIR ============ */
@@ -264,6 +298,9 @@ async function subscribe(planId){
   const { data, error } = await sb.rpc("vpa_start_subscription",{ payload:{ plan_id:planId, period:PERIOD, code:CODE, email } });
   if(error){ toast("Error: "+error.message); return; }
   if(!data || !data.ok){
+    // Ya tiene membresía viva: NO mandarlo a pagar otra vez (así casi se cobra doble
+    // a Monroy el 27-jul). Se le explica en qué va y ya.
+    if(data && data.error==="already_active"){ showMembershipState(data); return; }
     if(data && data.error==="need_profile"){
       toast("Primero crea tu perfil de especialista.");
       const q=new URLSearchParams(); if(CODE) q.set("ref",CODE);
@@ -273,14 +310,52 @@ async function subscribe(planId){
     toast("No se pudo iniciar la suscripción."); return;
   }
 
-  const r = await fetch(FN_BASE+"vpa-subscribe",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
-    body:JSON.stringify({ subscription_id:data.subscription_id })
-  });
-  const j = await r.json();
-  if(!r.ok || !j.ok || !j.checkout_url){ toast("Error de pago: "+(j.error||"intenta de nuevo")); return; }
-  location.href = j.checkout_url;   // → MercadoPago (autorizar tarjeta)
+  // Stripe PRIMERO: MercadoPago rechaza los cargos recurrentes con
+  // cc_rejected_high_risk (antifraude sobre suscripciones) y no hay palanca de
+  // código para bajar ese score. Stripe además trae Apple Pay y tarjetas
+  // internacionales. Si Stripe no está configurado o falla, cae a MercadoPago.
+  const url = await startCheckout("vpa-stripe-subscribe", data.subscription_id, session)
+           || await startCheckout("vpa-subscribe",        data.subscription_id, session);
+  if(!url){ toast("No se pudo abrir el pago. Escríbenos y lo resolvemos contigo."); return; }
+  location.href = url;
+}
+/* Pantalla "ya estás dentro": evita que alguien con membresía activa vuelva a pagar,
+   y le dice honestamente si su perfil sigue en revisión. */
+function showMembershipState(m){
+  const renueva = m.renews_at ? new Date(m.renews_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"}) : null;
+  const enRevision = m.profile_status && m.profile_status !== "published";
+  $("app").style.display="none";
+  const d=$("done");
+  d.innerHTML=`<div style="max-width:560px;margin:0 auto;text-align:center;padding:20px">
+    <div style="font-size:44px;line-height:1;margin-bottom:14px">${enRevision?"⏳":"✓"}</div>
+    <h2 style="font-family:var(--serif);font-size:27px;margin-bottom:12px">Tu membresía está activa</h2>
+    <p style="color:var(--tinta-60);line-height:1.65;margin-bottom:10px">
+      Plan <b>${esc((m.plan_id||"").toUpperCase())}</b> ${m.period==="yearly"?"anual":"mensual"}${renueva?` · se renueva el <b>${esc(renueva)}</b>`:""}.
+      <b>No necesitas pagar de nuevo.</b>
+    </p>
+    ${enRevision
+      ? `<p style="color:var(--tinta-60);line-height:1.65;background:rgba(182,138,62,.10);border:1px solid rgba(182,138,62,.35);border-radius:12px;padding:13px 15px;margin:14px 0">
+           Tu perfil está <b>en revisión por el equipo de Voces</b>. En cuanto lo aprueben aparece en el directorio público. Te avisamos por correo.
+         </p>`
+      : `<p style="color:var(--salvia);line-height:1.65">Tu perfil ya está publicado en el directorio. 🌿</p>`}
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a class="btn" href="/mi-voz">Ir a mi panel</a>
+      <a class="btn btn-ghost" href="/">Ver el directorio</a>
+    </div></div>`;
+  d.style.display="flex";
+}
+async function startCheckout(fn, subId, session){
+  try{
+    const r = await fetch(FN_BASE+fn,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+      body:JSON.stringify({ subscription_id:subId })
+    });
+    const j = await r.json();
+    if(r.ok && j.ok && j.checkout_url) return j.checkout_url;
+    console.warn(fn, j && (j.error||j.detail));
+  }catch(e){ console.warn(fn, e); }
+  return null;
 }
 
 /* ============ GATE LOGIN ============ */
@@ -308,12 +383,45 @@ async function doLogin(e){
 
 /* ============ INIT ============ */
 (async function init(){
-  // regreso desde MercadoPago
-  if(params.get("sub")){
-    $("app").style.display="none";
-    $("done").style.display="flex";
-    return;
+  // Regreso desde Stripe o MercadoPago.
+  // OJO: el back_url es el mismo (?sub=<id>) para éxito, fallo Y cancelación, así que
+  // NO se puede asumir que pagó. Antes mostrábamos "confirmando tu suscripción" a todos
+  // — el rechazado se quedaba viendo una pantalla que le mentía, sin planes ni botón.
+  // Ahora se pregunta el estado real y se actúa en consecuencia.
+  const subBack = params.get("sub");
+  if(subBack){
+    if(params.get("stripe")==="cancel"){
+      history.replaceState({},"",location.pathname);
+      toast("Pago cancelado. Puedes intentarlo de nuevo cuando quieras.");
+    } else {
+      let st=null;
+      try{ const {data}=await sb.rpc("vpa_subscription_public_status",{p_sub:subBack}); st=data; }catch(_){}
+      if(st && st.found && st.status==="active"){
+        $("app").style.display="none"; $("done").style.display="flex";
+        return;
+      }
+      if(st && st.found && st.status==="pending"){
+        // Pago no completado: se le avisa claro y se le devuelven los planes.
+        history.replaceState({},"",location.pathname);
+        setTimeout(()=>toast("Tu pago no se completó. Elige tu plan e inténtalo otra vez — si tu banco lo rechaza, escríbenos y lo resolvemos."),600);
+      } else if(!st || !st.found){
+        // Sin datos: mejor mostrar los planes que una pantalla muerta.
+        history.replaceState({},"",location.pathname);
+      } else {
+        $("app").style.display="none"; $("done").style.display="flex";
+        return;
+      }
+    }
   }
+  // Si ya tiene membresía viva, no le mostramos planes: le mostramos su estado.
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){
+      const { data:m } = await sb.rpc("vpa_my_membership");
+      if(m && m.active){ showMembershipState(m); return; }
+    }
+  }catch(_){}
+
   await loadPlans();
 })();
 </script>

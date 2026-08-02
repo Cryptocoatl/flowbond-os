@@ -129,13 +129,14 @@ const $=id=>document.getElementById(id);
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 const usd=c=>"$"+((Number(c)||0)/100).toLocaleString("en-US",{maximumFractionDigits:2})+" USD";
 let toastTimer; function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),3000); }
-const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
+const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
 const KINDS=Object.keys(KIND_ES);
 const PHOTO_BASE=SUPABASE_URL+"/storage/v1/object/public/vpa-photos/";
 function img(n){ return !n?"":(String(n).startsWith("http")?n:PHOTO_BASE+n); }
 
 let ME=null;     // vpa_my_profile()
 let PLANS=[];
+let COMM=null;   // vpa_my_commission() — % que retiene Voces + si ya lo aceptaste
 
 /* ============ GATE (claim / login) ============ */
 const claimToken = new URLSearchParams(location.search).get("claim");
@@ -213,6 +214,7 @@ async function boot(){
   }
   ME=prof;
   const { data:plans } = await sb.from("app_vpa_plans").select("*").order("sort_order"); PLANS=plans||[];
+  await loadCommission();
   $("gate").style.display="none"; $("app").style.display="block";
   $("whoami").textContent=session.user.email;
   buildNav(); await refreshBell(); go("perfil");
@@ -376,19 +378,84 @@ RENDER.oferta=async ()=>{
     <div class="hint">Tus libros, sesiones, retiros, conferencias. Lo que agregues o edites queda <b>pendiente</b> hasta que Voces lo publica. Marca “vender vía Voces” para que aparezca en la tienda y se pueda comprar en el carrito.</div>
     <div id="offForm"></div>
     <div id="rows">${offs.length?offs.map(o=>`<div class="card"><h4>${esc(o.title)} <span class="pill ${o.status==="published"?"published":(o.status==="hidden"?"hidden":"pending")}">${esc(o.status)}</span></h4>
-      <div class="meta">${esc(KIND_ES[o.kind]||o.kind)}${o.price_cents!=null?" · $"+(o.price_cents/100).toLocaleString("es-MX")+" MXN":" · precio a convenir"}${o.sell_via_voces?" · vía Voces":""}${o.external_url?" · 🔗 externo":""}${o.in_progress?" · en proceso":""}</div>
-      ${o.description?`<div class="meta" style="margin-top:4px;color:var(--tinta)">${esc(o.description)}</div>`:""}
+      <div class="meta">${esc(KIND_ES[o.kind]||o.kind)}${o.price_cents!=null?" · $"+(o.price_cents/100).toLocaleString("es-MX")+" MXN":" · precio a convenir"}${o.sell_via_voces?" · vía Voces":""}${o.external_url?" · 🔗 externo":""}${o.in_progress?" · en proceso":""}${SESSION_KINDS.includes(o.kind)&&!o.booking_url?` · <b style="color:#a33">⚠ falta tu enlace de agenda</b>`:""}${o.event_at?" · 📅 "+new Date(o.event_at).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}</div>
+      ${o.description?`<div class="meta" style="margin-top:4px;color:var(--tinta);white-space:pre-line">${esc(o.description)}</div>`:""}
       <div class="acts"><button class="btn btn-ghost btn-sm" onclick='editOffer(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button></div></div>`).join(""):`<div class="empty">Aún no tienes ofertas. Agrega la primera.</div>`}</div>`;
 };
+// Punto 4 · la voz elige cómo se anuncia su producto (antes lo decidía el sistema).
+const PILL_OPTS=[["","Automático"],["disponible","Disponible ahora"],["reserva","Reserva ahora"],
+  ["proximamente","Próximamente"],["ninguna","Sin píldora"]];
+// Punto 6/8 · sesión individual o grupal = agenda obligatoria para publicar.
+const SESSION_KINDS=["sesion_individual","sesion_grupal"];
+function bookNotice(){
+  const box=document.getElementById("of_bookNotice"); if(!box) return;
+  const need=SESSION_KINDS.includes(($("of_kind")||{}).value);
+  box.innerHTML = need
+    ? `<div class="hint" style="border:1px solid #d9b25a;background:rgba(203,161,90,.12);border-radius:10px;padding:11px 13px;margin:4px 0 12px;color:#7a5a12">
+         <b>El enlace de agenda es obligatorio</b> para las sesiones individuales y grupales.
+         Puedes guardar el resto ahora, pero tu oferta <b>no se publicará</b> hasta que lo agregues.
+       </div>` : "";
+}
+/* ---- Comisión de Voces: leyenda + aceptación obligatoria ------------------
+   Nada se puede vender por la plataforma sin que la voz haya aceptado, de forma
+   explícita, el porcentaje que le corresponde a su cuenta. Queda registrado
+   quién aceptó, cuándo y bajo qué porcentaje (respaldo formal). */
+async function loadCommission(){
+  try{ const { data } = await sb.rpc("vpa_my_commission"); COMM = (data&&data.ok)?data:null; }
+  catch(_){ COMM=null; }
+}
+function commissionText(pct){
+  return `Por cada venta que realices a través de Voces, la plataforma retiene una comisión del <b>${pct}%</b>. `
+    + `Es la misma lógica que aplica en cualquier plataforma: a cambio, recibes exposición internacional, `
+    + `herramientas de gestión y cobro, y un espacio donde tu trabajo puede crecer sin límite de fronteras. `
+    + `No te estamos dando un lugar donde publicar, te estamos proponiendo un negocio en conjunto, `
+    + `con depósitos prácticamente inmediatos según la forma de cobro que hayas configurado.`;
+}
+function commissionBlock(){
+  if(!COMM) return "";
+  const pct=COMM.commission_pct;
+  const done=!!COMM.accepted;
+  return `<div id="commBox" class="hint" style="border:1px solid #d9b25a;background:rgba(203,161,90,.10);border-radius:10px;padding:13px 15px;margin:6px 0 14px;color:#5c4a1e;line-height:1.55">
+      ${commissionText(pct)}
+      ${done
+        ? `<div style="margin-top:9px;color:#4c7a4c;font-weight:600">✓ Aceptaste esta comisión el ${
+             new Date(COMM.accepted_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}.</div>`
+        : `<label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin-top:11px;font-weight:600">
+             <input type="checkbox" id="of_commOk" style="margin-top:3px">
+             <span>Entiendo y acepto la comisión del ${pct}% aplicable a mi cuenta.</span></label>`}
+    </div>`;
+}
+// Sólo estorba cuando de verdad aplica: al vender a través de Voces.
+function commissionToggle(){
+  const box=document.getElementById("commWrap"); if(!box) return;
+  const on=($("of_via")||{}).checked;
+  box.innerHTML = on ? commissionBlock() : "";
+}
+async function ensureCommissionAccepted(){
+  if(!COMM || COMM.accepted) return true;
+  const chk=document.getElementById("of_commOk");
+  if(!chk || !chk.checked){
+    toast("Marca la casilla de aceptación de la comisión para poder vender por Voces");
+    if(chk) chk.focus();
+    return false;
+  }
+  const { error } = await sb.rpc("vpa_accept_commission",{ p_pct:COMM.commission_pct, p_source:"mi-voz" });
+  if(error){ toast("No se pudo registrar la aceptación: "+error.message); return false; }
+  await loadCommission();
+  return true;
+}
+
 function editOffer(o){
   o=o||{};
   const kOpts=KINDS.map(k=>`<option value="${k}" ${o.kind===k?"selected":""}>${KIND_ES[k]}</option>`).join("");
   $("offForm").innerHTML=`<div class="card">
-    <div class="row2"><div class="field"><label>Tipo</label><select id="of_kind">${kOpts}</select></div>
+    <div class="row2"><div class="field"><label>Tipo</label><select id="of_kind" onchange="bookNotice()">${kOpts}</select></div>
       <div class="field"><label>Precio (MXN, vacío = a convenir)</label><input id="of_price" type="number" min="0" value="${o.price_cents!=null?o.price_cents/100:""}"></div></div>
     <div class="field"><label>Título</label><input id="of_title" value="${esc(o.title||"")}"></div>
     <div class="field"><label>Descripción</label><textarea id="of_desc">${esc(o.description||"")}</textarea></div>
-    <div class="field"><label>Enlace externo (Amazon / tu tienda) <small style="color:#a49a88">— opcional, o sube el archivo abajo</small></label><input id="of_url" value="${esc(o.external_url||"")}"></div>
+    <div class="field"><label>Enlace externo (Amazon / tu tienda) <small style="color:#a49a88">— deshabilitado por ahora</small></label>
+      <input id="of_url" value="${esc(o.external_url||"")}" disabled style="background:#efeae1;color:#a49a88;cursor:not-allowed">
+      <div class="hint" style="color:#a49a88">Esta función todavía no está lista. Sube tu archivo aquí abajo o véndelo a través de Voces.</div></div>
 
     <div class="row2">
       <div class="field"><label>Imagen de portada</label>
@@ -413,11 +480,40 @@ function editOffer(o){
       <input type="hidden" id="of_fileName" value="${esc(o.file_name||"")}">
     </div>
 
-    <div class="field"><label class="chk"><input type="checkbox" id="of_via" ${o.sell_via_voces?"checked":""}> Vender a través de Voces (aparece en la tienda)</label></div>
+    <div id="of_bookNotice"></div>
+    <div class="field"><label>Enlace de agenda <small style="color:#a49a88">— Calendly u otro</small></label>
+      <input id="of_booking" type="url" placeholder="https://calendly.com/tu-usuario/sesion" value="${esc(o.booking_url||"")}">
+      <div class="hint">Tu link no será compartido, para evitar reservas sin pago por este medio. El usuario verá directamente tu calendario y elegirá la fecha. Voces te enviará un correo con la confirmación de la reserva, el nombre del usuario y la confirmación de pago.</div></div>
+    <div class="field"><label>Leyenda del botón de agenda <small style="color:#a49a88">— opcional, ej. «Reserva tu sesión gratuita»</small></label>
+      <input id="of_bookingLabel" maxlength="120" value="${esc(o.booking_label||"")}"></div>
+
+    <div class="field"><label>Píldora de estado <small style="color:#a49a88">— cómo se ve tu producto en la tienda</small></label>
+      <select id="of_pill">${PILL_OPTS.map(([v,l])=>`<option value="${v}" ${(o.status_pill||"")===v?"selected":""}>${l}</option>`).join("")}</select></div>
+
+    <div class="field"><label>📅 Fecha y hora del evento <small style="color:#a49a88">— sólo talleres y conferencias</small></label>
+      <input id="of_eventAt" type="datetime-local" value="${toLocalInput(o.event_at)}">
+      <div class="hint">Si pones fecha, tu taller o conferencia aparece en el <b>calendario público</b> de la página principal, visible para cualquier visitante. Déjalo vacío en libros, audios o sesiones que se agendan después de contratar.</div></div>
+    <div class="row2">
+      <div class="field"><label>Fin del evento <small style="color:#a49a88">— opcional</small></label>
+        <input id="of_eventEnd" type="datetime-local" value="${toLocalInput(o.event_ends_at)}"></div>
+      <div class="field"><label>Sede / lugar o enlace <small style="color:#a49a88">— opcional</small></label>
+        <input id="of_eventPlace" maxlength="200" value="${esc(o.event_location||"")}"></div>
+    </div>
+
+    <div class="field"><label class="chk"><input type="checkbox" id="of_via" ${o.sell_via_voces?"checked":""} onchange="commissionToggle()"> Vender a través de Voces (aparece en la tienda)</label></div>
+    <div id="commWrap"></div>
     <div class="field"><label class="chk"><input type="checkbox" id="of_wip" ${o.in_progress?"checked":""}> Obra en proceso</label></div>
     <div class="acts"><button class="btn btn-primary" onclick="saveOffer('${o.id||""}')">Guardar</button>
       <button class="btn btn-ghost" onclick="$('offForm').innerHTML=''">Cancelar</button></div>
   </div>`;
+  bookNotice(); commissionToggle();
+}
+// ISO → valor de <input type="datetime-local"> en hora local
+function toLocalInput(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d.getTime())) return "";
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 const OFFER_BAD_EXT=["exe","bat","cmd","com","scr","msi","app","dll","js","mjs","jar","sh","bash","bin","apk","deb","dmg","pkg","svg","vbs","ps1","wsf","cpl","gadget","jse","msc"];
 async function uploadOfferMedia(file, slot){
@@ -448,40 +544,200 @@ async function saveOffer(id){
     price_cents:price===""?"":Math.round(Number(price)*100), external_url:$("of_url").value.trim(),
     cover_url:$("of_cover").value.trim(), preview_url:$("of_preview").value.trim(),
     file_url:$("of_file").value.trim(), file_name:$("of_fileName").value.trim(),
+    booking_url:$("of_booking").value.trim(), booking_label:$("of_bookingLabel").value.trim(),
+    status_pill:$("of_pill").value,
+    event_at:$("of_eventAt").value?new Date($("of_eventAt").value).toISOString():"",
+    event_ends_at:$("of_eventEnd").value?new Date($("of_eventEnd").value).toISOString():"",
+    event_location:$("of_eventPlace").value.trim(),
     sell_via_voces:$("of_via").checked, in_progress:$("of_wip").checked };
   if(!p.title) return toast("Escribe un título");
+  // Vender por Voces exige aceptar la comisión vigente (el backend también lo exige).
+  if(p.sell_via_voces && !(await ensureCommissionAccepted())) return;
+  const needsBooking = SESSION_KINDS.includes(p.kind) && !p.booking_url;
   try{ const {error}=await sb.rpc("vpa_upsert_offering",{payload:p}); if(error)throw error;
-    toast("Guardado — pendiente de publicación por Voces ✓");
-    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; $("offForm").innerHTML=""; RENDER.oferta(); }catch(e){ toast("Error: "+e.message); }
+    toast(needsBooking
+      ? "Guardado — falta tu enlace de agenda para que Voces pueda publicarla"
+      : "Guardado — pendiente de publicación por Voces ✓");
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; $("offForm").innerHTML=""; RENDER.oferta(); }
+  catch(e){
+    const m=e&&e.message||"";
+    if(/commission_terms_required/.test(m)){ toast("Falta aceptar la comisión de Voces para poder vender."); await loadCommission(); commissionToggle(); return; }
+    if(/booking_required/.test(m)){ toast("Falta tu enlace de agenda: sin él la sesión no se puede publicar."); return; }
+    toast("Error: "+m);
+  }
 }
 
 /* ============ COBROS ============ */
-RENDER.cobros=async ()=>{
-  const p=ME.payout||{};
-  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div>
-    <div class="hint">Tus datos para recibir tu parte de las ventas. Son privados; sólo tú y el equipo de Voces los ven. Cuánto recibes lo define tu acuerdo de reparto (ve a “Membresía y acuerdo”).</div>
-    <div class="card">
-      <div class="field"><label>¿Cómo prefieres recibir?</label>
-        <select id="pa_method">${["mercadopago","clabe","paypal"].map(m=>`<option value="${m}" ${p.preferred_method===m?"selected":""}>${m==="mercadopago"?"MercadoPago":(m==="clabe"?"Transferencia (CLABE)":"PayPal")}</option>`).join("")}</select></div>
-      <div class="field"><label>MercadoPago (correo de tu cuenta)</label><input id="pa_mp" value="${esc(p.mercadopago_email||"")}" placeholder="tu-correo@mercadopago"></div>
-      <div class="field"><label>Titular de la cuenta</label><input id="pa_holder" value="${esc(p.holder_name||"")}"></div>
-      <div class="row2"><div class="field"><label>Banco</label><input id="pa_bank" value="${esc(p.bank_name||"")}"></div>
-        <div class="field"><label>CLABE (18 dígitos)</label><input id="pa_clabe" value="${esc(p.clabe||"")}"></div></div>
-      <div class="row2"><div class="field"><label>PayPal (correo, opcional)</label><input id="pa_paypal" value="${esc(p.paypal_email||"")}"></div>
-        <div class="field"><label>SWIFT (internacional, opcional)</label><input id="pa_swift" value="${esc(p.swift||"")}"></div></div>
-      <div class="row2"><div class="field"><label>País</label><input id="pa_country" value="${esc(p.country||"MX")}"></div>
-        <div class="field"><label>Moneda</label><input id="pa_currency" value="${esc(p.currency||"MXN")}"></div></div>
-      <div class="field"><label>Notas</label><input id="pa_notes" value="${esc(p.notes||"")}"></div>
-      <div class="acts"><button class="btn btn-primary" onclick="savePayout()">Guardar datos de cobro</button></div>
-    </div>`;
+/* Métodos de cobro internacionales. Cada voz puede tener varios y elegir el principal.
+   El % que conserva lo define su acuerdo de reparto (sección "Membresía y acuerdo");
+   aquí sólo se define POR DÓNDE le llega el dinero. */
+/* Cada riel con su VELOCIDAD real, porque es lo que de verdad importa al cobrar.
+   PayPal funciona casi en todo el mundo pero retiene el dinero días y cobra caro,
+   así que aquí siempre va al final y con su advertencia. */
+const PAY_KINDS={
+  clabe:      {label:"Transferencia SPEI (México)", tag:"⚡ En minutos", speed:"Llega en minutos · sin costo",
+               hint:"Transferencia bancaria en pesos a tu CLABE. Es la forma más rápida y barata dentro de México.", fields:["clabe","bank_name","holder_name"]},
+  dolarapp:   {label:"DolarApp / ARQ", tag:"⚡ En minutos", speed:"Llega en minutos · sin costo",
+               hint:"Recibe en dólares digitales. Lo más rápido es tu <b>CLABE de DolarApp</b> (te llega por transferencia SPEI) o tu <b>dirección USDC</b> con su red. El tag/correo sirve si prefieres que te busquemos en la app.", fields:["clabe","wallet_address","chain","account_id","email"]},
+  usdc:       {label:"USDC · dólar digital", tag:"⚡ En minutos", speed:"Llega en minutos · comisión de red mínima",
+               hint:"Dólares digitales directo a tu wallet, desde cualquier país. Revisa MUY bien la red: un envío por la red equivocada se pierde para siempre.", fields:["wallet_address","chain"]},
+  wise:       {label:"Wise", tag:"✅ Mejor tipo de cambio", speed:"1–2 días hábiles · comisión baja",
+               hint:"El mejor tipo de cambio real para recibir en tu moneda. Usa el correo de tu cuenta Wise.", fields:["email","holder_name"]},
+  payoneer:   {label:"Payoneer (dólares, euros, libras)", tag:"", speed:"1–3 días hábiles · sin comisión de transferencia internacional",
+               hint:"Pega los datos de tu <b>cuenta receptora</b> de Payoneer (en la app: <b>Recibir → Datos de la cuenta</b>): dólares = número de cuenta + <i>routing</i> · libras = número de cuenta + <i>sort code</i> (ponlo en Routing) · euros = IBAN + BIC. Escribe el <b>titular exactamente</b> como aparece en tu cuenta Payoneer, y elige abajo la moneda (USD, EUR o GBP).", fields:["holder_name","account_number","routing","iban","swift","bank_name","email"]},
+  mercadopago:{label:"MercadoPago", tag:"", speed:"1–2 días hábiles",
+               hint:"Depósito a tu cuenta MercadoPago. En las ventas con tarjeta el dinero te llega automático al momento de la compra.", fields:["email"]},
+  bank_intl:  {label:"Banco internacional", tag:"", speed:"2–5 días hábiles · tu banco suele cobrar comisión",
+               hint:"Transferencia SWIFT/IBAN a tu banco fuera de México.", fields:["holder_name","iban","account_number","swift","routing","bank_name"]},
+  paypal:     {label:"PayPal", tag:"🐢 Tarda varios días", speed:"3–5 días hábiles (a veces más) · comisión alta",
+               hint:"Funciona en casi todos los países, pero <b>PayPal retiene el dinero varios días</b> y cobra comisión alta más su propio tipo de cambio. Elígelo sólo si no tienes ninguna de las opciones de arriba.", fields:["email","holder_name"]},
+  credit:     {label:"Dejarlo como crédito en Voces", tag:"", speed:"Inmediato",
+               hint:"No recibes dinero: tu saldo queda como crédito para usar dentro de Voces.", fields:[]}
 };
-async function savePayout(){
-  const p={ holder_name:$("pa_holder").value.trim(), bank_name:$("pa_bank").value.trim(), clabe:$("pa_clabe").value.trim(),
-    paypal_email:$("pa_paypal").value.trim(), swift:$("pa_swift").value.trim(), country:$("pa_country").value.trim()||"MX",
-    currency:$("pa_currency").value.trim()||"MXN", notes:$("pa_notes").value.trim(),
-    mercadopago_email:$("pa_mp").value.trim(), preferred_method:$("pa_method").value };
-  try{ const {error}=await sb.rpc("vpa_set_payout_account",{payload:p}); if(error)throw error;
-    toast("Datos de cobro guardados ✓"); const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; }catch(e){ toast("Error: "+e.message); }
+
+/* Qué conviene según dónde vive la voz. El orden ES la recomendación. */
+const RAILS_BY_COUNTRY={
+  MX:["clabe","dolarapp","usdc","mercadopago","wise","payoneer","bank_intl","paypal"],
+  AR:["usdc","dolarapp","wise","payoneer","bank_intl","paypal"],
+  VE:["usdc","payoneer","bank_intl","paypal"],
+  CO:["usdc","wise","payoneer","bank_intl","paypal"], CL:["usdc","wise","payoneer","bank_intl","paypal"],
+  PE:["usdc","wise","payoneer","bank_intl","paypal"], UY:["usdc","wise","payoneer","bank_intl","paypal"],
+  BO:["usdc","wise","payoneer","bank_intl","paypal"], PY:["usdc","wise","payoneer","bank_intl","paypal"],
+  EC:["usdc","wise","payoneer","bank_intl","paypal"], BR:["wise","usdc","payoneer","bank_intl","paypal"],
+  ES:["wise","payoneer","bank_intl","usdc","paypal"], US:["wise","payoneer","usdc","bank_intl","paypal"],
+  CA:["wise","payoneer","usdc","bank_intl","paypal"], GB:["wise","payoneer","bank_intl","usdc","paypal"]
+};
+const RAILS_DEFAULT=["usdc","wise","payoneer","bank_intl","paypal"];
+function railsFor(country){
+  const base=RAILS_BY_COUNTRY[(country||"MX").toUpperCase()]||RAILS_DEFAULT;
+  const rest=Object.keys(PAY_KINDS).filter(k=>!base.includes(k)&&k!=="credit");
+  return [...base,...rest,"credit"];
+}
+function flagOf(c){
+  if(!c||c.length!==2) return "🌍";
+  try{ return String.fromCodePoint(...[...c.toUpperCase()].map(ch=>0x1F1E6+ch.charCodeAt(0)-65)); }
+  catch(_){ return "🌍"; }
+}
+const COUNTRY_ES={MX:"México",AR:"Argentina",CO:"Colombia",CL:"Chile",PE:"Perú",ES:"España",
+  US:"Estados Unidos",UY:"Uruguay",EC:"Ecuador",BO:"Bolivia",PY:"Paraguay",VE:"Venezuela",
+  BR:"Brasil",CR:"Costa Rica",PA:"Panamá",GT:"Guatemala",SV:"El Salvador",HN:"Honduras",
+  NI:"Nicaragua",DO:"República Dominicana",CU:"Cuba",PR:"Puerto Rico",CA:"Canadá",
+  GB:"Reino Unido",FR:"Francia",DE:"Alemania",IT:"Italia",PT:"Portugal",NL:"Países Bajos"};
+const countryName=c=>COUNTRY_ES[(c||"").toUpperCase()]||c||"—";
+const PAY_LBL={email:"Correo de la cuenta",holder_name:"Titular de la cuenta",account_id:"Tag / usuario",
+  clabe:"CLABE (18 dígitos)",bank_name:"Banco",wallet_address:"Dirección de tu wallet",chain:"Red",
+  iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
+const CHAINS=["base","polygon","solana","ethereum","arbitrum","optimism","tron"];
+const mx=c=>"$"+((c||0)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+let MYPAY=[], MYEARN=null;
+
+RENDER.cobros=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div><div class="hint">Cargando…</div>`;
+  const [{data:methods},{data:earn}]=await Promise.all([
+    sb.rpc("vpa_my_payout_methods"), sb.rpc("vpa_my_earnings")]);
+  MYPAY=methods||[]; MYEARN=earn||{};
+  const e=MYEARN;
+  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div>
+    <div class="hint">Aquí defines <b>cómo recibes tu dinero</b>. Puedes tener varios métodos y marcar uno como principal; Voces te paga por ese. Cuánto te toca de cada venta lo define tu acuerdo de reparto (ve a “Membresía y acuerdo”).</div>
+    <div class="card">
+      <h4>Tu saldo</h4>
+      <div class="row2">
+        <div><div class="hint">Disponible por cobrar</div><div style="font-size:1.6rem;font-weight:700">${mx(e.available_cents)}</div></div>
+        <div><div class="hint">En camino</div><div style="font-size:1.6rem;font-weight:700">${mx(e.paying_cents)}</div></div>
+      </div>
+      <div class="row2" style="margin-top:.6rem">
+        <div><div class="hint">Ya cobrado</div><div>${mx(e.paid_cents)}</div></div>
+        <div><div class="hint">Recibido directo en tus ventas con tarjeta</div><div>${mx(e.auto_split_cents)}</div></div>
+      </div>
+      ${e.auto_split_cents?`<div class="hint" style="margin-top:.6rem">En las compras con tarjeta tu parte llega <b>directo a tu cuenta</b> al momento; por eso ese monto no aparece como “por cobrar”.</div>`:``}
+    </div>
+
+    <div class="card">
+      <h4>Tus métodos de cobro</h4>
+      ${MYPAY.length?MYPAY.map(m=>`<div class="card" style="margin:.5rem 0">
+        <div><b>${esc(PAY_KINDS[m.kind]?.label||m.kind)}</b> ${m.is_default?`<span class="pill">Principal</span>`:``}</div>
+        <div class="hint">${esc(payDesc(m))}</div>
+        <div class="acts">
+          ${m.is_default?``:`<button class="btn" onclick="setDefaultPay('${m.id}')">Hacer principal</button>`}
+          <button class="btn" onclick="editPay('${m.id}')">Editar</button>
+          <button class="btn" onclick="delPay('${m.id}')">Eliminar</button>
+        </div></div>`).join(""):`<div class="hint">Todavía no agregas ninguno. Sin un método de cobro no podemos enviarte tu dinero.</div>`}
+      <div class="acts"><button class="btn btn-primary" onclick="newPay()">+ Agregar método de cobro</button></div>
+      <div id="payForm"></div>
+    </div>
+
+    ${(e.payouts||[]).length?`<div class="card"><h4>Pagos que te hemos enviado</h4>
+      ${e.payouts.map(p=>`<div style="padding:.4rem 0;border-bottom:1px solid #eee">
+        <b>${mx(p.amount_cents)}</b> · ${esc(PAY_KINDS[p.kind]?.label||p.kind)} ·
+        ${p.status==="paid"?"Pagado":(p.status==="processing"?"En camino":(p.status==="failed"?"Falló":"Pendiente"))}
+        ${p.paid_at?` · ${new Date(p.paid_at).toLocaleDateString("es-MX")}`:``}
+        ${p.provider_ref?`<div class="hint">Referencia: ${esc(p.provider_ref)}</div>`:``}
+      </div>`).join("")}</div>`:``}
+
+    ${(e.lines||[]).length?`<div class="card"><h4>De dónde viene tu saldo</h4>
+      ${e.lines.map(l=>`<div style="padding:.35rem 0;border-bottom:1px solid #eee">
+        <b>${mx(l.amount_cents)}</b> · ${esc(l.title||"Venta")}
+        <span class="hint">${l.status==="settled_source"?"recibido directo":(l.status==="paid"?"cobrado":(l.status==="paying"?"en camino":"por cobrar"))}
+        · ${new Date(l.created_at).toLocaleDateString("es-MX")}</span>
+      </div>`).join("")}</div>`:``}`;
+};
+
+function payDesc(m){
+  if(m.kind==="usdc") return `${m.wallet_address||""} · red ${String(m.chain||"").toUpperCase()}`;
+  if(m.kind==="clabe") return `CLABE ••••${m.clabe_last4||"----"} · ${m.bank_name||""}`;
+  if(m.kind==="bank_intl") return `Cuenta ••••${m.iban_last4||m.account_last4||"----"} · ${m.swift||""} · ${m.country||""}`;
+  return m.email||m.account_id||m.holder_name||"—";
+}
+
+/* Se abre con lo MEJOR para su país, nunca con PayPal. */
+function newPay(kind){ payForm(null, kind||railsFor(ME.country)[0]); }
+function editPay(id){ const m=MYPAY.find(x=>x.id===id); if(m) payForm(m, m.kind); }
+
+function payForm(m, kind){
+  const order=railsFor(ME.country);
+  kind = kind || order[0];
+  const k=PAY_KINDS[kind]||PAY_KINDS[order[0]];
+  const val=f=>{ if(!m) return ""; if(f==="clabe"||f==="iban"||f==="account_number") return ""; return m[f]||""; };
+  $("payForm").innerHTML=`<div class="card" style="margin-top:.6rem">
+    <div class="field"><label>Método <small style="font-weight:400;color:var(--tinta-60)">— ordenados de más rápido a más lento para ${flagOf(ME.country)} ${esc(countryName(ME.country))}</small></label>
+      <select id="pk" onchange="payForm(${m?`MYPAY.find(x=>x.id==='${m.id}')`:"null"}, this.value)">
+        ${order.map(v=>{const o=PAY_KINDS[v]; return `<option value="${v}" ${v===kind?"selected":""}>${o.tag?o.tag+" · ":""}${o.label}</option>`;}).join("")}
+      </select></div>
+    <div class="hint"><b>${esc(k.speed)}</b></div>
+    <div class="hint">${k.hint}</div>
+    ${kind==="paypal"?`<div class="hint" style="color:#a33">Ojo: si tienes cualquiera de las opciones de arriba, vas a recibir tu dinero <b>mucho antes</b> y con menos comisión.</div>`:``}
+    ${k.fields.map(f=>f==="chain"
+      ?`<div class="field"><label>${PAY_LBL[f]}</label><select id="pf_${f}">${CHAINS.map(c=>`<option value="${c}" ${val("chain")===c?"selected":""}>${c.toUpperCase()}</option>`).join("")}</select></div>`
+      :`<div class="field"><label>${PAY_LBL[f]}${(f==="clabe"||f==="iban"||f==="account_number")&&m?" (vuelve a escribirla)":""}</label><input id="pf_${f}" value="${esc(val(f))}"></div>`).join("")}
+    ${kind==="usdc"?`<div class="hint" style="color:#a33">⚠️ Revisa la red y la dirección carácter por carácter. Un envío a la red equivocada NO se puede recuperar.</div>`:``}
+    <div class="row2">
+      <div class="field"><label>País</label><input id="pf_country" value="${esc(m?.country||"MX")}"></div>
+      <div class="field"><label>Moneda en que quieres recibir</label><input id="pf_currency" value="${esc(m?.currency||"MXN")}"></div>
+    </div>
+    <label style="display:block;margin:.4rem 0"><input type="checkbox" id="pf_default" ${(!MYPAY.length||m?.is_default)?"checked":""}> Usar como método principal</label>
+    <div class="acts">
+      <button class="btn btn-primary" onclick="savePay('${m?m.id:""}')">Guardar método</button>
+      <button class="btn" onclick="document.getElementById('payForm').innerHTML=''">Cancelar</button>
+    </div></div>`;
+}
+
+async function savePay(id){
+  const kind=$("pk").value, p={kind, country:$("pf_country").value.trim()||"MX",
+    currency:$("pf_currency").value.trim()||"MXN", is_default:$("pf_default").checked};
+  if(id) p.id=id;
+  (PAY_KINDS[kind]?.fields||[]).forEach(f=>{ const el=$("pf_"+f); if(el&&el.value.trim()) p[f]=el.value.trim(); });
+  try{ const {error}=await sb.rpc("vpa_save_payout_method",{payload:p}); if(error)throw error;
+    toast("Método de cobro guardado ✓"); $("payForm").innerHTML=""; RENDER.cobros();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function setDefaultPay(id){
+  try{ const {error}=await sb.rpc("vpa_set_default_payout_method",{p_id:id}); if(error)throw error;
+    toast("Listo ✓"); RENDER.cobros(); }catch(e){ toast("Error: "+e.message); }
+}
+async function delPay(id){
+  if(!confirm("¿Eliminar este método de cobro?")) return;
+  try{ const {error}=await sb.rpc("vpa_delete_payout_method",{p_id:id}); if(error)throw error;
+    toast("Eliminado"); RENDER.cobros(); }catch(e){ toast("Error: "+e.message); }
 }
 
 /* ============ MEMBRESÍA ============ */
@@ -502,6 +758,16 @@ RENDER.membresia=async ()=>{
     ${agreed?`<div class="card"><h4>Tu acuerdo vigente <span class="pill published">activo</span></h4>
       <div class="meta">Conservas el <b>${agreed.specialist_pct}%</b> de cada venta. Se aplica automáticamente en cada compra.</div></div>`:
       `<div class="card"><div class="meta">Sin acuerdo personalizado: aplica el reparto por defecto de tu plan.</div></div>`}
+    ${COMM?`<div class="card" style="display:block">
+      <h4>Comisión de Voces <span class="pill ${COMM.accepted?"published":"pending"}">${COMM.commission_pct}%</span></h4>
+      <div class="meta" style="margin-top:6px;color:var(--tinta);line-height:1.55">${commissionText(COMM.commission_pct)}</div>
+      ${COMM.accepted
+        ? `<div class="meta" style="margin-top:9px;color:#4c7a4c;font-weight:600">✓ Aceptada el ${new Date(COMM.accepted_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}</div>`
+        : `<label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin-top:11px;font-weight:600">
+             <input type="checkbox" id="memCommOk" style="margin-top:3px">
+             <span>Entiendo y acepto la comisión del ${COMM.commission_pct}% aplicable a mi cuenta.</span></label>
+           <div class="acts"><button class="btn btn-primary btn-sm" onclick="acceptCommissionFromMembership()">Aceptar comisión</button></div>`}
+    </div>`:""}
     <div class="card" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
       <div><div class="meta">Tu plan actual</div><h3 style="font-size:22px">${esc((PLANS.find(p=>p.id===cur)||{}).name_es||cur)}</h3>
         ${sub?`<div class="meta">${esc(sub.status)} · ${esc(sub.period||"")}</div>`:`<div class="meta">Gratis</div>`}</div>
@@ -517,6 +783,13 @@ RENDER.membresia=async ()=>{
       </div>`).join("")}
     </div>`;
 };
+async function acceptCommissionFromMembership(){
+  const chk=document.getElementById("memCommOk");
+  if(!chk||!chk.checked){ toast("Marca la casilla para confirmar que aceptas la comisión"); return; }
+  try{ const {error}=await sb.rpc("vpa_accept_commission",{ p_pct:COMM.commission_pct, p_source:"membresia" });
+    if(error) throw error; await loadCommission(); toast("Comisión aceptada ✓"); RENDER.membresia();
+  }catch(e){ toast("Error: "+e.message); }
+}
 async function respondDeal(action){
   try{ const {error}=await sb.rpc("vpa_deal_respond",{p_action:action}); if(error)throw error;
     toast(action==="accept"?"Acuerdo aceptado ✓":"Acuerdo rechazado");
