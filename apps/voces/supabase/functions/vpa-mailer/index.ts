@@ -62,6 +62,89 @@ function tpl(template: string, p: Record<string, unknown>) {
         <p style="font-size:13px;color:#8a8378"><b>Guarda este correo:</b> este enlace es tu acceso y es <b>personal y de un solo uso</b>. Búscate un momento de calma y responde con lo primero que sientas — así el resultado es verdadero.</p>
         <p style="font-size:13px;color:#8a8378">Si el botón no abre, copia esta dirección:<br><span style="color:#B68A3E;word-break:break-all">${esc(url)}</span></p>`);
     }
+    case "test_result": {
+      // Resultado del Test de Temperamentos (La Vida es Bella).
+      // Por spec: SOLO el temperamento resultante y su descripción. Sin eBook ni adjuntos.
+      // Claves, nombres, colores y esencias tomados tal cual del Test (lavidaesbella.site/test).
+      const T: Record<string, { name: string; line: string; color: string }> = {
+        DOM: { name: "Colérico · Dominante", color: "#ff5d47",
+               line: "Naciste con motor propio. Donde otros ven un problema, tú ves algo que hay que resolver — y lo resuelves ya. Eres la que arranca, la que decide, la que no se queda esperando permiso." },
+        INF: { name: "Sanguíneo · Influyente", color: "#ffb43d",
+               line: "Entras a un lugar y el lugar cambia. Tienes el don de encender a la gente: donde hay tensión pones humor, donde hay desánimo pones chispa. Vives el presente con una intensidad que a otros les toma años aprender." },
+        EST: { name: "Flemático · Estable", color: "#37c294",
+               line: "Eres el suelo firme donde los demás se paran. Cuando todo se tensa, tú bajas la temperatura del cuarto con solo estar ahí. La gente te busca porque contigo se sienten en paz — y porque escuchas de verdad." },
+        MIN: { name: "Melancólico · Minucioso", color: "#7d9bff",
+               line: "Ves lo que nadie más ve. Mientras los demás opinan, tú observas, ordenas y entiendes. Tu profundidad no es exageración: es la razón por la que las cosas que tocas quedan bien hechas." },
+      };
+      const key = String(p.primary || "").toUpperCase();
+      const t = T[key] || { name: String(p.primary || "tu temperamento"), color: "#B68A3E", line: "" };
+      const sec = T[String(p.secondary || "").toUpperCase()];
+      const isTeam = p.team_copy === true;
+      const who = esc(String(p.name || "")) || "";
+
+      const scores = (p.scores && typeof p.scores === "object") ? p.scores as Record<string, number> : null;
+      const bars = scores
+        ? Object.keys(T).filter((k) => k in scores).map((k) => {
+            const v = Number(scores[k]) || 0;
+            const total = Object.values(scores).reduce((n, x) => n + (Number(x) || 0), 0) || 1;
+            const pct = Math.round((v / total) * 100);
+            return `<tr><td style="padding:5px 10px 5px 0;font-size:13px;color:#5a5348;white-space:nowrap">${T[k].name}</td>
+              <td style="padding:5px 0;width:100%"><div style="background:#EFE3D2;border-radius:99px;height:8px">
+              <div style="background:${T[k].color};width:${pct}%;height:8px;border-radius:99px"></div></div></td>
+              <td style="padding:5px 0 5px 10px;font-size:12px;color:#8a8378">${v}</td></tr>`;
+          }).join("")
+        : "";
+
+      const body = `
+        ${isTeam
+          ? `<p style="font-size:13px;color:#8a8378;background:#F7F2E9;padding:10px 14px;border-radius:8px">
+               <b>Copia para el equipo.</b> ${who ? who + " " : ""}(${esc(p.email)}) acaba de recibir su resultado.
+               Aún no ha agendado sesión — buen momento para acompañar. Responde este correo para escribirle directo.</p>`
+          : `<p>Hola${who ? " " + who : ""}:</p><p>Este es tu resultado del <b>Test de Temperamentos</b>, tal como lo viste en pantalla.</p>`}
+        <div style="text-align:center;margin:26px 0 18px">
+          <p style="font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#8a8378;margin:0 0 6px">Tu temperamento principal</p>
+          <p style="font-family:Georgia,serif;font-size:34px;color:${t.color};margin:0">${esc(t.name)}</p>
+        </div>
+        <p style="text-align:center;color:#5a5348">${esc(t.line)}</p>
+        ${sec ? `<p style="text-align:center;font-size:14px;color:#8a8378">Tu segundo estilo: <b>${esc(sec.name)}</b>${p.tie === true ? " — quedaron empatados, las dos guías son tuyas." : "."}</p>` : ""}
+        ${bars ? `<table style="width:100%;border-collapse:collapse;margin:22px 0 4px">${bars}</table>` : ""}
+        ${isTeam ? "" : `<p style="font-size:13px;color:#8a8378;margin-top:24px">Ningún temperamento es mejor que otro: son distintas expresiones de lo humano. El temperamento es el punto de partida — el carácter es el camino que eliges recorrer.</p>`}`;
+
+      return wrap(isTeam ? `Resultado del Test · ${t.name}${who ? " · " + who : ""}` : `Tu temperamento: ${t.name} 🌅`, body);
+    }
+    case "payout_sent": {
+      const KIND: Record<string, string> = {
+        mercadopago: "MercadoPago", paypal: "PayPal", wise: "Wise", dolarapp: "DolarApp / ARQ",
+        usdc: "USDC", clabe: "transferencia SPEI", bank_intl: "transferencia internacional",
+        credit: "crédito en Voces",
+      };
+      const total = (((p.amount_cents as number) || 0) / 100).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      });
+      const via = KIND[String(p.kind || "")] || String(p.kind || "");
+      return wrap("Te enviamos tu pago 🌿", `<p>Hola${name ? " " + esc(name) : ""}:</p>
+        <p>Te enviamos <b>$${total} MXN</b> por <b>${esc(via)}</b> — tu parte de las ventas en <b>Voces para el Alma</b>.</p>
+        ${p.ref ? `<p style="font-size:13px;color:#8a8378">Referencia: <b>${esc(String(p.ref))}</b></p>` : ""}
+        <p style="text-align:center;margin:22px 0"><a href="${SITE}/mi-voz" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Ver mis cobros</a></p>
+        <p style="font-size:13px;color:#8a8378">Según el método, puede tardar unos minutos u horas en reflejarse. Si algo no cuadra, respóndenos este correo.</p>`);
+    }
+    case "booking_paid": {
+      // Segunda notificación de una sesión agendada (la primera la manda Calendly).
+      // Aquí NO va el día ni la hora: eso lo sabe Calendly. Esto confirma que el
+      // dinero entró por Voces, para conciliar reserva ↔ pago real.
+      const total = (((p.amount_cents as number) || 0) / 100).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      });
+      const buyer = String(p.buyer_name || "").trim();
+      return wrap("Pago recibido por una sesión 🗓", `<p>Hola${name ? " " + esc(name) : ""}:</p>
+        <p>Se pagó una de tus sesiones a través de <b>Voces para el Alma</b>.</p>
+        <p><b>Sesión:</b> ${esc(p.titles || "")}<br>
+           <b>Comprador:</b> ${esc(buyer || "(sin nombre)")}${p.buyer_email ? ` &lt;<a href="mailto:${esc(p.buyer_email)}" style="color:#B68A3E">${esc(p.buyer_email)}</a>&gt;` : ""}<br>
+           <b>Monto pagado:</b> $${total} MXN<br>
+           <b>Pedido:</b> ${esc(String(p.order_id || "").slice(0, 8))}</p>
+        <p style="font-size:13px;color:#8a8378">La <b>fecha y hora</b> te llegan por separado en el correo de <b>Calendly</b>, con los datos que la persona capturó ahí. Este correo es tu comprobante de que la reserva corresponde a un pago real recibido por Voces.</p>
+        <p style="text-align:center;margin:22px 0"><a href="${SITE}/mi-voz" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Ver en mi panel</a></p>`);
+    }
     case "contacto":
       return wrap(`Nuevo mensaje de contacto${name ? " · " + esc(name) : ""}`, `
         <p>Recibiste un mensaje desde <b>Voces para el Alma</b>:</p>

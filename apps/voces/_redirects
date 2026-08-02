@@ -1,0 +1,3 @@
+# Enlaces legibles por oferta:  /oferta/<voz>/<producto>
+# Cloudflare Pages sirve index.html y la página resuelve la ruta del lado del cliente.
+/oferta/*  /index.html  200
