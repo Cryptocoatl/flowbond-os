@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next'
 import path from 'path'
+import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/auth', '@flowbond/i18n', '@flowbond/ui'],
+  transpilePackages: ['@flowbond/auth', '@flowbond/i18n', '@flowbond/ui', '@flowbond/security'],
   turbopack: {
     root: path.resolve(__dirname, '../..'),
     // Stub optional wagmi v3 connectors (Porto / Tempo) we don't use.
@@ -23,4 +24,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSecurity(nextConfig, { csp: false })

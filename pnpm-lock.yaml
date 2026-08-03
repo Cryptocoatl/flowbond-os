@@ -30,6 +30,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@vercel/blob':
         specifier: ^0.27.0
         version: 0.27.3
@@ -76,6 +79,9 @@ importers:
       '@flowbond/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@flowbond/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -143,6 +149,70 @@ importers:
       vitest:
         specifier: ^3.0.5
         version: 3.2.6(@types/node@22.19.15)(jiti@1.21.7)(tsx@4.21.0)
+
+  apps/banoseco:
+    dependencies:
+      '@flowbond/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@flowbond/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
+      '@supabase/ssr':
+        specifier: ^0.10.3
+        version: 0.10.3(@supabase/supabase-js@2.105.4)
+      '@supabase/supabase-js':
+        specifier: ^2.105.4
+        version: 2.105.4
+      mapbox-gl:
+        specifier: ^3.9.0
+        version: 3.27.0
+      next:
+        specifier: ^15.2.1
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@flowbond/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/mapbox-gl':
+        specifier: ^3.4.1
+        version: 3.5.0
+      '@types/node':
+        specifier: ^22.13.4
+        version: 22.19.15
+      '@types/qrcode':
+        specifier: ^1.5.5
+        version: 1.5.6
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.14)
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.4.27(postcss@8.5.8)
+      postcss:
+        specifier: ^8.5.1
+        version: 8.5.8
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19(tsx@4.21.0)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
 
   apps/claudia:
     dependencies:
@@ -213,6 +283,9 @@ importers:
 
   apps/deck:
     dependencies:
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@flowbond/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -259,6 +332,9 @@ importers:
       '@flowbond/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@flowbond/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -347,6 +423,9 @@ importers:
       '@flowbond/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@supabase/ssr':
         specifier: ^0.10.3
         version: 0.10.3(@supabase/supabase-js@2.105.4)
@@ -396,6 +475,9 @@ importers:
       '@flowbond/flowedit':
         specifier: workspace:*
         version: link:../../packages/flowedit
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       next:
         specifier: ^15.2.1
         version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -445,6 +527,9 @@ importers:
       '@flowbond/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@flowbond/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -637,6 +722,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.37.0
         version: 0.37.0
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@supabase/ssr':
         specifier: ^0.10.3
         version: 0.10.3(@supabase/supabase-js@2.105.4)
@@ -686,6 +774,9 @@ importers:
       '@flowbond/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@supabase/ssr':
         specifier: ^0.10.3
         version: 0.10.3(@supabase/supabase-js@2.105.4)
@@ -729,6 +820,9 @@ importers:
 
   apps/reciprociudad:
     dependencies:
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@react-three/drei':
         specifier: ^10.0.6
         version: 10.7.7(@react-three/fiber@9.6.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.174.0))(@types/react@19.2.14)(@types/three@0.174.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(three@0.174.0)
@@ -790,6 +884,9 @@ importers:
       '@flowbond/flowedit':
         specifier: workspace:*
         version: link:../../packages/flowedit
+      '@flowbond/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@flowbond/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -964,6 +1061,19 @@ importers:
         version: 8.5.1(jiti@1.21.7)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)
       typescript:
         specifier: ^5
+        version: 5.9.3
+
+  packages/security:
+    dependencies:
+      next:
+        specifier: '>=14.0.0'
+        version: 15.5.14(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    devDependencies:
+      '@flowbond/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5.7.3
         version: 5.9.3
 
   packages/ui:
@@ -2832,6 +2942,10 @@ packages:
   '@types/leaflet@1.9.21':
     resolution: {integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==}
 
+  '@types/mapbox-gl@3.5.0':
+    resolution: {integrity: sha512-3wVAUTC6q1UKatLP9YxFBnGJWi3neJUF9OKeyRdUf/BsYjZAP35xmZkL4zogVJbO3vdExuSVYCAkzUXjpjdhOg==}
+    deprecated: This is a stub types definition. mapbox-gl provides its own type definitions, so you do not need this installed.
+
   '@types/node-fetch@2.6.13':
     resolution: {integrity: sha512-QGpRVpzSaUs30JBSGPjOg4Uveu384erbHBoT1zeONvyCfwQxIkUshLAOqN/k9EjGviPRmWTTe6aH2qySWKTVSw==}
 
@@ -2849,6 +2963,9 @@ packages:
 
   '@types/offscreencanvas@2019.7.3':
     resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
+
+  '@types/qrcode@1.5.6':
+    resolution: {integrity: sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -3190,8 +3307,8 @@ packages:
   '@webgpu/types@0.1.71':
     resolution: {integrity: sha512-mMy8/ODcKhab808co15eW+yN+HgXoQxRQHTiBV9Mrvl1r0ufnid7YOcI+gi4eUWSWl9ezD6TW2KXccrL8HCh2A==}
 
-  '@whiskeysockets/eslint-config@https://codeload.github.com/whiskeysockets/eslint-config/tar.gz/299e8389baf62f9aa3034de18ff0d62cc0a5e838':
-    resolution: {tarball: https://codeload.github.com/whiskeysockets/eslint-config/tar.gz/299e8389baf62f9aa3034de18ff0d62cc0a5e838}
+  '@whiskeysockets/eslint-config@git+https://git@github.com:whiskeysockets/eslint-config.git#299e8389baf62f9aa3034de18ff0d62cc0a5e838':
+    resolution: {commit: 299e8389baf62f9aa3034de18ff0d62cc0a5e838, repo: git@github.com:whiskeysockets/eslint-config.git, type: git}
     version: 1.0.0
     peerDependencies:
       eslint: ^9.31.0
@@ -4342,8 +4459,8 @@ packages:
   libphonenumber-js@1.12.41:
     resolution: {integrity: sha512-lsmMmGXBxXIK/VMLEj0kL6MtUs1kBGj1nTCzi6zgQoG1DEwqwt2DQyHxcLykceIxAnfE3hya7NuIh6PpC6S3fA==}
 
-  libsignal@https://codeload.github.com/WhiskeySockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7:
-    resolution: {tarball: https://codeload.github.com/WhiskeySockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7}
+  libsignal@git+https://git@github.com:WhiskeySockets/libsignal-node.git#bcea72df9ec34d9d9140ab30619cf479c7c144c7:
+    resolution: {commit: bcea72df9ec34d9d9140ab30619cf479c7c144c7, repo: git@github.com:WhiskeySockets/libsignal-node.git, type: git}
     version: 6.0.0
 
   lie@3.3.0:
@@ -4407,6 +4524,9 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  mapbox-gl@3.27.0:
+    resolution: {integrity: sha512-K8W9LTTjFEJsg9qsnJbKk+zbXrmSqa+nU1EiFXez5gQ0T0RMtylZUelgg1/RE6vCUMvHX0gaYfWU9g2mTWuA0g==}
 
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
@@ -4876,6 +4996,11 @@ packages:
 
   qrcode@1.5.3:
     resolution: {integrity: sha512-puyri6ApkEHYiVl4CFzo1tDkAZ+ATcnbJrJ6RiBM1Fhctdn/ix9MTE3hRph33omisEbC/2fcfemsseiKgBPKZg==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+
+  qrcode@1.5.4:
+    resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
 
@@ -8006,6 +8131,10 @@ snapshots:
     dependencies:
       '@types/geojson': 7946.0.16
 
+  '@types/mapbox-gl@3.5.0':
+    dependencies:
+      mapbox-gl: 3.27.0
+
   '@types/node-fetch@2.6.13':
     dependencies:
       '@types/node': 22.19.15
@@ -8024,6 +8153,10 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/offscreencanvas@2019.7.3': {}
+
+  '@types/qrcode@1.5.6':
+    dependencies:
+      '@types/node': 22.19.15
 
   '@types/react-dom@19.2.3(@types/react@19.2.14)':
     dependencies:
@@ -9036,7 +9169,7 @@ snapshots:
 
   '@webgpu/types@0.1.71': {}
 
-  '@whiskeysockets/eslint-config@https://codeload.github.com/whiskeysockets/eslint-config/tar.gz/299e8389baf62f9aa3034de18ff0d62cc0a5e838(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)':
+  '@whiskeysockets/eslint-config@git+https://git@github.com:whiskeysockets/eslint-config.git#299e8389baf62f9aa3034de18ff0d62cc0a5e838(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.58.0(@typescript-eslint/parser@8.58.0(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)
       '@typescript-eslint/parser': 8.58.0(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)
@@ -9192,13 +9325,13 @@ snapshots:
       '@adiwajshing/keyed-db': 0.2.4
       '@cacheable/node-cache': 1.7.6
       '@hapi/boom': 9.1.4
-      '@whiskeysockets/eslint-config': https://codeload.github.com/whiskeysockets/eslint-config/tar.gz/299e8389baf62f9aa3034de18ff0d62cc0a5e838(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)
+      '@whiskeysockets/eslint-config': git+https://git@github.com:whiskeysockets/eslint-config.git#299e8389baf62f9aa3034de18ff0d62cc0a5e838(eslint@9.39.4(jiti@1.21.7))(typescript@5.9.3)
       async-lock: 1.4.1
       audio-decode: 2.2.3
       axios: 1.14.0
       cache-manager: 5.7.6
       libphonenumber-js: 1.12.41
-      libsignal: https://codeload.github.com/WhiskeySockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7
+      libsignal: git+https://git@github.com:WhiskeySockets/libsignal-node.git#bcea72df9ec34d9d9140ab30619cf479c7c144c7
       lodash: 4.18.1
       music-metadata: 7.14.0
       pino: 9.14.0
@@ -10138,7 +10271,7 @@ snapshots:
 
   libphonenumber-js@1.12.41: {}
 
-  libsignal@https://codeload.github.com/WhiskeySockets/libsignal-node/tar.gz/bcea72df9ec34d9d9140ab30619cf479c7c144c7:
+  libsignal@git+https://git@github.com:WhiskeySockets/libsignal-node.git#bcea72df9ec34d9d9140ab30619cf479c7c144c7:
     dependencies:
       curve25519-js: 0.0.4
       protobufjs: 7.5.8
@@ -10199,6 +10332,8 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  mapbox-gl@3.27.0: {}
 
   math-intrinsics@1.1.0: {}
 
@@ -10717,6 +10852,12 @@ snapshots:
     dependencies:
       dijkstrajs: 1.0.3
       encode-utf8: 1.0.3
+      pngjs: 5.0.0
+      yargs: 15.4.1
+
+  qrcode@1.5.4:
+    dependencies:
+      dijkstrajs: 1.0.3
       pngjs: 5.0.0
       yargs: 15.4.1
 

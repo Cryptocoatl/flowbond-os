@@ -1,8 +1,9 @@
 import type { NextConfig } from 'next'
 import path from 'path'
+import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/auth', '@flowbond/core', '@flowbond/db', '@flowbond/ui'],
+  transpilePackages: ['@flowbond/auth', '@flowbond/core', '@flowbond/db', '@flowbond/ui', '@flowbond/security'],
   // Compatibility shim: the app dropped the redundant /flowgarden URL segment.
   // Keep old deep links, bookmarks, and the installed PWA's cached start_url
   // working by 308-redirecting the legacy paths to their clean equivalents.
@@ -35,4 +36,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSecurity(nextConfig, { csp: false })

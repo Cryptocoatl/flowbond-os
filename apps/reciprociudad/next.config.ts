@@ -1,12 +1,13 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import { withSecurity } from '@flowbond/security/next';
 
 const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname, '../..'),
   },
   // three.js ships ESM; transpile it (and the r3f stack) for the app bundle.
-  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei', '@flowbond/security'],
   // Serve the static Sani Templo film at a clean /sanitemplo URL
   // (the file lives at public/sanitemplo/index.html).
   async rewrites() {
@@ -22,4 +23,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSecurity(nextConfig, { csp: false });

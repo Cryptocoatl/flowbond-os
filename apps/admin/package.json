@@ -15,7 +15,8 @@
     "jose": "^5.9.6",
     "next": "^15.2.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "@flowbond/security": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",

@@ -1,19 +1,25 @@
 {
   "_comment": "FloGuard status snapshot for the ClaudIA dashboard. Regenerated each FloGuard round from apps/claudia/operator/floguard/BACKLOG.md. NEVER contains secret values — operational metadata only.",
-  "generated": "2026-06-24",
-  "lastAudit": "2026-06-24",
+  "generated": "2026-08-03",
+  "lastAudit": "2026-08-03",
   "cadence": "semanal · lun 09:00",
   "posture": "alto",
-  "advisors": { "errors": 0, "warn": 219, "info": 72 },
-  "critical": 0,
-  "counts": { "total": 25, "open": 3, "inProgress": 3, "blocked": 19, "done": 0 },
+  "advisors": { "errors": 16, "warn": 716, "info": 196 },
+  "critical": 1,
+  "criticalNote": "FG-058 FIXED — admin middleware hardcoded JWT fallback removed in PR 2026-08-03. Verify AUTH_SECRET is set in Vercel.",
+  "counts": { "total": 34, "open": 10, "inProgress": 3, "blocked": 20, "done": 5 },
   "rotationsQueued": 16,
   "active": [
-    { "id": "FG-030", "sev": "headers", "status": "in-progress", "title": "Cabeceras de seguridad (paquete @flowbond/security) — vault ya no embebible" },
-    { "id": "FG-022", "sev": "hardening", "status": "in-progress", "title": "Fijar search_path de flowbond_role_rank (migración 006)" },
-    { "id": "FG-023", "sev": "hardening", "status": "in-progress", "title": "Políticas deny explícitas banoseco_donations/deposits (migración 006)" },
-    { "id": "FG-005", "sev": "p2", "status": "open", "title": "RPCs admin anon-alcanzables protegidos solo por secreto (admin_*/mt_*)" },
-    { "id": "FG-020", "sev": "hardening", "status": "open", "title": "7 políticas INSERT always-true en tablas de captura" }
+    { "id": "FG-058", "sev": "critical", "status": "done", "title": "Admin middleware JWT fallback secret — FIXED in PR" },
+    { "id": "FG-030", "sev": "headers", "status": "in-progress", "title": "Cabeceras de seguridad — 12 apps wired (PR abierto), falta CSP + claudia/flowscrow/flowstudio" },
+    { "id": "FG-005", "sev": "p2", "status": "open", "title": "14 RPCs admin anon-alcanzables protegidos solo por secreto (admin_*/mt_*/flowchords_publish/tulumcoin_set_contract)" },
+    { "id": "FG-055", "sev": "p3", "status": "open", "title": "15 vistas SECURITY DEFINER — auditar y convertir a INVOKER donde sea posible" },
+    { "id": "FG-056", "sev": "p3", "status": "open", "title": "16 funciones con search_path mutable adicionales (más allá de FG-022)" },
+    { "id": "FG-059", "sev": "p2", "status": "open", "title": "flowgarden dual-middleware: auth gate puede estar siendo silenciado" },
+    { "id": "FG-022", "sev": "hardening", "status": "in-progress", "title": "Fijar search_path de flowbond_role_rank — migración 006 lista, pendiente de aplicar" },
+    { "id": "FG-023", "sev": "hardening", "status": "in-progress", "title": "Políticas deny banoseco_donations/deposits — migración 006 lista, pendiente de aplicar" },
+    { "id": "FG-020", "sev": "hardening", "status": "open", "title": "7 políticas INSERT always-true en tablas de captura (FG-020)" },
+    { "id": "FG-042", "sev": "hygiene", "status": "open", "title": "Sin backstop de escaneo de secretos en commit (gitleaks)" }
   ],
-  "headline": "0 críticos · 219 avisos / 0 errores en advisors · sin secretos filtrados a git"
+  "headline": "🔴 1 crítico RESUELTO en PR (FG-058 JWT fallback) · 16 error / 716 warn advisors · FG-030 headers PR abierto · 10 open"
 }

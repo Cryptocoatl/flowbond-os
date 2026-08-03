@@ -27,7 +27,8 @@
     "react-dom": "^19.0.0",
     "tweetnacl": "^1.0.3",
     "viem": "^2.52.0",
-    "wagmi": "^3.6.16"
+    "wagmi": "^3.6.16",
+    "@flowbond/security": "workspace:*"
   },
   "devDependencies": {
     "@flowbond/config": "workspace:*",
