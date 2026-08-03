@@ -2,23 +2,26 @@
   "name": "@flowbond/security",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "main": "./dist/index.mjs",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "types": "./src/index.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.cjs",
       "types": "./src/index.ts"
     },
     "./headers": {
-      "import": "./dist/headers.mjs",
       "require": "./dist/headers.cjs",
+      "import": "./dist/headers.mjs",
+      "default": "./dist/headers.cjs",
       "types": "./src/headers.ts"
     },
     "./next": {
-      "import": "./dist/next.mjs",
       "require": "./dist/next.cjs",
+      "import": "./dist/next.mjs",
+      "default": "./dist/next.cjs",
       "types": "./src/next.ts"
     }
   },
