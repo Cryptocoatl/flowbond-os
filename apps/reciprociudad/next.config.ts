@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import path from 'path';
+import { withSecurity } from '@flowbond/security/next';
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -22,4 +23,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSecurity(nextConfig, { csp: false });

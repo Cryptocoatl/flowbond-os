@@ -24,7 +24,7 @@ Seeded from the round on **2026-06-24**.
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-005 | Anon-reachable `SECURITY DEFINER` admin RPCs gated only by a string param: `admin_bookings(p_key)`, `admin_event_summary(p_key)`, `admin_event_timeline(p_key,p_code)`, `mt_agregar_codigo(p_secreto)`, `mt_listar(p_secreto)` on canonical project | claudia-auto + steph-manual | open | Verify the gating secret is strong (not a `Pass4u`-class value); rotate it; add rate-limit; or move behind an authenticated role instead of a param. ClaudIA: pull fn bodies + draft fix. |
+| FG-005 | Anon-reachable `SECURITY DEFINER` admin RPCs gated only by a string param — **14 functions** (expanded 2026-08-03): `admin_bookings`, `admin_event_summary`, `admin_event_timeline`, `mt_agregar_codigo`, `mt_listar`, `flowchords_publish(p_key)`, `mt__is_admin`, `mt_admin_designs`, `mt_admin_inspiracion`, `mt_admin_ok`, `mt_admin_requests`, `mt_admin_set_inspiracion`, `mt_admin_set_request`, `tulumcoin_set_contract(p_key)` | claudia-auto + steph-manual | open | Verify the gating secret is strong (not a `Pass4u`-class value); rotate it; add rate-limit; or move behind an authenticated role instead of a param. ClaudIA: pull fn bodies + draft fix. |
 | FG-006 | `ADMIN_PASSWORD="Pass4u"` (flowcdmx) — guessable | steph-manual | blocked (steph) | Replace with 32-byte random. |
 | FG-007 | `ADMIN_SESSION_SECRET` `flowcdmx-2026…36` — predictable | steph-manual | blocked (steph) | Regenerate random. |
 | FG-008 | DB password `FlowBond-11:11` in services/api `DATABASE_URL` | steph-manual | blocked (steph) | Roll DB password (Supabase → Settings → Database). |
@@ -48,15 +48,15 @@ Seeded from the round on **2026-06-24**.
 |----|---------|-------|--------|--------|
 | FG-020 | 7 `rls_policy_always_true` INSERT policies (anon/auth) on lead-capture tables: `marketing.waitlist`, `public.waitlist`, `flownation_waitlist`, `investor_events`, `moon_temple_respuestas`, `phoenix_claims`, `xelva_project_applications` | claudia-auto | open | RLS can't rate-limit → app/edge turnstile + column CHECK constraints. Schemas not in-repo; template + verify-columns query shipped in `supabase/migrations/006_floguard_hardening.sql`. Fill columns then apply. |
 | FG-021 | `auth_leaked_password_protection` disabled (canonical) | steph-manual | blocked (steph) | Toggle on (Auth → HaveIBeenPwned). |
-| FG-022 | `public.flowbond_role_rank` mutable search_path | claudia-auto | in-progress | Pinned via guarded DO block in `migration 006` (all overloads). DRY-RUN — apply. |
-| FG-023 | `banoseco_donations` / `banoseco_deposits` RLS-on, no policy | claudia-auto | in-progress | Explicit `restrictive … using(false)` deny policies in `migration 006`. Safe (RPCs are definer-owned). DRY-RUN — apply. |
+| FG-022 | `public.flowbond_role_rank` mutable search_path — **still open in live DB** (advisors confirm pin not yet applied; migration 006 authored but DRY-RUN) | claudia-auto | in-progress | Apply `supabase/migrations/006_floguard_hardening.sql` (guarded DO block, all overloads). |
+| FG-023 | `banoseco_donations` / `banoseco_deposits` RLS-on, no policy — **still open in live DB** | claudia-auto | in-progress | Explicit `restrictive … using(false)` deny policies in `migration 006`. Safe (RPCs are definer-owned). Apply when ready. |
 | FG-024 | `flowedit` migration 005 ships bcrypt hashes for shared `Pass4u` password | steph-manual | blocked (steph) | Reset both admin passwords; stop seeding hashes in migrations. |
 
 ## 🧱 Security headers (zero coverage — all apps)
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-030 | No CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / HSTS on any app; `flowme.one` leaks `x-powered-by`; **claudiaflow.life vault is iframe-able (clickjacking)** | claudia-auto | in-progress | ✅ Built `packages/security` (`@flowbond/security`: `securityHeaders()`, `withSecurity()`, `CSP_PRESETS` incl. webgl); typechecks clean. Per-app wiring is a one-liner (`export default withSecurity(cfg, {csp})` + add to `transpilePackages` + workspace dep) but must land on **each app's own branch** (claudia is deploy-sensitive on `claudia-m1` — wiring reverted on `flowscrow`). Roll out app-by-app, claudia first. |
+| FG-030 | No CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / HSTS on any app; `flowme.one` leaks `x-powered-by`; **claudiaflow.life vault is iframe-able (clickjacking)** | claudia-auto | in-progress | ✅ Built `packages/security`. ✅ **PR open 2026-08-03**: wired `withSecurity(config, {csp:false})` into 12 apps (web, admin, ops, deck, grantflow, banoseco, fbid, astroflow, flowedit-dashboard, flow3, reciprociudad, flowgarden). Skipped: claudia (deploy-sensitive), flowscrow (reverted), flowstudio (complex). CSP omitted in phase-1 to avoid breakage — track per-app CSP as follow-up. Remaining: claudia (needs claudia-m1 PR), flowscrow, flowstudio, CSP per-app. |
 
 ## 🌐 Availability / deploy-integrity (NEW dimension — added 2026-06-28)
 
@@ -74,6 +74,26 @@ Seeded from the round on **2026-06-24**.
 | FG-040 | Live secrets sit in plaintext `.env.local` across ~20 dirs (git-clean, but disk/backup/cloud-sync risk) | steph-manual | blocked (steph) | Confirm FileVault on; ensure ~/Projects & ~/Downloads not cloud-synced; prefer Vercel env as prod source of truth. |
 | FG-041 | `.vercel/.env.*.local` (claudia, fbid, flowgarden ×2) + `flowcdmx/.env.vercel-current` | steph-manual | blocked (steph) | ⚠️ Re-triaged: these hold **live** secrets (service_role, anthropic, db pw), not just the expired OIDC token — NOT auto-deleted. `.vercel/*` are regenerable via `vercel env pull`; `flowcdmx/.env.vercel-current` may be the only copy of some values until FG-006..009 rotate. Delete only after rotation, by hand. |
 | FG-042 | No secret-scanning backstop on commit | claudia-auto | open | Add gitleaks pre-commit hook. PR. |
+
+## 🔴 P1 — NEW (2026-08-03)
+
+| ID | Finding | Owner | Status | Action |
+|----|---------|-------|--------|--------|
+| FG-058 | **CRITICAL: Admin middleware hardcoded fallback JWT secret** — `apps/admin/middleware.ts:6` fell back to the static literal `mtt-admin-secret-change-in-production-2026` when `AUTH_SECRET` env-var was unset, allowing any caller who knows that string to forge valid admin session tokens. | claudia-auto | **done** | ✅ Fixed in PR 2026-08-03: removed fallback; middleware now returns 302→/login if `AUTH_SECRET` is absent. Verify `AUTH_SECRET` is set in the admin Vercel project. |
+
+## 🟠 P2 — NEW (2026-08-03)
+
+| ID | Finding | Owner | Status | Action |
+|----|---------|-------|--------|--------|
+| FG-059 | **flowgarden dual-middleware ambiguity** — repo contains both `apps/flowgarden/middleware.ts` (root, session-refresh only) and `apps/flowgarden/src/middleware.ts` (full auth gate with public-path exclusions). In an `app/` router layout the root file takes precedence, silently shadowing the auth gate in `src/`. | claudia-auto | open | Investigate which file Next.js resolves; remove the shadowed one or consolidate. |
+
+## 🟡 P3 — NEW (2026-08-03)
+
+| ID | Finding | Owner | Status | Action |
+|----|---------|-------|--------|--------|
+| FG-055 | 15 `SECURITY DEFINER` views on canonical project (Supabase advisor: `security_definer_view`): `v_ff_funding_progress`, `app_vpa_offerings_public`, `app_vpa_categories_public`, `app_vpa_workshops_public`, `app_vpa_products_public`, `app_vpa_services_public`, `app_vpa_specialists_public`, `app_vpa_testimonials_public`, `app_vpa_settings_public`, `app_vpa_slug_aliases_public`, `app_vpa_specialist_categories_public`, `mtt_public_routes`, `mtt_admin_dashboard`, `mtt_commission_summary`, `mtt_partner_payouts` | steph-manual | open | Audit each view: if it reads data without filtering by `auth.uid()`, convert to `SECURITY INVOKER` so callers are bound by RLS. `mtt_admin_dashboard` / `mtt_commission_summary` / `mtt_partner_payouts` look especially sensitive. |
+| FG-056 | 16 additional functions with mutable `search_path` on canonical project (beyond FG-022's `flowbond_role_rank`): `ff_uid`, `ff_is_admin`, `vpa__is_service`, `_tevo_jwt_email`, `tulum_holders_sealed`, `tulum_snapshot_freeze_guard`, `tulum_wallets_permanent`, `mtt_no_delete_commission`, `mtt_touch`, `grantflow.audit_results_append_only`, `grantflow.audit_gate`, `grantflow.enforce_review_state`, `mtt_new_code`, `ff_ledger_no_mutate`, `lvb.team_inbox`, `_lvb_jwt_email` | claudia-auto | open | Extend `006_floguard_hardening.sql` or draft a new migration that applies `SET search_path = ''` (or the appropriate pinned schema) to each function. |
+| FG-057 | Extensions `pg_net` and `postgis` installed in the `public` schema | steph-manual | blocked (steph) | Supabase dashboard → Database → Extensions: move to a dedicated schema (e.g. `extensions`). Note: PostGIS moves may need app query adjustments (PostGIS functions are schema-qualified). |
 
 ---
 

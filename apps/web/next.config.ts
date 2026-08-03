@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import { join } from 'path'
+import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@flowbond/core', '@flowbond/ui', '@flowbond/flowedit'],
@@ -15,4 +16,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withSecurity(nextConfig, { csp: false })
