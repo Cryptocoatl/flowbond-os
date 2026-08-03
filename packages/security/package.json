@@ -3,12 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.mjs",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./headers": "./src/headers.ts",
-    "./next": "./src/next.ts"
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./src/index.ts"
+    },
+    "./headers": {
+      "import": "./dist/headers.mjs",
+      "types": "./src/headers.ts"
+    },
+    "./next": {
+      "import": "./dist/next.mjs",
+      "types": "./src/next.ts"
+    }
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
