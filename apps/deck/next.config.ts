@@ -3,7 +3,7 @@ import { join } from 'path'
 import { withSecurity } from '@flowbond/security/next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/ui', '@flowbond/security'],
+  transpilePackages: ['@flowbond/ui'],
   outputFileTracingRoot: join(__dirname, '../..'),
 }
 

@@ -3,7 +3,6 @@ import path from 'path';
 import { withSecurity } from '@flowbond/security/next';
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@flowbond/security'],
   turbopack: {
     root: path.resolve(__dirname, '../..'),
   },

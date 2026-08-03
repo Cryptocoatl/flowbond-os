@@ -8,14 +8,17 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
       "types": "./src/index.ts"
     },
     "./headers": {
       "import": "./dist/headers.mjs",
+      "require": "./dist/headers.cjs",
       "types": "./src/headers.ts"
     },
     "./next": {
       "import": "./dist/next.mjs",
+      "require": "./dist/next.cjs",
       "types": "./src/next.ts"
     }
   },
