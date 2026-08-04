@@ -1,4 +1,4 @@
-import { ENGINE } from '@/content/site'
+import { ENGINE } from '@/content/founder'
 
 export function Engine() {
   return (

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { BrandMark } from './BrandMark'
-import { NAV, LINKS } from '@/content/site'
+import { NAV } from '@/content/site'
 
-/** Sticky nav with scroll-state + mobile burger menu (ported from the prototype). */
+/** Sticky nav with scroll-state + mobile burger menu (ported from the prototype).
+ *  Links are real routes now, so it works identically on every page. */
 export function Nav() {
   const navRef = useRef<HTMLElement>(null)
   const [open, setOpen] = useState(false)
@@ -18,13 +19,18 @@ export function Nav() {
 
   return (
     <nav id="nav" ref={navRef}>
-      <a href="#top" className="brand" data-mag>
+      <a href="/" className="brand" data-mag>
         <BrandMark />
         <span>
           <b>FLOW</b>BOND
         </span>
       </a>
-      <button className={`burger${open ? ' open' : ''}`} aria-label="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button
+        className={`burger${open ? ' open' : ''}`}
+        aria-label="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
         <span></span>
         <span></span>
         <span></span>
@@ -35,8 +41,8 @@ export function Nav() {
             {l.label}
           </a>
         ))}
-        <a href={LINKS.docs} className="nav-cta" data-mag>
-          Docs ↗
+        <a href={NAV.cta.href} className="nav-cta" data-mag onClick={() => setOpen(false)}>
+          {NAV.cta.label}
         </a>
       </div>
     </nav>

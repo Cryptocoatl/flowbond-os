@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { FOUNDER } from '@/content/site'
+import { FOUNDER } from '@/content/founder'
 import steph from '../../public/steph_portrait.jpg'
 
 export function Founder() {

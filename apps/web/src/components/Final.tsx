@@ -9,12 +9,17 @@ export function Final() {
         <OctagonSeal />
       </div>
       <h2>
-        Build life-serving
+        {FINAL.h2a}
         <br />
-        <em>technology.</em>
+        <em>{FINAL.h2b}.</em>
       </h2>
       <p>{FINAL.body}</p>
       <ContactForm />
+      <div className="proof-cta reveal" style={{ marginTop: '34px' }}>
+        <a href="/contact" className="btn btn-ghost" data-mag>
+          Or write to us directly <span className="arr">→</span>
+        </a>
+      </div>
     </section>
   )
 }

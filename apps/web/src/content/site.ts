@@ -1,193 +1,192 @@
-// FlowBond Life — site copy, lifted verbatim from flowbond.html so it's editable
-// without touching components. Brand law: FlowBond (one word), AI OS = FlowMe OS,
-// tagline always credits V. Creativo.
+// FlowBond — site copy. Brand law: FlowBond (one word), the intelligence layer is
+// FlowMe OS, and the tagline always credits V. Creativo.
+//
+// POSITIONING (2026-08-03): FlowBond builds and runs software for businesses.
+// The landing sells outcomes in plain language; the depth pages (/technology,
+// /docs) carry the proof. No vendor names, no ZK/ICP vocabulary above the fold.
 
 export const LINKS = {
-  docs: 'https://docs.flowbond.life',
+  docs: '/docs',
   deck: 'https://deck.flowbond.life',
+  contact: '/contact',
 }
 
 export const NAV = {
   links: [
-    { href: '#trinity', label: 'System' },
-    { href: '#flowme', label: 'FlowMe OS' },
-    { href: '#layer0', label: 'Layer 0' },
-    { href: '#founder', label: 'Founder' },
+    { href: '/work', label: 'Work' },
+    { href: '/services', label: 'Services' },
+    { href: '/technology', label: 'Technology' },
+    { href: '/docs', label: 'Docs' },
   ],
+  cta: { href: '/contact', label: 'Start a project' },
 }
 
 export const HERO = {
-  eyebrow: 'The Layer 0 of Life',
+  eyebrow: 'Software studio & platform company',
   creditPrefix: 'a phrase by',
   creditName: 'V. Creativo',
-  sub: 'FlowBond is the living infrastructure for a regenerative internet — identity, value, and intelligence woven into one layer beneath every app you build. Technology, mastered in service of life.',
-  ctaPrimary: 'Start building',
-  ctaGhost: 'View the deck ↗',
+  h1a: 'If you can imagine it,',
+  h1b: 'you can program it',
+  sub: 'FlowBond builds and runs the software your business lives on — websites, platforms, and apps, with intelligence woven through them, payments that work across borders, and rewards that reach into the real world.',
+  ctaPrimary: 'Start a project',
+  ctaGhost: 'See our work',
 }
 
-export const MANIFESTO = {
-  tag: 'Manifesto',
-  body: 'For two decades the internet learned to harvest attention, identity, and trust, then sell them back to us. FlowBond inverts the stack. We treat human identity as sovereign, value as something that compounds when life flourishes, and intelligence as a tool for stewardship — not surveillance. The result is a foundation builders stand on without their users ever seeing it: invisible infrastructure, visible regeneration.',
+/** Live client sites. Every URL here is checked before it ships — a dead link on
+ *  a portfolio is worse than no portfolio. */
+export const PROOF = {
+  tag: 'Live in production',
+  lead: 'Real businesses, running on software we built and still look after.',
+  items: [
+    { name: 'Legatum', what: 'Asset protection firm', href: 'https://legatum.lat' },
+    { name: 'Mayan Transfers', what: 'Travel booking platform', href: 'https://mayantransfers.tours' },
+    { name: 'Voces para el Alma', what: 'Wellness marketplace', href: 'https://voces.world' },
+    { name: 'Tevo Salgado', what: 'Artist platform', href: 'https://tevosalgado.com' },
+    { name: 'La Vida es Bella', what: 'Coaching practice', href: 'https://lavidaesbella.site' },
+    { name: 'BrandMark', what: 'Print & merch studio', href: 'https://brandmark.click' },
+  ],
+  cta: { label: 'See the work in detail', href: '/work' },
 }
 
-export const TRINITY = {
-  tag: 'The System · Three Forces',
+export const WHATWEDO = {
+  tag: 'What we do',
+  lead: 'Three things, and we do all three for the same client.',
   cards: [
     {
       cls: 'ai',
       num: '01',
       stroke: '#c084fc',
-      kicker: 'Intelligence',
-      h3: 'AI, woven in.',
-      body: 'Imagination, compiled. FlowMe OS brings Claude-grade reasoning inside the identity layer — so every app you build ships with a mind, not just a database.',
-      feats: ['FlowMe OS', 'Vision & agent tooling', 'Structured reasoning RPCs'],
+      kicker: 'Build',
+      h3: 'We build the thing.',
+      body: 'Your website, your platform, your app — designed and built end to end. Not a template with your logo on it: the actual system your business runs on, shaped around how you already work.',
+      feats: ['Websites & storefronts', 'Booking & marketplace platforms', 'Web and mobile apps', 'Internal admin tools'],
     },
     {
       cls: 'chain',
       num: '02',
       stroke: '#ffd98a',
-      kicker: 'Value',
-      h3: 'Trust, made native.',
-      body: 'Wallets, attestations, and proof-of-presence as defaults — not bolt-ons. On-chain where it matters, private by design everywhere else.',
-      feats: ['Embedded wallets', 'EAS attestations', 'ZK + ICP privacy'],
+      kicker: 'Run',
+      h3: 'We keep it running.',
+      body: 'Hosting, security, backups, updates, and someone who answers when something breaks. You own everything we build — we just stay responsible for it staying up.',
+      feats: ['Hosting & domains', 'Security & backups', 'Ongoing changes', 'Real human support'],
     },
     {
       cls: 'life',
       num: '03',
       stroke: '#6ef0b8',
-      kicker: 'Life',
-      h3: 'Real Value Based on Life.',
-      body: 'A new economic primitive. Value anchored to living systems and real-world regeneration — so the network grows richer precisely when the world grows healthier.',
-      feats: ['RVBL ledger', 'Regenerative incentives', 'Proof-of-presence XP'],
+      kicker: 'Grow',
+      h3: 'We help it grow.',
+      body: 'The parts that usually cost you a whole team: intelligence that handles the repetitive work, payments that reach customers in other countries, and rewards that bring people back.',
+      feats: ['Intelligence, built in', 'Cross-border payments', 'Rewards & loyalty', 'One login across your products'],
     },
   ],
 }
 
-export const FLOWME = {
-  tag: 'FlowMe OS · The Intelligence Layer',
+export const INTELLIGENCE = {
+  tag: 'Intelligence, woven in',
+  h2: 'Not a chatbot bolted on the side.',
+  body: 'Intelligence sits inside the product, where the work actually happens. It answers your customers in their language, drafts what you would have written, watches for the transaction that does not look right, and handles the parts of the job nobody wants to do twice.',
+  bodyB: 'It works from your real data — your prices, your inventory, your bookings — so it cannot invent an answer you would have to honour.',
   list: [
-    { ic: 'REASON', body: 'Structured intelligence. Turn raw signals — missions, check-ins, content — into decisions and on-chain actions.' },
-    { ic: 'SEE', body: 'Vision built in. From garden health to product imagery, FlowMe reads the real world and responds.' },
-    { ic: 'ACT', body: 'Agentic by default. Bots, workflows, and assistants that operate across every connected app on one identity.' },
+    { ic: 'ANSWER', body: 'Customers get a straight answer at 2am, in whichever language they asked in — and only from what is actually true in your system.' },
+    { ic: 'ASSIST', body: 'The admin side gets a hand: drafting, summarising, sorting, and surfacing the thing you were about to miss.' },
+    { ic: 'WATCH', body: 'Quiet checks running underneath — unusual transactions, stock that stopped moving, a booking that never got confirmed.' },
   ],
   terminal: [
-    { c: 'u', t: '> flowme: who is this user, and what should we do?' },
+    { c: 'u', t: '> Guest asks: “can you take 6 people and 4 surfboards to Tulum?”' },
     { c: 'a', t: '✦ FlowMe OS' },
-    { c: 'm', t: '  Reading FBID 0x7c…a3f across 3 connected apps…' },
-    { c: 'v', t: '  Identity: verified · Presence: 14 real-world check-ins' },
-    { c: 'v', t: '  Value: 2,140 RVBL · regenerative streak active' },
-    { c: 'a', t: '  → Issue attestation, unlock Builder tier, mint presence proof.' },
-    { c: 'm', t: '  Done. One identity. Every app. In service of life.' },
+    { c: 'm', t: '  Checking fleet, capacity, and published rates…' },
+    { c: 'v', t: '  Van (8 seats) available · surfboard add-on configured' },
+    { c: 'v', t: '  Rate: published — no estimate invented' },
+    { c: 'a', t: '  → Answer the guest, hold the vehicle, notify the operator.' },
+    { c: 'm', t: '  Replied in English. Booking held for 30 minutes.' },
   ],
 }
 
-export const LAYER0 = {
-  lead: 'Consumer apps connect once and inherit a complete identity stack: a single FlowBond ID that travels across every product, every wallet, every chain — while your users only ever see your brand.',
+export const PAYMENTS = {
+  tag: 'Payments that cross borders',
+  h2: 'Your customers pay the way they pay at home. You get paid where you are.',
+  body: 'Most platforms quietly assume everyone banks the same way. They do not. We wire up the payment methods your customers actually use in their country, and the payout rail that actually reaches you in yours — cards, local transfers, wallets, and bank deposits across currencies.',
   cells: [
-    { ic: 'FBID', h4: 'Sovereign identity', p: 'One root identity, infinite app connections. Users own it; you build on it.' },
-    { ic: 'WALLET', h4: 'Wallets, abstracted', p: 'Embedded, multi-chain wallets that appear the moment a user arrives — no seed-phrase friction.' },
-    { ic: 'PRIVACY', h4: 'Zero-knowledge by design', p: 'Nullifier-based privacy, client-side encryption, and a ZK + ICP roadmap at the root.' },
-    { ic: 'ONBOARD', h4: 'Drop-in onboarding', p: 'Magic-link → wallet → attestation in one SDK. Plug in, ship, regenerate.' },
+    { ic: 'IN', h4: 'Local payment methods', p: 'Cards, bank transfer, cash vouchers, wallets — whatever is normal where your customer lives.' },
+    { ic: 'SPLIT', h4: 'Split at the source', p: 'When several people share a sale, each side is paid directly by the payment provider. The money does not detour through us.' },
+    { ic: 'OUT', h4: 'Payouts that arrive', p: 'Sellers choose how they get paid and in which currency, with real exchange rates rather than a number we made up.' },
+    { ic: 'PROOF', h4: 'A ledger you can audit', p: 'Every split, fee, and payout is recorded and append-only, so the numbers reconcile without anyone taking your word for it.' },
+  ],
+  // Regulatory posture. This paragraph is load-bearing — do not soften it into
+  // marketing language, and do not let the site imply FlowBond moves money.
+  disclosure:
+    'To be precise about what we are: FlowBond builds software. Payments are processed by licensed providers, and our clients are the merchant of record for their own sales. We are not a bank, a money transmitter, or an exchange, and we hold no private keys.',
+}
+
+export const REWARDS = {
+  tag: 'Rewards that reach the real world',
+  h2: 'The part where the internet touches the street.',
+  body: 'Points that only ever buy more points are a dead end. We build reward systems where showing up somewhere, finishing something, or bringing someone with you is what earns — and where what you earn is worth something you can actually use.',
+  bodyB: 'It runs on one account that works across everything you own, so a customer who arrives through one of your products is recognised in all of them.',
+  cells: [
+    { ic: 'ONE', h4: 'One account, all your products', p: 'Customers sign in once. You stop rebuilding login, and stop losing people at the door.' },
+    { ic: 'EARN', h4: 'Earned by doing, not clicking', p: 'Real actions — a visit, a completed booking, a referral that stuck — are what move the balance.' },
+    { ic: 'SPEND', h4: 'Worth something offline', p: 'Redeemable against real products, services, and access, not a scoreboard nobody looks at.' },
+    { ic: 'SAFE', h4: 'Safe by construction', p: 'Balances are append-only and access is checked per person, so rewards cannot be quietly minted or drained.' },
   ],
 }
 
-export const SERVICES = {
-  tag: 'What We Build',
-  products: [
-    { tag: 'CORE', h4: 'FBID — Layer 0 Identity', p: 'Sovereign, portable identity that anchors every app, wallet, and attestation.' },
-    { tag: 'AI', h4: 'FlowMe OS', p: 'Claude-powered agentic intelligence woven through the stack — reason, see, act.' },
-    { tag: 'SDK', h4: 'FlowBond SDK', p: 'One drop-in: auth, embedded wallets, onboarding, and attestations. CJS + ESM + types.' },
-    { tag: 'PRIVACY', h4: 'Privacy Layer', p: 'Zero-knowledge identity and value with a ZK + ICP roadmap, private by design.' },
-    { tag: 'VALUE', h4: 'RVBL Ledger', p: 'Real Value Based on Life — append-only XP and value ledgers tied to regeneration.' },
-  ],
-  services: [
-    { tag: 'BUILD', h4: 'Done-for-you product builds', p: 'Full Next.js products shipped on the FlowBond stack — the proven client pattern, end to end.' },
-    { tag: 'INTEGRATE', h4: 'Integration & migration', p: 'Drop FlowBond into existing apps, or migrate identity and wallets onto Layer 0.' },
-    { tag: 'DESIGN', h4: 'Brand & experience', p: 'Bilingual, conversion-grade web experiences with identity baked into the design.' },
-    { tag: 'ADVISE', h4: 'Web3 & ReFi advisory', p: 'Tokenomics, regenerative models, and go-to-market from a builder who has shipped them.' },
-    { tag: 'ACTIVATE', h4: 'Ecosystem activation', p: 'Real-world presence, events, and community to launch products that live offline too.' },
-  ],
-}
-
-export const FOUNDER = {
-  tag: 'The Founder',
-  role: 'Founder & Ecosystem Builder',
-  name: 'Steph Ferrera',
-  photoCaption: 'Steph Ferrera · Founder & Ecosystem Builder',
-  paras: [
-    'Steph began the way most founders do — with cofounders and alliances. But the partnerships couldn’t keep pace with what she was discovering in herself: that she is not only a visionary, but an ecosystem builder — able to architect and ship the whole stack, not just imagine it.',
-    'Across years she has launched a constellation of work — consumer apps, cultural networks, regenerative economies, and the identity infrastructure beneath them — while building and backing digital-art and NFT collections and producing festivals and immersive experiences that move thousands. She ships her own dreams and helps others ship theirs, extending now into luxury holistic wearables and privacy-first hardware: devices engineered to give you what you need from technology, with as little of its harm as possible.',
-    'Her method is the one FlowBond is built on — read the whole system, trace every pattern to its highest expression, then build the tools that let people embody it. Technology, mastered in service of life.',
-  ],
-  quote:
-    '“My life’s work is to get the right tools into the right hands — and through them, place something lasting in service of the whole world.”',
-  quoteSrc: 'Steph Ferrera · Founder, FlowBond',
-  facets: [
-    { fi: 'BUILD', p: 'Ecosystem architecture. Full-stack shipping, from protocol to product.' },
-    { fi: 'ART', p: 'Digital art & NFTs. Building and backing collections — taken to the moon.' },
-    { fi: 'PRODUCE', p: 'Experience production. Festivals and immersive worlds that move thousands.' },
-    { fi: 'NETWORK', p: 'A rare inner circle. High-level founders, artists, and culture-shapers.' },
-  ],
-  tags: ['Founder · FlowBond', 'Ecosystem Builder', 'NFT & Digital Art', 'Experience Production', 'Holistic Wearables'],
-}
-
-export const ENGINE = {
-  tag: 'The Engine',
+export const HOW = {
+  tag: 'How it works',
+  lead: 'No discovery-phase theatre. Four steps, and you know the price before the second one.',
   cards: [
-    { n: '01 · FOUNDER', h4: 'Steph Ferrera', p: 'Vision, architecture, and direction. The majority holder steering FlowBond’s mission.' },
-    { n: '02 · COLLABORATORS', h4: 'The build network', p: 'A network of builders and projects across LATAM starting the engine together, project by project.' },
-    { n: '03 · ADVISORS', h4: 'Advisory board', p: 'Forming now — equity-aligned advisors across identity, ReFi, AI, and go-to-market.' },
-    { n: '04 · INVESTORS', h4: 'Mission-aligned capital', p: 'Open to partners who back regenerative infrastructure for the long arc, not the quick exit.' },
-  ],
-}
-
-export const RVBL = {
-  tag: 'Real Value Based on Life',
-  body: 'Most systems reward extraction. RVBL rewards regeneration. Presence in the real world, care for living systems, and contribution to community become the units of account — a value model where the healthiest networks are, quite literally, the most valuable.',
-  stats: [
-    { n: 'Layer 0', l: 'Identity & value root' },
-    { n: '18+', l: 'Downstream systems' },
-    { n: '∞', l: 'Apps on one ID' },
+    { n: '01 · TALK', h4: 'We talk', p: 'One conversation about what your business actually does and where it is losing time or money. Free, and you leave with an opinion whether or not you hire us.' },
+    { n: '02 · PLAN', h4: 'You get a plan', p: 'Scope, price, and a delivery date in writing. Fixed price for defined work — no hourly meter running in the background.' },
+    { n: '03 · BUILD', h4: 'We build it', p: 'You see it as it goes up, on a real link you can open, not in a slide deck. You approve what ships.' },
+    { n: '04 · RUN', h4: 'We run it', p: 'It goes live on your domain, and stays looked after. Changes are a message away, not a new project.' },
   ],
 }
 
 export const FINAL = {
-  body: 'If you can imagine it, you can program it. We built the layer that lets you ship it — sovereign, regenerative, alive.',
-  cta: 'Request access',
-  placeholder: 'you@yourproject.com',
+  h2a: 'Tell us what you',
+  h2b: 'need built',
+  body: 'One conversation is enough to know whether we are the right people for it. If we are not, we will tell you that too.',
+  cta: 'Start a project',
+  ghost: 'Read the docs',
+  placeholder: 'you@yourbusiness.com',
 }
 
 export const FOOTER = {
-  brandBlurb: 'The Layer 0 of Life. Identity, value, and intelligence in service of a regenerative internet.',
+  brandBlurb: 'FlowBond builds and runs the software businesses live on. Technology, mastered in service of life.',
   credit: '“If you can imagine it, you can program it”',
   creditName: 'V. Creativo',
   cols: [
     {
-      h5: 'Build',
+      h5: 'Work with us',
       links: [
-        { label: 'Documentation', href: LINKS.docs },
-        { label: 'Products', href: '#services' },
-        { label: 'Deck ↗', href: LINKS.deck },
+        { label: 'Our work', href: '/work' },
+        { label: 'Services & pricing', href: '/services' },
+        { label: 'Start a project', href: '/contact' },
       ],
     },
     {
-      h5: 'System',
+      h5: 'Build',
       links: [
-        { label: 'Intelligence', href: '#trinity' },
-        { label: 'FlowMe OS', href: '#flowme' },
-        { label: 'Layer 0', href: '#layer0' },
-        { label: 'RVBL', href: '#rvbl' },
+        { label: 'Documentation', href: '/docs' },
+        { label: 'Technology', href: '/technology' },
+        { label: 'Trust & security', href: '/docs/trust' },
+        { label: 'Deck ↗', href: 'https://deck.flowbond.life' },
       ],
     },
     {
       h5: 'Company',
       links: [
-        { label: 'Founder', href: '#founder' },
-        { label: 'Contact', href: '#contact' },
-        { label: 'Privacy', href: '#' },
+        { label: 'Founder', href: '/founder' },
+        { label: 'Contact', href: '/contact' },
+        { label: 'Privacy', href: '/privacy' },
+        { label: 'Terms', href: '/terms' },
       ],
     },
   ],
-  copyright: '© 2026 FlowBond Tech Inc. · flowbond.life',
+  // Entity note: the old Texas corporation is being dissolved and must not appear
+  // as the owner of this site. The Delaware entity is not formed yet — do not
+  // write "FlowBond, Inc." here until the certificate issues.
+  copyright: '© 2026 FlowBond · flowbond.life',
   tagline: 'In service of life ◇',
 }
