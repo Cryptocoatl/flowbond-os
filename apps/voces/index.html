@@ -185,10 +185,40 @@
   .badge.hibrido{background:rgba(203,161,90,.16);color:var(--oro)}
   .ws-action{text-align:right}
   /* ---- Calendario público (siempre visible, sin registro) ---- */
-  .cal-card{background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:26px 26px 22px;
+  .cal-card{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:30px;align-items:start;
+    background:var(--lino);border:1px solid var(--linea);border-radius:var(--r);padding:26px 26px 22px;
       box-shadow:0 14px 34px -26px rgba(44,39,34,.4)}
+
+  /* Calendario: columna izquierda (intro + agenda completa) y derecha (mes) ----
+     El mes se mantiene CUADRADO y acotado: antes se estiraba a todo el ancho y
+     se comía la página. */
+  .cal-left{min-width:0}
+  .cal-intro{font-size:14.5px;line-height:1.65;color:var(--tinta-60)}
+  .cal-all-h{font-family:var(--serif);font-size:16px;margin:18px 0 8px}
+  .cal-all{max-height:392px;overflow-y:auto;padding-right:6px;scrollbar-width:thin}
+  .cal-all::-webkit-scrollbar{width:6px}
+  .cal-all::-webkit-scrollbar-thumb{background:rgba(44,39,34,.18);border-radius:10px}
+  .cal-item{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;
+    padding:10px 11px;border-radius:12px;border:1px solid transparent;background:none;font:inherit;color:inherit}
+  .cal-item:hover{border-color:var(--oro-claro);background:#fff}
+  .cal-item.on{border-color:var(--oro);background:#fff}
+  .cal-item .dchip{flex:none;width:44px;text-align:center;border-radius:9px;padding:5px 0;background:#fff;
+    border:1px solid var(--linea);line-height:1.1}
+  .cal-item.on .dchip{background:var(--oro);border-color:var(--oro);color:#fff}
+  .cal-item .dchip b{display:block;font-family:var(--serif);font-size:17px;font-weight:400}
+  .cal-item .dchip span{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+  .cal-item .it-main{min-width:0;flex:1}
+  .cal-item .it-main b{display:block;font-family:var(--serif);font-size:15px;font-weight:400;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cal-item .it-main span{font-size:12px;color:var(--tinta-60)}
+  .cal-right{min-width:0;max-width:560px}
+  @media(max-width:900px){
+    .cal-card{grid-template-columns:1fr;gap:22px}
+    .cal-right{max-width:none}
+    .cal-all{max-height:300px}
+  }
   .cal-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
-  .cal-month{font-family:var(--serif);font-size:22px;text-transform:capitalize}
+  .cal-month{font-family:var(--serif);font-size:22px}
   .cal-nav{display:flex;gap:8px}
   .cal-nav button{width:34px;height:34px;border-radius:50%;border:1px solid var(--linea);background:#fff;color:var(--tinta);
       cursor:pointer;font-size:15px;line-height:1;transition:.2s}
@@ -367,6 +397,34 @@
     font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta-60)}
   .more-sep::before,.more-sep::after{content:"";flex:1;height:1px;background:var(--linea)}
   .sess-note{font-size:12px;color:var(--tinta-60);margin-top:5px}
+  /* "Nota importante" de una oferta: condición que no se puede perder dentro
+     del resto del texto, así que va en su propio recuadro y en negritas. */
+  .onote{margin:9px 0 0;padding:10px 13px;border-radius:10px;font-size:13px;line-height:1.5;
+    font-weight:700;color:#7a5a12;background:rgba(203,161,90,.14);border:1px solid var(--oro-claro);
+    border-left:3px solid var(--oro)}
+  .prod .onote{margin:8px 0 2px;font-size:12.5px}
+  /* Masterclass: fecha del evento y producto que promociona */
+  .mc-when{font-size:12.5px;font-weight:600;color:var(--pizarra);margin:4px 0 2px}
+  .mc-promo{font-size:12.5px;color:var(--tinta-60);margin-top:7px}
+  .mc-promo b{color:var(--oro)}
+  /* Inscripción a una Masterclass (gratuita) */
+  .mc-bg{position:fixed;inset:0;z-index:80;background:rgba(44,39,34,.5);display:flex;
+    align-items:center;justify-content:center;padding:20px}
+  .mc-card{position:relative;background:var(--lino);border:1px solid var(--linea);border-radius:18px;
+    padding:26px 24px;width:min(440px,100%);max-height:88vh;overflow:auto;box-shadow:0 18px 50px rgba(44,39,34,.22)}
+  .mc-card h3{font-family:var(--serif);font-weight:400;font-size:22px;margin:0 0 10px}
+  .mc-x{position:absolute;top:10px;right:12px;background:none;border:0;font-size:26px;line-height:1;
+    color:var(--tinta-60);cursor:pointer}
+  .mc-of{font-size:14.5px;margin-bottom:4px}
+  .mc-of span{display:block;font-size:12.5px;color:var(--tinta-60);font-weight:400}
+  .mc-sub{font-size:13px;color:var(--tinta-60);line-height:1.55;margin:10px 0 14px}
+  .mc-l{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--tinta-60);margin:10px 0 4px}
+  .mc-card input{width:100%;padding:11px 13px;border:1px solid var(--linea);border-radius:10px;
+    background:#fff;font-family:inherit;font-size:15px;color:var(--tinta)}
+  .mc-go{width:100%;margin-top:16px;text-align:center}
+  .mc-err{font-size:12.5px;color:#a33;margin-top:8px;min-height:1em}
+  .mc-ok{font-family:var(--serif);font-size:19px;color:#4b6b45;margin:6px 0 2px}
   /* Calendario embebido tras el pago — nunca un enlace copiable */
   .cal-embed{width:100%;height:min(78vh,760px);border:1px solid var(--linea);border-radius:14px;background:#fff;display:block}
   .contact-reveal{border:1px dashed var(--oro-claro);border-radius:14px;padding:18px;background:rgba(203,161,90,.07)}
@@ -631,6 +689,12 @@
       <p data-i18n="cal.sub">Talleres y conferencias con fecha confirmada. Toca un día para ver todo lo que sucede ese día.</p>
     </div>
     <div class="cal-card reveal">
+      <div class="cal-left">
+        <p class="cal-intro" data-i18n="cal.intro">Aquí encontrarás los próximos eventos que los especialistas ofrecen a través de Voces. Consúltalos e inscríbete al de tu elección.</p>
+        <div class="cal-all-h" data-i18n="cal.allTitle">Próximos eventos</div>
+        <div class="cal-all" id="calAll"></div>
+      </div>
+      <div class="cal-right">
       <div class="cal-top">
         <div class="cal-month" id="calMonth"></div>
         <div class="cal-nav">
@@ -642,6 +706,7 @@
       <div class="cal-grid" id="calGrid"></div>
       <div class="cal-tz" id="calTz"></div>
       <div class="cal-list" id="calList"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -792,6 +857,9 @@ const I18N = {
     "cal.eyebrow":"Calendario","cal.title":"Qué viene en Voces",
     "cal.sub":"Talleres y conferencias con fecha confirmada. Toca un día para ver todo lo que sucede ese día.",
     "cal.none":"No hay eventos programados este día.",
+    "cal.intro":"Aquí encontrarás los próximos eventos que los especialistas ofrecen a través de Voces. Consúltalos e inscríbete al de tu elección.",
+    "cal.allTitle":"Próximos eventos",
+    "cal.allEmpty":"Todavía no hay eventos con fecha confirmada.",
     "cal.nonemonth":"Todavía no hay eventos con fecha en este mes. Usa las flechas para ver otros meses.",
     "cal.open":"Ver detalle","cal.free":"Sin costo","cal.online":"En línea","cal.tz":"Horarios en tu hora local",
     "cal.dow":"D,L,M,M,J,V,S","cal.today":"Hoy",
@@ -827,10 +895,16 @@ const I18N = {
     "sess.pick":"Elige la sesión que quieres agendar","sess.pickNote":"Reservas tu lugar al pagar; enseguida eliges el día y la hora.",
     "sess.soon":"Agenda en preparación","offer.sessNote":"Al pagar eliges día y hora en el calendario de la voz.",
     "sess.none":"Por el momento este especialista no ofrece este servicio en esta plataforma.",
+    "mc.free":"Sin costo, inscríbete aquí","mc.title":"Inscríbete a la Masterclass","mc.sub":"Es sin costo. Déjanos tu correo y te mandamos la confirmación y el enlace de la reunión.",
+    "mc.name":"Tu nombre","mc.email":"Tu correo","mc.go":"Inscribirme","mc.ok":"¡Listo! Tu lugar está reservado ✓",
+    "mc.already":"Ya estabas inscrita(o) en esta Masterclass ✓","mc.mail":"Te mandamos la confirmación a tu correo.",
+    "mc.later":"El enlace de la reunión te llegará a tu correo antes del evento.",
+    "mc.join":"Entrar a la reunión","mc.promo":"Con esta Masterclass te presenta:","mc.badEmail":"Escribe un correo válido.",
+    "mc.when":"Cuándo","mc.close":"Cerrar",
     "book.embedLead":"Elige tu día y hora aquí mismo:","book.mailNote":"También te llega un correo con la confirmación de tu pago.",
     "toast.add":"Añadido al carrito","toast.rm":"Eliminado del carrito","toast.checkout":"Redirigiendo a pago seguro…","toast.sent":"Mensaje enviado. Te responderemos pronto.","toast.reg":"Inscripción iniciada — redirigiendo a pago…",
     "toast.sessSent":"Solicitud enviada. La voz te contactará directo.","toast.orderOk":"Pedido recibido — te enviamos las instrucciones de pago.","toast.orderErr":"No se pudo completar el pedido. Intenta de nuevo.",
-    "bio.more":"Ver más","bio.less":"Ver menos","cart.by":"por","cart.qty":"Cantidad","cart.checkoutTitle":"Finalizar pedido","cart.email":"Tu correo","cart.name":"Tu nombre","cart.code":"Código de descuento","cart.apply":"Aplicar","cart.place":"Confirmar pedido","cart.fx":"Precios convertidos como referencia; el cobro se procesa en pesos mexicanos (MXN).","cart.back":"← Seguir explorando",
+    "bio.more":"Ver más","bio.less":"Ver menos","cart.by":"por","cart.qty":"Cantidad","cart.checkoutTitle":"Finalizar pedido","cart.email":"Tu correo","cart.name":"Tu nombre","cart.code":"Código de descuento","cart.apply":"Aplicar","cart.place":"Confirmar pedido","cart.fx":"El total en tu moneda es una referencia al tipo de cambio de hoy; el monto final lo confirma tu banco.","cart.back":"← Seguir explorando",
     "pay.how":"¿Cómo quieres pagar?","pay.card":"Tarjeta de crédito o débito","pay.cardSub":"Pago inmediato y entrega al instante.","pay.other":"Efectivo, SPEI o saldo MercadoPago","pay.otherSub":"OXXO, transferencia SPEI, saldo MP y cualquier tarjeta. Si tu tarjeta fue rechazada, usa esta opción.","pay.transfer":"Transferencia directa (SPEI)","pay.transferSub":"Te damos la CLABE y confirmamos tu depósito a mano.","pay.trTitle":"Transferencia directa","pay.trIntro":"Haz la transferencia por este monto y luego pulsa el botón. Confirmamos tu depósito y liberamos tu compra.","pay.trBank":"Banco","pay.trClabe":"CLABE","pay.trBenef":"Beneficiario","pay.trConcept":"Concepto / referencia","pay.trRefLabel":"Referencia de tu transferencia (opcional)","pay.trDone":"Ya transferí","pay.trOk":"¡Gracias! Recibimos tu aviso. En cuanto confirmemos el depósito te llega tu compra por correo.","pay.copy":"Copiar","pay.copied":"Copiado","pay.failTitle":"Ese medio de pago no se pudo procesar","pay.failIntro":"No es tu culpa y tu pedido sigue guardado. Elige otra forma de pagar:","pay.retryOther":"Pagar con efectivo, SPEI o saldo","pay.retryCard":"Reintentar con tarjeta","pay.needTransfer":"Escríbenos y te pasamos los datos de transferencia.",
     "avail.now":"Disponible","avail.soon":"Agenda limitada","mod.all":"Todas las modalidades","mod.presencial":"Presencial","mod.online":"En línea","mod.hibrido":"Híbrido",
     "lang.all":"Todos los idiomas","catfilter.all":"Todas las temáticas","ws.spots":"por persona","store.by":"Ofrecido por",
@@ -876,12 +950,21 @@ const I18N = {
     "pill.disponible":"Available now","pill.reserva":"Book now","pill.proximamente":"Coming soon",
     "shared.this":"The offering shared with you","shared.more":"More from",
     "sess.pick":"Choose the session you'd like to book","sess.pickNote":"You reserve your place when you pay; then you pick the day and time.",
+    "cal.intro":"Here you'll find the upcoming events our specialists offer through Voces. Browse them and sign up for the one you choose.",
+    "cal.allTitle":"Upcoming events",
+    "cal.allEmpty":"No events with a confirmed date yet.",
     "sess.soon":"Calendar being set up","offer.sessNote":"After paying you pick the day and time on the voice's calendar.",
     "sess.none":"This specialist does not currently offer this service on this platform.",
+    "mc.free":"Free — sign up here","mc.title":"Sign up for the Masterclass","mc.sub":"It's free. Leave us your email and we'll send you the confirmation and the meeting link.",
+    "mc.name":"Your name","mc.email":"Your email","mc.go":"Sign me up","mc.ok":"You're in! Your place is reserved ✓",
+    "mc.already":"You were already signed up for this Masterclass ✓","mc.mail":"We've emailed you the confirmation.",
+    "mc.later":"The meeting link will reach your inbox before the event.",
+    "mc.join":"Join the meeting","mc.promo":"With this Masterclass they introduce:","mc.badEmail":"Please enter a valid email.",
+    "mc.when":"When","mc.close":"Close",
     "book.embedLead":"Pick your day and time right here:","book.mailNote":"You'll also get an email confirming your payment.",
     "toast.add":"Added to cart","toast.rm":"Removed from cart","toast.checkout":"Redirecting to secure checkout…","toast.sent":"Message sent. We'll be in touch soon.","toast.reg":"Registration started — redirecting to payment…",
     "toast.sessSent":"Request sent. The voice will reach out directly.","toast.orderOk":"Order received — we've emailed your payment instructions.","toast.orderErr":"Could not place the order. Please try again.",
-    "bio.more":"Read more","bio.less":"Read less","cart.by":"by","cart.qty":"Qty","cart.checkoutTitle":"Complete your order","cart.email":"Your email","cart.name":"Your name","cart.code":"Discount code","cart.apply":"Apply","cart.place":"Place order","cart.fx":"Prices shown for reference; payment is processed in Mexican pesos (MXN).","cart.back":"← Keep exploring",
+    "bio.more":"Read more","bio.less":"Read less","cart.by":"by","cart.qty":"Qty","cart.checkoutTitle":"Complete your order","cart.email":"Your email","cart.name":"Your name","cart.code":"Discount code","cart.apply":"Apply","cart.place":"Place order","cart.fx":"The total in your currency is a reference at today\u2019s rate; your bank confirms the final amount.","cart.back":"← Keep exploring",
     "pay.how":"How would you like to pay?","pay.card":"Credit or debit card","pay.cardSub":"Instant payment and instant delivery.","pay.other":"Cash, bank transfer or MercadoPago balance","pay.otherSub":"OXXO, SPEI transfer, MP balance and any card. If your card was declined, use this option.","pay.transfer":"Direct bank transfer (SPEI)","pay.transferSub":"We give you the account details and confirm your deposit by hand.","pay.trTitle":"Direct transfer","pay.trIntro":"Transfer this amount, then tap the button. We confirm your deposit and release your purchase.","pay.trBank":"Bank","pay.trClabe":"CLABE","pay.trBenef":"Account holder","pay.trConcept":"Reference","pay.trRefLabel":"Your transfer reference (optional)","pay.trDone":"I've transferred","pay.trOk":"Thank you! We got your notice. As soon as we confirm the deposit your purchase arrives by email.","pay.copy":"Copy","pay.copied":"Copied","pay.failTitle":"That payment method couldn't be processed","pay.failIntro":"It's not your fault and your order is safe. Pick another way to pay:","pay.retryOther":"Pay with cash, transfer or balance","pay.retryCard":"Try card again","pay.needTransfer":"Write to us and we'll send you the transfer details.",
     "avail.now":"Available","avail.soon":"Limited slots","mod.all":"All formats","mod.presencial":"In person","mod.online":"Online","mod.hibrido":"Hybrid",
     "lang.all":"All languages","catfilter.all":"All themes","ws.spots":"per person","store.by":"Offered by",
@@ -902,6 +985,16 @@ const PHOTO = n => !n ? '' : (String(n).startsWith('http') ? n : `https://images
 // Foto de perfil: se muestra circular y centrada (la forma la da el CSS)
 const PHOTO_STYLE = s => `background-image:url('${PHOTO(s?s.photo:'')}')`;
 const esc = s => (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* Formato mínimo de lo que escriben las voces: **negritas** y *cursivas*.
+   Antes los asteriscos salían literales en la página. Se escapa PRIMERO y sólo
+   después se marcan las etiquetas, así que el texto no puede inyectar HTML. */
+function mdText(s){
+  let h = esc(s);
+  h = h.replace(/\*\*([^*\n](?:[^*]|\*(?!\*))*?)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/(^|[\s(¡¿"'])\*([^*\n]+?)\*(?=[\s).,;:!?"']|$)/g, "$1<em>$2</em>");
+  h = h.replace(/(^|[\s(¡¿"'])_([^_\n]+?)_(?=[\s).,;:!?"']|$)/g, "$1<em>$2</em>");
+  return h;
+}
 
 /* ============================================================
    CURRENCY — display-only geo conversion. Prices live in MXN;
@@ -975,8 +1068,8 @@ function money(pesos){
   }catch(_){ return `≈ ${Math.round(conv).toLocaleString()} ${CUR.code}`; }
 }
 const OKIND = {
-  es:{libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"},
-  en:{libro:"Book",ebook:"Ebook",audiolibro:"Audiobook",audio:"Audio",test:"Test",curso:"Course",coaching:"Coaching",sesion_individual:"1-on-1 session",sesion_grupal:"Group session",retiro:"Retreat",conferencia:"Speaking",otro:"Other"}
+  es:{libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",masterclass:"Masterclass",otro:"Otro"},
+  en:{libro:"Book",ebook:"Ebook",audiolibro:"Audiobook",audio:"Audio",test:"Test",curso:"Course",coaching:"Coaching",sesion_individual:"1-on-1 session",sesion_grupal:"Group session",retiro:"Retreat",conferencia:"Speaking",masterclass:"Masterclass",otro:"Other"}
 };
 
 let CATEGORIES = [
@@ -1028,7 +1121,15 @@ async function loadData(){
       icon:c.icon||'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/>',
       es:{t:c.name_es,d:c.desc_es||""},
       en:{t:c.name_en||c.name_es,d:c.desc_en||c.desc_es||""}}));
+    /* Una voz puede estar en VARIAS temáticas (tabla puente). Si el backend
+       todavía no la tiene, `cats` queda con su temática única y todo sigue igual. */
+    let CATMAP={};
+    try{
+      const { data:sc } = await sb.from("app_vpa_specialist_categories_public").select("specialist_id,category_id,is_primary");
+      (sc||[]).forEach(r=>{ (CATMAP[r.specialist_id]=CATMAP[r.specialist_id]||[]).push(r.category_id); });
+    }catch(_){}
     if(specs.data&&specs.data.length) SPECIALISTS = specs.data.map(s=>({id:s.id,slug:s.slug,cat:s.category_id,
+      cats:(CATMAP[s.id]&&CATMAP[s.id].length?CATMAP[s.id]:[s.category_id]).filter(Boolean),
       photo:s.photo_url,badge:s.badge_url,availNow:s.available_now,langs:s.langs||["es"],mod:s.modalities||["online"],
       es:{name:s.name,role:s.role_es,bio:s.bio_es,focus:s.focus_es||[],certs:s.certs_es},
       en:{name:s.name,role:s.role_en,bio:s.bio_en,focus:s.focus_en||[],certs:s.certs_en}}));
@@ -1110,26 +1211,36 @@ function buildFilters(){
   fl.innerHTML = `<option value="">${t("lang.all")}</option><option value="es">Español</option><option value="en">English</option>`;
 }
 
+/* Temáticas de una voz: la principal primero. */
+function specCats(s){
+  const ids=(s.cats&&s.cats.length?s.cats:[s.cat]).filter(Boolean);
+  return ids.slice().sort((a,b)=> (a===s.cat?-1:0)-(b===s.cat?-1:0));
+}
+function catLabel(id){ const c=CATEGORIES.find(x=>x.id===id); return c?(c[lang]||c.es).t:""; }
+
 function renderSpecs(){
   const q=(document.getElementById("specSearch").value||"").toLowerCase();
   const fc=document.getElementById("filterCat").value;
   const fm=document.getElementById("filterMod").value;
   const fl=document.getElementById("filterLang").value;
   const list = SPECIALISTS.filter((s,i)=>{
-    const d=s[lang]; const catName=(CATEGORIES.find(c=>c.id===s.cat)||{})[lang]?.t||"";
+    const d=s[lang];
+    const mine=specCats(s);
+    const catName=mine.map(id=>(CATEGORIES.find(c=>c.id===id)||{})[lang]?.t||"").join(" ");
     const hay=(d.name+" "+d.role+" "+d.bio+" "+d.focus.join(" ")+" "+catName).toLowerCase();
-    return (!q||hay.includes(q))&&(!fc||s.cat===fc)&&(!fm||s.mod.includes(fm))&&(!fl||s.langs.includes(fl));
+    return (!q||hay.includes(q))&&(!fc||mine.includes(fc))&&(!fm||s.mod.includes(fm))&&(!fl||s.langs.includes(fl));
   });
   const grid=document.getElementById("specGrid");
   if(!list.length){ grid.innerHTML=`<div class="empty">${lang==="es"?"No encontramos voces con esos filtros. Prueba ampliar tu búsqueda.":"No voices match those filters. Try broadening your search."}</div>`; return; }
   grid.innerHTML = list.map(s=>{
-    const i=SPECIALISTS.indexOf(s); const d=s[lang]; const cat=CATEGORIES.find(c=>c.id===s.cat)[lang].t;
+    const i=SPECIALISTS.indexOf(s); const d=s[lang];
+    const mine=specCats(s); const cat=catLabel(mine[0]); const more=mine.length-1;
     return `<article class="spec reveal" onclick="openModal(${i})">
       <div class="spec-photo" style="${PHOTO_STYLE(s)}">
         <span class="avail"><span class="dot ${s.availNow?'':'busy'}"></span>${s.availNow?t("avail.now"):t("avail.soon")}</span>
       </div>
       <div class="spec-body">
-        <span class="cat-tag">${esc(cat)}</span>
+        <span class="cat-tag">${esc(cat)}${more>0?` +${more}`:""}</span>
         <h4>${esc(d.name)}</h4>
         <div class="role">${esc(d.role)}</div>
         <p>${esc(d.bio)}</p>
@@ -1189,6 +1300,16 @@ function tzAbbr(d){
   }
   return "";
 }
+/* Fecha de un evento fuera del calendario (tarjeta de tienda, ficha de oferta,
+   confirmación de inscripción). Misma regla: hora local del visitante, con la
+   zona etiquetada, porque el público es internacional. */
+function fmtEvent(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d.getTime())) return "";
+  const f=d.toLocaleString(calLoc(),{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
+  const a=tzAbbr(d);
+  return a ? `${f} (${a})` : f;
+}
 function calEvents(){
   const evs=[];
   (WORKSHOPS||[]).forEach(w=>{ if(!w.at) return;
@@ -1217,9 +1338,45 @@ function calEvRow(e, withDate){
       <button type="button" class="ev-open" onclick="calOpen('${esc(e.type)}','${esc(String(e.id||""))}')">${t("cal.open")}</button>
     </div>`;
 }
+/* Agenda completa de la izquierda: TODO lo que viene, de lo más próximo a lo más
+   lejano, con su propio scroll (no se corta a N elementos). Al hacer clic salta
+   al día dentro del mes de la derecha, que es donde está la inscripción. */
+let CAL_UPCOMING=[];
+function renderCalAll(byDay){
+  const box=document.getElementById("calAll"); if(!box) return;
+  if(!CAL_UPCOMING.length){ box.innerHTML=`<div class="cal-empty">${t("cal.allEmpty")}</div>`; return; }
+  box.innerHTML = CAL_UPCOMING.map((e,i)=>{
+    const k=calKey(e.at);
+    const day=e.at.toLocaleDateString(calLoc(),{day:"numeric"});
+    const mon=e.at.toLocaleDateString(calLoc(),{month:"short"}).replace(".","");
+    const when=e.at.toLocaleDateString(calLoc(),{weekday:"short",day:"numeric",month:"long"});
+    const hh=e.at.toLocaleTimeString(calLoc(),{hour:"2-digit",minute:"2-digit"});
+    const who=e.by ? " · "+e.by : "";
+    return `<button type="button" class="cal-item${calSel===k?" on":""}" onclick="calGoTo(${i})">
+        <span class="dchip"><b>${esc(day)}</b><span>${esc(mon)}</span></span>
+        <span class="it-main"><b>${esc(e.title)}</b>
+          <span>${esc(when)} · ${esc(hh)}${esc(who)}</span></span>
+      </button>`;
+  }).join("");
+}
+/* Salta al día del evento: cambia de mes si hace falta, lo selecciona y lo deja
+   a la vista (en móvil el calendario queda debajo del listado). */
+function calGoTo(i){
+  const e=CAL_UPCOMING[i]; if(!e) return;
+  calY=e.at.getFullYear(); calM=e.at.getMonth(); calSel=calKey(e.at);
+  renderCalendar();
+  const cell=document.querySelector(".cal-day.sel");
+  if(cell){
+    if(window.matchMedia("(max-width:900px)").matches)
+      cell.scrollIntoView({behavior:"smooth",block:"center"});
+    flashEl(cell);
+  }
+}
 function renderCalendar(){
   const grid=document.getElementById("calGrid"); if(!grid) return;
   const evs=calEvents();
+  const from0=new Date(); from0.setHours(0,0,0,0);
+  CAL_UPCOMING=evs.filter(e=>e.at>=from0);
   const byDay={}; evs.forEach(e=>{ const k=calKey(e.at); (byDay[k]=byDay[k]||[]).push(e); });
   const now=new Date();
   if(calY==null){
@@ -1245,10 +1402,13 @@ function renderCalendar(){
   for(let i=1;i<=tail;i++) html+=`<div class="cal-day out">${i}</div>`;
   grid.innerHTML=html;
   const mh=document.getElementById("calMonth");
-  if(mh) mh.textContent = first.toLocaleDateString(calLoc(),{month:"long",year:"numeric"});
+  if(mh){ const mtxt=first.toLocaleDateString(calLoc(),{month:"long",year:"numeric"});
+    mh.textContent = mtxt.charAt(0).toUpperCase()+mtxt.slice(1); }
   const tzEl=document.getElementById("calTz");
   if(tzEl){ const z=tzZone(), a=tzAbbr();
-    tzEl.textContent = t("cal.tz") + (z? " · "+z : "") + (a? " ("+a+")" : ""); }
+    const city = z ? z.split("/").pop().replace(/_/g," ") : "";
+    tzEl.textContent = t("cal.tz") + (city? " · "+city : "") + (a? " ("+a+")" : "");
+    if(z) tzEl.title = z; }
 
   // Debajo: el día elegido, o —si no hay ninguno— todo lo del mes a la vista.
   const box=document.getElementById("calList"); if(!box) return;
@@ -1263,6 +1423,7 @@ function renderCalendar(){
       ? monthEvs.map(e=>calEvRow(e,true)).join("")
       : `<div class="cal-empty">${t("cal.nonemonth")}</div>`;
   }
+  renderCalAll(byDay);
 }
 function calSelect(key){ calSel=(calSel===key?null:key); renderCalendar(); }
 function calNav(delta){
@@ -1290,6 +1451,8 @@ const isSession = o => SESSION_KINDS.includes(o.kind);
 // una pantalla en blanco después de pagar. Se muestra, pero no entra al carrito.
 const sellable = o => o.sell_via_voces && !o.in_progress && o.price_cents!=null
                       && !(isSession(o) && !o.has_booking);
+// Masterclass: gratuita y en vivo. No se compra, se reserva lugar con el correo.
+const isMasterclass = o => o.kind === "masterclass";
 // Píldora de estado: la elige la voz; si no eligió, se comporta como siempre.
 function offerPill(o){
   const p = o.status_pill || (o.in_progress ? "proximamente" : null);
@@ -1298,12 +1461,16 @@ function offerPill(o){
 }
 function buildStore(){
   const prods = PRODUCTS.map(p=>({type:"product", id:p.id||null, title:p[lang].t, desc:p[lang].d,
-    price:p.price, cover:p.cover, ptype:p.type[lang], by:null, bySlug:null, pill:null, slug:null}));
-  const offs = OFFERINGS.filter(sellable)
+    price:p.price, cover:p.cover, ptype:p.type[lang], by:null, bySlug:null, pill:null, slug:null,
+    note:null, enroll:false}));
+  // Las Masterclass viven en la misma cuadrícula que todo lo demás, pero en vez
+  // del botón de carrito llevan "Sin costo, inscríbete aquí".
+  const offs = OFFERINGS.filter(o => sellable(o) || isMasterclass(o))
     .map(o=>({type:"offering", id:o.id, title:o.title, desc:o.description||"",
-      price:Math.round(o.price_cents/100), cover:o.cover_url,
+      price:isMasterclass(o)?0:Math.round(o.price_cents/100), cover:o.cover_url,
       ptype:(OKIND[lang]||{})[o.kind]||o.kind, by:o.specialist_name,
-      bySlug:o.specialist_slug||o.specialist_id, pill:offerPill(o), slug:o.slug}));
+      bySlug:o.specialist_slug||o.specialist_id, pill:offerPill(o), slug:o.slug,
+      note:o.note_important||null, enroll:isMasterclass(o), at:o.event_at||null}));
   STORE = prods.concat(offs);
 }
 function renderStore(){
@@ -1318,16 +1485,20 @@ function renderStore(){
         }</div>`:""}
         ${p.pill?`<div class="pill-row"><span class="opill ${esc(p.pill.key)}">${esc(p.pill.label)}</span></div>`:""}
         <div class="prod-desc-wrap">
-          <p class="prod-desc clamped">${esc(p.desc)}</p>
+          <p class="prod-desc clamped">${mdText(p.desc)}</p>
           <button type="button" class="prod-more" hidden onclick="toggleProdDesc(this)">${t("bio.more")}</button>
         </div>
+        ${p.note?`<div class="onote">${mdText(p.note)}</div>`:""}
+        ${p.enroll&&p.at?`<div class="mc-when">📅 ${esc(fmtEvent(p.at))}</div>`:""}
         <div class="prod-foot">
-          <span class="pp">${money(p.price)}</span>
+          <span class="pp">${p.enroll?"":money(p.price)}</span>
           <span class="acts">
             ${p.id?`<button class="share" onclick="shareItem('${esc(p.type)}','${esc(String(p.id))}')" title="${esc(t("share.title"))}" aria-label="${esc(t("share.item"))}">${SHARE_SVG}</button>`:""}
-            <button class="add" onclick="addToCart(${i})" aria-label="${esc(t("offer.add"))}">
+            ${p.enroll
+              ? `<button class="btn btn-primary obtn" onclick="openEnroll('${esc(String(p.id))}')">${t("mc.free")}</button>`
+              : `<button class="add" onclick="addToCart(${i})" aria-label="${esc(t("offer.add"))}">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
+            </button>`}
           </span>
         </div>
       </div>
@@ -1368,7 +1539,8 @@ function renderTestimonials(){
 let highlightOffer = null;   // id de la oferta que traía el enlace compartido
 function openModal(i, offeringId){
   highlightOffer = offeringId || null;
-  const s=SPECIALISTS[i]; currentSpec=s; const d=s[lang]; const catObj=CATEGORIES.find(c=>c.id===s.cat); const cat=catObj?catObj[lang].t:"";
+  const s=SPECIALISTS[i]; currentSpec=s; const d=s[lang];
+  const cat=specCats(s).map(catLabel).filter(Boolean).join(" · ");
   document.getElementById("modalContent").innerHTML=`
     <button class="modal-close" onclick="closeModal()" aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tinta)" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     <div class="modal-photo" style="${PHOTO_STYLE(s)}"></div>
@@ -1411,8 +1583,10 @@ function offerRow(o){
   const price=pesos!=null?money(pesos):"";
   const safeUrl=(o.external_url&&/^https?:\/\//i.test(o.external_url))?o.external_url:null;
   const canBuy=sellable(o);
+  const mc=isMasterclass(o);
   let action="";
-  if(safeUrl) action=`<a class="btn btn-ghost obtn" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${t("offer.buy")}</a>`;
+  if(mc) action=`<button class="btn btn-primary obtn" onclick="openEnroll('${esc(o.id)}')">${t("mc.free")}</button>`;
+  else if(safeUrl) action=`<a class="btn btn-ghost obtn" href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${t("offer.buy")}</a>`;
   else if(canBuy) action=`<button class="btn btn-primary obtn" onclick="addOfferingToCart('${esc(o.id)}')">${t("offer.add")}</button>`;
   else if(isSession(o) && !o.has_booking) action=`<span class="ovia">${t("sess.soon")}</span>`;
   else if(o.sell_via_voces) action=`<span class="ovia">${t("offer.via")}</span>`;
@@ -1420,15 +1594,20 @@ function offerRow(o){
   const audio=(o.preview_url&&/^https?:\/\//i.test(o.preview_url))?o.preview_url:null;
   const file=(o.file_url&&/^https?:\/\//i.test(o.file_url))?o.file_url:null;
   const pill=offerPill(o);
+  // La Masterclass promociona un producto de la misma voz: se dice cuál.
+  const promo = o.promotes_offering_id ? OFFERINGS.find(x=>x.id===o.promotes_offering_id) : null;
   return `<div class="offer-row" data-offer="${esc(String(o.id))}">
     ${cover?`<img class="ocover" src="${esc(cover)}" alt="" loading="lazy">`:""}
     <div class="oi"><span class="okind">${esc(kind)}</span><b>${esc(o.title)}</b>
-      ${o.description?`<p>${esc(o.description)}</p>`:""}
+      ${mc&&o.event_at?`<div class="mc-when">📅 ${esc(fmtEvent(o.event_at))}</div>`:""}
+      ${o.description?`<p>${mdText(o.description)}</p>`:""}
+      ${o.note_important?`<div class="onote">${mdText(o.note_important)}</div>`:""}
+      ${promo?`<div class="mc-promo">${t("mc.promo")} <b>${esc(promo.title)}</b></div>`:""}
       ${audio?`<audio controls preload="none" src="${esc(audio)}" style="width:100%;margin-top:8px"></audio>`:""}
       ${file?`<a class="ofile" href="${esc(file)}" target="_blank" rel="noopener">📄 ${esc(o.file_name||(lang==="es"?"Descargar archivo":"Download file"))}</a>`:""}
       ${isSession(o)&&canBuy?`<div class="sess-note">${t("offer.sessNote")}</div>`:""}
       ${pill?`<div class="pill-row"><span class="opill ${esc(pill.key)}">${esc(pill.label)}</span></div>`:""}</div>
-    <div class="oa">${price?`<span class="oprice">${price}</span>`:""}${action}
+    <div class="oa">${mc?`<span class="oprice">${lang==="es"?"Gratis":"Free"}</span>`:(price?`<span class="oprice">${price}</span>`:"")}${action}
       <button class="share oshare" style="margin:8px 0 0 auto" onclick="shareItem('offering','${esc(String(o.id))}')" title="${esc(t("share.title"))}" aria-label="${esc(t("share.item"))}">${SHARE_SVG}</button>
     </div>`+`</div>`;
 }
@@ -1473,9 +1652,66 @@ function sessionCTA(){
       ${sessions.map(offerRow).join("")}</div>` + box.innerHTML;
   box.scrollIntoView({behavior:"smooth", block:"nearest"});
 }
+/* ============================================================
+   MASTERCLASS · inscripción gratuita
+   No hay carrito ni pago: se reserva el lugar con el correo. La confirmación y
+   el enlace de la reunión salen por correo, pero si la voz ya puso el enlace se
+   muestra también aquí mismo — el correo puede tardar o irse a spam y quien ya
+   se inscribió tiene derecho a entrar.
+============================================================ */
+function openEnroll(id){
+  const o=OFFERINGS.find(x=>String(x.id)===String(id)); if(!o) return;
+  const box=document.createElement("div");
+  box.className="mc-bg";
+  box.innerHTML=`<div class="mc-card" role="dialog" aria-modal="true" aria-label="${esc(t("mc.title"))}">
+      <button class="mc-x" aria-label="${esc(t("mc.close"))}">&times;</button>
+      <h3>${esc(t("mc.title"))}</h3>
+      <div class="mc-of"><b>${esc(o.title)}</b>${o.specialist_name?`<span>${lang==="es"?"con":"with"} ${esc(o.specialist_name)}</span>`:""}</div>
+      ${o.event_at?`<div class="mc-when">📅 ${esc(fmtEvent(o.event_at))}</div>`:""}
+      <p class="mc-sub">${esc(t("mc.sub"))}</p>
+      <div id="mcBody">
+        <label class="mc-l">${esc(t("mc.name"))}</label><input id="mcName" type="text" autocomplete="name">
+        <label class="mc-l">${esc(t("mc.email"))} *</label><input id="mcMail" type="email" autocomplete="email" required>
+        <div class="mc-err" id="mcErr"></div>
+        <button class="btn btn-primary mc-go" id="mcGo">${esc(t("mc.go"))}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+  const close=()=>{ box.remove(); };
+  box.querySelector(".mc-x").onclick=close;
+  box.onclick=e=>{ if(e.target===box) close(); };
+  const go=box.querySelector("#mcGo");
+  go.onclick=async ()=>{
+    const email=(box.querySelector("#mcMail").value||"").trim();
+    const name=(box.querySelector("#mcName").value||"").trim();
+    const err=box.querySelector("#mcErr");
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ err.textContent=t("mc.badEmail"); return; }
+    err.textContent=""; go.disabled=true; go.textContent="…";
+    try{
+      const { data, error } = await sb.rpc("vpa_enroll_masterclass",{ p_offering:o.id, p_email:email, p_name:name||null });
+      if(error) throw error;
+      const url=data.meeting_url||"";
+      box.querySelector("#mcBody").innerHTML=`
+        <div class="mc-ok">${esc(data.already?t("mc.already"):t("mc.ok"))}</div>
+        <p class="mc-sub">${esc(t("mc.mail"))}</p>
+        ${url
+          ? `<a class="btn btn-primary mc-go" href="${esc(url)}" target="_blank" rel="noopener">${esc(t("mc.join"))}</a>`
+          : `<p class="mc-sub">${esc(t("mc.later"))}</p>`}`;
+    }catch(e){
+      go.disabled=false; go.textContent=t("mc.go");
+      const m=(e&&e.message)||"";
+      err.textContent = /bad_email/.test(m) ? t("mc.badEmail")
+                      : /rate_limited/.test(m) ? (lang==="es"?"Demasiados intentos seguidos. Espera unos minutos.":"Too many attempts. Please wait a few minutes.")
+                      : (lang==="es"?"No se pudo completar la inscripción. Intenta de nuevo.":"We couldn't complete the sign-up. Please try again.");
+    }
+  };
+  setTimeout(()=>{ const f=box.querySelector("#mcMail"); if(f) f.focus(); }, 60);
+}
+
 // add a specialist offering to the cart straight from the modal
 function addOfferingToCart(id){
   const o=OFFERINGS.find(x=>x.id===id); if(!o) return;
+  if(isMasterclass(o)) return openEnroll(o.id);   // gratuita: inscripción, no compra
   cartAdd({type:"offering", id:o.id, title:o.title, price:Math.round(o.price_cents/100),
     cover:o.cover_url, ptype:(OKIND[lang]||{})[o.kind]||o.kind, by:o.specialist_name});
 }
@@ -1614,7 +1850,10 @@ function cleanCart(){
   }).map(x=>({...x, qty:Math.max(1, Math.min(99, x.qty||1))}));
   if(cart.length!==before){ cartSave(); }
 }
-function addToCart(storeIdx){ const it=STORE[storeIdx]; if(it) cartAdd(it); }
+function addToCart(storeIdx){ const it=STORE[storeIdx]; if(!it) return;
+  // Una Masterclass es gratuita: nunca entra al carrito, se inscribe uno.
+  if(it.enroll) return openEnroll(it.id);
+  cartAdd(it); }
 function registerWs(i){ const w=WORKSHOPS[i]; if(w) cartAdd({type:"workshop", id:w.id||null, title:w[lang].t, price:w.price, cover:null, ptype:t("nav.ws"), by:w.by}); }
 function removeFromCart(idx){ cart.splice(idx,1); cartSave(); renderCart(); toast(t("toast.rm")); }
 function cartQty(idx,d){ if(!cart[idx])return; cart[idx].qty=Math.max(1,(cart[idx].qty||1)+d); cartSave(); renderCart(); }
