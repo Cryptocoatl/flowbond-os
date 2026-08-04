@@ -2,13 +2,16 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Read per call, never at module scope: on Cloudflare Workers the module is
+// evaluated when the isolate boots, before the request's env is populated, so a
+// top-level read yields undefined and every Supabase client comes up empty.
+const url = () => process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const anon = () => process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /** Cookie-bound client carrying the caller's FBID session (RLS applies). */
 export async function authClient() {
   const store = await cookies();
-  return createServerClient(URL, ANON, {
+  return createServerClient(url(), anon(), {
     cookies: {
       getAll: () => store.getAll(),
       setAll: (list) => {
@@ -29,6 +32,6 @@ export async function authClient() {
  * flow through the role-enforced RPCs, not this client.
  */
 export const dbAdmin = () =>
-  createClient(URL, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  createClient(url(), process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
