@@ -1,5 +1,5 @@
 import { OctagonSeal } from '@flowbond/ui'
-import { HERO, LINKS } from '@/content/site'
+import { HERO } from '@/content/site'
 
 export function Hero() {
   return (
@@ -22,15 +22,12 @@ export function Hero() {
         <p className="credit">
           {HERO.creditPrefix} <b>{HERO.creditName}</b> ✦
         </p>
-        <p className="hero-sub">
-          FlowBond is the living infrastructure for a regenerative internet — <b>identity, value, and intelligence</b> woven into one
-          layer beneath every app you build. Technology, mastered in service of life.
-        </p>
+        <p className="hero-sub">{HERO.sub}</p>
         <div className="cta-row">
-          <a href="#contact" className="btn btn-primary" data-mag>
+          <a href="/contact" className="btn btn-primary" data-mag>
             {HERO.ctaPrimary} <span className="arr">→</span>
           </a>
-          <a href={LINKS.deck} className="btn btn-ghost" data-mag>
+          <a href="/work" className="btn btn-ghost" data-mag>
             {HERO.ctaGhost}
           </a>
         </div>

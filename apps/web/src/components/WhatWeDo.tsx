@@ -1,16 +1,15 @@
-import { TRINITY } from '@/content/site'
+import { WHATWEDO } from '@/content/site'
 
-export function Trinity() {
+export function WhatWeDo() {
   return (
-    <section className="trinity" id="trinity">
-      <div className="section-tag reveal">{TRINITY.tag}</div>
-      <h2 className="lead-h reveal d1" style={{ maxWidth: '22ch' }}>
-        One layer. Three forces.
-        <br />
-        Woven into a single primitive.
+    <section className="trinity" id="what-we-do">
+      <div className="section-tag reveal">{WHATWEDO.tag}</div>
+      <h2 className="lead-h reveal d1" style={{ maxWidth: '20ch' }}>
+        Build it. <span className="g">Run it.</span> <em>Grow it.</em>
       </h2>
+      <p className="mani-p reveal d2">{WHATWEDO.lead}</p>
       <div className="tri-grid">
-        {TRINITY.cards.map((c, i) => (
+        {WHATWEDO.cards.map((c, i) => (
           <article key={c.cls} className={`tri-card ${c.cls} reveal d${i + 1}`}>
             <span className="tri-num">{c.num}</span>
             <svg className="tri-octa" viewBox="0 0 100 100" fill="none" aria-hidden="true">
