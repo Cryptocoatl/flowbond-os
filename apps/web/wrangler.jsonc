@@ -1,0 +1,19 @@
+{
+  // flowbond.life — the network front door. Cut over from Vercel to Cloudflare
+  // Workers on 2026-08-04 after the whole route set was verified on the
+  // workers.dev preview. Declaring the custom domains here makes wrangler own
+  // the apex A record and the www CNAME (both previously pointed at Vercel).
+  "name": "flowbond-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "flowbond.life", "custom_domain": true },
+    { "pattern": "www.flowbond.life", "custom_domain": true }
+  ]
+}
