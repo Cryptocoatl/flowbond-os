@@ -8,6 +8,22 @@ const SITE = "https://voces.flowme.one";
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
+/* Fecha de un evento dentro de un correo. `event_at` es un instante absoluto y
+   el correo no sabe en qué huso está quien lo lee, así que se escribe en hora
+   de Ciudad de México y se dice explícitamente — igual que el calendario del
+   sitio. Sin fecha, no se imprime nada. */
+function fechaHtml(iso: unknown) {
+  if (!iso) return "";
+  const d = new Date(String(iso));
+  if (isNaN(d.getTime())) return "";
+  const f = d.toLocaleString("es-MX", {
+    timeZone: "America/Mexico_City",
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+  return `<p><b>Cuándo:</b> ${esc(f)} <span style="color:#8a8378">(hora de Ciudad de México)</span></p>`;
+}
+
 function tpl(template: string, p: Record<string, unknown>) {
   const en = p.locale === "en";
   const name = (p.name as string) || "";
@@ -144,6 +160,40 @@ function tpl(template: string, p: Record<string, unknown>) {
            <b>Pedido:</b> ${esc(String(p.order_id || "").slice(0, 8))}</p>
         <p style="font-size:13px;color:#8a8378">La <b>fecha y hora</b> te llegan por separado en el correo de <b>Calendly</b>, con los datos que la persona capturó ahí. Este correo es tu comprobante de que la reserva corresponde a un pago real recibido por Voces.</p>
         <p style="text-align:center;margin:22px 0"><a href="${SITE}/mi-voz" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Ver en mi panel</a></p>`);
+    }
+    /* ---- Masterclass (gratuita, doc de Mónica 5-ago-2026) ----------------
+       Tres correos: confirmación a quien se inscribe, aviso a la voz por cada
+       inscripción (para que sepa cuánta gente lleva), y el enlace de la reunión
+       cuando la voz eligió mandarlo después.                                */
+    case "masterclass_signup": {
+      const url = String(p.meeting_url || "");
+      const later = !!p.link_later;
+      return wrap("Tu lugar está reservado 🌿", `<p>Hola${name ? " " + esc(name) : ""}:</p>
+        <p>Quedaste inscrita(o) en la Masterclass <b>${esc(p.title)}</b>${p.specialist_name ? ` con <b>${esc(p.specialist_name)}</b>` : ""}. Es <b>sin costo</b>.</p>
+        ${fechaHtml(p.event_at)}
+        ${url
+          ? `<p style="text-align:center;margin:22px 0"><a href="${esc(url)}" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Entrar a la reunión</a></p>
+             <p style="font-size:13px;color:#8a8378">Guarda este correo: aquí está tu enlace de acceso.</p>`
+          : `<p style="font-size:14px;color:#5a5348">${later
+              ? "El enlace de la reunión te llegará a este mismo correo antes del evento."
+              : "Te enviaremos el enlace de la reunión a este mismo correo."}</p>`}`);
+    }
+    case "masterclass_signup_specialist":
+      return wrap("Alguien se inscribió a tu Masterclass ✨", `<p>Hola${name ? " " + esc(name) : ""}:</p>
+        <p>Una persona más se inscribió a tu Masterclass <b>${esc(p.title)}</b>.</p>
+        <p><b>Nombre:</b> ${esc(p.attendee_name || "(sin nombre)")}<br>
+           <b>Correo:</b> <a href="mailto:${esc(p.attendee_email)}" style="color:#B68A3E">${esc(p.attendee_email)}</a><br>
+           <b>Inscritos hasta ahora:</b> ${esc(p.total)}</p>
+        ${fechaHtml(p.event_at)}
+        <p style="text-align:center;margin:22px 0"><a href="${SITE}/mi-voz" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Ver la lista completa</a></p>
+        <p style="font-size:13px;color:#8a8378">En tu panel tienes los nombres y correos de todos los inscritos, para darles seguimiento.</p>`);
+    case "masterclass_link": {
+      const url = String(p.meeting_url || "");
+      return wrap("El enlace de tu Masterclass 🔗", `<p>Hola${name ? " " + esc(name) : ""}:</p>
+        <p>Este es el enlace para entrar a <b>${esc(p.title)}</b>${p.specialist_name ? ` con <b>${esc(p.specialist_name)}</b>` : ""}.</p>
+        ${fechaHtml(p.event_at)}
+        <p style="text-align:center;margin:22px 0"><a href="${esc(url)}" style="display:inline-block;background:#B01E2E;color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-family:Helvetica,Arial,sans-serif">Entrar a la reunión</a></p>
+        <p style="font-size:13px;color:#8a8378">Si el botón no funciona, copia esta dirección: ${esc(url)}</p>`);
     }
     case "contacto":
       return wrap(`Nuevo mensaje de contacto${name ? " · " + esc(name) : ""}`, `

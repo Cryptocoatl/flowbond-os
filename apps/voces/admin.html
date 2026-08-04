@@ -271,9 +271,13 @@ const SECTIONS = [
   ["pagos","Pagos"],["comisiones","% Comisiones"],["payouts","💸 Pagos a las voces"],["orders","Pedidos"],["memberships","Membresías"],["codes","Códigos y referidos"],["points","Puntos y créditos"],
   ["testimonials","Testimonios"],["inquiries","Postulaciones"],["members","Miembros"],["settings","Inicio / Contacto"]
 ];
-const KINDS=["libro","ebook","audiolibro","audio","test","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","otro"];
+const KINDS=["libro","ebook","audiolibro","audio","test","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","masterclass","otro"];
 const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",
-  sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",otro:"Otro"};
+  sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",
+  masterclass:"Masterclass",otro:"Otro"};
+// Ofertas cargadas de la sección "Ofertas": alimentan el selector de "producto
+// que promociona" de las Masterclass (sólo las publicadas y aprobadas).
+let OFFS=[];
 const PHOTO_BASE = SUPABASE_URL + "/storage/v1/object/public/vpa-photos/";
 function buildNav(){
   $("nav").innerHTML = SECTIONS.map(([k,l])=>`<button data-sec="${k}" onclick="go('${k}')">${l}</button>`).join("");
@@ -412,8 +416,19 @@ const CFG = {
       {k:"specialist_id",t:"select",l:"Especialista (dueño)",opts:SPECS.map(s=>[s.id,s.name]),req:true},
       {k:"kind",t:"select",l:"Tipo",opts:KINDS.map(k=>[k,KIND_ES[k]])},
       {k:"title",t:"text",l:"Título",req:true},
-      {k:"description",t:"textarea",l:"Descripción"},
-      {k:"price_mxn",t:"number",l:"Precio (MXN, vacío = a convenir)"},
+      {k:"description",t:"textarea",l:"Descripción",
+       hint:"Se puede dar formato: <code>**negritas**</code> y <code>*cursivas*</code> salen aplicadas en el sitio público."},
+      {k:"note_important",t:"textarea",l:"⚠️ Nota importante (opcional)",
+       hint:"Se muestra aparte de la descripción, en un <b>recuadro destacado y en negritas</b>. Ej.: «Este precio incluye un aforo de hasta 100 personas. Si tu evento requiere un aforo distinto, contáctanos a voces.world@gmail.com.»"},
+      {k:"price_mxn",t:"number",l:"Precio (MXN) — obligatorio",
+       hint:"Voces ya no maneja «precio a convenir»: todo se publica con precio fijo. Para proyectos que necesitan cotizarse, la voz publica una <b>Sesión individual</b> con el costo de la sesión de diagnóstico.<br><b>Excepción:</b> las Masterclass son siempre gratuitas y no llevan precio."},
+      {k:"promotes_offering_id",t:"select",l:"🎓 Masterclass · producto que promociona",
+       opts:[["","— (sólo para Masterclass) —"]].concat(OFFS.filter(x=>x.status==="published"&&x.kind!=="masterclass")
+             .map(x=>[x.id, specName(x.specialist_id)+" · "+x.title])),
+       hint:"<b>Obligatorio en las Masterclass.</b> Sólo ofertas <b>publicadas y aprobadas</b> de la misma voz."},
+      {k:"meeting_url",t:"text",l:"🔗 Masterclass · enlace de la reunión",
+       hint:"Nunca es público: sólo le llega por correo a quien se inscribe. Se puede dejar vacío y enviarlo después desde el botón <b>Inscritos</b>."},
+      {k:"meeting_link_later",t:"chk",l:"Masterclass · el enlace se envía después a los inscritos"},
       {k:"external_url",t:"text",dis:true,l:"Enlace externo (Amazon / tienda) — deshabilitado por ahora",
        hint:"Esta función todavía no está definida. El campo queda visible pero no editable hasta nuevo aviso."},
       {k:"file_url",t:"upload",media:"file",l:"📄 Archivo descargable — SUBE AQUÍ tu PDF, Word, ePub, ZIP…"},
@@ -437,7 +452,7 @@ const CFG = {
     ],
     list:i=>({thumb:i.cover_url,title:i.title,
       meta:(KIND_ES[i.kind]||i.kind)+" · "+specName(i.specialist_id)
-        +(i.price_cents!=null?" · $"+(i.price_cents/100)+" MXN":" · precio a convenir")
+        +(i.kind==="masterclass"?" · gratuita":(i.price_cents!=null?" · $"+(i.price_cents/100)+" MXN":" · ⚠ SIN precio"))
         +(i.sell_via_voces?" · vía Voces":"")+(i.external_url?" · 🔗 externo":"")
         +(i.wants_help?" · ⚠ pide apoyo":"")
         +(["sesion_individual","sesion_grupal"].includes(i.kind)&&!i.booking_url?" · ⚠ SIN enlace de agenda":""),
@@ -490,6 +505,7 @@ RENDER.guia=()=>{
     const { data, error } = await sb.from(cfg.table).select("*").order(cfg.order,{ascending:true});
     if(error){ $("rows").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
     if(sec==="categories") CATS=data; if(sec==="specialists") SPECS=data.map(d=>({id:d.id,name:d.name}));
+    if(sec==="offerings") OFFS=data;
     if(!data.length){ $("rows").innerHTML=`<div class="empty">Aún no hay ${cfg.title}s. Crea el primero.</div>`; return; }
     $("rows").innerHTML=data.map(i=>{
       const v=cfg.list(i); const img=v.thumb?`style="background-image:url('${imgUrl(v.thumb)}')"`:"";
@@ -502,6 +518,7 @@ RENDER.guia=()=>{
           <select class="btn-sm" style="padding:6px;border-radius:8px" onchange="quickStatus('${sec}','${i.id}',this.value)">${stOpts}</select>
           <button class="btn btn-ghost btn-sm" onclick='openForm("${sec}", ${JSON.stringify(i).replace(/'/g,"&#39;")})'>Editar</button>
           ${sec==="specialists"?specActions(i):""}
+          ${sec==="offerings"?`<button class="btn btn-ghost btn-sm" onclick="offerAttendees('${i.id}')">${i.kind==="masterclass"?"Inscritos":"Asistentes"}</button>`:""}
         </div></div>`;
     }).join("");
   };
@@ -509,7 +526,7 @@ RENDER.guia=()=>{
 function labelOf(sec){ return (SECTIONS.find(s=>s[0]===sec)||["",sec])[1]; }
 function hintOf(sec){ return ({
   specialists:"Crea y edita las voces del directorio. Solo los 'published' se ven en el sitio. El correo/teléfono son privados y se revelan a quien inicia sesión.",
-  offerings:"Lo que ofrece cada voz: libros, ebooks, audiolibros, coaching, sesiones, retiros, conferencias. Con enlace externo (Amazon etc.) o venta vía Voces. Solo los 'published' se ven en el perfil público.",
+  offerings:"Lo que ofrece cada voz: libros, ebooks, audiolibros, coaching, sesiones, retiros, conferencias y <b>Masterclass</b>. Solo los 'published' se ven en el perfil público. <b>Todas llevan precio</b> — el «a convenir» ya no existe. La <b>Masterclass</b> es la excepción: siempre gratuita, sólo para voces con membresía <b>Pro</b>, promociona un producto ya publicado de esa misma voz y la gente se inscribe con su correo (botón <b>Inscritos</b>).",
   categories:"Las temáticas del directorio. Edita nombres, descripciones e íconos. Incluye la nueva “Historias de Transformación”.",
   workshops:"Talleres y retiros. Define fecha, modalidad, precio y especialista.",
   products:"Tienda de contenidos digitales (ebooks, audios, cursos, guías).",
@@ -525,8 +542,115 @@ function specActions(i){
     <button class="btn btn-ghost btn-sm" onclick='specDeal("${i.id}","${escAttr(i.name)}")'>Acuerdo %</button>
     <button class="btn btn-ghost btn-sm" onclick='specClaim("${i.id}","${escAttr(i.name)}",${i.fbid_user?1:0})'>Enlace de reclamo</button>
     <button class="btn btn-ghost btn-sm" onclick='specPhoto("${i.id}","${escAttr(i.name)}")'>Subir/editar foto</button>
+    <button class="btn btn-ghost btn-sm" onclick='specCats("${i.id}","${escAttr(i.name)}","${escAttr(i.category_id||"")}")'>Temáticas</button>
     <button class="btn btn-ghost btn-sm" onclick='specShare("${escAttr(i.slug||i.id)}")'>Compartir</button>
     <button class="btn btn-ghost btn-sm" style="color:var(--bad)" onclick='specDelete("${i.id}","${escAttr(i.name)}")'>Borrar</button>`;
+}
+/* Temáticas de una voz: puede estar en varias y aparece en TODAS en el directorio.
+   La primera marcada es la principal (la que se ve en su tarjeta y la que queda en
+   `category_id`). Si el backend todavía no tiene la tabla puente, avisa y no rompe. */
+async function specCats(id,name,current){
+  let mine=[];
+  try{
+    const { data, error } = await sb.rpc("vpa_my_specialist_categories",{ p_specialist:id });
+    if(error) throw error;
+    mine=(data||[]).map(r=>r.category_id);
+  }catch(_){
+    return toast("Las temáticas múltiples todavía no están habilitadas en la base de datos.");
+  }
+  if(!mine.length && current) mine=[current];
+  const box=document.createElement("div");
+  box.style.cssText="position:fixed;inset:0;z-index:60;background:rgba(44,39,34,.42);display:flex;"+
+    "align-items:center;justify-content:center;padding:20px";
+  box.innerHTML=`<div style="background:var(--lino);border:1px solid var(--linea);border-radius:16px;
+      padding:22px;width:min(560px,100%);max-height:86vh;overflow:auto">
+    <h3>Temáticas de ${esc(name)}</h3>
+    <div class="hint">Marca todas las temáticas en las que acompaña (hasta 3). Aparecerá en cada una dentro del directorio.
+      <b>La primera marcada es la principal</b> y es la que se ve en su tarjeta.</div>
+    <div id="scBox" style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:.8rem 0">
+      ${CATS.map(c=>`<label class="chk" style="display:flex;gap:.5rem;align-items:flex-start;font-size:13.5px">
+        <input type="checkbox" value="${esc(c.id)}" ${mine.includes(c.id)?"checked":""}>
+        <span>${esc(c.name_es)}</span></label>`).join("")}
+    </div>
+    <div class="acts">
+      <button class="btn btn-primary" id="scSave">Guardar</button>
+      <button class="btn btn-ghost" id="scCancel">Cancelar</button>
+    </div><div class="hint" id="scMsg"></div></div>`;
+  document.body.appendChild(box);
+  const close=()=>box.remove();
+  box.querySelector("#scCancel").onclick=close;
+  box.onclick=e=>{ if(e.target===box) close(); };
+  box.querySelector("#scSave").onclick=async ()=>{
+    const ids=[...box.querySelectorAll("#scBox input:checked")].map(i=>i.value);
+    const msg=box.querySelector("#scMsg");
+    if(!ids.length){ msg.innerHTML='<span style="color:var(--bad)">Marca al menos una.</span>'; return; }
+    if(ids.length>3){ msg.innerHTML='<span style="color:var(--bad)">Máximo 3 (es el tope que acepta el servidor).</span>'; return; }
+    try{
+      const { error } = await sb.rpc("vpa_set_specialist_categories",{ p_specialist:id, p_ids:ids, p_primary:ids[0] });
+      if(error) throw error;
+      toast("Temáticas guardadas ✓"); close(); await preload(); RENDER.specialists();
+    }catch(e){ msg.innerHTML='<span style="color:var(--bad)">Error: '+esc(e.message)+'</span>'; }
+  };
+}
+
+/* Inscritos / asistentes de una oferta.
+   Masterclass gratuita → quien se inscribió. Conferencia de pago o grabada →
+   quien compró. En los dos casos son las personas con las que hay que dar
+   seguimiento, así que van en la misma lista. */
+async function offerAttendees(id){
+  let d;
+  try{
+    const { data, error } = await sb.rpc("vpa_offering_attendees",{ p_offering:id });
+    if(error) throw error; d=data;
+  }catch(e){ return toast("Error: "+e.message); }
+  const list=d.attendees||[], o=d.offering||{}, mc=o.kind==="masterclass";
+  const rows=list.length?list.map(a=>`<tr>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--linea)">${esc(a.name||"—")}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--linea)"><a href="mailto:${esc(a.email)}">${esc(a.email)}</a></td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--linea);white-space:nowrap">${a.paid?"compra":"inscripción"}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--linea);white-space:nowrap">${a.at?new Date(a.at).toLocaleDateString("es-MX",{day:"numeric",month:"short"}):""}</td>
+    </tr>`).join(""):`<tr><td colspan="4" style="padding:14px 8px;color:#a49a88">Todavía no hay nadie inscrito.</td></tr>`;
+  const box=document.createElement("div");
+  box.style.cssText="position:fixed;inset:0;z-index:60;background:rgba(44,39,34,.42);display:flex;"+
+    "align-items:center;justify-content:center;padding:20px";
+  box.innerHTML=`<div style="background:var(--lino);border:1px solid var(--linea);border-radius:16px;
+      padding:22px;width:min(680px,100%);max-height:86vh;overflow:auto">
+    <h3>${mc?"Inscritos":"Asistentes"} · ${esc(o.title||"")}</h3>
+    <div class="hint"><b>${d.count}</b> persona(s)${o.event_at?` · 📅 ${new Date(o.event_at).toLocaleString("es-MX",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}`:""}</div>
+    <div style="overflow-x:auto;margin:.8rem 0"><table style="width:100%;border-collapse:collapse;font-size:14px">
+      <tr><th style="text-align:left;padding:6px 8px">Nombre</th><th style="text-align:left;padding:6px 8px">Correo</th>
+          <th style="text-align:left;padding:6px 8px">Cómo</th><th style="text-align:left;padding:6px 8px">Cuándo</th></tr>
+      ${rows}</table></div>
+    ${mc?`<div class="field"><label>🔗 Enlace de la reunión</label>
+      <input id="oaLink" type="url" placeholder="https://meet.google.com/…" value="${esc(o.meeting_url||"")}">
+      <div class="hint">Al enviarlo le llega por correo a todas las personas inscritas. Si lo cambias, se les reenvía el nuevo.</div>
+      <button class="btn btn-primary btn-sm" id="oaSend" style="margin-top:8px">Enviar enlace a los inscritos</button></div>`:""}
+    <div class="acts">
+      ${list.length?`<button class="btn btn-ghost" id="oaCopy">Copiar todos los correos</button>`:""}
+      <button class="btn btn-ghost" id="oaClose">Cerrar</button>
+    </div><div class="hint" id="oaMsg"></div></div>`;
+  document.body.appendChild(box);
+  const close=()=>box.remove();
+  box.querySelector("#oaClose").onclick=close;
+  box.onclick=e=>{ if(e.target===box) close(); };
+  const copyBtn=box.querySelector("#oaCopy");
+  if(copyBtn) copyBtn.onclick=()=>{
+    const s=list.map(a=>a.email).join(", ");
+    (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject())
+      .then(()=>toast("Copiado ✓")).catch(()=>prompt("Correos", s));
+  };
+  const send=box.querySelector("#oaSend");
+  if(send) send.onclick=async ()=>{
+    const url=(box.querySelector("#oaLink").value||"").trim();
+    const msg=box.querySelector("#oaMsg");
+    if(!/^https?:\/\//i.test(url)){ msg.innerHTML='<span style="color:var(--bad)">El enlace debe empezar con https://</span>'; return; }
+    try{
+      const { data, error } = await sb.rpc("vpa_send_meeting_link",{ p_offering:id, p_url:url });
+      if(error) throw error;
+      toast(data.sent ? `Enlace enviado a ${data.sent} persona(s) ✓` : "Enlace guardado — todos ya lo tenían");
+      close();
+    }catch(e){ msg.innerHTML='<span style="color:var(--bad)">Error: '+esc(e.message)+'</span>'; }
+  };
 }
 async function specComment(id,name){
   const msg=prompt("Comentario para "+name+" (le llega como notificación en su panel; si aún no reclama su perfil, se le envía por correo):");
@@ -743,7 +867,9 @@ function collect(){
     p[fd.k]=v;
   });
   Object.keys(bags).forEach(k=>{ p[k]=bags[k]; });
-  // price_mxn -> price_cents (null se conserva: ofertas "a convenir")
+  // price_mxn -> price_cents. Si viene vacío llega null y el servidor lo rechaza
+  // con `price_required`: ya no existe el precio "a convenir" (sólo Masterclass,
+  // que el servidor pone en 0 por su cuenta).
   if("price_mxn" in p){ p.price_cents = p.price_mxn==null ? null : Math.round((Number(p.price_mxn)||0)*100); delete p.price_mxn; }
   return p;
 }
@@ -752,6 +878,14 @@ function saveErrorText(msg){
   msg = msg || "";
   if(/booking_required/.test(msg))
     return "Falta el enlace de agenda (Calendly): las sesiones individuales y grupales no se pueden publicar sin él.";
+  if(/price_required/.test(msg))
+    return "Falta el precio. Voces ya no maneja «precio a convenir»: si el servicio necesita cotizarse, publica una «Sesión individual» con el costo de la sesión de diagnóstico.";
+  if(/masterclass_requires_pro/.test(msg))
+    return "Esa voz no tiene membresía Pro activa: no puede tener ofertas tipo Masterclass.";
+  if(/masterclass_needs_product/.test(msg))
+    return "Una Masterclass tiene que promocionar un producto de esa misma voz que ya esté publicado y aprobado. Elígelo en el campo «producto que promociona».";
+  if(/meeting_url_invalid/.test(msg))
+    return "El enlace de la reunión debe empezar con https://";
   if(/category_name_required/.test(msg))
     return "Falta el nombre de la temática.";
   if(/duplicate key|already exists|unique/i.test(msg))
@@ -1267,7 +1401,7 @@ RENDER.payouts=async ()=>{
       <div class="acts">
         ${b.available_cents>0&&m?`<button class="btn btn-primary" onclick="doPayout('${b.specialist_id}')">Pagar ${pmx(b.available_cents)}</button>
         <button class="btn" onclick="doPayout('${b.specialist_id}',true)">Pagar otra cantidad…</button>`:``}
-        <button class="btn" onclick="poMethodForm('${b.specialist_id}','${esc(b.name||"")}')">${m?"Cambiar método de cobro":"Registrar método de cobro"}</button>
+        <button class="btn" onclick="poMethodForm('${b.specialist_id}','${esc(b.name||"")}',null,'${esc(b.country||"")}')">${m?"Cambiar método de cobro":"Registrar método de cobro"}</button>
       </div>
       <div id="po_form_${b.specialist_id}"></div>
       <div id="po_msg_${b.specialist_id}" class="hint"></div>
@@ -1303,21 +1437,43 @@ const PO_FLBL={email:"Correo de la cuenta",holder_name:"Titular",account_id:"Tag
   iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
 const PO_CHAINS=["base","polygon","solana","ethereum","arbitrum","optimism","tron"];
 
-function poMethodForm(spec,name,kind){
+/* País -> moneda local. Antes País y Moneda eran inputs de texto clavados en
+   "MX"/"MXN" (o US/USD para payoneer) sin mirar el país real del especialista:
+   a ALVERA (Colombia) le aparecía México/MXN. Ahora País es un select que
+   arranca en el país del perfil (viene en vpa_payout_balances) y la Moneda se
+   deriva de él. Todos estos códigos existen en app_vpa_fx_rates. */
+const CUR_BY_COUNTRY={MX:"MXN",AR:"ARS",CO:"COP",CL:"CLP",PE:"PEN",UY:"UYU",BO:"BOB",
+  PY:"PYG",BR:"BRL",CR:"CRC",GT:"GTQ",HN:"HNL",NI:"NIO",DO:"DOP",CA:"CAD",GB:"GBP",
+  ES:"EUR",FR:"EUR",DE:"EUR",IT:"EUR",PT:"EUR",NL:"EUR",
+  US:"USD",EC:"USD",PA:"USD",SV:"USD",PR:"USD",CU:"USD",VE:"USD"};
+const curOf=(c)=>CUR_BY_COUNTRY[String(c||"").toUpperCase()]||"USD";
+const CUR_OPTS=[...new Set([...Object.values(CUR_BY_COUNTRY),"USD"])].sort();
+/* Payoneer es cuenta receptora en USD/EUR/GBP: ahí sí manda el riel, no el país. */
+function poCurFor(kind,country){ return kind==="payoneer" ? "USD" : curOf(country); }
+function poSyncCur(spec,kind){
+  const c=document.getElementById("pof_country_"+spec); const cur=document.getElementById("pof_currency_"+spec);
+  if(c&&cur) cur.value=poCurFor(kind,c.value);
+}
+
+function poMethodForm(spec,name,kind,country){
   kind=kind||"paypal";
   const box=$("po_form_"+spec);
   box.innerHTML=`<div class="card" style="margin-top:.5rem">
     <div class="hint">Método de cobro de <b>${esc(name)}</b>. Úsalo sólo si la voz no puede ponerlo ella misma desde su panel — son sus datos bancarios.</div>
     <div class="field"><label>Método</label>
-      <select id="pof_kind_${spec}" onchange="poMethodForm('${spec}','${esc(name)}',this.value)">
+      <select id="pof_kind_${spec}" onchange="poMethodForm('${spec}','${esc(name)}',this.value,'${esc(country||"")}')">
         ${Object.keys(PO_FIELDS).map(k=>`<option value="${k}" ${k===kind?"selected":""}>${PO_KIND[k]}</option>`).join("")}
       </select></div>
     ${(PO_FIELDS[kind]||[]).map(f=>f==="chain"
       ?`<div class="field"><label>${PO_FLBL[f]}</label><select id="pof_${f}_${spec}">${PO_CHAINS.map(c=>`<option value="${c}">${c.toUpperCase()}</option>`).join("")}</select></div>`
       :`<div class="field"><label>${PO_FLBL[f]}</label><input id="pof_${f}_${spec}"></div>`).join("")}
     <div class="row2">
-      <div class="field"><label>País</label><input id="pof_country_${spec}" value="${kind==="payoneer"?"US":"MX"}"></div>
-      <div class="field"><label>Moneda</label><input id="pof_currency_${spec}" value="${kind==="payoneer"?"USD":"MXN"}"></div>
+      <div class="field"><label>País <small style="font-weight:400;color:#8a8272">— del perfil del especialista</small></label>
+        <select id="pof_country_${spec}" onchange="poSyncCur('${spec}','${esc(kind)}')">
+          ${COUNTRIES.filter(([c])=>c).map(([c,n])=>`<option value="${c}" ${String(country||"").toUpperCase()===c?"selected":""}>${esc(n)}</option>`).join("")}
+        </select></div>
+      <div class="field"><label>Moneda <small style="font-weight:400;color:#8a8272">— según el país</small></label>
+        <input id="pof_currency_${spec}" value="${poCurFor(kind,country)}"></div>
     </div>
     ${kind==="usdc"?`<div class="hint" style="color:var(--bad)">⚠️ Verifica la red y la dirección carácter por carácter. Un envío por la red equivocada no se recupera.</div>`:``}
     ${kind==="payoneer"?`<div class="hint">Son los datos de su <b>cuenta receptora</b> de Payoneer (en la app: Recibir → Datos de la cuenta): dólares = número de cuenta + routing · libras = número de cuenta + sort code (va en “Routing number”) · euros = IBAN + BIC. El <b>titular tiene que ir exacto</b> o Payoneer rechaza el depósito. Pon la moneda que corresponda (USD, EUR o GBP). Payoneer no tiene envío automático: tú haces la transferencia y la confirmas aquí.</div>`:``}
@@ -1329,8 +1485,8 @@ function poMethodForm(spec,name,kind){
 async function savePoMethod(spec){
   const kind=$("pof_kind_"+spec).value;
   const p={specialist_id:spec, kind, is_default:true,
-    country:($("pof_country_"+spec).value||"MX").trim(),
-    currency:($("pof_currency_"+spec).value||"MXN").trim()};
+    country:($("pof_country_"+spec).value||"").trim(),
+    currency:($("pof_currency_"+spec).value||curOf($("pof_country_"+spec).value)).trim()};
   (PO_FIELDS[kind]||[]).forEach(f=>{ const el=$(`pof_${f}_${spec}`); if(el&&el.value.trim()) p[f]=el.value.trim(); });
   try{ const {error}=await sb.rpc("vpa_save_payout_method",{payload:p}); if(error)throw error;
     toast("Método de cobro guardado ✓"); RENDER.payouts(); }catch(e){ toast("Error: "+e.message); }
@@ -1480,6 +1636,49 @@ async function cancelPayout(id){
     toast("Cancelado — el saldo volvió a estar disponible"); RENDER.payouts(); }catch(e){ toast("Error: "+e.message); }
 }
 
+
+/* ============ CAMBIOS EN CRISTIANO ============
+   Un diff con nombres de campo en uuid no lo entiende nadie. Esto traduce cada
+   cambio propuesto a una línea legible, con el valor que se va a publicar. */
+const CH_LABEL={
+  name:"Nombre", role_es:"Título profesional (ES)", role_en:"Título profesional (EN)",
+  bio_es:"Biografía (ES)", bio_en:"Biografía (EN)", certs_es:"Certificaciones (ES)", certs_en:"Certificaciones (EN)",
+  focus_es:"Áreas de enfoque (ES)", focus_en:"Áreas de enfoque (EN)", photo_url:"Foto de perfil",
+  contact_email:"Correo de contacto", contact_phone:"WhatsApp / teléfono", contact_web:"Sitio web",
+  available_now:"Disponibilidad", langs:"Idiomas", modalities:"Modalidades", country:"País",
+  category_id:"Temática principal", category_ids:"Temáticas", category_primary:"Temática principal",
+  sort_order:"Orden", title:"Título de la oferta", description:"Descripción", price_cents:"Precio",
+  kind:"Tipo de oferta", cover_url:"Portada", preview_url:"Audio de muestra", file_url:"Archivo descargable",
+  file_name:"Nombre del archivo", external_url:"Enlace externo", sell_via_voces:"Se vende por Voces",
+  in_progress:"Obra en proceso", booking_url:"Enlace de agenda", booking_label:"Texto del botón de agenda",
+  status_pill:"Píldora de estado", event_at:"Fecha del evento", event_ends_at:"Fin del evento",
+  event_location:"Lugar del evento"
+};
+function chCatName(id){
+  const c=(typeof CATS!=="undefined"?CATS:(typeof ALL_CATS!=="undefined"?ALL_CATS:[])).find(x=>x.id===id);
+  return c ? (c.name_es||c.name||id) : "temática";
+}
+function chValue(k,v){
+  if(v===null||v===undefined||v==="") return "(vacío)";
+  if(k==="category_ids") return (Array.isArray(v)?v:[v]).map(chCatName).join(", ");
+  if(k==="category_id"||k==="category_primary") return chCatName(v);
+  if(k==="price_cents") return "$"+(Number(v)/100).toLocaleString("es-MX");
+  if(k==="available_now"||k==="sell_via_voces"||k==="in_progress") return v?"Sí":"No";
+  if(k==="photo_url"||k==="cover_url"||k==="preview_url"||k==="file_url") return "archivo nuevo";
+  if(Array.isArray(v)) return v.join(", ");
+  const t=String(v);
+  return t.length>90 ? t.slice(0,90)+"…" : t;
+}
+/* Lista legible de lo propuesto. `compact` = una línea para el encabezado. */
+function humanChanges(changes, compact){
+  if(!changes) return "";
+  const ks=Object.keys(changes).filter(k=>k!=="category_primary");
+  if(!ks.length) return "";
+  if(compact) return ks.map(k=>CH_LABEL[k]||k).join(", ");
+  return `<ul style="margin:.5rem 0 0 1rem;padding:0;font-size:13px;line-height:1.65">`+
+    ks.map(k=>`<li><b>${esc(CH_LABEL[k]||k)}:</b> ${esc(chValue(k,changes[k]))}</li>`).join("")+`</ul>`;
+}
+
 /* ============ CAMBIOS Y COMENTARIOS (moderación) ============ */
 const CH_PILL={open:"pending",applied:"published",rejected:"hidden",withdrawn:"draft"};
 const CH_KIND={comment:"comentario",suggestion:"sugerencia",edit:"edición propuesta"};
@@ -1495,8 +1694,10 @@ RENDER.changes=async ()=>{
   const byReq={}; (msgs||[]).forEach(m=>{ (byReq[m.request_id]=byReq[m.request_id]||[]).push(m); });
   $("rows").innerHTML=reqs.map(r=>{
     const openedBy = r.opened_role==="super_admin" ? "Voces" : "la voz";
-    const chg = r.changes&&Object.keys(r.changes).length ? Object.keys(r.changes).join(", ") : "";
+    const chg = humanChanges(r.changes, true);
+    const chgList = humanChanges(r.changes, false);
     const thread=(byReq[r.id]||[]).map(m=>`<div style="margin:4px 0;font-size:13px"><b>${m.author_role==="super_admin"?"Voces":"Voz"}:</b> ${esc(m.body)}</div>`).join("");
+    const detalle = chgList ? `<div style="margin-top:.5rem"><div class="hint"><b>Lo que se publicaría si apruebas:</b></div>${chgList}</div>` : "";
     let actions="";
     if(r.status==="open"){
       if(chg) actions+=`<button class="btn btn-primary btn-sm" onclick="resolveChange('${r.id}','approve')">Aprobar y publicar</button>`;
@@ -1505,8 +1706,10 @@ RENDER.changes=async ()=>{
     }
     return `<div class="card" style="align-items:flex-start;flex-direction:column">
       <div class="grow"><h4>${esc(specName(r.specialist_id))} <span class="pill ${CH_PILL[r.status]||"pending"}">${esc(r.status)}</span></h4>
-        <div class="meta">${CH_KIND[r.kind]||r.kind} · por ${openedBy} · ${new Date(r.created_at).toLocaleString("es-MX")}${chg?` · campos: ${esc(chg)}`:""}</div>
-        ${thread?`<div style="margin-top:8px">${thread}</div>`:""}</div>
+        <div class="meta">${CH_KIND[r.kind]||r.kind} · por ${openedBy} · ${new Date(r.created_at).toLocaleString("es-MX")}${chg?` · ${esc(chg)}`:""}</div>
+        ${detalle}
+        ${thread?`<div style="margin-top:8px">${thread}</div>`:""}
+        ${r.status==="open"&&chgList?`<div class="hint" style="margin-top:.5rem">Aprueba para publicarlo tal cual, <b>Responde</b> si quieres pedirle un ajuste antes, o edítalo tú desde <b>Especialistas</b> y quedará como sugerencia para que lo acepte.</div>`:""}</div>
       <div class="acts" style="margin-top:10px">${actions}</div>
     </div>`;
   }).join("");
