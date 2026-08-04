@@ -1347,8 +1347,9 @@ RENDER.payouts=async ()=>{
 
   $("poProv").innerHTML=`<div class="card">
     <h4>Rieles automáticos</h4>
-    <div class="hint">Con estos dos, Voces envía el dinero sola. Los demás (DolarApp/ARQ, USDC, SPEI, banco) los mandas tú desde tu cuenta y los confirmas aquí —
-    el de <b>USDC se verifica solo contra la blockchain</b> cuando pegas el hash.</div>
+    <div class="hint">Con estos dos, Voces envía el dinero sola. Los demás (DolarApp/ARQ, USDC/USDT, SPEI, banco) los mandas tú desde tu cuenta y los confirmas aquí —
+    <b>USDC y USDT se verifican solos contra la blockchain</b> cuando pegas el hash (Polygon, Ethereum, Base, Arbitrum, Optimism).
+    <b>Tron es la excepción</b>: ahí se revisa en Tronscan y se marca pagado a mano.</div>
     <div class="row2" style="margin-top:.5rem">
 
       <div><b>PayPal</b> — ${prov?.paypal?.configured?`<span class="pill published">conectado (${esc(prov.paypal.mode)})</span>`:`<span class="pill hidden">sin conectar</span>`}
@@ -1394,7 +1395,7 @@ RENDER.payouts=async ()=>{
         <div style="flex:1">
           <b>${esc(b.name||"—")}</b>
           <div class="hint">Por pagar <b>${pmx(b.available_cents)}</b> · en camino ${pmx(b.paying_cents)} · ya pagado ${pmx(b.paid_cents)} · directo ${pmx(b.auto_split_cents)}</div>
-          <div class="hint">${m?`Cobra por <b>${esc(PO_KIND[m.kind]||m.kind)}</b>${m.email?` · ${esc(m.email)}`:``}${m.chain?` · red ${esc(String(m.chain).toUpperCase())}`:``}`:`<span style="color:var(--bad)">Todavía no tiene método de cobro</span>`}</div>
+          <div class="hint">${m?`Cobra por <b>${esc(PO_KIND[m.kind]||m.kind)}</b>${m.email?` · ${esc(m.email)}`:``}${m.wallet_address?` · <b>${esc(m.asset||"USDC")}</b>`:``}${m.chain?` · red ${esc(String(m.chain).toUpperCase())}`:``}`:`<span style="color:var(--bad)">Todavía no tiene método de cobro</span>`}</div>
           ${b.linked===false?`<div class="hint">Sin cuenta ligada — no puede entrar a /mi-voz a ponerlo ella; regístraselo tú aquí.</div>`:``}
         </div>
       </div>
@@ -1429,13 +1430,40 @@ RENDER.payouts=async ()=>{
 const PO_FIELDS={
   mercadopago:["email"], paypal:["email","holder_name"], wise:["email","holder_name"],
   payoneer:["holder_name","account_number","routing","iban","swift","bank_name","email"],
-  dolarapp:["clabe","wallet_address","chain","account_id","email"], usdc:["wallet_address","chain"],
+  dolarapp:["clabe","asset","wallet_address","chain","account_id","email"], usdc:["asset","wallet_address","chain"],
   clabe:["clabe","bank_name","holder_name"],
   bank_intl:["holder_name","iban","account_number","swift","routing","bank_name"], credit:[]};
 const PO_FLBL={email:"Correo de la cuenta",holder_name:"Titular",account_id:"Tag / usuario",
   clabe:"CLABE (18 dígitos)",bank_name:"Banco",wallet_address:"Dirección de wallet",chain:"Red",
+  asset:"Token",
   iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
-const PO_CHAINS=["base","polygon","solana","ethereum","arbitrum","optimism","tron"];
+
+/* ===== Regla dura de token/red (espejo de vpa__check_crypto en la base) =====
+   Sólo USDC y USDT OFICIALES, y sólo en las redes donde de verdad se aceptan
+   (Arq/DolarApp es más estricta que una wallet propia). Manda la base: si algo
+   no cuadra, el guardado falla con el mensaje exacto. */
+const PO_CRYPTO_CHAINS={
+  USDC:{ dolarapp:["polygon","ethereum"], usdc:["polygon","base","arbitrum","optimism","ethereum"] },
+  USDT:{ dolarapp:["polygon","ethereum","tron"], usdc:["polygon","ethereum","tron"] }
+};
+const PO_NET_FEE={polygon:0,ethereum:3,tron:3};
+const PO_NET_NOTE={
+  polygon:"Polygon no cobra comisión: es la red recomendada.",
+  ethereum:"Ethereum cobra 3 USD por envío. Polygon es gratis.",
+  tron:"Tron cobra 3 USD por envío, sólo acepta USDT y NO se verifica sola: se confirma en Tronscan y se marca pagado a mano."
+};
+const poNetLabel=c=>c.toUpperCase()+(c in PO_NET_FEE?(PO_NET_FEE[c]?` — ${PO_NET_FEE[c]} USD de comisión`:" — sin comisión"):"");
+const poChainsFor=(kind,asset)=>PO_CRYPTO_CHAINS[asset==="USDT"?"USDT":"USDC"][kind==="dolarapp"?"dolarapp":"usdc"];
+function poCryptoSync(spec,kind,preferred){
+  const sel=document.getElementById("pof_chain_"+spec); if(!sel) return;
+  const aEl=document.getElementById("pof_asset_"+spec);
+  const asset=aEl?aEl.value:"USDC";
+  const list=poChainsFor(kind,asset), want=preferred||sel.value;
+  sel.innerHTML=list.map(c=>`<option value="${c}">${poNetLabel(c)}</option>`).join("");
+  sel.value=list.includes(want)?want:list[0];
+  const n=document.getElementById("po_crypto_note_"+spec);
+  if(n) n.innerHTML=`Va a recibir <b>${asset}</b> en <b>${sel.value.toUpperCase()}</b>. ${PO_NET_NOTE[sel.value]||""}`;
+}
 
 /* País -> moneda local. Antes País y Moneda eran inputs de texto clavados en
    "MX"/"MXN" (o US/USD para payoneer) sin mirar el país real del especialista:
@@ -1465,7 +1493,13 @@ function poMethodForm(spec,name,kind,country){
         ${Object.keys(PO_FIELDS).map(k=>`<option value="${k}" ${k===kind?"selected":""}>${PO_KIND[k]}</option>`).join("")}
       </select></div>
     ${(PO_FIELDS[kind]||[]).map(f=>f==="chain"
-      ?`<div class="field"><label>${PO_FLBL[f]}</label><select id="pof_${f}_${spec}">${PO_CHAINS.map(c=>`<option value="${c}">${c.toUpperCase()}</option>`).join("")}</select></div>`
+      ?`<div class="field"><label>${PO_FLBL[f]}</label><select id="pof_chain_${spec}" onchange="poCryptoSync('${spec}','${kind}',this.value)"></select></div>
+        <div id="po_crypto_note_${spec}" class="hint"></div>`
+      :f==="asset"
+      ?`<div class="field"><label>${PO_FLBL[f]}</label>
+          <select id="pof_asset_${spec}" onchange="poCryptoSync('${spec}','${kind}')">
+            ${["USDC","USDT"].map(a=>`<option value="${a}">${a}</option>`).join("")}
+          </select></div>`
       :`<div class="field"><label>${PO_FLBL[f]}</label><input id="pof_${f}_${spec}"></div>`).join("")}
     <div class="row2">
       <div class="field"><label>País <small style="font-weight:400;color:#8a8272">— del perfil del especialista</small></label>
@@ -1475,12 +1509,14 @@ function poMethodForm(spec,name,kind,country){
       <div class="field"><label>Moneda <small style="font-weight:400;color:#8a8272">— según el país</small></label>
         <input id="pof_currency_${spec}" value="${poCurFor(kind,country)}"></div>
     </div>
-    ${kind==="usdc"?`<div class="hint" style="color:var(--bad)">⚠️ Verifica la red y la dirección carácter por carácter. Un envío por la red equivocada no se recupera.</div>`:``}
+    ${(kind==="usdc"||kind==="dolarapp")?`<div class="hint" style="color:var(--bad)">⚠️ Verifica el token, la red y la dirección carácter por carácter. Un envío con el token equivocado o por la red equivocada no se recupera.</div>`:``}
     ${kind==="payoneer"?`<div class="hint">Son los datos de su <b>cuenta receptora</b> de Payoneer (en la app: Recibir → Datos de la cuenta): dólares = número de cuenta + routing · libras = número de cuenta + sort code (va en “Routing number”) · euros = IBAN + BIC. El <b>titular tiene que ir exacto</b> o Payoneer rechaza el depósito. Pon la moneda que corresponda (USD, EUR o GBP). Payoneer no tiene envío automático: tú haces la transferencia y la confirmas aquí.</div>`:``}
     <div class="acts">
       <button class="btn btn-primary" onclick="savePoMethod('${spec}')">Guardar método</button>
       <button class="btn" onclick="document.getElementById('po_form_${spec}').innerHTML=''">Cancelar</button>
     </div></div>`;
+  // Las redes dependen del token elegido: se llenan después de dibujar el formulario.
+  if((PO_FIELDS[kind]||[]).includes("chain")) poCryptoSync(spec,kind);
 }
 async function savePoMethod(spec){
   const kind=$("pof_kind_"+spec).value;
@@ -1553,15 +1589,18 @@ async function syncPaypalPayout(id){
   }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
 }
 
-/* USDC: Mónica envía desde SU wallet (Voces nunca guarda llaves) y aquí se comprueba
-   contra la blockchain que el monto correcto llegó a la dirección correcta. */
+/* USDC/USDT: Mónica envía desde SU wallet (Voces nunca guarda llaves) y aquí se
+   comprueba contra la blockchain que el TOKEN correcto, en la red correcta, llegó
+   a la dirección correcta. Tron no es EVM: ahí la respuesta llega como `manual`
+   (no es un error, es un aviso) y el pago se cierra con «Marcar pagado». */
 async function verifyUsdcPayout(id){
-  const hash=prompt("Pega el hash de la transacción (0x…):");
+  const hash=prompt("Pega el hash de la transacción (0x… · en Tron van 64 caracteres sin 0x):");
   if(!hash) return;
   const box=$("dest_"+id); box.textContent="Verificando en la blockchain…";
   try{ const j=await payoutTool({action:"verify_usdc",payout:id,tx_hash:hash.trim()});
     const link=j.explorer?` <a href="${esc(j.explorer)}" target="_blank" rel="noopener">ver en el explorador ↗</a>`:"";
-    box.innerHTML=`<span style="color:${j.ok?"var(--ok)":"var(--bad)"}">${esc(j.note||j.error||"")}</span>${link}`;
+    const color=j.ok?"var(--ok)":(j.manual?"inherit":"var(--bad)");
+    box.innerHTML=`<span style="color:${color}">${esc(j.note||j.error||"")}</span>${link}`;
     if(j.ok) setTimeout(()=>RENDER.payouts(),1300);
   }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
 }
@@ -1612,15 +1651,23 @@ async function showDest(id){
     const f=[["Titular",data.holder_name],["Correo",data.email],["Tag/usuario",data.account_id],
       ["CLABE",data.clabe],["Banco",data.bank_name],["SWIFT",data.swift],["IBAN",data.iban],
       ["Cuenta",data.account_number],["Routing",data.routing],["Wallet",data.wallet_address],
+      ["Token",data.asset],
       ["Red",data.chain&&String(data.chain).toUpperCase()],["País",data.country]]
       .filter(([,v])=>v).map(([k,v])=>`<div><b>${k}:</b> ${esc(String(v))}</div>`).join("");
+    /* Token y red van juntos y en rojo: es lo único de esta pantalla que, si se
+       equivoca, no se puede deshacer. La comisión de la red va aquí también para
+       que no la descubra después en el saldo. */
+    const cryptoWarn=data.wallet_address?`
+      <div class="hint" style="color:var(--bad);margin-top:.4rem">⚠️ ${esc(data.asset_warning||"Verifica el token y la red antes de enviar.")}</div>
+      ${data.network_note?`<div class="hint">${esc(data.network_note)}</div>`:``}
+      ${String(data.chain||"").toLowerCase()==="tron"?`<div class="hint">Tron no se verifica solo: confirma la transacción en Tronscan y ciérrala con «✓ Marcar pagado».</div>`:``}`:``;
     const conv=(data.fx_ok&&data.currency_target&&data.currency_target!==data.currency)
       ? `<div class="hint" style="margin-top:.5rem">Envía <b>${Number(data.suggested_amount).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})} ${esc(data.currency_target)}</b>
            — equivalen a ${pmx(data.amount_cents)} al tipo de cambio de hoy (1 ${esc(data.currency)} = ${Number(data.fx_rate).toFixed(4)} ${esc(data.currency_target)}).</div>`
       : `<div class="hint" style="margin-top:.5rem">Envía <b>${pmx(data.amount_cents)}</b>.</div>`;
     const warn=(!data.fx_ok&&data.currency_target&&data.currency_target!==data.currency)
       ? `<div class="hint" style="color:var(--bad)">No hay tipo de cambio fresco: el monto se queda en pesos. Actualiza el tipo de cambio arriba antes de enviar.</div>`:``;
-    box.innerHTML=`<div class="card" style="margin-top:.4rem">${f}${conv}${warn}<div class="hint">Cuando lo hayas enviado, marca el pago como pagado.</div></div>`;
+    box.innerHTML=`<div class="card" style="margin-top:.4rem">${f}${cryptoWarn}${conv}${warn}<div class="hint">Cuando lo hayas enviado, marca el pago como pagado.</div></div>`;
   }catch(e){ box.innerHTML=`<span style="color:var(--bad)">Error: ${esc(e.message)}</span>`; }
 }
 
