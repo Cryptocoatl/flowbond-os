@@ -1,24 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 // The vault (root) + documents are public — entry is the in-app 4-digit code gate,
 // not a Supabase session. Only the FBID escrow dashboard requires a login.
 export async function middleware(req: NextRequest) {
   let res = NextResponse.next({ request: req });
 
-  const sb = createServerClient(URL, ANON, {
-    cookies: {
-      getAll: () => req.cookies.getAll(),
-      setAll: (list) => {
-        list.forEach(({ name, value }) => req.cookies.set(name, value));
-        res = NextResponse.next({ request: req });
-        list.forEach(({ name, value, options }) => res.cookies.set(name, value, options));
+  // Read inside the handler: on Cloudflare Workers module scope is evaluated at
+  // isolate boot, before the request env exists, and an empty client here made
+  // the gate throw instead of redirecting to /login.
+  const sb = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll: (list) => {
+          list.forEach(({ name, value }) => req.cookies.set(name, value));
+          res = NextResponse.next({ request: req });
+          list.forEach(({ name, value, options }) => res.cookies.set(name, value, options));
+        },
       },
     },
-  });
+  );
 
   const {
     data: { user },

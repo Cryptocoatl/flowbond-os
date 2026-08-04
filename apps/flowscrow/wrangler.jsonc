@@ -1,0 +1,14 @@
+{
+  // FlowScrow separation-agreement vault. Not a public domain of its own: it is
+  // reached through the /separationagreement rewrite in apps/web, so it stays on
+  // its workers.dev hostname and no custom domain is declared here.
+  "name": "flowscrow",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "workers_dev": true
+}
