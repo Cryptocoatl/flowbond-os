@@ -180,6 +180,20 @@ async function payWithWise(p: any, cfg: any, mode: string) {
 }
 
 // ---------------------------------------------------------------- manual ---
+// Qué token exactamente. Las filas viejas (anteriores a la regla dura de
+// token/red) no traen `asset` y todas eran USDC: ese es el default seguro.
+const cryptoAsset = (dest: any) => String(dest.asset || "USDC").toUpperCase();
+// El aviso de token/red y la comisión de la red vienen ya redactados de la BD
+// (vpa__crypto_network_note), así que la regla vive en un solo lugar.
+function cryptoWarn(dest: any) {
+  const parts = [
+    dest.asset_warning ||
+      `Envía EXACTAMENTE ${cryptoAsset(dest)} en la red ${String(dest.chain || "?").toUpperCase()}. Token equivocado o red equivocada = dinero perdido.`,
+    dest.network_note,
+  ].filter(Boolean);
+  return parts.length ? " " + parts.join(" ") : "";
+}
+
 function manualInstructions(p: any, dest: any) {
   const base = `$${money(p.amount_cents)} ${p.currency || "MXN"}`;
   const t = payAmount(p);
@@ -196,7 +210,7 @@ function manualInstructions(p: any, dest: any) {
         return `Transfiere ${amount} por SPEI a la CLABE de DolarApp ${dest.clabe}, a nombre de ${dest.holder_name || p.specialist_name}.`;
       }
       if (dest.wallet_address) {
-        return `Envía ${amount} en USDC por la red ${String(dest.chain || "").toUpperCase()} a ${dest.wallet_address} (DolarApp/ARQ de ${p.specialist_name}). Verifica la red antes de enviar — un envío por la red equivocada se pierde. Cuando lo mandes, pega el hash en «Confirmar con el hash».`;
+        return `Envía ${amount} en ${cryptoAsset(dest)} por la red ${String(dest.chain || "").toUpperCase()} a ${dest.wallet_address} (DolarApp/ARQ de ${p.specialist_name}).${cryptoWarn(dest)} Cuando lo mandes, pega el hash en «Confirmar con el hash».`;
       }
       const to = dest.account_id || dest.email;
       return `Envía ${amount} por DolarApp/ARQ a ${to ? `«${to}»` : "su cuenta"} (${p.specialist_name}).`;
@@ -210,7 +224,7 @@ function manualInstructions(p: any, dest: any) {
       return `Transfiere ${amount} a la cuenta receptora de Payoneer de ${dest.holder_name || p.specialist_name}: ${via}${dest.bank_name ? ` (${dest.bank_name})` : ""}. El nombre del titular tiene que ir EXACTO o Payoneer rechaza el depósito.${dest.email ? ` Si Voces llega a abrir su propia cuenta Payoneer, se le puede pagar directo a ${dest.email}, sin costo de transferencia.` : ""}`;
     }
     case "usdc":
-      return `Envía ${amount} en USDC por la red ${String(dest.chain || "").toUpperCase()} a ${dest.wallet_address}. Verifica la red antes de enviar — un envío por la red equivocada se pierde.`;
+      return `Envía ${amount} en ${cryptoAsset(dest)} por la red ${String(dest.chain || "").toUpperCase()} a ${dest.wallet_address}.${cryptoWarn(dest)}`;
     case "clabe":
       return `Transfiere ${amount} por SPEI a la CLABE ${dest.clabe} (${dest.bank_name || "banco"}), a nombre de ${dest.holder_name || p.specialist_name}.`;
     case "bank_intl":

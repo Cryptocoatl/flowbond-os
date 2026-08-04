@@ -930,8 +930,37 @@ const COUNTRY_ES={MX:"México",AR:"Argentina",CO:"Colombia",CL:"Chile",PE:"Perú
 const countryName=c=>COUNTRY_ES[(c||"").toUpperCase()]||c||"—";
 const PAY_LBL={email:"Correo de la cuenta",holder_name:"Titular de la cuenta",account_id:"Tag / usuario",
   clabe:"CLABE (18 dígitos)",bank_name:"Banco",wallet_address:"Dirección de tu wallet",chain:"Red",
+  asset:"Token que quieres recibir",
   iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
-const CHAINS=["base","polygon","solana","ethereum","arbitrum","optimism","tron"];
+/* ===== Regla dura de token/red (espejo de vpa__check_crypto en la base) =====
+   Sólo USDC y USDT OFICIALES, y sólo en las redes donde de verdad se aceptan.
+   Arq/DolarApp es más estricta que una wallet propia. Si esto y la base llegaran
+   a separarse manda la base: el guardado falla con el mensaje exacto. */
+const CRYPTO_CHAINS={
+  USDC:{ dolarapp:["polygon","ethereum"], usdc:["polygon","base","arbitrum","optimism","ethereum"] },
+  USDT:{ dolarapp:["polygon","ethereum","tron"], usdc:["polygon","ethereum","tron"] }
+};
+/* Comisión que cobra Arq por red (regla temporal). Va en la etiqueta de cada red
+   para que la voz elija informada, no después de que le descuenten 3 dólares. */
+const NET_FEE={polygon:0,ethereum:3,tron:3};
+const NET_NOTE={
+  polygon:"Polygon no cobra comisión: es la red recomendada.",
+  ethereum:"Ethereum cobra 3 USD por envío. Polygon es gratis.",
+  tron:"Tron cobra 3 USD por envío y sólo acepta USDT. Polygon es gratis."
+};
+const netLabel=c=>c.toUpperCase()+(c in NET_FEE?(NET_FEE[c]?` — ${NET_FEE[c]} USD de comisión`:" — sin comisión"):"");
+const chainsFor=(kind,asset)=>CRYPTO_CHAINS[asset==="USDT"?"USDT":"USDC"][kind==="dolarapp"?"dolarapp":"usdc"];
+/* Al cambiar el token cambian las redes posibles: se reconstruyen sin volver a
+   dibujar el formulario (no se pierde lo que ya escribió). */
+function cryptoSync(kind,preferred){
+  const sel=$("pf_chain"); if(!sel) return;
+  const asset=$("pf_asset")?$("pf_asset").value:"USDC";
+  const list=chainsFor(kind,asset), want=preferred||sel.value;
+  sel.innerHTML=list.map(c=>`<option value="${c}">${netLabel(c)}</option>`).join("");
+  sel.value=list.includes(want)?want:list[0];
+  const n=$("cryptoNote");
+  if(n) n.innerHTML=`Vas a recibir <b>${asset}</b> en <b>${sel.value.toUpperCase()}</b>. ${NET_NOTE[sel.value]||""}`;
+}
 const mx=c=>"$"+((c||0)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
 let MYPAY=[], MYEARN=null;
 
@@ -1076,7 +1105,8 @@ RENDER.cobros=async ()=>{
 };
 
 function payDesc(m){
-  if(m.kind==="usdc") return `${m.wallet_address||""} · red ${String(m.chain||"").toUpperCase()}`;
+  if(m.kind==="usdc") return `${m.asset||"USDC"} · ${m.wallet_address||""} · red ${String(m.chain||"").toUpperCase()}`;
+  if(m.kind==="dolarapp"&&m.wallet_address) return `${m.asset||"USDC"} · ${m.wallet_address} · red ${String(m.chain||"").toUpperCase()}`;
   if(m.kind==="clabe") return `CLABE ••••${m.clabe_last4||"----"} · ${m.bank_name||""}`;
   if(m.kind==="bank_intl") return `Cuenta ••••${m.iban_last4||m.account_last4||"----"} · ${m.swift||""} · ${m.country||""}`;
   return m.email||m.account_id||m.holder_name||"—";
@@ -1112,9 +1142,15 @@ function payForm(m, kind){
     <div class="hint">${k.hint}</div>
     ${kind==="paypal"?`<div class="hint" style="color:#a33">Ojo: si tienes cualquiera de las opciones de arriba, vas a recibir tu dinero <b>mucho antes</b> y con menos comisión.</div>`:``}
     ${k.fields.map(f=>f==="chain"
-      ?`<div class="field"><label>${PAY_LBL[f]}</label><select id="pf_${f}">${CHAINS.map(c=>`<option value="${c}" ${val("chain")===c?"selected":""}>${c.toUpperCase()}</option>`).join("")}</select></div>`
+      ?`<div class="field"><label>${PAY_LBL[f]}</label><select id="pf_chain" onchange="cryptoSync('${kind}',this.value)"></select></div>
+        <div id="cryptoNote" class="hint"></div>`
+      :f==="asset"
+      ?`<div class="field"><label>${PAY_LBL[f]}</label>
+          <select id="pf_asset" onchange="cryptoSync('${kind}')">
+            ${["USDC","USDT"].map(a=>`<option value="${a}" ${(val("asset")||"USDC")===a?"selected":""}>${a}</option>`).join("")}
+          </select></div>`
       :`<div class="field"><label>${PAY_LBL[f]}${(f==="clabe"||f==="iban"||f==="account_number")&&m?" (vuelve a escribirla)":""}</label><input id="pf_${f}" value="${esc(val(f))}"></div>`).join("")}
-    ${kind==="usdc"?`<div class="hint" style="color:#a33">⚠️ Revisa la red y la dirección carácter por carácter. Un envío a la red equivocada NO se puede recuperar.</div>`:``}
+    ${(kind==="usdc"||kind==="dolarapp")?`<div class="hint" style="color:#a33">⚠️ Revisa el token, la red y la dirección carácter por carácter. Un envío con el token equivocado o por la red equivocada NO se puede recuperar.</div>`:``}
     <div class="row2">
       <div class="field"><label>País de tu cuenta</label>
         <select id="pf_country" onchange="payForm(${m?`MYPAY.find(x=>x.id==='${m.id}')`:"null"}, document.getElementById('pk').value)">
@@ -1128,6 +1164,8 @@ function payForm(m, kind){
       <button class="btn btn-primary" onclick="savePay('${m?m.id:""}')">Guardar método</button>
       <button class="btn" onclick="document.getElementById('payForm').innerHTML=''">Cancelar</button>
     </div></div>`;
+  // Las redes dependen del token elegido, así que se llenan después de dibujar.
+  if(k.fields.includes("chain")) cryptoSync(kind, val("chain"));
 }
 
 async function savePay(id){
