@@ -8,7 +8,8 @@
    variables (--font-fraunces etc.) by the <html> className. */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+/* scroll-padding-top keeps in-page anchor targets clear of the fixed nav. */
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; scroll-padding-top: 92px; }
 body {
   background: var(--void); color: var(--bone); font-family: var(--sans); font-weight: 300;
   line-height: 1.6; overflow-x: hidden; cursor: none;
@@ -293,6 +294,9 @@ h1.hero-h .program .k { color: var(--gold-bright); }
 
 .engine { padding-block: 12vh; max-width: 1320px; margin-inline: auto; }
 .eng-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 54px; }
+/* Declared before the media queries on purpose: same specificity, so the
+   narrow-screen rules below still win. */
+.eng-grid--3 { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 920px) { .eng-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 520px) { .eng-grid { grid-template-columns: 1fr; } }
 .eng-card { border: 1px solid var(--hair); border-radius: 6px; padding: 30px 26px; background: rgba(13, 7, 25, 0.4); transition: 0.4s; }
@@ -517,6 +521,160 @@ footer { border-top: 1px solid var(--hair); padding: 70px var(--gut) 50px; posit
 .page-cta h2 { font-family: var(--serif); font-weight: 300; font-size: clamp(28px, 4vw, 46px); line-height: 1.1; color: var(--bone); margin-bottom: 16px; }
 .page-cta p { max-width: 52ch; margin: 0 auto 32px; color: var(--muted); font-size: 16.5px; line-height: 1.75; }
 .founder-page { padding-top: 120px; }
+
+/* ══ Mobile pass ═══════════════════════════════════════════════════════════
+   Phones were getting the desktop composition at a quarter of the width: the
+   hero seal landed on top of the copy, viewport-height section padding stacked
+   into screensful of empty void, card padding ate the reading column, and most
+   tap targets sat around 28px. Everything below is narrow-screen only — the
+   desktop composition is untouched.                                          */
+
+/* ── Nav ergonomics (tablet + phone, where the burger menu lives) ─────────── */
+@media (max-width: 920px) {
+  /* 24px of bar inside 6px of padding is a 28px target; pad it out to 44. */
+  .burger { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 0; }
+  /* Menu items were 29px tall with 30px of dead gap between them. Trade the
+     gap for padding: same rhythm, targets that clear 44px. */
+  .navlinks { gap: 6px; }
+  .navlinks a { padding: 13px 24px; }
+  /* The hover underline is a desktop affordance; in the overlay it just
+     mis-tracks the new padding. */
+  .navlinks a:not(.nav-cta)::after { display: none; }
+  .nav-cta { padding: 15px 26px; margin-top: 10px; }
+  /* The overlay covered the brand, so an open menu had no visible identity.
+     Keep it above, next to the close button. */
+  nav .brand { position: relative; z-index: 61; }
+  /* Freeze the page behind the open overlay instead of letting it scroll. */
+  body:has(.navlinks.open) { overflow: hidden; }
+}
+
+@media (max-width: 640px) {
+  /* ── Hero ──────────────────────────────────────────────────────────────
+     The seal is a backdrop for the headline, not for the body copy — at 80vw
+     it ran straight through the credit line and the paragraph. Pull it up
+     behind the headline and take it down to a wash. */
+  .hero { padding-top: 104px; padding-bottom: 64px; }
+  .seal-wrap { width: min(84vw, 330px); top: 30%; opacity: 0.34; }
+  /* 0.42em of tracking wrapped the eyebrow onto two lines and stranded the
+     status dot on its own. Tighter tracking keeps it to one line. */
+  .eyebrow { font-size: 10.5px; letter-spacing: 0.2em; gap: 10px; margin-bottom: 24px; }
+  /* The 42px floor overflowed 360px screens; scale with the viewport instead. */
+  h1.hero-h { font-size: clamp(34px, 10.6vw, 52px); }
+  .credit { margin-bottom: 26px; }
+  .hero-sub { margin-bottom: 34px; }
+  /* Two buttons of different widths stacked centre-aligned read as an
+     accident. Full width, equal, deliberate. */
+  .cta-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .cta-row .btn { justify-content: center; }
+  .scrollcue { bottom: 16px; }
+  .scrollcue .line { height: 28px; }
+
+  /* ── Vertical rhythm ───────────────────────────────────────────────────
+     12–18vh per section is right on a desktop and absurd on a phone: it made
+     the landing 12,000px tall, most of it empty. Fixed spacing instead. */
+  .manifesto, .trinity, .flowme, .layer0, .svc, .founder, .engine, .rvbl,
+  .proof, .pricing { padding-block: 72px; }
+  .final { padding-block: 80px; }
+  .proof--tail { padding-block: 56px; }
+  .final-seal { width: min(48vw, 190px); margin-bottom: 30px; }
+  .platforms, .faq, .sec-block { margin-top: 72px; }
+  .page-cta { margin-top: 72px; padding-top: 48px; }
+  .section-tag { font-size: 10.5px; letter-spacing: 0.24em; margin-bottom: 26px; }
+  .section-tag::before { width: 24px; }
+  .rvbl-stats { margin-top: 44px; }
+  /* Desktop leads a card group in with 54–60px of air. At phone width that
+     reads as a dropout between the heading and the thing it introduces. */
+  .tri-grid, .l0-grid, .eng-grid, .proof-grid, .plat-grid, .sec-grid { margin-top: 38px; }
+  .fm-grid { margin-top: 34px; }
+  .mani-p { margin-top: 26px; }
+  .l0-lead { font-size: 16px; }
+  /* The mono kicker sits inside the serif h2; 18px let the two collide. */
+  .l0-h .mono { margin-top: 22px; font-size: 0.62em; line-height: 1.45; }
+
+  /* ── Cards: give the words the width back ──────────────────────────────── */
+  .tri-card { padding: 30px 22px 34px; }
+  .tri-octa { width: 44px; height: 44px; margin-bottom: 20px; }
+  .tri-num { top: 22px; right: 22px; }
+  .tri-card h3 { font-size: 26px; }
+  .l0-cell { padding: 26px 22px; }
+  .eng-card { padding: 24px 22px; }
+  .proof-card { padding: 22px 20px; }
+  .svc-card { padding: 26px 22px; }
+  .faq-item, .sec-card, .docs-card { padding: 24px 22px; }
+  .doc-step { padding: 20px 22px; gap: 14px; }
+
+  /* Badge beside a paragraph left ~20 characters per line. Stack them — and
+     once stacked, the items need a rule between them or ANSWER / ASSIST /
+     WATCH run together as one block of text. */
+  .fm-list { gap: 0; margin-top: 26px; }
+  .fm-list div, .facet { flex-direction: column; gap: 10px; }
+  .fm-list div { padding: 20px 0; border-top: 1px solid var(--hair); }
+  .fm-list div:first-child { padding-top: 0; border-top: 0; }
+  .fm-list div:last-child { padding-bottom: 0; }
+  .fm-list .ic, .facet .fi { align-self: flex-start; margin-top: 0; }
+  .facet { gap: 8px; }
+
+  /* Terminal: smaller type wraps the transcript instead of stranding words. */
+  .term-bar { padding: 12px 14px; }
+  .term-body { padding: 18px 16px; font-size: 12px; min-height: 200px; }
+
+  /* iOS zooms the whole page when a focused input is under 16px. 16px it is. */
+  .cform input { font-size: 16px; padding: 15px 16px; }
+  .cform { gap: 14px; }
+
+  /* A 3-column table can only sideways-scroll at this width, and a sideways
+     scroller inside a legal page is how people miss a row. Stack each row into
+     a labelled block instead — the labels come from data-label on each cell. */
+  .doc-table-wrap { overflow-x: visible; border: 0; border-radius: 0; background: none; }
+  .doc-table { min-width: 0; display: block; }
+  .doc-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .doc-table tbody, .doc-table tr { display: block; }
+  .doc-table tr {
+    border: 1px solid var(--hair); border-radius: 6px; background: rgba(13, 7, 25, 0.4);
+    padding: 6px 18px 14px; margin-bottom: 12px;
+  }
+  .doc-table tr:last-child { margin-bottom: 0; }
+  .doc-table td { display: block; padding: 10px 0 0; border-bottom: 0; }
+  .doc-table td::before {
+    content: attr(data-label); display: block; margin-bottom: 4px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--gold);
+  }
+  .doc-table td:first-child { font-family: var(--serif); font-size: 18px; }
+  .doc-table td:first-child::before { font-family: var(--mono); font-size: 10px; }
+
+  /* ── Document pages ────────────────────────────────────────────────────── */
+  .doc { padding-top: 116px; padding-bottom: 72px; }
+  .founder-page { padding-top: 104px; }
+  .doc-body { margin-top: 34px; }
+  .doc-body h2 { margin-top: 40px; }
+  .doc-sidenav { margin-bottom: 36px; padding-bottom: 26px; gap: 18px; }
+  .doc-contact .row { padding: 16px 18px; }
+  .doc-contact .k { min-width: 0; }
+  .disclosure { margin-top: 32px; padding-left: 16px; }
+
+  /* ── Footer ────────────────────────────────────────────────────────────
+     The brand blurb was sharing a 2-up grid with the link columns and broke
+     to three words a line. Give it the full width, keep links 2-up. */
+  footer { padding: 56px var(--gut) 44px; }
+  .foot-grid { grid-template-columns: 1fr 1fr; gap: 34px 20px; }
+  .foot-brand { grid-column: 1 / -1; }
+  .foot-brand p { max-width: none; }
+  /* Three link columns in a 2-up grid stranded the third one beside an empty
+     cell. Let it span, and run its own links 2-up instead. */
+  .foot-col:last-of-type { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+  .foot-col:last-of-type h5 { grid-column: 1 / -1; }
+  .foot-col h5 { margin-bottom: 12px; }
+  /* 22px links → 44px targets, without changing the visual spacing much. */
+  .foot-col a { margin-bottom: 0; padding-block: 11px; }
+  .foot-bottom { margin-top: 40px; }
+}
+
+/* Very small phones (≤360px) — the last place the headline can overflow. */
+@media (max-width: 380px) {
+  .foot-grid { grid-template-columns: 1fr; }
+  .l0-cell h4, .eng-card h4 { font-size: 19px; }
+}
 
 /* Accessibility: kill all motion (canvas falls back to a static field in JS). */
 @media (prefers-reduced-motion: reduce) {

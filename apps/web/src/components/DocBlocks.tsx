@@ -54,7 +54,11 @@ export function DocBlocks({ blocks }: { blocks: Block[] }) {
                     {b.rows.map((r) => (
                       <tr key={r.join('|')}>
                         {r.map((cell, ci) => (
-                          <td key={ci}>{cell}</td>
+                          // data-label carries the header down to the stacked
+                          // card layout phones get (see .doc-table in globals).
+                          <td key={ci} data-label={b.head[ci]}>
+                            {cell}
+                          </td>
                         ))}
                       </tr>
                     ))}
