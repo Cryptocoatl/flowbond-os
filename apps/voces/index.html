@@ -346,12 +346,21 @@
   .modal-bg{position:fixed;inset:0;z-index:120;background:rgba(44,39,34,.55);backdrop-filter:blur(4px);
        display:none;align-items:center;justify-content:center;padding:24px}
   .modal-bg.open{display:flex}
-  .modal{background:var(--lino);border-radius:24px;max-width:760px;width:100%;max-height:88vh;overflow:auto;position:relative;
-       display:grid;grid-template-columns:300px 1fr;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  /* El perfil se abre ancho a propósito: la cabecera (foto izquierda, texto
+     derecha) queda igual, pero las ofertas de abajo aprovechan toda la página.
+     Antes todo cabía en 760px y una descripción larga se volvía una tira
+     vertical imposible de leer. */
+  .modal{background:var(--lino);border-radius:24px;max-width:min(1180px,94vw);width:100%;max-height:88vh;overflow:auto;position:relative;
+       display:grid;grid-template-columns:300px minmax(0,1fr);align-content:start;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  /* Fila propia que cruza las dos columnas: cada oferta ocupa el ancho completo. */
+  .modal-offers{grid-column:1/-1;padding:0 38px 34px}
+  .modal-offers:empty{display:none}
   .modal-close{position:absolute;top:16px;right:16px;background:rgba(247,242,233,.92);border:1px solid var(--linea);border-radius:50%;width:40px;height:40px;
        cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .modal-photo{width:220px;height:220px;border-radius:50%;margin:38px auto 0;align-self:start;background-size:cover;background-position:center;border:4px solid #fff;box-shadow:0 12px 30px -14px rgba(44,39,34,.45)}
-  .modal-info{padding:38px}
+  /* La cabecera se queda como estaba: el texto conserva su medida de lectura
+     aunque el perfil ahora sea ancho (una bio a 880px no se lee, se recorre). */
+  .modal-info{padding:38px;max-width:660px}
   .modal-info .cat-tag{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--oro);font-weight:600}
   .modal-info h3{font-size:30px;margin:8px 0 4px}
   .modal-info .role{color:var(--pizarra);font-weight:500;margin-bottom:18px}
@@ -362,16 +371,21 @@
      tal cual las capturó la voz (antes se veían como un bloque corrido). */
   .certs{font-size:13.5px;color:var(--tinta-60);margin-bottom:24px;white-space:pre-line}
   .certs b{color:var(--tinta);font-weight:600}
-  .offers{margin:0 0 22px;border-top:1px solid var(--linea);padding-top:16px}
-  .offers h5{font-family:var(--sans);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-weight:600;margin-bottom:10px}
-  .offer-row{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--linea)}
-  .offer-row:last-child{border-bottom:none}
-  .offer-row .ocover{width:56px;height:56px;border-radius:9px;object-fit:cover;flex:none;border:1px solid var(--linea)}
+  .offers{margin:0;border-top:1px solid var(--linea);padding-top:18px}
+  .offers h5{font-family:var(--sans);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--oro);font-weight:600;margin-bottom:12px}
+  /* Cada oferta = una tarjeta que ocupa el ancho completo del perfil. La
+     descripción se acomoda en horizontal; nunca se recorta. */
+  .offer-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;
+      padding:16px 18px;margin-bottom:12px;border:1px solid var(--linea);border-radius:16px;
+      background:rgba(255,255,255,.5)}
+  .offer-row:last-child{margin-bottom:0}
+  .offer-row .ocover{width:104px;height:104px;border-radius:12px;object-fit:cover;flex:none;border:1px solid var(--linea)}
   .offer-row .oi{flex:1;min-width:0}
   .offer-row .okind{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
       background:var(--salvia-tenue);color:var(--salvia);border-radius:100px;padding:2px 9px;margin-right:7px;vertical-align:middle}
-  .offer-row b{font-family:var(--serif);font-size:15.5px;font-weight:400}
-  .offer-row p{font-size:12.5px;color:var(--tinta-60);margin:3px 0 0!important;line-height:1.4;white-space:pre-line}
+  .offer-row b{font-family:var(--serif);font-size:18px;font-weight:400}
+  .offer-row p{font-size:14px;color:var(--tinta-60);margin:6px 0 0!important;line-height:1.55;white-space:pre-line}
+  .offer-row .oa{min-width:150px}
   .offer-row .ofile{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--oro);text-decoration:none;border:1px solid var(--oro-claro);border-radius:8px;padding:5px 11px}
   .offer-row .ofile:hover{background:rgba(203,161,90,.1)}
   .offer-row .owip{display:inline-block;font-size:10.5px;font-weight:600;color:var(--oro);border:1px dashed var(--oro-claro);border-radius:100px;padding:2px 9px;margin-top:5px}
@@ -392,7 +406,9 @@
     background:rgba(203,161,90,.08);margin:18px 0 6px}
   .shared-offer .shared-eyebrow{display:block;font-size:10.5px;font-weight:700;letter-spacing:.09em;
     text-transform:uppercase;color:var(--oro);margin-bottom:8px}
-  .shared-offer .offer-row{border-bottom:none;padding-top:0}
+  /* La oferta compartida ya viene en su propio recuadro: la tarjeta de adentro
+     se aplana para no dibujar una caja dentro de otra. */
+  .shared-offer .offer-row{border:none;background:none;padding:0;margin:0}
   .more-sep{display:flex;align-items:center;gap:12px;margin:22px 0 4px;
     font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta-60)}
   .more-sep::before,.more-sep::after{content:"";flex:1;height:1px;background:var(--linea)}
@@ -479,6 +495,8 @@
     .about-grid,.contact-grid{grid-template-columns:1fr;gap:38px}
     .foot-grid{grid-template-columns:1fr 1fr}
     .modal{grid-template-columns:1fr}
+    .modal-info{max-width:none}
+    .modal-offers{padding:0 28px 30px}
     .modal-photo{margin:28px auto 0}
     .rings{opacity:.45}
   }
@@ -505,7 +523,12 @@
     .modal{grid-template-columns:1fr;max-width:none;width:100%;max-height:none;height:100dvh;border-radius:0}
     .modal-close{position:fixed;top:14px;right:14px;width:44px;height:44px;background:var(--lino);box-shadow:0 4px 14px -4px rgba(0,0,0,.35)}
     .modal-photo{width:128px;height:128px;margin:26px auto 0;border-width:3px}
-    .modal-info{padding:24px 22px calc(36px + env(safe-area-inset-bottom))}
+    .modal-info{padding:24px 22px 8px;max-width:none}
+    .modal-offers{padding:0 22px calc(36px + env(safe-area-inset-bottom))}
+    /* En móvil no hay ancho que aprovechar: la tarjeta se apila. */
+    .offer-row{flex-direction:column;gap:12px;padding:14px 15px}
+    .offer-row .ocover{width:100%;height:170px}
+    .offer-row .oa{text-align:left;min-width:0;width:100%}
     .modal-info h3{font-size:26px}
     .contact-reveal .btn,.contact-reveal .obtn{min-height:46px}
     .offer-row .obtn{padding:9px 15px;font-size:13px;min-height:40px}
@@ -1453,6 +1476,10 @@ const sellable = o => o.sell_via_voces && !o.in_progress && o.price_cents!=null
                       && !(isSession(o) && !o.has_booking);
 // Masterclass: gratuita y en vivo. No se compra, se reserva lugar con el correo.
 const isMasterclass = o => o.kind === "masterclass";
+/* Las Masterclass van AL FINAL de cualquier listado de ofertas: ya tienen su
+   visibilidad propia en el calendario público de la portada, así que dentro del
+   catálogo no deben desplazar a los productos y servicios de pago. */
+const mcLast = (a,b) => (isMasterclass(a)?1:0) - (isMasterclass(b)?1:0);
 // Píldora de estado: la elige la voz; si no eligió, se comporta como siempre.
 function offerPill(o){
   const p = o.status_pill || (o.in_progress ? "proximamente" : null);
@@ -1466,6 +1493,7 @@ function buildStore(){
   // Las Masterclass viven en la misma cuadrícula que todo lo demás, pero en vez
   // del botón de carrito llevan "Sin costo, inscríbete aquí".
   const offs = OFFERINGS.filter(o => sellable(o) || isMasterclass(o))
+    .slice().sort(mcLast)
     .map(o=>({type:"offering", id:o.id, title:o.title, desc:o.description||"",
       price:isMasterclass(o)?0:Math.round(o.price_cents/100), cover:o.cover_url,
       ptype:(OKIND[lang]||{})[o.kind]||o.kind, by:o.specialist_name,
@@ -1554,7 +1582,6 @@ function openModal(i, offeringId){
       </div>
       <div class="focus-list">${d.focus.map(f=>`<span>${esc(f)}</span>`).join("")}</div>
       ${d.certs?`<div class="certs"><b>${t("modal.certs")}:</b> ${esc(d.certs)}</div>`:""}
-      <div id="modalOffers"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
         <button class="btn btn-primary" id="sessBtn" onclick="sessionCTA()">${t("modal.session")}</button>
         <button class="btn btn-ghost" onclick="shareSpec()" aria-label="${esc(t("modal.share"))}">
@@ -1563,7 +1590,11 @@ function openModal(i, offeringId){
         </button>
       </div>
       <div id="sessNone" class="sess-note" hidden style="margin-top:10px">${t("sess.none")}</div>
-    </div>`;
+    </div>
+    <!-- Las ofertas salen de la columna de texto y ocupan TODO el ancho del
+         perfil: las descripciones largas se leen en horizontal en vez de caer
+         en una tira vertical angosta. La cabecera de arriba no se toca. -->
+    <div class="modal-offers" id="modalOffers"></div>`;
   document.getElementById("modalBg").classList.add("open");
   document.body.style.overflow="hidden";
   // El "Ver más" sólo aparece si la bio de verdad se recortó.
@@ -1613,7 +1644,7 @@ function offerRow(o){
 }
 function loadOffers(s){
   // offerings already loaded globally in loadData — filter to this voice
-  const data = OFFERINGS.filter(o=>o.specialist_id===s.id);
+  const data = OFFERINGS.filter(o=>o.specialist_id===s.id).slice().sort(mcLast);
   const box=document.getElementById("modalOffers");
   if(!box || currentSpec!==s) return;
 
