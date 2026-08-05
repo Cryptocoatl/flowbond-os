@@ -29,6 +29,7 @@ export default function RedViva({ copy }: { copy: Record<string, string> }) {
   const [authed, setAuthed] = useState(false);
   const [form, setForm] = useState<NodeInput>(EMPTY);
   const [hasNode, setHasNode] = useState(false);
+  const [pending, setPending] = useState(false);
   const [busy, setBusy] = useState(false);
   const [locating, setLocating] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -51,6 +52,7 @@ export default function RedViva({ copy }: { copy: Record<string, string> }) {
         const mine = await myNode();
         if (mine) {
           setHasNode(true);
+          setPending(mine.status !== 'published');
           setForm({
             name: mine.name,
             kind: mine.kind,
@@ -101,7 +103,17 @@ export default function RedViva({ copy }: { copy: Record<string, string> }) {
     try {
       await upsertNode(form);
       setHasNode(true);
-      setMsg({ kind: 'ok', text: '¡Tu nodo está en la red! Ya aparece en el mapa vivo.' });
+      // Leemos el estado REAL en vez de inferirlo: un nodo nuevo nace en
+      // revisión, uno ya aprobado sigue publicado al editarlo.
+      const mine = await myNode();
+      const inReview = mine ? mine.status !== 'published' : true;
+      setPending(inReview);
+      setMsg({
+        kind: 'ok',
+        text: inReview
+          ? 'Recibimos tu nodo. Lo revisamos y en cuanto lo activemos aparece en el mapa vivo.'
+          : 'Listo, tu nodo quedó actualizado en el mapa.',
+      });
       await refresh();
     } catch {
       setMsg({ kind: 'err', text: 'No se pudo guardar. Revisa que hayas iniciado sesión e inténtalo.' });
@@ -156,6 +168,13 @@ export default function RedViva({ copy }: { copy: Record<string, string> }) {
           ) : (
             <div className="nodo-form">
               <h3>{hasNode ? 'Tu nodo' : copy['red.gateTitle']}</h3>
+              {hasNode && (
+                <p className={`nodo-msg ${pending ? '' : 'ok'}`} role="status">
+                  {pending
+                    ? '⏳ En revisión — lo activamos pronto. Mientras tanto puedes seguir editándolo.'
+                    : '✓ Publicado en el mapa vivo.'}
+                </p>
+              )}
               <p className="nodo-form-sub">
                 {hasNode
                   ? 'Actualiza lo que tu nodo ofrece y necesita cuando quieras.'

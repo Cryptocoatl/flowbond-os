@@ -578,7 +578,7 @@ function RedTab() {
       await setNodeStatus(id, status);
       await pushLive();
       setNodes((ns) => ns.map((n) => (n.id === id ? { ...n, status } : n)));
-      setMsg(status === 'published' ? 'Nodo publicado en el mapa.' : 'Nodo oculto del sitio.');
+      setMsg(status === 'published' ? 'Nodo activado: ya está en el mapa.' : 'Nodo retirado del sitio.');
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'No se pudo cambiar.');
     }
@@ -587,68 +587,98 @@ function RedTab() {
 
   if (loading) return <p className="a-empty">Cargando la red…</p>;
 
+  // Los que esperan revisión van primero — es lo que hay que atender.
+  const pendientes = nodes.filter((n) => n.status !== 'published');
+  const publicados = nodes.filter((n) => n.status === 'published');
+
   return (
     <>
       <div className="a-intro">
         <h1>La red viva</h1>
         <p>
-          Cada nodo lo registra una persona desde el sitio. Aquí decides cuáles se ven en la
-          sección &ldquo;La red viva&rdquo;. Ocultar un nodo no lo borra: su dueño sigue viéndolo y
-          puede seguir editándolo.
+          Cada nodo lo registra una persona desde el sitio y queda <b>en revisión</b> hasta que tú o
+          Steph lo activen. Retirar un nodo no lo borra: su dueño lo sigue viendo y puede seguir
+          editándolo.
         </p>
         {msg && <p className={`a-msg ${msg.startsWith('No') ? 'err' : 'ok'}`}>{msg}</p>}
       </div>
 
       {nodes.length === 0 && <p className="a-empty">Todavía nadie registra un nodo.</p>}
 
-      <div className="a-cards">
-        {nodes.map((n) => (
-          <div className="a-card" key={n.id}>
-            <span className="a-meta">{KIND_LABEL[n.kind] ?? n.kind}</span>
-            <h3>{n.name}</h3>
-            {n.description && <p className="a-hint">{n.description}</p>}
-            {n.offers && (
-              <p className="a-hint">
-                <b>Ofrece:</b> {n.offers}
-              </p>
-            )}
-            {n.needs && (
-              <p className="a-hint">
-                <b>Necesita:</b> {n.needs}
-              </p>
-            )}
-            {n.contact && (
-              <p className="a-hint">
-                <b>Contacto:</b> {n.contact}
-              </p>
-            )}
-            <span className="a-hint">
-              {n.lat != null && n.lng != null
-                ? `📍 ${n.lat.toFixed(4)}, ${n.lng.toFixed(4)}`
-                : 'Sin ubicación'}
-            </span>
-            <span className={`a-pill ${n.status === 'published' ? 'ok' : 'off'}`}>
-              {n.status === 'published' ? 'en el sitio' : 'oculto'}
-            </span>
-            <div className="a-actions">
-              {n.status === 'published' ? (
-                <button className="a-btn sm" onClick={() => move(n.id, 'draft')} disabled={busy === n.id}>
-                  Ocultar
-                </button>
-              ) : (
-                <button
-                  className="a-btn sm aqua"
-                  onClick={() => move(n.id, 'published')}
-                  disabled={busy === n.id}
-                >
-                  Publicar
-                </button>
-              )}
-            </div>
+      {pendientes.length > 0 && (
+        <>
+          <h2 className="a-section-h">
+            Por revisar <span className="a-count">{pendientes.length}</span>
+          </h2>
+          <div className="a-cards">
+            {pendientes.map((n) => (
+              <NodeCard key={n.id} n={n} busy={busy === n.id} onMove={move} />
+            ))}
           </div>
+        </>
+      )}
+
+      {publicados.length > 0 && (
+        <h2 className="a-section-h">En el sitio</h2>
+      )}
+      <div className="a-cards">
+        {publicados.map((n) => (
+          <NodeCard key={n.id} n={n} busy={busy === n.id} onMove={move} />
         ))}
       </div>
     </>
+  );
+}
+
+function NodeCard({
+  n,
+  busy,
+  onMove,
+}: {
+  n: AdminNodo;
+  busy: boolean;
+  onMove: (id: string, status: 'published' | 'draft') => void;
+}) {
+  const live = n.status === 'published';
+  return (
+    <div className="a-card">
+      <span className="a-meta">{KIND_LABEL[n.kind] ?? n.kind}</span>
+      <h3>{n.name}</h3>
+      {n.description && <p className="a-hint">{n.description}</p>}
+      {n.offers && (
+        <p className="a-hint">
+          <b>Ofrece:</b> {n.offers}
+        </p>
+      )}
+      {n.needs && (
+        <p className="a-hint">
+          <b>Necesita:</b> {n.needs}
+        </p>
+      )}
+      {n.contact && (
+        <p className="a-hint">
+          <b>Contacto:</b> {n.contact}
+        </p>
+      )}
+      <span className="a-hint">
+        {n.lat != null && n.lng != null
+          ? `\u{1F4CD} ${n.lat.toFixed(4)}, ${n.lng.toFixed(4)}`
+          : 'Sin ubicacion'}
+      </span>
+      <span className="a-hint">Registrado {new Date(n.created_at).toLocaleDateString('es-MX')}</span>
+      <span className={`a-pill ${live ? 'ok' : 'off'}`}>{live ? 'en el sitio' : 'en revision'}</span>
+      <div className="a-actions">
+        {live ? (
+          <button className="a-btn sm" onClick={() => onMove(n.id, 'draft')} disabled={busy}>
+            Retirar del sitio
+          </button>
+        ) : (
+          <button className="a-btn sm aqua" onClick={() => onMove(n.id, 'published')} disabled={busy}>
+            Activar en el mapa
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

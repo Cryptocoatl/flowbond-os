@@ -13,6 +13,8 @@ export type Nodo = {
   offers: string | null;
   needs: string | null;
   contact?: string | null;
+  /** 'draft' = registrado, esperando que un admin lo active. Sólo el dueño y /admin lo ven. */
+  status?: string | null;
 };
 
 export const NODE_KINDS: [string, string][] = [

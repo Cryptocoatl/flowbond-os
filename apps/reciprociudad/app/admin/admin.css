@@ -362,6 +362,28 @@
   border-color: rgba(255, 111, 94, 0.4);
 }
 
+/* ── Section heading (e.g. "Por revisar" above the pending nodes) ─────── */
+.rc-admin .a-section-h {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 21px;
+  margin: 26px 0 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rc-admin .a-count {
+  font-family: var(--font-system);
+  font-size: 12px;
+  min-width: 24px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--oro);
+  color: var(--tierra);
+  font-weight: 700;
+}
+
 /* ── Media ────────────────────────────────────────────────────────────── */
 .rc-admin .a-shot {
   width: 100%;
