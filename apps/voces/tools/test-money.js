@@ -11,7 +11,7 @@ const RATES = JSON.parse(fs.readFileSync(path.join(__dirname, "fx-snapshot.json"
 function makeEnv({ lang = "es-MX", cc = null, ccy = null, rates = RATES, fetched = new Date().toISOString(), stale = false, ipCountry = null }) {
   const store = {};
   if (cc) store.vpa_cc = cc;
-  if (ccy) store.vpa_ccy = ccy;
+  if (ccy) store.vpa_ccy2 = ccy;
   const win = {};
   const sandbox = {
     window: win,
@@ -20,6 +20,7 @@ function makeEnv({ lang = "es-MX", cc = null, ccy = null, rates = RATES, fetched
       getItem: k => (k in store ? store[k] : null),
       setItem: (k, v) => { store[k] = String(v); },
     },
+    sessionStorage: (() => { const t = {}; return { getItem: k => (k in t ? t[k] : null), setItem: (k, v) => { t[k] = String(v); } }; })(),
     fetch: async () => ({ ok: !!ipCountry, json: async () => ({ country_code: ipCountry }) }),
     AbortController, setTimeout, clearTimeout, Date, Intl, Math, Number, JSON, isFinite, String, Object, Promise, console,
   };
@@ -148,6 +149,19 @@ function checkTrue(name, cond, extra = "") {
     check("moneda tras el cambio", VM.currency(), "EUR");
     check("moneda inexistente se rechaza", VM.setCurrency("XXX", true), "false");
     check("sigue en EUR", VM.currency(), "EUR");
+  }
+
+  console.log("— 7b. la vista de prueba (?moneda=) no se queda pegada");
+  {
+    const { VM, sb, store } = makeEnv({ cc: "MX" });
+    await VM.init(sb);
+    check("México ve pesos", VM.currency(), "MXN");
+    check("la elección a mano sí se guarda", VM.setCurrency("COP", true), "true");
+    check("y queda en la llave nueva", store.vpa_ccy2, "COP");
+    const otra = makeEnv({ cc: "MX" });   // navegador limpio, sin haber elegido nada
+    await otra.VM.init(otra.sb);
+    check("otro navegador sigue en pesos", otra.VM.currency(), "MXN");
+    check("sin preferencia guardada", otra.store.vpa_ccy2 === undefined, true);
   }
 
   console.log("— 8. lectura de importes escritos a mano (el error de «33.000»)");
