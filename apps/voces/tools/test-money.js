@@ -44,8 +44,8 @@ function checkTrue(name, cond, extra = "") {
   console.log("— 1. país → moneda + formato en el país del visitante");
   const casos = [
     // país, idioma navegador, precio MXN, moneda esperada, texto ≈ esperado
-    ["CO", "es-CO", 180, "COP", "≈ 33.709 COP"],
-    ["CO", "en-US", 180, "COP", "≈ 33.709 COP"],   // el formato sigue la moneda, no el navegador
+    ["CO", "es-CO", 180, "COP", "≈ 33 709 COP"],
+    ["CO", "en-US", 180, "COP", "≈ 33 709 COP"],   // el formato sigue la moneda, no el navegador
     ["MX", "es-MX", 180, "MXN", ""],
     ["US", "en-US", 180, "USD", "≈ 10.42 USD"],
     ["AR", "es-AR", 180, "ARS", null],
@@ -119,7 +119,7 @@ function checkTrue(name, cond, extra = "") {
     const cop = VM.convert(299, "MXN", "COP");
     const viaUsd = VM.convert(VM.convert(299, "MXN", "USD"), "USD", "COP");
     checkTrue("MXN→COP == MXN→USD→COP", Math.abs(cop - viaUsd) < 0.01, `${cop} vs ${viaUsd}`);
-    check("$299 MXN en COP", VM.approx(299), "≈ 55.995 COP");
+    check("$299 MXN en COP", VM.approx(299), "≈ 55 995 COP");
     // el viejo cálculo (USD 19 del catálogo) daba otro número: eso era el bug
     const viejo = 19 * RATES.COP;
     checkTrue("el precio viejo en USD daba OTRA cifra", Math.round(viejo) !== Math.round(cop), `${Math.round(viejo)} vs ${Math.round(cop)}`);
@@ -132,8 +132,9 @@ function checkTrue(name, cond, extra = "") {
       const { VM, sb } = makeEnv({ cc, lang: "es-" + cc });
       await VM.init(sb);
       const s = VM.approx(pesos);
-      checkTrue(`${cc} sin decimales falsos`, !/,\d{2}$/.test(s) || pesos < 100, s);
+      checkTrue(`${cc} sin decimales falsos`, !/[.,]\d{2}$/.test(s) || pesos < 100, s);
       checkTrue(`${cc} lleva el código ISO`, new RegExp(VM.currency()).test(s), s);
+      checkTrue(`${cc} sin punto ni coma de miles (ambiguos)`, !/\d[.,]\d{3}\b/.test(s), s);
       console.log(`   ${cc}: ${VM.line(pesos)}`);
     }
   }
