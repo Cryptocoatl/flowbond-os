@@ -397,7 +397,11 @@ KES:"KE",EGP:"EG",MAD:"MA",XOF:"SN",XAF:"CM",XCD:"AG",XPF:"PF"
 var VOLATILE = ["ARS","VES","LBP","SYP","ZWL","ZWG","IRR","SDG","SSP","AFN","CUP","LAK","MMK"];
 var VOLATILE_MAX_AGE_MS = 36 * 3600 * 1000;
 
-var LS_CC = "vpa_cc", LS_CCY = "vpa_ccy", LS_FX = "vpa_fx_cache";
+/* `vpa_ccy2` (no `vpa_ccy`): la primera versión guardaba también la moneda que
+   venía en `?moneda=`, así que a quien abría un enlace de prueba se le quedaba
+   pegada esa moneda para siempre. Cambiar de llave descarta de una vez todas
+   las preferencias viejas. Ahora sólo se guarda lo que se elige a mano. */
+var LS_CC = "vpa_cc", LS_CCY = "vpa_ccy2", LS_FX = "vpa_fx_cache", SS_CCY = "vpa_ccy_vista";
 var MAX_AGE_MS = 3 * 24 * 3600 * 1000;   // misma regla de "stale" que el servidor
 
 var FX = null;          // {rates:{CODE:per_usd}, fetched_at, stale}
@@ -485,18 +489,20 @@ function setCurrency(code, remember){
   if(remember){ USER_PICKED = true; lsSet(LS_CCY, code); }
   emit(); return true;
 }
-/* ?moneda=COP (o ?currency=COP) fuerza la moneda: sirve para reproducir lo que
-   ve alguien en otro país y para mandarle un enlace ya en su moneda. */
+/* ?moneda=COP (o ?currency=COP) fuerza la moneda para VER lo que ve alguien de
+   otro país. Dura sólo la pestaña (sessionStorage): al cerrarla todo vuelve a
+   la normalidad. Lo que sí se guarda de verdad es el selector del carrito. */
 function paramCurrency(){
   try{
     var q = new URLSearchParams(location.search);
     var c = (q.get("moneda") || q.get("currency") || "").toUpperCase();
-    return /^[A-Z]{3}$/.test(c) ? c : null;
+    if(/^[A-Z]{3}$/.test(c)){ try{ sessionStorage.setItem(SS_CCY, c); }catch(_){} return c; }
+    try{ var v = sessionStorage.getItem(SS_CCY); return /^[A-Z]{3}$/.test(v||"") ? v : null; }catch(_){ return null; }
   }catch(_){ return null; }
 }
 function pickCurrency(){
   var forced = paramCurrency();
-  if(forced && (forced==="MXN" || canShow(forced))){ CCY = forced; USER_PICKED = true; lsSet(LS_CCY, forced); return; }
+  if(forced && (forced==="MXN" || canShow(forced))){ CCY = forced; USER_PICKED = true; return; }
   var saved = (ls(LS_CCY)||"").toUpperCase();
   if(saved && (saved==="MXN" || canShow(saved))){ CCY = saved; USER_PICKED = true; return; }
   var auto = ccyForCountry(CC);
