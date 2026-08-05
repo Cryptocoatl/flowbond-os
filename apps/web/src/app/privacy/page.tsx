@@ -98,10 +98,12 @@ export default function PrivacyPage() {
           </thead>
           <tbody>
             {SUBPROCESSORS.map((s) => (
+              // data-label carries the column header down to the stacked
+              // one-card-per-row layout phones get (see .doc-table in globals).
               <tr key={s.p}>
-                <td>{s.p}</td>
-                <td>{s.purpose}</td>
-                <td>{s.loc}</td>
+                <td data-label="Provider">{s.p}</td>
+                <td data-label="Purpose">{s.purpose}</td>
+                <td data-label="Data location">{s.loc}</td>
               </tr>
             ))}
           </tbody>

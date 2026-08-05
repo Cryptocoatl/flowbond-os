@@ -43,7 +43,10 @@ export default function ServicesPage() {
           Three ways money changes hands.
         </h2>
         <p className="mani-p reveal d2">{ENGAGEMENT.lead}</p>
-        <div className="eng-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {/* Three across on desktop, but the column count is left to .eng-grid's
+            media queries — an inline value here beat them and pushed the whole
+            page into horizontal scroll on phones. */}
+        <div className="eng-grid eng-grid--3">
           {ENGAGEMENT.models.map((m, i) => (
             <div key={m.n} className={`eng-card reveal d${i + 1}`}>
               <div className="n">{m.n}</div>
