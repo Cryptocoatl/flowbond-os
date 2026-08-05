@@ -1213,10 +1213,13 @@ function pickCurrency(){
 function emit(){ listeners.forEach(function(f){ try{ f(CCY); }catch(_){} }); }
 
 /* ---------------- formato ---------------- */
-/* La cifra se agrupa como se escribe en el país de ESA moneda, no como en el
-   navegador de quien mira: en Colombia 33.709 y en México 33,709 son el mismo
-   número, y leer el separador al revés es exactamente lo que hace pensar que
-   hay "dos precios". Intl deduce el idioma probable del país (und-CO → es-CO). */
+/* SEPARADOR NEUTRO (decisión de Steph, 5-ago-2026, viendo la página).
+   El punto y la coma significan lo contrario en México y en Colombia: «55.995»
+   es cincuenta y seis mil para un colombiano y cincuenta y cinco con noventa y
+   nueve para un mexicano. Agrupar por país arregla al comprador y rompe a quien
+   da soporte. Así que los miles se separan con ESPACIO —«55 995 COP»— que se
+   lee igual en todo el mundo, y el decimal es siempre punto. Se conserva
+   localeFor() sólo para los nombres de moneda del selector. */
 /* Paraguay: Intl deduce guaraní (gn-PY, que agrupa con coma) pero los precios
    allá se escriben 30.522 como en el resto del Cono Sur. */
 var LOCALE_OVERRIDE = { PY:"es-PY" };
@@ -1239,17 +1242,19 @@ function localeFor(code){
 function digitsFor(v){ return Math.abs(v) >= 1000 ? 0 : 2; }
 /* Siempre "cifra + código ISO" (33.709 COP · 15,03 EUR · 2,729 JPY): una sola
    forma en todo el sitio y sin ambigüedad posible sobre de qué peso hablamos. */
+var NBSP = "\u00a0";
+/* Miles con espacio duro, decimales con punto, y el código ISO al final:
+   «55 995 COP» · «15.03 EUR» · «2 729 JPY». Una sola forma en todo el sitio. */
+function group(v, d){
+  var s;
+  try{ s = new Intl.NumberFormat("en-US", {minimumFractionDigits:d, maximumFractionDigits:d}).format(v); }
+  catch(_){ s = v.toFixed(d); }
+  return s.replace(/,/g, NBSP);
+}
 function fmt(value, code){
   var v = Number(value); if(!isFinite(v)) return "";
   code = String(code||CCY).toUpperCase();
-  var d = Math.min(digitsFor(v), maxFrac(code));
-  var s;
-  try{
-    s = new Intl.NumberFormat(localeFor(code), {minimumFractionDigits:d, maximumFractionDigits:d}).format(v);
-  }catch(_){
-    s = v.toFixed(d);
-  }
-  return s + " " + code;
+  return group(v, Math.min(digitsFor(v), maxFrac(code))) + " " + code;
 }
 /* cuántos decimales admite la moneda según el propio Intl (JPY→0, KWD→3…) */
 var fracCache = {};
@@ -1264,7 +1269,7 @@ function maxFrac(code){
 function mxn(pesos){
   var v = Number(pesos)||0;
   var d = (Math.round(v*100)%100 === 0) ? 0 : 2;
-  return "$" + v.toLocaleString("es-MX",{minimumFractionDigits:d, maximumFractionDigits:d}) + " MXN";
+  return "$" + group(v, d) + " MXN";   // «$8 500 MXN»: nadie lo lee como 8.5
 }
 /* Referencia en la moneda del visitante. "" si no aplica o no hay tasa fresca. */
 function approx(pesos, code){
