@@ -602,15 +602,31 @@ function offerKindUI(){
   show("of_freeNote",  mc);
   show("of_promoWrap", mc);
   show("of_meetWrap",  mc);
-  show("of_fileWrap", !mc);   // una Masterclass no lleva material descargable
-  show("of_bookWrap", !mc);   // ni enlace de agenda: no es una sesión de pago
+  show("of_fileWrap", !mc);   // una Masterclass no entrega material descargable
   show("of_viaWrap",  !mc);   // ni se vende
+  // La agenda NO se esconde: se deja a la vista pero en gris y sin poder
+  // escribir, igual que el enlace externo — así se entiende que no aplica en
+  // vez de parecer que el campo desapareció.
+  offDisable("of_booking",      mc);
+  offDisable("of_bookingLabel", mc);
+  const bw=document.getElementById("of_bookOff");
+  if(bw) bw.innerHTML = mc
+    ? `<div class="hint" style="color:#a49a88">Una Masterclass no se agenda por Calendly: es un evento en vivo y el acceso va por el <b>enlace de la reunión</b> de arriba.</div>`
+    : "";
   if(mc && !promotables().length){
     const w=document.getElementById("of_promoNote");
     if(w) w.innerHTML=`<div class="hint" style="color:#a33"><b>Todavía no tienes ningún producto publicado y aprobado.</b>
       Publica primero el producto que quieres promocionar; sin él no se puede crear una Masterclass.</div>`;
   } else { const w=document.getElementById("of_promoNote"); if(w) w.innerHTML=""; }
   meetModeUI();
+}
+// Campo que se deja a la vista pero apagado (gris, no editable), como el enlace externo.
+function offDisable(id, off){
+  const el=document.getElementById(id); if(!el) return;
+  el.disabled = off;
+  el.style.background = off ? "#efeae1" : "";
+  el.style.color      = off ? "#a49a88" : "";
+  el.style.cursor     = off ? "not-allowed" : "";
 }
 function meetModeUI(){
   const later = (document.getElementById("of_meetLater")||{}).checked;
@@ -688,7 +704,8 @@ function editOffer(o){
       <input id="of_booking" type="url" placeholder="https://calendly.com/tu-usuario/sesion" value="${esc(o.booking_url||"")}">
       <div class="hint">Tu link no será compartido, para evitar reservas sin pago por este medio. El usuario verá directamente tu calendario y elegirá la fecha. Voces te enviará un correo con la confirmación de la reserva, el nombre del usuario y la confirmación de pago.</div></div>
     <div class="field"><label>Leyenda del botón de agenda <small style="color:#a49a88">— opcional, ej. «Reserva tu sesión gratuita»</small></label>
-      <input id="of_bookingLabel" maxlength="120" value="${esc(o.booking_label||"")}"></div>
+      <input id="of_bookingLabel" maxlength="120" value="${esc(o.booking_label||"")}">
+      <div id="of_bookOff"></div></div>
     </div>
 
     <div class="field"><label>Píldora de estado <small style="color:#a49a88">— cómo se ve tu producto en la tienda</small></label>

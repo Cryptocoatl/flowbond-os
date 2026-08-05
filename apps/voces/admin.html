@@ -422,10 +422,11 @@ const CFG = {
        hint:"Se muestra aparte de la descripción, en un <b>recuadro destacado y en negritas</b>. Ej.: «Este precio incluye un aforo de hasta 100 personas. Si tu evento requiere un aforo distinto, contáctanos a voces.world@gmail.com.»"},
       {k:"price_mxn",t:"number",l:"Precio (MXN) — obligatorio",
        hint:"Voces ya no maneja «precio a convenir»: todo se publica con precio fijo. Para proyectos que necesitan cotizarse, la voz publica una <b>Sesión individual</b> con el costo de la sesión de diagnóstico.<br><b>Excepción:</b> las Masterclass son siempre gratuitas y no llevan precio."},
+      // Las opciones reales las pone `syncPromotesOptions()` al abrir el formulario:
+      // dependen de qué voz esté seleccionada, así que no se pueden fijar aquí.
       {k:"promotes_offering_id",t:"select",l:"🎓 Masterclass · producto que promociona",
-       opts:[["","— (sólo para Masterclass) —"]].concat(OFFS.filter(x=>x.status==="published"&&x.kind!=="masterclass")
-             .map(x=>[x.id, specName(x.specialist_id)+" · "+x.title])),
-       hint:"<b>Obligatorio en las Masterclass.</b> Sólo ofertas <b>publicadas y aprobadas</b> de la misma voz."},
+       opts:[["","— elige el producto —"]],
+       hint:"<b>Obligatorio en las Masterclass.</b> Sólo aparecen las ofertas <b>publicadas y aprobadas de esa misma voz</b>; cambia según el especialista que elijas arriba."},
       {k:"meeting_url",t:"text",l:"🔗 Masterclass · enlace de la reunión",
        hint:"Nunca es público: sólo le llega por correo a quien se inscribe. Se puede dejar vacío y enviarlo después desde el botón <b>Inscritos</b>."},
       {k:"meeting_link_later",t:"chk",l:"Masterclass · el enlace se envía después a los inscritos"},
@@ -756,8 +757,61 @@ function openForm(sec,item){
   $("drawerBody").innerHTML=f.map(fd=>fieldHtml(fd,fieldVal(item,fd))).join("");
   // "Proponer a la voz" sólo tiene sentido al editar un perfil/oferta existente
   $("suggestBtn").style.display = (item && (sec==="specialists"||sec==="offerings")) ? "" : "none";
+  if(sec==="offerings") wireOfferingForm();
   showFormError("");
   openDrawer();
+}
+
+/* ---- Formulario de oferta: lo que aplica a cada tipo ----------------------
+   El formulario del panel es genérico (se arma solo desde CFG), así que las
+   reglas por tipo se cablean aquí después de dibujarlo:
+   · Masterclass  → sin precio, sin archivo descargable y sin agenda (en gris,
+     no editable, igual que el enlace externo), CON producto promocionado y
+     enlace de reunión.
+   · Lo demás     → sin producto promocionado ni enlace de reunión.
+   Y el selector de producto promocionado muestra SÓLO las ofertas publicadas
+   de ESA voz — con el catálogo creciendo, la lista completa era inservible. */
+const MC_ONLY   = ["promotes_offering_id","meeting_url","meeting_link_later"];
+const MC_NEVER  = ["price_mxn","file_url","file_name","booking_url","booking_label"];
+function offFieldOff(key, off, why){
+  const el=$("f_"+key); if(!el) return;
+  el.disabled = off;
+  el.style.background = off ? "#efeae1" : "";
+  el.style.color      = off ? "#a49a88" : "";
+  el.style.cursor     = off ? "not-allowed" : "";
+  const wrap = el.closest(".field"); if(!wrap) return;
+  wrap.style.opacity = off ? ".72" : "";
+  // el subidor de archivos es un botón aparte, no el input: hay que apagarlo también
+  wrap.querySelectorAll("button").forEach(b=>{ b.disabled=off; b.style.opacity=off?".5":""; b.style.cursor=off?"not-allowed":""; });
+  let note = wrap.querySelector(".off-why");
+  if(off && why){
+    if(!note){ note=document.createElement("div"); note.className="off-why";
+      note.style.cssText="font-size:12px;color:#8a8378;margin-top:5px;line-height:1.45"; wrap.appendChild(note); }
+    note.innerHTML=why;
+  } else if(note) note.remove();
+}
+function syncPromotesOptions(){
+  const sel=$("f_promotes_offering_id"); if(!sel) return;
+  const spec=($("f_specialist_id")||{}).value||"";
+  const keep=sel.value;
+  const mine=OFFS.filter(x=>x.specialist_id===spec && x.status==="published" && x.kind!=="masterclass");
+  sel.innerHTML=`<option value="">${mine.length?"— elige el producto —":"— esta voz no tiene productos publicados —"}</option>`
+    + mine.map(x=>`<option value="${esc(x.id)}">${esc(KIND_ES[x.kind]||x.kind)} · ${esc(x.title)}</option>`).join("");
+  if(mine.some(x=>x.id===keep)) sel.value=keep;   // conserva la selección si sigue siendo válida
+}
+function offerKindSync(){
+  const mc = (($("f_kind")||{}).value === "masterclass");
+  MC_NEVER.forEach(k=>offFieldOff(k, mc,
+    k==="price_mxn"      ? "Las Masterclass son siempre <b>gratuitas</b>: no llevan precio."
+  : k.startsWith("file") ? "Una Masterclass no entrega material descargable."
+  :                        "Una Masterclass no se agenda por Calendly: es un evento en vivo con enlace de reunión."));
+  MC_ONLY.forEach(k=>offFieldOff(k, !mc, "Sólo aplica al tipo <b>Masterclass</b>."));
+  if(mc) syncPromotesOptions();
+}
+function wireOfferingForm(){
+  const k=$("f_kind"); if(k) k.addEventListener("change", offerKindSync);
+  const s=$("f_specialist_id"); if(s) s.addEventListener("change", syncPromotesOptions);
+  syncPromotesOptions(); offerKindSync();
 }
 // diff del payload vs. el item original (para proponer sólo lo que cambió)
 function diffPayload(payload, orig){
