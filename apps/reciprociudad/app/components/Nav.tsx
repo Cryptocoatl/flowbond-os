@@ -3,15 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-const LINKS = [
-  { href: '#origen', label: 'El origen' },
-  { href: '#sistema', label: 'El sistema' },
-  { href: '#viaje', label: 'El viaje' },
-  { href: '#iniciativas', label: 'Iniciativas' },
-  { href: '#social', label: 'Instagram' },
-];
+type Props = { copy: Record<string, string>; media: Record<string, string> };
 
-export default function Nav() {
+const HREFS = ['#top', '#sistema', '#viaje', '#iniciativas', '#social'];
+
+export default function Nav({ copy, media }: Props) {
   const [solid, setSolid] = useState(false);
 
   useEffect(() => {
@@ -25,18 +21,23 @@ export default function Nav() {
     <header id="hdr" className={solid ? 'solid' : undefined}>
       <div className="wrap nav">
         <a className="brand" href="#top">
-          <Image className="logo-mark" src="/logo-512.png" alt="" width={38} height={38} priority />
-          Reciprociudad
+          <Image className="logo-mark" src={media['brand.logo']} alt="" width={38} height={38} priority />
+          {copy['nav.brand']}
         </a>
         <nav className="nav-links">
-          {LINKS.map((l) => (
-            <a key={l.href} href={l.href}>
-              {l.label}
-            </a>
-          ))}
+          {HREFS.map((href, i) => {
+            const label = copy[`nav.link${i + 1}`];
+            if (!label) return null;
+            return (
+              <a key={href} href={href}>
+                {label}
+              </a>
+            );
+          })}
         </nav>
-        <a href="#unete" className="btn btn-sun">
-          Entrar a la red
+        <a href="#unete" className="btn btn-sun nav-cta">
+          <span className="nav-cta-full">{copy['nav.cta']}</span>
+          <span className="nav-cta-short">{copy['nav.ctaShort']}</span>
         </a>
       </div>
     </header>

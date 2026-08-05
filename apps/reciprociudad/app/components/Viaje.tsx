@@ -1,67 +1,25 @@
-const STATIONS = [
-  {
-    n: '01',
-    title: 'Únete',
-    body: 'Crea tu cuenta y entra a la red en menos de un minuto. Una sola identidad para todo lo que sigue.',
-    tag: 'Identidad · FBID',
-  },
-  {
-    n: '02',
-    title: 'Tu chinampa',
-    body: 'Tu perfil vivo: di qué siembras y qué buscas. La red lee tus señales y te conecta con quien encaja.',
-    tag: 'Oferta · Demanda',
-  },
-  {
-    n: '03',
-    title: 'Iniciativas',
-    body: 'Descubre y suma proyectos que regeneran tu colonia: huertos, compostaje, bancos de tiempo y más.',
-    tag: 'Explorar · Sumarte',
-  },
-  {
-    n: '04',
-    title: 'Eventos',
-    body: 'La agenda viva de la ciudad: encuentros, talleres y ferias de intercambio en tu zona.',
-    tag: 'Agenda · Asistir',
-  },
-  {
-    n: '05',
-    title: 'Servicios',
-    body: 'Ofrece y encuentra servicios dentro de la comunidad. Confianza de barrio, no de extraños.',
-    tag: 'Ofrecer · Contratar',
-  },
-  {
-    n: '06',
-    title: 'Proyectos y donaciones',
-    body: 'Aporta tiempo, recursos o dinero a las causas que sostienen la ciudad. Cada aporte queda visible y trazable.',
-    tag: 'Aportar · Donar',
-  },
-];
+import { richKey } from '@/lib/rich';
 
-export default function Viaje() {
+type Props = { copy: Record<string, string> };
+
+const STEPS = [1, 2, 3, 4, 5, 6];
+
+export default function Viaje({ copy }: Props) {
   return (
     <section className="section" id="viaje">
       <div className="wrap">
         <div className="section-head reveal">
-          <span className="eyebrow">Tu viaje</span>
-          <h2 className="display-md">
-            Un camino <em className="coral">por los canales</em>.
-          </h2>
-          <p className="sub">
-            Empieza por entrar. De ahí la red se abre, canal por canal: tu lugar, las iniciativas,
-            los eventos, los servicios y las causas que mueven tu barrio.
-          </p>
+          <span className="eyebrow">{copy['viaje.eyebrow']}</span>
+          <h2 className="display-md">{richKey(copy, 'viaje.title')}</h2>
+          <p className="sub">{richKey(copy, 'viaje.sub')}</p>
         </div>
-        <div className="journey">
-          {STATIONS.map((s) => (
-            <div className="station reveal" key={s.n}>
-              <div className="marker">
-                <span>{s.n}</span>
-              </div>
-              <div className="body">
-                <h3>{s.title}</h3>
-                <p>{s.body}</p>
-                <span className="tag">{s.tag}</span>
-              </div>
+        <div className="pasos">
+          {STEPS.map((i) => (
+            <div className={`paso p${i} reveal`} key={i}>
+              <span className="num">{String(i).padStart(2, '0')}</span>
+              <h3>{copy[`viaje.p${i}.title`]}</h3>
+              <p>{richKey(copy, `viaje.p${i}.body`)}</p>
+              <span className="tag">{copy[`viaje.p${i}.tag`]}</span>
             </div>
           ))}
         </div>

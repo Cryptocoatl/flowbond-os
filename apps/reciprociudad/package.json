@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start --port 3015",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:brand": "tsx scripts/check-brand.ts"
   },
   "dependencies": {
+    "@flowbond/sanitemplo-core": "workspace:*",
     "@react-three/drei": "^10.0.6",
     "@react-three/fiber": "^9.1.0",
     "@supabase/ssr": "^0.10.3",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@flowbond/config": "workspace:*",
+    "tsx": "^4.21.0",
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

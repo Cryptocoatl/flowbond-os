@@ -6,7 +6,16 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname, '../..'),
   },
   // three.js ships ESM; transpile it (and the r3f stack) for the app bundle.
-  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  // @flowbond/sanitemplo-core is a workspace TS package → transpile it too.
+  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei', '@flowbond/sanitemplo-core'],
+  // Higher-quality next/image encode for the cinematic vision stills.
+  // Images replaced from /admin live in the public `reciprociudad-media`
+  // Supabase bucket, so they must be allowed as remote sources (still
+  // optimized by next/image — never served raw).
+  images: {
+    qualities: [75, 88],
+    remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' }],
+  },
   // Serve the static Sani Templo film at a clean /sanitemplo URL
   // (the file lives at public/sanitemplo/index.html).
   async rewrites() {

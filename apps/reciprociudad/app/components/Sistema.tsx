@@ -1,20 +1,19 @@
-export default function Sistema() {
+import { richKey } from '@/lib/rich';
+
+type Props = { copy: Record<string, string> };
+
+export default function Sistema({ copy }: Props) {
   return (
     <section className="section" id="sistema">
       <div className="wrap">
         <div className="section-head reveal">
-          <span className="eyebrow">El sistema</span>
-          <h2 className="display-md">
-            Tres fuerzas que esta ciudad <em className="agua">ya conocía</em>.
-          </h2>
-          <p className="sub">
-            Reciprociudad no inventa nada nuevo. Reactiva lo que el lago hacía: intercambiar,
-            regenerar y sostener en comunidad.
-          </p>
+          <span className="eyebrow">{copy['sistema.eyebrow']}</span>
+          <h2 className="display-md">{richKey(copy, 'sistema.title')}</h2>
+          <p className="sub">{richKey(copy, 'sistema.sub')}</p>
         </div>
         <div className="sistema">
           <div className="force f1 reveal">
-            <span className="nahuatl">Tianguis · el mercado</span>
+            <span className="nahuatl">{copy['sistema.f1.nahuatl']}</span>
             <div className="ico">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 3l4 4-4 4" />
@@ -23,14 +22,11 @@ export default function Sistema() {
                 <path d="M3 17h14a4 4 0 0 0 4-4" />
               </svg>
             </div>
-            <h3>Reciprocidad</h3>
-            <p>
-              Trueque, intercambio y apoyo mutuo. Lo que sobra de un lado le falta a otro: la red
-              cierra el círculo.
-            </p>
+            <h3>{copy['sistema.f1.title']}</h3>
+            <p>{richKey(copy, 'sistema.f1.body')}</p>
           </div>
           <div className="force f2 reveal">
-            <span className="nahuatl">Chinampa · la tierra fértil</span>
+            <span className="nahuatl">{copy['sistema.f2.nahuatl']}</span>
             <div className="ico">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2C8 6 8 11 12 13c4-2 4-7 0-11z" />
@@ -39,14 +35,11 @@ export default function Sistema() {
                 <path d="M12 18c3 0 6-1 7-4-3-1-6 0-7 4z" />
               </svg>
             </div>
-            <h3>Economía regenerativa</h3>
-            <p>
-              Circular por diseño. Recursos, tiempo y dinero que regresan al ciclo y vuelven más
-              fértiles.
-            </p>
+            <h3>{copy['sistema.f2.title']}</h3>
+            <p>{richKey(copy, 'sistema.f2.body')}</p>
           </div>
           <div className="force f3 reveal">
-            <span className="nahuatl">Calpulli · la comunidad</span>
+            <span className="nahuatl">{copy['sistema.f3.nahuatl']}</span>
             <div className="ico">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="3" />
@@ -57,11 +50,8 @@ export default function Sistema() {
                 <path d="M14.5 13l2 1.5" />
               </svg>
             </div>
-            <h3>Cultura viva</h3>
-            <p>
-              La comunidad que sostiene y celebra el territorio: eventos, talleres y proyectos en la
-              calle.
-            </p>
+            <h3>{copy['sistema.f3.title']}</h3>
+            <p>{richKey(copy, 'sistema.f3.body')}</p>
           </div>
         </div>
       </div>

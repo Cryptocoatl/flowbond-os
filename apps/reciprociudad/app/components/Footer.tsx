@@ -1,24 +1,26 @@
 import Image from 'next/image';
 
-export default function Footer() {
+type Props = { copy: Record<string, string>; media: Record<string, string> };
+
+export default function Footer({ copy, media }: Props) {
   return (
     <footer>
       <div className="wrap foot">
         <a className="brand" href="#top">
-          <Image className="logo-mark" src="/logo-512.png" alt="" width={36} height={36} />
-          Reciprociudad
+          <Image className="logo-mark" src={media['brand.logo']} alt="" width={36} height={36} />
+          {copy['footer.brand']}
         </a>
         <nav className="foot-links">
-          <a href="#origen">El origen</a>
-          <a href="#sistema">El sistema</a>
-          <a href="#viaje">El viaje</a>
-          <a href="#iniciativas">Iniciativas</a>
-          <a href="https://www.instagram.com/reciprociudad" target="_blank" rel="noopener">
-            Instagram
+          <a href="#sistema">{copy['nav.link2']}</a>
+          <a href="#viaje">{copy['nav.link3']}</a>
+          <a href="#iniciativas">{copy['nav.link4']}</a>
+          <a href={copy['social.url']} target="_blank" rel="noopener">
+            {copy['nav.link5']}
           </a>
-          <a href="#unete">Únete</a>
+          <a href="#red">{copy['red.eyebrow']}</a>
+          <a href="#unete">{copy['nav.cta']}</a>
         </nav>
-        <small>Hecha en la ciudad-lago · CDMX</small>
+        <small>{copy['footer.tagline']}</small>
       </div>
     </footer>
   );
