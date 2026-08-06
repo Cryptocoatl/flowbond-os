@@ -63,6 +63,16 @@
   .card{background:var(--pergamino);border:1px solid var(--linea);border-radius:var(--r);padding:14px 16px;margin-bottom:11px;
     display:flex;align-items:center;gap:14px}
   .card .grow{flex:1;min-width:0}
+  /* Columna de orden: asa de arrastre, posición y flechas (para tableta/teclado). */
+  .card .ord{display:flex;flex-direction:column;align-items:center;gap:2px;flex:none;width:34px;user-select:none}
+  .card .drag{background:none;border:0;font-size:19px;line-height:1;color:var(--tinta-60);cursor:grab;padding:2px 4px}
+  .card .drag:active{cursor:grabbing}
+  .card .drag:disabled{opacity:.28;cursor:not-allowed}
+  .card .pos{font-size:11.5px;color:var(--tinta-60);font-variant-numeric:tabular-nums}
+  .card .arrows{display:flex;flex-direction:column;gap:1px}
+  .card .arrows button{padding:0 4px;font-size:10px;line-height:1.35;border-radius:5px}
+  .card.dragging{opacity:.45;outline:2px dashed var(--oro)}
+  .card[data-fixed="1"]{background:rgba(0,0,0,.028)}
   .card h4{font-size:16px;margin-bottom:2px}
   .card .meta{font-size:12.5px;color:var(--tinta-60)}
   .card .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -529,8 +539,10 @@ let toastTimer;
 function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),2800); }
 function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
-const usd = c => "$"+((Number(c)||0)/100).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:2})+" USD";
-const mxn = c => "$"+((Number(c)||0)/100).toLocaleString("es-MX")+" MXN";
+/* Mismo formato que ve el comprador: miles con espacio (ver bloque de moneda). */
+const _grp = (v,d)=>Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/,/g,"\u00a0");
+const usd = c => "$"+_grp((Number(c)||0)/100, ((Number(c)||0)%100)?2:0)+" USD";
+const mxn = c => VM.mxn((Number(c)||0)/100);
 let PLANS=[];   // planes de membresía (cache)
 const STATUS_PUB = ["published","hidden","pending","draft"];
 const STATUS_SPEC = ["published","verified","pending","hidden"];
@@ -617,6 +629,7 @@ const SECTIONS = [
   ["applications","Solicitudes de perfil"],["specialists","Especialistas"],["changes","Cambios y comentarios"],
   ["offerings","Ofertas"],["categories","Temáticas"],["workshops","Talleres"],["products","Tienda"],
   ["pagos","Pagos"],["comisiones","% Comisiones"],["payouts","💸 Pagos a las voces"],["orders","Pedidos"],["memberships","Membresías"],["codes","Códigos y referidos"],["points","Puntos y créditos"],
+  ["directory","📇 Directorio de voces"],["buyers","🧾 Compradores"],
   ["testimonials","Testimonios"],["inquiries","Postulaciones"],["members","Miembros"],["settings","Inicio / Contacto"]
 ];
 const KINDS=["libro","ebook","audiolibro","audio","test","curso","coaching","sesion_individual","sesion_grupal","retiro","conferencia","masterclass","otro"];
@@ -706,7 +719,7 @@ const CFG = {
       {k:"instagram",t:"text",json:"contact_socials",l:"Instagram"},
       {k:"commission_pct",t:"number",l:"Comisión de Voces (%) — vacío = la del plan o el 20% por defecto",
        hint:"Es el porcentaje que retiene Voces en cada venta de esta voz. Se negocia caso por caso; queda auditado."},
-      {k:"sort_order",t:"number",l:"Orden"}
+      {k:"sort_order",t:"number",l:"Orden",hint:"No hace falta tocarlo: se ajusta solo al <b>arrastrar</b> en la lista."}
     ],
     list:i=>({thumb:i.photo_url,title:i.name,meta:(i.role_es||"")+" · "+catName(i.category_id),status:i.status}),
     statusRpc:(id,st)=>sb.rpc("vpa_set_specialist_status",{p_id:id,p_status:st}), statusOpts:STATUS_SPEC
@@ -796,7 +809,7 @@ const CFG = {
       {k:"sell_via_voces",t:"chk",l:"Se vende a través de Voces"},
       {k:"in_progress",t:"chk",l:"Obra en proceso"},
       {k:"wants_help",t:"chk",l:"Pide apoyo de Voces para terminarla (privado)"},
-      {k:"sort_order",t:"number",l:"Orden (sólo Voces — la voz no ve este campo)"},
+      {k:"sort_order",t:"number",l:"Orden (sólo Voces — la voz no ve este campo)",hint:"No hace falta tocarlo: se ajusta solo al <b>arrastrar</b> en la lista. Lo que no está publicado se va al final."},
       {k:"status",t:"select",l:"Estado",opts:[["published","published"],["pending","pending"],["hidden","hidden"],["draft","draft"]]}
     ],
     list:i=>({thumb:i.cover_url,title:i.title,
@@ -839,12 +852,78 @@ RENDER.guia=()=>{
       <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">3 · Cobrar (MercadoPago)</h4>
         <p class="meta" style="margin:0">En <b>Pagos</b> conectas tu MercadoPago pegando tu <b>Access Token</b>. Cuando aparezca la etiqueta verde <b>PRODUCCIÓN</b>, ya cobras de verdad. Puedes usar “Probar pago $3”.</p></div>
       <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">4 · Ordenar, ocultar o borrar</h4>
-        <p class="meta" style="margin:0">En cada lista puedes <b>Editar</b>, cambiar el orden y <b>Borrar</b> lo que no quieras (el botón rojo). Si borras algo, desaparece del sitio de inmediato.</p></div>
+        <p class="meta" style="margin:0">En cada lista puedes <b>Editar</b> y <b>Borrar</b> (el botón rojo). Para cambiar el orden <b>arrastra desde el asa ⠿</b> (o usa las flechas ▲▼): la numeración se recalcula sola, ya no hay que teclear números. Lo que está <b>pendiente de aprobación se queda al final</b> hasta que lo publiques. Si borras algo, desaparece del sitio de inmediato.</p></div>
       <div class="card" style="padding:18px 20px"><h4 style="margin:0 0 6px">5 · Lo demás</h4>
-        <p class="meta" style="margin:0"><b>Temáticas</b> = categorías del directorio · <b>Talleres</b> y <b>Testimonios</b> = eventos y reseñas (aparecen en el sitio cuando agregas al menos uno) · <b>Pedidos</b> = tus ventas · <b>Inicio / Contacto</b> = textos y redes del pie de página.</p></div>
+        <p class="meta" style="margin:0"><b>📇 Directorio de voces</b> = los correos y teléfonos de todas, para mandar comunicados · <b>🧾 Compradores</b> = quién compró qué, filtrable por temática y tipo, para escribirle a cada quien de lo que sí le interesa · <b>Temáticas</b> = categorías del directorio · <b>Talleres</b> y <b>Testimonios</b> = eventos y reseñas (aparecen en el sitio cuando agregas al menos uno) · <b>Pedidos</b> = tus ventas · <b>Inicio / Contacto</b> = textos y redes del pie de página.</p></div>
     </div>
     <p class="meta" style="margin-top:20px">¿Dudas? Escríbele a Steph y lo vemos. Este espacio es tuyo — explóralo con confianza. 🌊</p>`;
 };
+/* ============================================================
+   REORDENAR ARRASTRANDO
+   Antes había que teclear el número de "Orden" de cada elemento y, para subir
+   uno, renumerar a mano todos los de abajo. Ahora se arrastra (o se usan las
+   flechas, que sirven en tableta y con teclado) y el servidor renumera todo:
+   `vpa_reorder(entidad, [ids en el orden nuevo])` deja 1..n de un golpe.
+   Sólo estas cuatro listas se pueden reordenar — son las que acepta la RPC.
+============================================================ */
+const REORDER_ENTITY = { specialists:"specialist", offerings:"offering", categories:"category", testimonials:"testimonial" };
+/* Lo que NO está publicado se ancla al final y no se puede arrastrar: una oferta
+   en revisión espera su turno abajo, y en cuanto Mónica la aprueba queda libre
+   para moverla a donde quiera. */
+const PIN_LAST = { offerings: i => i.status !== "published" };
+function sortForAdmin(sec, data){
+  const by = (a,b) => (a.sort_order==null?1e9:a.sort_order) - (b.sort_order==null?1e9:b.sort_order);
+  const pin = PIN_LAST[sec];
+  const rows = data.slice().sort(by);
+  if(!pin) return rows;
+  return rows.filter(i=>!pin(i)).concat(rows.filter(pin));
+}
+let DRAG = { el:null, sec:null };
+function dragArm(btn){ const c=btn.closest(".card"); if(c && c.dataset.fixed!=="1") c.draggable=true; }
+function dragDisarm(btn){ const c=btn.closest(".card"); if(c) c.draggable=false; }
+function dragStart(e, card, sec){
+  DRAG={el:card, sec};
+  card.classList.add("dragging");
+  try{ e.dataTransfer.effectAllowed="move"; e.dataTransfer.setData("text/plain", card.dataset.id||""); }catch(_){}
+}
+function dragOver(e, card){
+  if(!DRAG.el || card===DRAG.el || card.dataset.fixed==="1") return;
+  e.preventDefault();
+  const r=card.getBoundingClientRect();
+  const abajo=(e.clientY - r.top) > r.height/2;
+  card.parentNode.insertBefore(DRAG.el, abajo ? card.nextSibling : card);
+}
+function dragEnd(card){
+  card.classList.remove("dragging"); card.draggable=false;
+  const sec=DRAG.sec; DRAG={el:null,sec:null};
+  if(sec) saveOrder(sec);
+}
+/* Flechas: mismo resultado que arrastrar, pero con un clic (y en pantallas
+   táctiles, donde el arrastre HTML5 no existe). */
+function moveRow(sec, id, dir){
+  const card=document.querySelector(`#rows .card[data-id="${id}"]`); if(!card) return;
+  const libres=[...document.querySelectorAll('#rows .card[data-id]')].filter(c=>c.dataset.fixed!=="1");
+  const i=libres.indexOf(card); const j=i+dir;
+  if(i<0 || j<0 || j>=libres.length) return;
+  if(dir<0) libres[j].parentNode.insertBefore(card, libres[j]);
+  else libres[j].parentNode.insertBefore(card, libres[j].nextSibling);
+  saveOrder(sec);
+}
+async function saveOrder(sec){
+  const ent=REORDER_ENTITY[sec]; if(!ent) return;
+  const ids=[...document.querySelectorAll('#rows .card[data-id]')].map(c=>c.dataset.id);
+  if(!ids.length) return;
+  document.querySelectorAll('#rows .pos').forEach((el,idx)=>{ el.textContent=idx+1; });
+  try{
+    const { error } = await sb.rpc("vpa_reorder", { p_entity:ent, p_ids:ids });
+    if(error) throw error;
+    toast("Orden guardado ✓");
+  }catch(e){
+    toast("No se pudo guardar el orden: "+e.message);
+    RENDER[sec]();     // si falló, se vuelve a pintar como está en la base
+  }
+}
+
 ["specialists","offerings","categories","workshops","products","testimonials"].forEach(sec=>{
   RENDER[sec]=async ()=>{
     const cfg=CFG[sec];
@@ -856,10 +935,23 @@ RENDER.guia=()=>{
     if(sec==="categories") CATS=data; if(sec==="specialists") SPECS=data.map(d=>({id:d.id,name:d.name}));
     if(sec==="offerings") OFFS=data;
     if(!data.length){ $("rows").innerHTML=`<div class="empty">Aún no hay ${cfg.title}s. Crea el primero.</div>`; return; }
-    $("rows").innerHTML=data.map(i=>{
+    const ent=REORDER_ENTITY[sec];
+    const rows=ent?sortForAdmin(sec,data):data;
+    const pin=PIN_LAST[sec];
+    if(ent) $("rows").insertAdjacentHTML("beforebegin", `<div class="hint" id="dragTip">↕ Arrastra desde <b>⠿</b> para cambiar el orden (o usa las flechas). El número de orden se recalcula solo.${pin?" Lo que está <b>pendiente de aprobación</b> se queda al final hasta que lo publiques.":""}</div>`);
+    $("rows").innerHTML=rows.map((i,idx)=>{
       const v=cfg.list(i); const img=v.thumb?`style="background-image:url('${imgUrl(v.thumb)}')"`:"";
       const stOpts=cfg.statusOpts.map(s=>`<option ${s===v.status?"selected":""}>${s}</option>`).join("");
-      return `<div class="card">
+      const fixed=!!(pin&&pin(i));
+      const handle=!ent?"":`<div class="ord">
+        <button class="drag" ${fixed?'disabled title="Al aprobarla podrás moverla"':'title="Arrastra para reordenar"'}
+          onmousedown="dragArm(this)" onmouseup="dragDisarm(this)">⠿</button>
+        <span class="pos">${idx+1}</span>
+        ${fixed?"":`<span class="arrows"><button class="btn-sm" title="Subir" onclick="moveRow('${sec}','${i.id}',-1)">▲</button><button class="btn-sm" title="Bajar" onclick="moveRow('${sec}','${i.id}',1)">▼</button></span>`}
+      </div>`;
+      return `<div class="card" data-id="${i.id}" ${fixed?'data-fixed="1"':""}
+        ${ent?`ondragstart="dragStart(event,this,'${sec}')" ondragover="dragOver(event,this)" ondragend="dragEnd(this)"`:""}>
+        ${handle}
         <div class="thumb" ${img}></div>
         <div class="grow"><h4>${esc(v.title)}</h4><div class="meta">${esc(v.meta)}</div></div>
         <div class="acts">
@@ -1734,7 +1826,7 @@ async function runPayTest(){
    de cada voz por el riel que ella conectó: PayPal/Wise por API, el resto a mano. */
 const PO_KIND={mercadopago:"MercadoPago",paypal:"PayPal",wise:"Wise",payoneer:"Payoneer (USD · EUR · GBP)",dolarapp:"DolarApp / ARQ",
   usdc:"USDC (cripto)",clabe:"SPEI / CLABE",bank_intl:"Banco internacional",credit:"Crédito en Voces"};
-const pmx=c=>"$"+((c||0)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pmx=c=>"$"+_grp((c||0)/100,2);   // pagos: siempre con centavos
 
 RENDER.payouts=async ()=>{
   $("main").innerHTML=`<div class="sec-head"><h2>💸 Pagos a las voces</h2></div>
@@ -2206,6 +2298,186 @@ RENDER.orders=async ()=>{
       </div></div>`;
   }).join("");
 };
+/* ============================================================
+   DIRECTORIOS INTERNOS (sólo panel — nunca públicos)
+   1) Las voces con su correo y teléfono, para mandarles comunicados.
+   2) Quién ha comprado y QUÉ, para poder escribirle a la gente según lo que
+      realmente le interesa (por temática y por tipo de producto) en vez de
+      mandarle lo mismo a toda la base.
+============================================================ */
+const DIR_TXT = {
+  copy:"📋 Copiar correos", csv:"⬇️ Descargar CSV", mail:"✉️ Escribir a todos"
+};
+function dirActions(pre, correos){
+  const n=correos.length;
+  return `<div class="acts" style="margin:0 0 12px;flex-wrap:wrap">
+    <button class="btn btn-ghost btn-sm" onclick="dirCopy('${pre}')">${DIR_TXT.copy} (${n})</button>
+    <button class="btn btn-ghost btn-sm" onclick="dirCsv('${pre}')">${DIR_TXT.csv}</button>
+    <button class="btn btn-ghost btn-sm" ${n?`onclick="dirMail('${pre}')"`:"disabled"}>${DIR_TXT.mail}</button>
+    <span class="meta">${n} ${n===1?"contacto":"contactos"} en la vista actual</span></div>`;
+}
+let DIRDATA = {};    // {pre:{emails:[], csv:[[fila]], nombre:"archivo"}}
+function dirCopy(pre){
+  const d=DIRDATA[pre]; if(!d) return;
+  const txt=d.emails.join(", ");
+  navigator.clipboard?.writeText(txt).then(()=>toast(`${d.emails.length} correos copiados`),
+    ()=>{ prompt("Copia los correos:", txt); });
+}
+function dirCsv(pre){
+  const d=DIRDATA[pre]; if(!d) return;
+  /* Comillas dobles escapadas y BOM: así Excel abre bien los acentos. */
+  const csv="﻿"+d.csv.map(f=>f.map(c=>`"${String(c==null?"":c).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=d.nombre; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function dirMail(pre){
+  const d=DIRDATA[pre]; if(!d||!d.emails.length) return;
+  /* En copia oculta: nadie ve el correo de los demás. Si son muchos, el propio
+     cliente de correo se atora, así que arriba de 90 se avisa y se copian. */
+  if(d.emails.length>90){ dirCopy(pre); toast("Son muchos: los copié para que los pegues en BCC"); return; }
+  location.href="mailto:?bcc="+encodeURIComponent(d.emails.join(","));
+}
+const telLimpio = t => String(t||"").replace(/[^\d]/g,"");
+
+/* ---------- 1 · Directorio de voces ---------- */
+let DIRQ="";
+RENDER.directory=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>📇 Directorio de voces</h2></div>
+    <div class="hint">Los datos de contacto de todas las voces, en un solo lugar, para mandarles comunicados (avisos, invitaciones, cambios). <b>Es interno:</b> en el sitio público el correo y el teléfono siguen ocultos y sólo se revelan a quien inicia sesión.</div>
+    <div class="field" style="max-width:340px"><input id="dirQ" type="text" placeholder="Buscar por nombre, correo o teléfono…" value="${escAttr(DIRQ)}" oninput="DIRQ=this.value;dirRender()"></div>
+    <div id="dirBox"><div class="empty">Cargando…</div></div>`;
+  const { data, error } = await sb.from("app_vpa_specialists")
+    .select("id,name,contact_email,contact_phone,contact_web,country,status,category_id,fbid_user")
+    .order("name");
+  if(error){ $("dirBox").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  DIRROWS=data||[]; dirRender();
+};
+let DIRROWS=[];
+function dirRender(){
+  const q=DIRQ.trim().toLowerCase();
+  const rows=DIRROWS.filter(r=>!q || [r.name,r.contact_email,r.contact_phone].some(v=>String(v||"").toLowerCase().includes(q)));
+  const emails=[...new Set(rows.map(r=>(r.contact_email||"").trim()).filter(Boolean))];
+  DIRDATA.voces={ emails,
+    nombre:"voces-directorio.csv",
+    csv:[["Nombre","Correo","Teléfono","País","Temática","Estado","Tiene cuenta"]].concat(
+      rows.map(r=>[r.name, r.contact_email||"", r.contact_phone||"", r.country||"", catName(r.category_id), r.status, r.fbid_user?"sí":"no"])) };
+  const box=$("dirBox"); if(!box) return;
+  if(!rows.length){ box.innerHTML=dirActions("voces",[])+`<div class="empty">Nadie coincide con «${esc(DIRQ)}».</div>`; return; }
+  box.innerHTML = dirActions("voces",emails) + rows.map(r=>{
+    const tel=telLimpio(r.contact_phone);
+    const sinDatos=!r.contact_email&&!r.contact_phone;
+    return `<div class="card">
+      <div class="grow"><h4>${esc(r.name)} ${r.status!=="published"?`<span class="pill ${r.status}">${esc(r.status)}</span>`:""}</h4>
+        <div class="meta">${esc(catName(r.category_id))}${r.country?" · "+esc(countryName(r.country)):""}${r.fbid_user?" · <b>tiene cuenta</b>":" · sin cuenta"}</div>
+        <div style="margin-top:5px;font-size:13.5px">
+          ${r.contact_email?`✉️ <a href="mailto:${escAttr(r.contact_email)}">${esc(r.contact_email)}</a>`:`<span class="meta">✉️ sin correo</span>`}
+          ${r.contact_phone?` · 📞 <a href="https://wa.me/${tel}" target="_blank" rel="noopener">${esc(r.contact_phone)}</a>`:` · <span class="meta">📞 sin teléfono</span>`}
+        </div>
+        ${sinDatos?`<div class="meta" style="color:var(--bad);margin-top:4px">Sin datos de contacto: no le llegarán los comunicados.</div>`:""}
+      </div>
+      <div class="acts"><button class="btn btn-ghost btn-sm" onclick="go('specialists')">Ver ficha</button></div></div>`;
+  }).join("");
+}
+
+/* ---------- 2 · Compradores ---------- */
+const BUYF = { q:"", tema:"", tipo:"", estado:"pagados" };
+let BUYROWS=[];   // agregado por persona
+RENDER.buyers=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>🧾 Compradores</h2></div>
+    <div class="hint">Quién ha comprado y <b>qué</b>. Filtra por <b>temática</b> o por <b>tipo de producto</b> para escribirle sólo a quien le interesa ese tema — en vez de mandarle lo mismo a toda la base. Es interno.</div>
+    <div id="buyFilters"></div>
+    <div id="buyBox"><div class="empty">Cargando…</div></div>`;
+  const [{data:groups,error},{data:offs},{data:specs}] = await Promise.all([
+    sb.from("app_vpa_order_groups").select("*").order("created_at",{ascending:false}).limit(500),
+    sb.from("app_vpa_offerings").select("id,kind,title,specialist_id"),
+    sb.from("app_vpa_specialists").select("id,name,category_id")
+  ]);
+  if(error){ $("buyBox").innerHTML=`<div class="empty">Error: ${esc(error.message)}</div>`; return; }
+  const reales=(groups||[]).filter(g=>!g.is_test);
+  let items=[];
+  /* Se piden por tandas: una lista de ids demasiado larga no cabe en la URL. */
+  for(let i=0;i<reales.length;i+=100){
+    const { data } = await sb.from("app_vpa_order_items").select("*").in("group_id", reales.slice(i,i+100).map(g=>g.id));
+    items=items.concat(data||[]);
+  }
+  const OFF={}, SP={};
+  (offs||[]).forEach(o=>OFF[o.id]=o); (specs||[]).forEach(x=>SP[x.id]=x);   // los nombres de temática ya vienen de CATS (preload)
+  const porGrupo={}; items.forEach(it=>(porGrupo[it.group_id]=porGrupo[it.group_id]||[]).push(it));
+
+  const gente={};
+  reales.forEach(g=>{
+    const correo=String(g.buyer_email||"").trim().toLowerCase(); if(!correo) return;
+    const p = gente[correo] || (gente[correo]={ email:correo, nombre:g.buyer_name||"", compras:[], totalCents:0, ultima:g.created_at });
+    if(!p.nombre && g.buyer_name) p.nombre=g.buyer_name;
+    (porGrupo[g.id]||[]).forEach(it=>{
+      const off = it.item_type==="offering" ? OFF[it.item_id] : null;
+      const voz = SP[it.specialist_id||(off&&off.specialist_id)];
+      p.compras.push({
+        titulo: it.title, tipo: off ? off.kind : it.item_type,
+        tipoLbl: off ? (KIND_ES[off.kind]||off.kind) : (it.item_type==="product"?"Producto de tienda":it.item_type==="workshop"?"Taller":it.item_type),
+        tema: voz ? (voz.category_id||"") : "", temaLbl: voz ? catName(voz.category_id) : "—",
+        voz: voz?voz.name:"", cents: (it.unit_cents||0)*(it.qty||1),
+        estado: g.status, fecha: g.created_at
+      });
+    });
+    if(["paid","fulfilled"].includes(g.status)) p.totalCents += (g.total_cents||0);
+    if(new Date(g.created_at) > new Date(p.ultima)) p.ultima=g.created_at;
+  });
+  BUYROWS=Object.values(gente);
+  buyRender();
+};
+function buyRender(){
+  const ESTADOS={ pagados:["paid","fulfilled"], pendientes:["awaiting_payment","awaiting_review"], todos:null };
+  const permitidos=ESTADOS[BUYF.estado];
+  const q=BUYF.q.trim().toLowerCase();
+  const pasa = c => (!permitidos || permitidos.includes(c.estado))
+                 && (!BUYF.tema || c.tema===BUYF.tema)
+                 && (!BUYF.tipo || c.tipo===BUYF.tipo);
+  const rows = BUYROWS.map(p=>({...p, vistas:p.compras.filter(pasa)}))
+    .filter(p=>p.vistas.length)
+    .filter(p=>!q || p.email.includes(q) || String(p.nombre).toLowerCase().includes(q) || p.vistas.some(c=>String(c.titulo).toLowerCase().includes(q)))
+    .sort((a,b)=> new Date(b.ultima)-new Date(a.ultima));
+
+  const temas=[...new Set(BUYROWS.flatMap(p=>p.compras.map(c=>c.tema)).filter(Boolean))];
+  const tipos=[...new Set(BUYROWS.flatMap(p=>p.compras.map(c=>c.tipo)).filter(Boolean))];
+  const tipoLbl = t => KIND_ES[t] || (t==="product"?"Producto de tienda":t==="workshop"?"Taller":t);
+  $("buyFilters").innerHTML=`<div class="card" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+    <div class="field" style="margin:0;min-width:180px"><label>Temática</label>
+      <select onchange="BUYF.tema=this.value;buyRender()"><option value="">Todas</option>
+        ${temas.map(t=>`<option value="${escAttr(t)}" ${BUYF.tema===t?"selected":""}>${esc(catName(t))}</option>`).join("")}</select></div>
+    <div class="field" style="margin:0;min-width:180px"><label>Tipo de producto</label>
+      <select onchange="BUYF.tipo=this.value;buyRender()"><option value="">Todos</option>
+        ${tipos.map(t=>`<option value="${escAttr(t)}" ${BUYF.tipo===t?"selected":""}>${esc(tipoLbl(t))}</option>`).join("")}</select></div>
+    <div class="field" style="margin:0;min-width:170px"><label>Estado del pedido</label>
+      <select onchange="BUYF.estado=this.value;buyRender()">
+        <option value="pagados" ${BUYF.estado==="pagados"?"selected":""}>Compras confirmadas</option>
+        <option value="pendientes" ${BUYF.estado==="pendientes"?"selected":""}>Pendientes de pago</option>
+        <option value="todos" ${BUYF.estado==="todos"?"selected":""}>Todos</option></select></div>
+    <div class="field" style="margin:0;flex:1;min-width:180px"><label>Buscar</label>
+      <input type="text" placeholder="nombre, correo o producto…" value="${escAttr(BUYF.q)}" oninput="BUYF.q=this.value;buyRender()"></div>
+  </div>`;
+
+  const emails=[...new Set(rows.map(p=>p.email))];
+  const csv=[["Nombre","Correo","Compras","Total confirmado (MXN)","Última compra","Temáticas","Tipos","Productos"]].concat(
+    rows.map(p=>[p.nombre, p.email, p.vistas.length, (p.totalCents/100).toFixed(2),
+      new Date(p.ultima).toLocaleDateString("es-MX"),
+      [...new Set(p.vistas.map(c=>c.temaLbl))].join(" / "),
+      [...new Set(p.vistas.map(c=>c.tipoLbl))].join(" / "),
+      p.vistas.map(c=>c.titulo).join(" / ")]));
+  DIRDATA.compradores={ emails, csv, nombre:"voces-compradores.csv" };
+
+  const box=$("buyBox"); if(!box) return;
+  if(!rows.length){ box.innerHTML=dirActions("compradores",[])+`<div class="empty">Nadie coincide con este filtro.</div>`; return; }
+  box.innerHTML = dirActions("compradores",emails) + rows.map(p=>`
+    <div class="card" style="align-items:flex-start">
+      <div class="grow"><h4>${esc(p.nombre||"(sin nombre)")}</h4>
+        <div class="meta">✉️ <a href="mailto:${escAttr(p.email)}">${esc(p.email)}</a> · ${p.vistas.length} ${p.vistas.length===1?"compra":"compras"}${p.totalCents?` · ${mxn(p.totalCents)} confirmados`:""} · última ${new Date(p.ultima).toLocaleDateString("es-MX")}</div>
+        <div style="margin-top:6px">${p.vistas.map(c=>`<div style="font-size:13px;margin:2px 0">• ${esc(c.titulo)}
+          <span class="meta">— ${esc(c.tipoLbl)}${c.temaLbl&&c.temaLbl!=="—"?` · ${esc(c.temaLbl)}`:""}${c.voz?` · ${esc(c.voz)}`:""}${["paid","fulfilled"].includes(c.estado)?"":` · <b>${esc(c.estado)}</b>`}</span></div>`).join("")}</div>
+      </div></div>`).join("");
+}
+
 async function setOrderStatus(id,st){ try{ const {error}=await sb.rpc("vpa_set_order_status",{p_id:id,p_status:st}); if(error)throw error; toast("Pedido actualizado"); RENDER.orders(); }catch(e){ toast("Error: "+e.message);} }
 /* --- CLAUDIA: asistente del panel. Consulta sola; para CAMBIAR algo pide confirmación
    (publicar un perfil lo hace público, marcar pagado entrega producto). --- */
