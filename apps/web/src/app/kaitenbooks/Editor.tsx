@@ -140,7 +140,12 @@ export default function Editor({
     currentRef.current = currentId
     const el = writeRef.current
     if (!el || blocked) return
-    el.innerHTML = toHtml(drafts[currentId]?.body ?? '')
+    const body = drafts[currentId]?.body ?? ''
+    // truly empty, so `.write:empty::before` can show the placeholder; the
+    // browser inserts its own block on first keystroke and toMarkdown treats
+    // a bare <div> as a paragraph
+    el.innerHTML = body.trim() ? toHtml(body) : ''
+    try { document.execCommand('defaultParagraphSeparator', false, 'p') } catch { /* older engines */ }
     dirtyRef.current = false
     setSaveState('idle')
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -274,7 +279,7 @@ export default function Editor({
       {/* ------------------------------------------------------ bar */}
       <header className="bar">
         <button
-          className="btn btn--icon"
+          className="kbtn kbtn--icon"
           onClick={() => setRailOpen((v) => !v)}
           aria-expanded={railOpen}
           title="Los tres libros"
@@ -302,13 +307,13 @@ export default function Editor({
           <b style={{ fontVariantNumeric: 'tabular-nums' }}>{words}</b>&nbsp;palabras
         </span>
         <div className="sep" />
-        <button className="btn btn--icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Claro / oscuro">
+        <button className="kbtn kbtn--icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Claro / oscuro">
           {theme === 'dark' ? '☾' : '☀'}
         </button>
-        <button className="btn" onClick={() => setBriefOpen((v) => !v)} aria-expanded={briefOpen}>
+        <button className="kbtn" onClick={() => setBriefOpen((v) => !v)} aria-expanded={briefOpen}>
           Guía
         </button>
-        <button className="btn" onClick={() => void flush().then(onSignOut)}>
+        <button className="kbtn" onClick={() => void flush().then(onSignOut)}>
           Salir
         </button>
       </header>
@@ -509,7 +514,7 @@ export default function Editor({
             {(['seed', 'drafted', 'reviewed', 'final'] as Progress[]).map((s) => (
               <button
                 key={s}
-                className="btn"
+                className="kbtn"
                 aria-pressed={(draft?.status ?? 'seed') === s}
                 disabled={blocked}
                 onClick={() => void setStatus(s)}

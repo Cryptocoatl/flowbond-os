@@ -144,6 +144,27 @@ html.kaiten-mode [class*="ScrollProgress"] { display: none !important; }
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ---- guard against the marketing globals ---------------------------- *
+ * This route mounts inside the site's global stylesheet, which styles bare
+ * elements: `nav { position: fixed; display: flex }`, `section { padding-inline }`,
+ * `body { cursor: none }`. Inside a writing app those are actively wrong — a
+ * fixed <nav> tears the rail straight out of the grid, which is exactly what
+ * it did. Scoped to the route wrapper so it outranks the bare selectors, and
+ * placed before our own rules so those still win. */
+/* :where() keeps this at .kaiten-fonts specificity (0,1,0) — above the bare
+   element selectors it is undoing (0,0,1), and level with our own single-class
+   rules, which come later in source and therefore still win. Without it the
+   reset outranks .bar and collapses the toolbar. */
+.kaiten-fonts :where(nav, header, aside, main, section) {
+  position: static; inset: auto; z-index: auto;
+  display: block; padding: 0; margin: 0;
+  background: none; border: 0; transition: none;
+  justify-content: normal; align-items: normal;
+}
+.kaiten-fonts, .kaiten-fonts :where(*) { cursor: auto; }
+.kaiten-fonts button, .kaiten-fonts [role="tab"], .kaiten-fonts a { cursor: pointer; }
+.kaiten-fonts [contenteditable="true"] { cursor: text; }
+
 html, body { height: 100%; }
 
 body {
@@ -199,18 +220,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .spacer { flex: 1 1 auto; min-width: 0; }
 
-.btn {
+.kbtn {
   display: inline-flex; align-items: center; gap: 0.4rem;
   background: none; border: 1px solid var(--line-strong); color: var(--dim);
   font-family: var(--meta); font-size: 0.62rem; letter-spacing: 0.13em; text-transform: uppercase;
   padding: 0.42rem 0.62rem; cursor: pointer; border-radius: 2px; white-space: nowrap;
   transition: color 0.16s, border-color 0.16s, background-color 0.16s;
 }
-.btn:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn[data-primary] { border-color: var(--accent); color: var(--accent); }
-.btn[data-primary]:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-.btn--icon { padding: 0.42rem 0.5rem; }
+.kbtn:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
+.kbtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.kbtn[data-primary] { border-color: var(--accent); color: var(--accent); }
+.kbtn[data-primary]:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.kbtn--icon { padding: 0.42rem 0.5rem; }
 
 /* save state reads at a glance, in form as well as words */
 .saved {
@@ -480,8 +501,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .counts b { color: var(--ink); font-weight: 400; font-variant-numeric: tabular-nums; }
 
 .statusrow { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
-.statusrow .btn { flex: 1 1 auto; justify-content: center; }
-.statusrow .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.statusrow .kbtn { flex: 1 1 auto; justify-content: center; }
+.statusrow .kbtn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
 
 /* ----------------------------------------------------------- toast */
 
