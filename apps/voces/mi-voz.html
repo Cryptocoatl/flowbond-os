@@ -485,7 +485,9 @@ function mdText(s){
   h = h.replace(/(^|[\s(¡¿"'])_([^_\n]+?)_(?=[\s).,;:!?"']|$)/g, "$1<em>$2</em>");
   return h;
 }
-const usd=c=>"$"+((Number(c)||0)/100).toLocaleString("en-US",{maximumFractionDigits:2})+" USD";
+/* Mismo formato que ve el comprador: miles con espacio (ver bloque de moneda). */
+const _grp = (v,d)=>Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/,/g,"\u00a0");
+const usd=c=>"$"+_grp((Number(c)||0)/100, ((Number(c)||0)%100)?2:0)+" USD";
 let toastTimer; function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),3000); }
 const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",masterclass:"Masterclass",otro:"Otro"};
 const KINDS=Object.keys(KIND_ES);
@@ -1337,7 +1339,7 @@ function cryptoSync(kind,preferred){
   const n=$("cryptoNote");
   if(n) n.innerHTML=`Vas a recibir <b>${asset}</b> en <b>${sel.value.toUpperCase()}</b>. ${NET_NOTE[sel.value]||""}`;
 }
-const mx=c=>"$"+((c||0)/100).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});
+const mx=c=>"$"+_grp((c||0)/100,2);
 let MYPAY=[], MYEARN=null;
 
 /* ============ TIPO DE CAMBIO PARA LA VOZ ============
