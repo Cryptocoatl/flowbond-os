@@ -1,0 +1,654 @@
+/* =====================================================================
+   KAITENBOOKS — flowbond.life/kaitenbooks
+   =====================================================================
+   Adapted from src/editor/editor.css in the trilogy engine. Kept in step by
+   hand rather than by import: the two live in different repositories and the
+   engine's copy has its fonts inlined as base64, this one takes them from
+   next/font. Everything else — tokens, layout, the canon plate — is the same.
+   ===================================================================== */
+
+/* The marketing shell wraps every page in ambient grain, a magnetic cursor and
+   a scroll-progress bar. None of that belongs over a page someone is writing
+   on, so the route switches them off for as long as it is mounted. */
+html.kaiten-mode, html.kaiten-mode body { overflow: hidden; height: 100%; background: #0b0e19; }
+html.kaiten-mode .atmos,
+html.kaiten-mode .vign,
+html.kaiten-mode .grain,
+html.kaiten-mode canvas,
+html.kaiten-mode [class*="cursor"],
+html.kaiten-mode [class*="scrollProgress"],
+html.kaiten-mode [class*="ScrollProgress"] { display: none !important; }
+
+/* =====================================================================
+   TALES OF A PLANETARY AWAKENING — el escritorio
+   =====================================================================
+
+   The writing tool. Same organism as the reader and the codex, so it uses
+   the same tokens: nigredo ground, the three alchemical accents, EB Garamond
+   over Source Serif 4. Nothing new was invented here — see the header of
+   src/reader/reader.css for why those two faces.
+
+   What differs: this is a UI, scanned and operated, not a document read
+   top to bottom. So the chrome is quiet mono, state is encoded in form as
+   well as in words, and the one place that gets full typographic weight is
+   the writing surface itself — set in Source Serif at reading size and
+   reading measure, on the same ground the finished book uses. Writing the
+   book should look like the book.
+
+   The structural idea: the canon plate. Every unit's label, title and
+   subtitle sit above the writing surface in Garamond, letterspaced, behind
+   a hairline, and cannot be typed into. That boundary is the whole product.
+   ===================================================================== */
+
+
+:root {
+  color-scheme: dark;
+
+  --nigredo: #0b0e19;
+  --ground: #0b0e19;
+  --panel: #0e1223;
+  --raised: #141930;
+  --raised-2: #1b2140;
+  --ink: #e8e2d4;
+  --dim: #9298ae;
+  --dimmer: #666c85;
+  --line: rgba(232, 226, 212, 0.1);
+  --line-strong: rgba(232, 226, 212, 0.2);
+
+  --brass: #c9a227;
+  --albedo: #8fb3d9;
+  --cinnabar: #d2564a;
+  --verdigris: #4e9a83;
+
+  /* semantic, deliberately separate from the book accents */
+  --ok: #4e9a83;
+  --locked: #d2564a;
+  --pending: #9298ae;
+
+  /* --display and --body are declared on .kaiten-fonts, not here: a var() inside
+     a custom property is substituted against the element the property is declared
+     on, and next/font puts --kaiten-* on the route wrapper rather than on :root.
+     Declaring them here silently computes to nothing and every face falls back. */
+  --meta: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --accent: var(--brass);
+  --rail: 17rem;
+  --brief: 21rem;
+  --bar: 3.1rem;
+  --measure: 34rem;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --ground: #f4f0e6;
+    --panel: #efeade;
+    --raised: #e7e1d1;
+    --raised-2: #ded7c4;
+    --ink: #1a1a22;
+    --dim: #55596b;
+    --dimmer: #7c8095;
+    --line: rgba(26, 26, 34, 0.12);
+    --line-strong: rgba(26, 26, 34, 0.24);
+    --brass: #8a6b12;
+    --albedo: #3f6a9c;
+    --cinnabar: #b03a2e;
+    --verdigris: #2f6b58;
+    --ok: #2f6b58;
+    --locked: #b03a2e;
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #f4f0e6;
+  --panel: #efeade;
+  --raised: #e7e1d1;
+  --raised-2: #ded7c4;
+  --ink: #1a1a22;
+  --dim: #55596b;
+  --dimmer: #7c8095;
+  --line: rgba(26, 26, 34, 0.12);
+  --line-strong: rgba(26, 26, 34, 0.24);
+  --brass: #8a6b12;
+  --albedo: #3f6a9c;
+  --cinnabar: #b03a2e;
+  --verdigris: #2f6b58;
+  --ok: #2f6b58;
+  --locked: #b03a2e;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0b0e19;
+  --panel: #0e1223;
+  --raised: #141930;
+  --raised-2: #1b2140;
+  --ink: #e8e2d4;
+  --dim: #9298ae;
+  --dimmer: #666c85;
+  --line: rgba(232, 226, 212, 0.1);
+  --line-strong: rgba(232, 226, 212, 0.2);
+  --brass: #c9a227;
+  --albedo: #8fb3d9;
+  --cinnabar: #d2564a;
+  --verdigris: #4e9a83;
+  --ok: #4e9a83;
+  --locked: #d2564a;
+}
+
+.kaiten-fonts {
+  --display: var(--kaiten-display), "Adobe Garamond Pro", Garamond, "Iowan Old Style", Palatino, Georgia, serif;
+  --body: var(--kaiten-body), Charter, "Charis SIL", Georgia, "Times New Roman", serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 1px; }
+
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+
+/* ------------------------------------------------------------ shell */
+
+.app {
+  position: fixed; inset: 0; z-index: 2147483000;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) var(--brief);
+  grid-template-rows: var(--bar) minmax(0, 1fr);
+  grid-template-areas: "bar bar bar" "rail surface brief";
+  height: 100dvh;
+}
+.app[data-rail="closed"] { grid-template-columns: 0 minmax(0, 1fr) var(--brief); }
+.app[data-brief="closed"] { grid-template-columns: var(--rail) minmax(0, 1fr) 0; }
+.app[data-rail="closed"][data-brief="closed"] { grid-template-columns: 0 minmax(0, 1fr) 0; }
+
+/* ------------------------------------------------------------- bar */
+
+.bar {
+  grid-area: bar;
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0 0.7rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  position: relative; z-index: 30;
+}
+
+.mark {
+  font-family: var(--display);
+  font-size: 1.02rem; letter-spacing: 0.01em; white-space: nowrap;
+  padding-right: 0.4rem; color: var(--ink);
+}
+.mark b { color: var(--accent); font-weight: 400; }
+
+.sep { width: 1px; height: 1.4rem; background: var(--line); flex: none; }
+
+.spacer { flex: 1 1 auto; min-width: 0; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: none; border: 1px solid var(--line-strong); color: var(--dim);
+  font-family: var(--meta); font-size: 0.62rem; letter-spacing: 0.13em; text-transform: uppercase;
+  padding: 0.42rem 0.62rem; cursor: pointer; border-radius: 2px; white-space: nowrap;
+  transition: color 0.16s, border-color 0.16s, background-color 0.16s;
+}
+.btn:hover:not(:disabled) { color: var(--ink); border-color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn[data-primary] { border-color: var(--accent); color: var(--accent); }
+.btn[data-primary]:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.btn--icon { padding: 0.42rem 0.5rem; }
+
+/* save state reads at a glance, in form as well as words */
+.saved {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-family: var(--meta); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--dimmer); white-space: nowrap;
+}
+.saved i { width: 0.46rem; height: 0.46rem; border-radius: 50%; background: var(--pending); flex: none; }
+.saved[data-state="saved"] { color: var(--ok); }
+.saved[data-state="saved"] i { background: var(--ok); }
+.saved[data-state="dirty"] { color: var(--brass); }
+.saved[data-state="dirty"] i { background: var(--brass); }
+
+/* ------------------------------------------------------------ rail */
+
+.rail {
+  grid-area: rail;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 0.9rem 0 3rem;
+}
+.app[data-rail="closed"] .rail { display: none; }
+
+.rail__overview { padding: 0 0.85rem 0.9rem; border-bottom: 1px solid var(--line); margin-bottom: 0.5rem; }
+.lane { margin-bottom: 0.62rem; }
+.lane:last-child { margin-bottom: 0; }
+.lane__top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
+  font-family: var(--meta); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--lane); margin-bottom: 0.3rem;
+}
+.lane__top span { color: var(--dimmer); font-variant-numeric: tabular-nums; }
+.lane__track { height: 3px; background: var(--raised); display: flex; overflow: hidden; border-radius: 2px; }
+.lane__track i { display: block; height: 100%; background: var(--lane); }
+.lane[data-book="B1"] { --lane: var(--brass); }
+.lane[data-book="B2"] { --lane: var(--albedo); }
+.lane[data-book="B3"] { --lane: var(--cinnabar); }
+
+.rail__book {
+  font-family: var(--meta); font-size: 0.57rem; letter-spacing: 0.19em; text-transform: uppercase;
+  color: var(--book); padding: 1.15rem 0.85rem 0.42rem; border-bottom: 1px solid var(--line);
+  margin-bottom: 0.28rem;
+}
+.rail__part {
+  font-family: var(--meta); font-size: 0.55rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dimmer); padding: 0.65rem 0.85rem 0.25rem;
+}
+
+.uitem {
+  display: grid; grid-template-columns: 2.5rem 1fr auto; gap: 0.45rem; align-items: baseline;
+  width: 100%; text-align: left; background: none; border: 0;
+  border-left: 2px solid transparent; cursor: pointer;
+  padding: 0.36rem 0.7rem 0.36rem 0.68rem; color: var(--dim); line-height: 1.3;
+  transition: background-color 0.14s, color 0.14s, border-color 0.14s;
+}
+.uitem:hover { background: var(--raised); color: var(--ink); }
+.uitem[aria-current="true"] { background: var(--raised-2); color: var(--ink); border-left-color: var(--book); }
+.uitem .n {
+  font-family: var(--meta); font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--dimmer);
+}
+.uitem .t { font-family: var(--display); font-size: 0.94rem; }
+.uitem[data-locked="true"] .t { opacity: 0.55; }
+.uitem[data-locked="true"] { cursor: default; }
+
+.dot { width: 0.42rem; height: 0.42rem; border-radius: 50%; background: var(--line-strong); align-self: center; flex: none; }
+.dot[data-p="seed"] { background: color-mix(in srgb, var(--verdigris) 45%, transparent); }
+.dot[data-p="drafted"] { background: var(--verdigris); }
+.dot[data-p="reviewed"] { background: var(--albedo); }
+.dot[data-p="final"] { background: var(--brass); }
+.dot[data-p="locked"] { background: none; box-shadow: inset 0 0 0 1px var(--locked); }
+
+/* --------------------------------------------------------- surface */
+
+.surface {
+  grid-area: surface;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 1.25rem 22vh;
+}
+
+/* the toolbar rides above the writing column, not the window */
+.tools {
+  position: sticky; top: 0; z-index: 20;
+  width: 100%; max-width: calc(var(--measure) + 3rem);
+  display: flex; align-items: center; gap: 0.2rem; flex-wrap: wrap;
+  padding: 0.55rem 0; margin-bottom: 0.4rem;
+  background: linear-gradient(var(--ground) 72%, transparent);
+}
+.tool {
+  background: none; border: 1px solid transparent; color: var(--dim);
+  padding: 0.32rem 0.5rem; cursor: pointer; border-radius: 2px; line-height: 1;
+  font-family: var(--display); font-size: 0.96rem; min-width: 2rem;
+  transition: background-color 0.14s, color 0.14s, border-color 0.14s;
+}
+.tool:hover:not(:disabled) { background: var(--raised); color: var(--ink); }
+.tool[aria-pressed="true"] { background: var(--raised-2); color: var(--accent); border-color: var(--line-strong); }
+.tool:disabled { opacity: 0.3; cursor: not-allowed; }
+.tool--b { font-weight: 700; }
+.tool--i { font-style: italic; }
+.tool--label { font-family: var(--meta); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.tools .sep { height: 1.1rem; margin: 0 0.28rem; }
+
+/* the canon plate — the part he cannot type into */
+.plate {
+  width: 100%; max-width: calc(var(--measure) + 3rem);
+  padding: 1.5rem 0 1.15rem; margin-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.plate::after {
+  content: ""; position: absolute; left: 0; bottom: -1px; width: 3.2rem; height: 1px; background: var(--accent);
+}
+.plate__eyebrow {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  font-family: var(--meta); font-size: 0.58rem; letter-spacing: 0.19em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.7rem;
+}
+.plate__eyebrow em { color: var(--dimmer); font-style: normal; letter-spacing: 0.14em; }
+.plate h1 {
+  font-family: var(--display); font-weight: 400; font-size: clamp(1.7rem, 3.4vw, 2.5rem);
+  line-height: 1.13; margin: 0; text-wrap: balance; letter-spacing: -0.005em;
+}
+.plate__sub {
+  font-family: var(--display); font-style: italic; font-size: 1.05rem; color: var(--dim);
+  margin-top: 0.5rem; text-wrap: pretty;
+}
+.plate__from {
+  font-family: var(--meta); font-size: 0.55rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--dimmer); margin-top: 0.85rem; display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* the writing surface itself, set like the book */
+.write {
+  width: 100%; max-width: calc(var(--measure) + 3rem);
+  min-height: 40vh; outline: none;
+  font-family: var(--body); font-size: 1.06rem; line-height: 1.66;
+  padding-bottom: 2rem;
+}
+.write[data-register="transmission"] { max-width: 30rem; font-size: 1.2rem; line-height: 1.85; }
+
+.write > * { margin: 0 0 1.05em; }
+.write > *:first-child { margin-top: 0; }
+.write p { text-wrap: pretty; }
+.write h2, .write h3 {
+  font-family: var(--display); font-weight: 500; line-height: 1.2;
+  margin: 1.9em 0 0.55em;
+}
+.write h2 { font-size: 1.5rem; }
+.write h3 { font-size: 1.22rem; font-style: italic; font-weight: 400; }
+.write blockquote {
+  margin: 1.7em 0; padding-left: 1.25em; border-left: 2px solid var(--accent);
+  font-family: var(--display); font-size: 1.2rem; font-style: italic; color: var(--dim);
+}
+.write ul, .write ol { padding-left: 1.5em; }
+.write li { margin-bottom: 0.32em; }
+.write hr {
+  border: 0; height: 1.4em; margin: 1.7em 0;
+  background: no-repeat center / 3rem 1px linear-gradient(var(--line-strong), var(--line-strong));
+}
+.write strong { font-weight: 600; }
+.write em { font-style: italic; }
+
+/* figure reference — he names a figure, the engine draws and places it */
+.write .figref {
+  display: flex; align-items: center; gap: 0.7rem;
+  border: 1px dashed var(--line-strong); padding: 0.75rem 0.9rem; border-radius: 2px;
+  font-family: var(--meta); font-size: 0.68rem; letter-spacing: 0.06em; color: var(--dim);
+  background: var(--panel);
+}
+.write .figref b { color: var(--accent); font-weight: 400; letter-spacing: 0.12em; }
+
+.write:empty::before,
+.write > p:only-child:empty::before {
+  content: attr(data-placeholder);
+  color: var(--dimmer); font-style: italic; font-family: var(--display); font-size: 1.15rem;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------- blocked */
+
+.blocked {
+  width: 100%; max-width: calc(var(--measure) + 3rem);
+  border: 1px solid color-mix(in srgb, var(--locked) 45%, transparent);
+  border-left-width: 2px;
+  background: color-mix(in srgb, var(--locked) 7%, transparent);
+  padding: 1.5rem 1.6rem; border-radius: 2px;
+}
+.blocked h2 {
+  font-family: var(--meta); font-size: 0.6rem; letter-spacing: 0.19em; text-transform: uppercase;
+  color: var(--locked); margin: 0 0 0.9rem; font-weight: 400;
+}
+.blocked p { margin: 0 0 0.85rem; color: var(--dim); font-size: 0.96rem; }
+.blocked p:last-child { margin-bottom: 0; }
+.blocked q { color: var(--ink); font-style: italic; font-family: var(--display); font-size: 1.06rem; }
+
+/* ----------------------------------------------------------- brief */
+
+.brief {
+  grid-area: brief;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 0 4rem;
+}
+.app[data-brief="closed"] .brief { display: none; }
+
+.brief__tabs {
+  display: flex; position: sticky; top: 0; background: var(--panel); z-index: 10;
+  border-bottom: 1px solid var(--line);
+}
+.brief__tab {
+  flex: 1; background: none; border: 0; border-bottom: 1px solid transparent;
+  font-family: var(--meta); font-size: 0.57rem; letter-spacing: 0.13em; text-transform: uppercase;
+  color: var(--dimmer); padding: 0.85rem 0.3rem; cursor: pointer;
+  transition: color 0.14s, border-color 0.14s;
+}
+.brief__tab:hover { color: var(--ink); }
+.brief__tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+.pane { display: none; padding: 1.15rem 1.05rem 0; }
+.pane[data-on="true"] { display: block; }
+
+.pane h4 {
+  font-family: var(--meta); font-size: 0.56rem; letter-spacing: 0.17em; text-transform: uppercase;
+  color: var(--dimmer); margin: 1.6rem 0 0.6rem; font-weight: 400;
+}
+.pane h4:first-child { margin-top: 0; }
+.pane p { font-size: 0.88rem; line-height: 1.55; color: var(--dim); margin: 0 0 0.8rem; }
+.pane p strong, .pane li strong { color: var(--ink); font-weight: 600; }
+.pane ul { margin: 0 0 0.9rem; padding-left: 1.1rem; }
+.pane li { font-size: 0.86rem; line-height: 1.5; color: var(--dim); margin-bottom: 0.5rem; }
+.pane code {
+  font-family: var(--meta); font-size: 0.78em; background: var(--raised); padding: 0.08em 0.32em; border-radius: 2px;
+}
+
+.thread {
+  display: block; width: 100%; text-align: left; background: none; cursor: pointer;
+  border: 1px solid var(--line); border-left: 2px solid var(--tb); border-radius: 2px;
+  padding: 0.6rem 0.7rem; margin-bottom: 0.42rem; color: var(--dim);
+  transition: background-color 0.14s, color 0.14s;
+}
+.thread:hover { background: var(--raised); color: var(--ink); }
+.thread .n {
+  font-family: var(--meta); font-size: 0.55rem; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--tb); display: block; margin-bottom: 0.22rem;
+}
+.thread .t { font-family: var(--display); font-size: 0.97rem; line-height: 1.25; }
+.thread[data-b="B1"] { --tb: var(--brass); }
+.thread[data-b="B2"] { --tb: var(--albedo); }
+.thread[data-b="B3"] { --tb: var(--cinnabar); }
+
+.note {
+  width: 100%; background: var(--ground); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 2px;
+  padding: 0.7rem 0.75rem; font-family: var(--body); font-size: 0.9rem; line-height: 1.5;
+  min-height: 8rem; resize: vertical;
+}
+.note::placeholder { color: var(--dimmer); font-style: italic; }
+
+.counts {
+  display: flex; gap: 1.1rem; flex-wrap: wrap;
+  font-family: var(--meta); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dimmer); margin-bottom: 1rem;
+}
+.counts b { color: var(--ink); font-weight: 400; font-variant-numeric: tabular-nums; }
+
+.statusrow { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+.statusrow .btn { flex: 1 1 auto; justify-content: center; }
+.statusrow .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+/* ----------------------------------------------------------- toast */
+
+.toasts {
+  position: fixed; bottom: 1.1rem; left: 50%; transform: translateX(-50%);
+  z-index: 90; display: flex; flex-direction: column; gap: 0.45rem; align-items: center;
+  pointer-events: none; width: min(30rem, calc(100vw - 2rem));
+}
+.toast {
+  background: var(--raised-2); border: 1px solid var(--line-strong); border-left: 2px solid var(--accent);
+  padding: 0.6rem 0.9rem; border-radius: 2px; font-size: 0.86rem; color: var(--ink);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32); max-width: 100%;
+  animation: rise 0.22s ease both;
+}
+.toast[data-kind="warn"] { border-left-color: var(--locked); }
+.toast[data-kind="ok"] { border-left-color: var(--ok); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------------------------------------------------------- dialog */
+
+dialog {
+  border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink);
+  border-radius: 3px; padding: 0; max-width: min(38rem, calc(100vw - 2rem)); width: 100%;
+}
+dialog::backdrop { background: rgba(3, 5, 12, 0.66); }
+.dlg { padding: 1.5rem 1.6rem; }
+.dlg h3 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0 0 0.6rem; }
+.dlg p { font-size: 0.92rem; color: var(--dim); margin: 0 0 1rem; line-height: 1.55; }
+.dlg__row { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; margin-top: 1.2rem; }
+.dlg label {
+  display: block; font-family: var(--meta); font-size: 0.58rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--dimmer); margin-bottom: 0.4rem;
+}
+.dlg input[type="text"] {
+  width: 100%; background: var(--ground); border: 1px solid var(--line-strong); color: var(--ink);
+  padding: 0.6rem 0.7rem; border-radius: 2px; font-family: var(--meta); font-size: 0.9rem;
+}
+.dlg .drop {
+  border: 1px dashed var(--line-strong); border-radius: 2px; padding: 1.6rem 1rem; text-align: center;
+  color: var(--dim); font-size: 0.9rem; cursor: pointer;
+}
+.dlg .drop:hover, .dlg .drop[data-over="true"] { border-color: var(--accent); color: var(--ink); }
+
+/* -------------------------------------------------------- warnings */
+
+.banner {
+  grid-area: bar; /* overridden below */
+  display: none;
+}
+.storagewarn {
+  display: none; align-items: center; gap: 0.5rem;
+  font-family: var(--meta); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--locked); border: 1px solid color-mix(in srgb, var(--locked) 45%, transparent);
+  padding: 0.36rem 0.55rem; border-radius: 2px; white-space: nowrap;
+}
+.storagewarn[data-on="true"] { display: inline-flex; }
+
+/* ------------------------------------------------------ responsive */
+
+@media (max-width: 1180px) {
+  :root { --brief: 0px; }
+  .app { grid-template-columns: var(--rail) minmax(0, 1fr); grid-template-areas: "bar bar" "rail surface"; }
+  .app[data-rail="closed"] { grid-template-columns: 0 minmax(0, 1fr); }
+  .brief {
+    position: fixed; inset: var(--bar) 0 0 auto; width: min(23rem, 92vw); z-index: 40;
+    transform: translateX(101%); transition: transform 0.24s cubic-bezier(0.2, 0, 0, 1);
+    border-left: 1px solid var(--line-strong);
+  }
+  .app[data-brief="open"] .brief { display: block; transform: none; }
+  .app[data-brief="closed"] .brief { display: block; transform: translateX(101%); }
+}
+
+@media (max-width: 780px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "surface"; }
+  .app[data-rail="closed"], .app[data-brief="closed"] { grid-template-columns: minmax(0, 1fr); }
+  .rail {
+    position: fixed; inset: var(--bar) auto 0 0; width: min(20rem, 88vw); z-index: 40;
+    transform: translateX(-101%); transition: transform 0.24s cubic-bezier(0.2, 0, 0, 1);
+    border-right: 1px solid var(--line-strong);
+  }
+  .app[data-rail="open"] .rail { display: block; transform: none; }
+  .mark span { display: none; }
+  .surface { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .tools { gap: 0.1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ==================================================================== *
+ * the gate — the only thing a stranger ever sees
+ * ==================================================================== */
+
+.gate {
+  position: fixed; inset: 0; z-index: 2147483000;
+  background: var(--ground); color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.6rem; padding: 2rem 1.25rem;
+  font-family: var(--body);
+}
+.gate::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(60rem 26rem at 50% -6%, color-mix(in srgb, var(--brass) 9%, transparent), transparent 64%),
+    radial-gradient(48rem 22rem at 50% 108%, color-mix(in srgb, var(--cinnabar) 7%, transparent), transparent 62%);
+}
+
+.gate__panel {
+  position: relative; width: min(27rem, 100%);
+  border: 1px solid var(--line-strong); background: var(--panel);
+  padding: 2.1rem 2rem; border-radius: 3px;
+}
+.gate__mark {
+  font-family: var(--display); font-size: 1.02rem; letter-spacing: 0.02em;
+  color: var(--dim); margin-bottom: 1.5rem;
+}
+.gate__mark b { color: var(--brass); font-weight: 400; }
+
+.gate h1 {
+  font-family: var(--display); font-weight: 400; font-size: 1.95rem; line-height: 1.14;
+  margin: 0 0 0.75rem; text-wrap: balance;
+}
+.gate p { font-size: 0.94rem; line-height: 1.55; color: var(--dim); margin: 0 0 1.4rem; }
+.gate p b { color: var(--ink); font-weight: 600; }
+.gate__muted { color: var(--dimmer); }
+
+.gate__form { display: flex; flex-direction: column; gap: 0.55rem; }
+.gate__form label {
+  font-family: var(--meta); font-size: 0.57rem; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--dimmer);
+}
+.gate__form input {
+  width: 100%; background: var(--ground); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 2px;
+  padding: 0.72rem 0.8rem; font-family: var(--body); font-size: 1rem;
+}
+.gate__form input:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
+.gate__code {
+  font-family: var(--meta) !important; letter-spacing: 0.42em; font-size: 1.25rem !important;
+  text-align: center;
+}
+
+.gate__btn {
+  margin-top: 0.5rem; background: none; cursor: pointer;
+  border: 1px solid var(--brass); color: var(--brass); border-radius: 2px;
+  font-family: var(--meta); font-size: 0.64rem; letter-spacing: 0.15em; text-transform: uppercase;
+  padding: 0.72rem 0.9rem;
+  transition: background-color 0.16s, opacity 0.16s;
+}
+.gate__btn:hover:not(:disabled) { background: color-mix(in srgb, var(--brass) 14%, transparent); }
+.gate__btn:disabled { opacity: 0.42; cursor: not-allowed; }
+
+.gate__link {
+  background: none; border: 0; color: var(--dimmer); cursor: pointer;
+  font-family: var(--meta); font-size: 0.58rem; letter-spacing: 0.13em; text-transform: uppercase;
+  padding: 0.5rem; margin-top: 0.2rem;
+}
+.gate__link:hover { color: var(--ink); }
+
+.gate__error {
+  margin: 1rem 0 0; font-size: 0.88rem; color: var(--cinnabar);
+  border-left: 2px solid var(--cinnabar); padding-left: 0.7rem;
+}
+
+.gate__foot {
+  position: relative;
+  font-family: var(--meta); font-size: 0.55rem; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--dimmer); margin: 0;
+}
