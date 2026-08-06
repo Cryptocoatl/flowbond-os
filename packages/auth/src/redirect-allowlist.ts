@@ -14,7 +14,9 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://flowgarden.life', path: '/auth/callback' },
   { origin: 'https://www.flowgarden.life', path: '/auth/callback' },
   { origin: 'https://flowbond.life', path: '/api/auth/callback' },
-  { origin: 'https://danz-now.vercel.app', path: '/auth/callback' },
+  { origin: 'https://danz.now', path: '/auth/callback' },              // danz (custom domain, Cloudflare Workers)
+  { origin: 'https://www.danz.now', path: '/auth/callback' },          // danz (www)
+  { origin: 'https://danz-now.vercel.app', path: '/auth/callback' },   // danz (legacy vercel, pre-migration)
   { origin: 'https://deck.flowbond.life', path: '/auth/callback' },
   { origin: 'https://xelva.live', path: '/auth/callback' },
   { origin: 'https://dev.flowbond.life', path: '/auth/callback' }, // ops
