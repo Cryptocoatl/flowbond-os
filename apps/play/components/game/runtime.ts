@@ -31,3 +31,28 @@ export const playerPos = new THREE.Vector3(0, 0, 0);
 export const playerState = { moving: false, face: Math.PI, grounded: true };
 /** physics for the current world (set from the world theme). */
 export const phys = { grav: 22, jump: 8.6, swim: false };
+
+/**
+ * Co-op state, written once per frame by RemotePlayers and read by whatever
+ * needs it (objectives, HUD) without prop-drilling through the scene.
+ *
+ * The "bond" is the heart of the co-op design: stay close to your teammate and
+ * a link forms between you. It is never a race — the bond is the only thing
+ * that opens the last objective of a mission, so the game rewards travelling
+ * together rather than splitting up to finish faster.
+ */
+export const party = {
+  /** at least one teammate is in the room */
+  active: false,
+  /** a teammate is within BOND_RADIUS right now */
+  bonded: false,
+  /** distance to the nearest teammate (Infinity when alone) */
+  near: Infinity,
+  /** nearest teammate's world position, for the compass arrow */
+  nx: 0,
+  ny: 0,
+  nz: 0,
+};
+
+/** How close two guardians must be for the bond to hold. */
+export const BOND_RADIUS = 12;
