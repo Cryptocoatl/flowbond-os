@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Bóveda · ClaudIA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  const SUPABASE_URL  = "https://fgsrcxxccdjqyrpkitmk.supabase.co";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+</script>
+<style>
+  :root{
+    --fondo:#0D1317; --panel:#131C22; --panel2:#182229; --linea:#243139;
+    --tinta:#E6EEF2; --suave:#8FA3AD; --acento:#4FB3B8; --acento-tenue:#11292C;
+    --urge:#E28378; --urge-tenue:#2B1917; --bien:#7FB68F; --bien-tenue:#16241A;
+    --aviso:#D9AA5A; --aviso-tenue:#2A2216;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--tinta);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:26px 20px 90px}
+  a{color:var(--acento)}
+  h1{font-size:23px;letter-spacing:-.015em;margin:0}
+  h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--suave);font-family:var(--mono);margin:30px 0 12px;font-weight:600}
+  .mono{font-family:var(--mono)}
+  .sub{color:var(--suave);font-size:13.5px}
+
+  /* ── puerta ── */
+  #puerta{max-width:400px;margin:8vh auto;background:var(--panel);border:1px solid var(--linea);border-radius:14px;padding:26px}
+  #puerta h1{margin-bottom:6px}
+  .campo{margin:14px 0}
+  label{display:block;font-size:12.5px;color:var(--suave);margin-bottom:5px}
+  input{width:100%;padding:11px 13px;background:var(--fondo);border:1px solid var(--linea);border-radius:9px;color:var(--tinta);font:inherit}
+  input:focus{outline:2px solid var(--acento);outline-offset:1px}
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:9px;border:1px solid var(--linea);
+    background:var(--panel2);color:var(--tinta);font:inherit;cursor:pointer}
+  .btn:hover{border-color:var(--acento)}
+  .btn.pri{background:var(--acento);color:#08171A;border-color:var(--acento);font-weight:600}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.mini{padding:5px 10px;font-size:12.5px;border-radius:7px}
+  #msg{margin-top:12px;font-size:13.5px;min-height:20px}
+  .mal{color:var(--urge)} .ok{color:var(--bien)}
+  #qr{margin:14px 0;background:#fff;padding:10px;border-radius:10px;display:inline-block}
+  #qr svg,#qr img{display:block;width:190px;height:190px}
+
+  /* ── tablero ── */
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    border-bottom:1px solid var(--linea);padding-bottom:16px;margin-bottom:20px}
+  .candados{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .cand{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    background:var(--bien-tenue);color:var(--bien);padding:3px 8px;border-radius:5px}
+  .barra{height:7px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:10px 0 4px}
+  .barra i{display:block;height:100%;background:var(--acento);transition:width .4s}
+  .resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:8px}
+  .caja{background:var(--panel);border:1px solid var(--linea);border-radius:11px;padding:12px 14px}
+  .caja b{display:block;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .caja small{color:var(--suave);font-size:12px}
+  .caja.urge b{color:var(--urge)} .caja.bien b{color:var(--bien)}
+
+  .aviso{background:var(--urge-tenue);border:1px solid var(--urge);border-radius:11px;padding:13px 15px;margin-bottom:18px}
+  .aviso b{color:var(--urge)}
+
+  .llave{background:var(--panel);border:1px solid var(--linea);border-left:3px solid var(--linea);border-radius:11px;padding:14px 16px;margin-bottom:10px}
+  .llave.abierta{border-left-color:var(--acento)}
+  .llave.lista{border-left-color:var(--bien);opacity:.72}
+  .llave.urge{border-left-color:var(--urge)}
+  .cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer}
+  .cab h3{font-size:15px;margin:0;font-family:var(--mono);font-weight:600}
+  .cab .proj{color:var(--suave);font-family:var(--mono);font-size:12.5px}
+  .chip{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:5px;letter-spacing:.05em}
+  .chip.urge{background:var(--urge-tenue);color:var(--urge)}
+  .chip.bien{background:var(--bien-tenue);color:var(--bien)}
+  .chip.med{background:var(--acento-tenue);color:var(--acento)}
+  .chip.nunca{background:var(--aviso-tenue);color:var(--aviso)}
+  .cuenta{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--suave)}
+  .cuerpo{display:none;margin-top:14px;border-top:1px solid var(--linea);padding-top:14px}
+  .llave.abierta .cuerpo{display:block}
+  .dato{margin:9px 0;font-size:13.5px}
+  .dato .et{color:var(--suave);font-size:12px;text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);display:block;margin-bottom:3px}
+  .warn{background:var(--aviso-tenue);border-radius:8px;padding:9px 11px;color:var(--aviso);font-size:13px;margin:9px 0}
+  .pasos{list-style:none;padding:0;margin:12px 0 0}
+  .paso{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px dashed var(--linea)}
+  .paso:first-child{border-top:0}
+  .paso input{width:18px;height:18px;margin-top:2px;accent-color:var(--acento);flex:none;cursor:pointer}
+  .paso .txt{flex:1;font-size:13.5px}
+  .paso.hecho .txt{color:var(--suave);text-decoration:line-through}
+  .paso .cuando{font-family:var(--mono);font-size:11px;color:var(--suave)}
+  .cmd{display:flex;align-items:center;gap:8px;background:var(--fondo);border:1px solid var(--linea);border-radius:8px;
+    padding:9px 11px;font-family:var(--mono);font-size:12.5px;margin:10px 0;overflow-x:auto}
+  .cmd code{white-space:nowrap;flex:1}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--linea);color:var(--suave);font-size:12.5px}
+</style>
+
+<div class="wrap">
+
+<!-- ══════════ puerta ══════════ -->
+<div id="puerta">
+  <h1>Bóveda</h1>
+  <p class="sub">Consola de rotación de llaves. Aquí no vive ningún secreto: sólo el seguimiento.</p>
+  <div id="paso1">
+    <div class="campo"><label for="em">Correo</label><input id="em" type="email" autocomplete="username"></div>
+    <div class="campo"><label for="pw">Contraseña</label><input id="pw" type="password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')entrar()"></div>
+    <button class="btn pri" onclick="entrar()">Entrar</button>
+  </div>
+  <div id="paso2" style="display:none">
+    <p class="sub" id="mfaTexto">Escribe el código de 6 dígitos de tu app de autenticación.</p>
+    <div id="qr"></div>
+    <div class="campo"><label for="cod">Código</label><input id="cod" inputmode="numeric" maxlength="6" autocomplete="one-time-code"
+      onkeydown="if(event.key==='Enter')verificar()"></div>
+    <button class="btn pri" onclick="verificar()">Verificar</button>
+    <button class="btn" onclick="salir()">Salir</button>
+  </div>
+  <div id="msg"></div>
+</div>
+
+<!-- ══════════ tablero ══════════ -->
+<div id="app" style="display:none">
+  <header class="top">
+    <div>
+      <h1>Bóveda · rotación de llaves</h1>
+      <div class="candados">
+        <span class="cand">sesión ✓</span><span class="cand">fundador ✓</span><span class="cand">2º factor ✓</span>
+        <span class="cand" style="background:var(--acento-tenue);color:var(--acento)">cero secretos aquí</span>
+      </div>
+    </div>
+    <button class="btn" onclick="salir()">Salir</button>
+  </header>
+
+  <div class="resumen" id="resumen"></div>
+  <div class="barra"><i id="barra" style="width:0"></i></div>
+  <div class="sub" id="progreso"></div>
+
+  <div id="avisos"></div>
+  <div id="tandas"></div>
+
+  <footer>
+    Los valores nunca pasan por aquí: viajan del proveedor a tu Llavero por el prompt silencioso de
+    <span class="mono">claudia keys rotate</span>. Esta consola sólo sabe <b>qué</b> llave, <b>dónde</b> vive y <b>cuándo</b> se rotó.
+    <br>Tres candados en la base de datos, no en el navegador: sesión iniciada · fundador · segundo factor verificado en esta sesión.
+  </footer>
+</div>
+</div>
+
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let TABLERO = [], FACTOR = null;
+
+const PASOS = [
+  ["created",  "Llave nueva creada en el proveedor — la vieja sigue viva"],
+  ["deployed", "Deploys actualizados (env de Vercel / secret de wrangler)"],
+  ["verified", "App viva verificada"],
+  ["vaulted",  "Guardada en el Llavero (prompt silencioso)"],
+  ["revoked",  "Llave vieja revocada en el proveedor"],
+];
+const TANDA = {
+  1:"Tanda 1 · llaves de servicios (bajo riesgo, para agarrar el ritmo)",
+  2:"Tanda 2 · dinero y plataformas",
+  3:"Tanda 3 · secretos que generas tú",
+  4:"Tanda 4 · service-role de Supabase (el mayor radio de daño — al final)",
+};
+
+/* Los mensajes de Supabase vienen en inglés; los que se ven seguido, en claro. */
+const EN_CLARO = {
+  "Invalid login credentials":"Correo o contraseña incorrectos.",
+  "Email not confirmed":"Ese correo aún no está confirmado.",
+  "Invalid TOTP code entered":"Código incorrecto o ya vencido. Prueba con el siguiente.",
+  "Too many requests":"Demasiados intentos seguidos. Espera un momento.",
+};
+function aviso(t, clase){ $("msg").className = clase||""; $("msg").textContent = EN_CLARO[t] || t || ""; }
+
+/* ── entrar: contraseña y luego segundo factor ── */
+async function entrar(){
+  aviso("Entrando…");
+  const { error } = await sb.auth.signInWithPassword({ email:$("em").value.trim(), password:$("pw").value });
+  if(error){ aviso(error.message, "mal"); return; }
+  await segundoFactor();
+}
+async function segundoFactor(){
+  const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(aal && aal.currentLevel === "aal2") return abrir();
+  const { data: f, error } = await sb.auth.mfa.listFactors();
+  if(error){ aviso(error.message,"mal"); return; }
+  const listo = (f.totp||[]).find(x=>x.status==="verified");
+  $("paso1").style.display="none"; $("paso2").style.display="block";
+  if(listo){
+    FACTOR = listo.id; $("qr").innerHTML="";
+    $("mfaTexto").textContent = "Escribe el código de 6 dígitos de tu app de autenticación.";
+    aviso("");
+  } else {
+    const { data: en, error: e2 } = await sb.auth.mfa.enroll({ factorType:"totp", friendlyName:"Bóveda "+Date.now() });
+    if(e2){ aviso(e2.message,"mal"); return; }
+    FACTOR = en.id;
+    $("qr").innerHTML = en.totp.qr_code ? `<img src="${en.totp.qr_code}" alt="Código QR para tu app de autenticación">` : "";
+    $("mfaTexto").textContent = "Primera vez: escanea este código con tu app de autenticación y escribe el número que te dé.";
+    aviso("");
+  }
+  $("cod").focus();
+}
+async function verificar(){
+  const code = ($("cod").value||"").replace(/\D/g,"");
+  if(code.length!==6){ aviso("Son 6 dígitos.","mal"); return; }
+  aviso("Verificando…");
+  const { data: ch, error: e1 } = await sb.auth.mfa.challenge({ factorId: FACTOR });
+  if(e1){ aviso(e1.message,"mal"); return; }
+  const { error: e2 } = await sb.auth.mfa.verify({ factorId: FACTOR, challengeId: ch.id, code });
+  if(e2){ aviso("Código incorrecto o vencido. Prueba con el siguiente.","mal"); $("cod").value=""; return; }
+  abrir();
+}
+async function salir(){ await sb.auth.signOut(); location.reload(); }
+
+/* ── tablero ── */
+async function abrir(){
+  aviso("Abriendo…");
+  const { data, error } = await sb.rpc("claudia_vault_board");
+  if(error){ aviso(error.message,"mal"); return; }
+  TABLERO = data || [];
+  $("puerta").style.display="none"; $("app").style.display="block";
+  pintar();
+}
+function pasoHecho(k, id){ return k.steps && k.steps[id]; }
+function completa(k){ return PASOS.every(([id])=>pasoHecho(k,id)); }
+
+function pintar(){
+  const total = TABLERO.length;
+  const hechas = TABLERO.filter(completa).length;
+  const urgentes = TABLERO.filter(k=>k.due && !completa(k));
+  const pasosTotales = total*PASOS.length;
+  const pasosHechos = TABLERO.reduce((n,k)=>n+PASOS.filter(([id])=>pasoHecho(k,id)).length,0);
+
+  $("resumen").innerHTML = `
+    <div class="caja"><b>${total}</b><small>llaves vigiladas</small></div>
+    <div class="caja bien"><b>${hechas}</b><small>rotadas por completo</small></div>
+    <div class="caja urge"><b>${urgentes.length}</b><small>toca rotarlas</small></div>
+    <div class="caja"><b>${Math.round(pasosHechos/pasosTotales*100)}%</b><small>del barrido</small></div>`;
+  $("barra").style.width = (pasosHechos/pasosTotales*100)+"%";
+  $("progreso").textContent = `${pasosHechos} de ${pasosTotales} pasos · ${hechas} de ${total} llaves cerradas`;
+
+  $("avisos").innerHTML = urgentes.length ? `<div class="aviso">
+      <b>${urgentes.length} llave(s) piden rotación.</b>
+      <div class="sub" style="margin-top:5px">${urgentes.slice(0,6).map(k=>esc(k.project+"/"+k.key_name)).join(" · ")}${urgentes.length>6?" …":""}</div>
+    </div>` : "";
+
+  $("tandas").innerHTML = [1,2,3,4].map(n=>{
+    const grupo = TABLERO.filter(k=>k.session_no===n);
+    if(!grupo.length) return "";
+    const listas = grupo.filter(completa).length;
+    return `<h2>${esc(TANDA[n])} <span style="color:var(--acento)">${listas}/${grupo.length}</span></h2>
+            ${grupo.map(tarjeta).join("")}`;
+  }).join("");
+}
+
+function tarjeta(k){
+  const lista = completa(k);
+  const clase = lista ? "lista" : (k.due ? "urge" : "");
+  const n = PASOS.filter(([id])=>pasoHecho(k,id)).length;
+  const cmd = k.cmd_override || `claudia keys rotate ${k.project} ${k.key_name} --yes`;
+  return `<div class="llave ${clase}" id="k_${cssId(k.id)}">
+    <div class="cab" onclick="alternar('${esc(k.id)}')">
+      <h3>${esc(k.key_name)}</h3><span class="proj">${esc(k.project)}</span>
+      ${k.never_rotate?'<span class="chip nunca">nunca rotar</span>':""}
+      ${lista?'<span class="chip bien">completa</span>':(k.due?'<span class="chip urge">toca rotar</span>':'<span class="chip med">al día</span>')}
+      <span class="cuenta">${n}/${PASOS.length}</span>
+    </div>
+    <div class="cuerpo">
+      ${k.warn?`<div class="warn">⚠️ ${esc(k.warn)}</div>`:""}
+      ${k.provider?`<div class="dato"><span class="et">Proveedor</span>${k.provider_url?`<a href="${esc(k.provider_url)}" target="_blank" rel="noopener">${esc(k.provider)} ↗</a>`:esc(k.provider)}</div>`:""}
+      ${(k.deploy&&k.deploy.length)?`<div class="dato"><span class="et">Dónde actualizarla</span>${k.deploy.map(d=>`• ${esc(d)}`).join("<br>")}</div>`:""}
+      ${k.verify?`<div class="dato"><span class="et">Cómo verificar</span>${esc(k.verify)}</div>`:""}
+      <div class="cmd"><code>! ${esc(cmd)}</code><button class="btn mini" onclick="copiar(this,'${esc(cmd)}')">Copiar</button></div>
+      <ul class="pasos">${PASOS.map(([id,txt])=>{
+        const hecho = pasoHecho(k,id);
+        return `<li class="paso ${hecho?"hecho":""}">
+          <input type="checkbox" ${hecho?"checked":""} onchange="marcar('${esc(k.id)}','${id}',this.checked,this)">
+          <span class="txt">${esc(txt)}</span>
+          ${hecho?`<span class="cuando">${new Date(hecho).toLocaleDateString("es-MX")}</span>`:""}</li>`;
+      }).join("")}</ul>
+    </div>
+  </div>`;
+}
+const cssId = s => String(s).replace(/[^a-zA-Z0-9]/g,"_");
+function alternar(id){ const el=$("k_"+cssId(id)); if(el) el.classList.toggle("abierta"); }
+function copiar(btn, txt){
+  navigator.clipboard?.writeText(txt).then(()=>{ btn.textContent="Copiado"; setTimeout(()=>btn.textContent="Copiar",1400); });
+}
+async function marcar(id, paso, hecho, el){
+  el.disabled = true;
+  const { error } = await sb.rpc("claudia_vault_mark", { p_key:id, p_step:paso, p_done:hecho });
+  el.disabled = false;
+  if(error){ alert("No se pudo guardar: "+error.message); el.checked = !hecho; return; }
+  const k = TABLERO.find(x=>x.id===id);
+  if(k){ k.steps = k.steps||{}; if(hecho) k.steps[paso]=new Date().toISOString(); else delete k.steps[paso];
+         if(paso==="revoked"&&hecho) k.due=false; }
+  const abierta = document.querySelector(".llave.abierta")?.id;
+  pintar();
+  if(abierta) document.getElementById(abierta)?.classList.add("abierta");
+}
+
+/* ── arranque: si ya hay sesión, seguir donde quedó ── */
+(async ()=>{
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session) await segundoFactor();
+})();
+</script>
+</body>
+</html>

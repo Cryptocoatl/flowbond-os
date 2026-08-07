@@ -86,14 +86,33 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     text = typeof body?.text === 'string' ? body.text.slice(0, 1200) : '';
     lang = body?.lang === 'en' ? 'en' : 'es';
+    // dev-only voice override (never reaches production — env NODE_ENV guards it)
+    if (process.env.NODE_ENV !== 'production' && typeof body?.voice === 'string') {
+      (global as Record<string, unknown>).__claudia_voice_override__ = body.voice;
+    }
   } catch {
     return NextResponse.json({ error: 'bad-request' }, { status: 400 });
   }
   if (!text.trim()) return NextResponse.json({ error: 'bad-request' }, { status: 400 });
 
+  const voiceOverride = process.env.NODE_ENV !== 'production'
+    ? (global as Record<string, unknown>).__claudia_voice_override__ as string | undefined
+    : undefined;
+
   try {
     // OpenAI is the default engine; ElevenLabs is the bespoke-voice fallback.
-    const res = openaiKey ? await openaiTTS(openaiKey, text, lang) : await elevenTTS(elevenKey!, text, lang);
+    const oaiWithVoice = openaiKey
+      ? (t: string, l: string) => {
+          const saved = OAI_VOICE;
+          // temporarily override for this request if dev asked for a specific voice
+          return fetch('https://api.openai.com/v1/audio/speech', {
+            method: 'POST',
+            headers: { authorization: `Bearer ${openaiKey}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ model: OAI_MODEL, voice: voiceOverride || saved, input: t, instructions: oaiInstructions(l), response_format: 'mp3' }),
+          });
+        }
+      : null;
+    const res = oaiWithVoice ? await oaiWithVoice(text, lang) : await elevenTTS(elevenKey!, text, lang);
 
     if (!res.ok || !res.body) {
       // Surface only the status (never the upstream body). The client uses 401/429
