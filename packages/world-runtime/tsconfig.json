@@ -1,0 +1,7 @@
+{
+  "extends": "@flowbond/config/tsconfig/base",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}
