@@ -79,7 +79,9 @@ const sesion = {
   const page = await ctx.newPage();
   const errores = [];
   page.on("pageerror", e => errores.push(String(e)));
-  await page.goto(`${BASE}/admin.html`, { waitUntil: "networkidle", timeout: 45000 });
+  // En producción Cloudflare sirve /admin (sin .html) y redirige el .html a vacío.
+  const RUTA = BASE.includes("localhost") ? "/admin.html" : "/admin";
+  await page.goto(`${BASE}${RUTA}`, { waitUntil: "networkidle", timeout: 45000 });
   await page.waitForTimeout(800);
   ok("entra al panel (sesión simulada)", await page.isVisible("#app"), await page.innerText("#login").catch(() => ""));
 
