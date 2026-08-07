@@ -7,6 +7,13 @@
 // completing one makes the guide speak its teaching and grants XP; finishing a
 // world unlocks the next. Third-person avatar (keyboard + touch + drag-look),
 // Enter-VR, Web Speech guide voice.
+//
+// CO-OP: join a room (four-letter code) and you are literally in the same world
+// as the other player — same objectives, one shared progress bar, a live voice
+// call, and a bond that has to hold for the last objective of every mission to
+// open. Nothing here is competitive: there is no score to take from each other.
+// See useParty.ts (React face), lib/net/* (transport + WebRTC) and
+// apps/kai-room (the Durable Object that referees the shared state).
 // =============================================================================
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -30,7 +37,11 @@ import { MiniHud, type HudTarget } from './MiniHud';
 import { AtlantisEnvironment, SelvaEnvironment, EgiptoEnvironment, EscuelaEnvironment, EspirituEnvironment, NuevoEnvironment } from './environments';
 import { useBuild, type Placed } from './useBuild';
 import { BuiltProp, paletteFor, BUILD_KINDS, type BuildKind } from './BuiltProps';
-import { input, playerPos, playerState, phys } from './runtime';
+import { input, playerPos, playerState, phys, party as partyRt } from './runtime';
+import { useParty } from './useParty';
+import { PartyLayer } from './PartyLayer';
+import { RemotePlayers } from './RemotePlayers';
+import { normalizeCode } from '@/lib/net/protocol';
 
 const store = createXRStore();
 
@@ -282,6 +293,7 @@ function Target({
   drift = false,
   collected,
   onCollect,
+  needsBond = false,
 }: {
   id: number;
   position: [number, number, number];
@@ -291,8 +303,11 @@ function Target({
   drift?: boolean;
   collected: boolean;
   onCollect: (id: number) => void;
+  /** co-op gate: only opens while your teammate is bonded (close by). */
+  needsBond?: boolean;
 }) {
   const g = useRef<THREE.Group>(null);
+  const lock = useRef<THREE.Mesh>(null);
   const done = useRef(false);
   const py = position[1];
   useFrame((_, dt) => {
@@ -302,7 +317,13 @@ function Target({
     const oz = drift ? Math.sin(t * 0.9 + id) * 3 : 0;
     g.current.rotation.y += dt * 1.4;
     g.current.position.set(position[0] + ox, py + Math.sin(t * 2.4 + id) * 0.18, position[2] + oz);
-    if (!done.current) {
+    // The last objective of a co-op mission stays sealed until you're together.
+    const sealed = needsBond && !partyRt.bonded;
+    if (lock.current) {
+      lock.current.visible = sealed;
+      lock.current.rotation.z = t * 0.8;
+    }
+    if (!done.current && !sealed) {
       const d = Math.hypot(playerPos.x - g.current.position.x, (playerPos.y + 1.2) - g.current.position.y, playerPos.z - g.current.position.z);
       if (d < radius) {
         done.current = true;
@@ -318,6 +339,12 @@ function Target({
         <cylinderGeometry args={[0.12, 0.12, py + 2, 8]} />
         <meshBasicMaterial color={color} transparent opacity={0.42} />
       </mesh>
+      {needsBond && (
+        <mesh ref={lock} visible={false}>
+          <torusGeometry args={[1.05, 0.06, 8, 40]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.55} toneMapped={false} />
+        </mesh>
+      )}
       <mesh position={[0, -py + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.9, 1.2, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.8} side={THREE.DoubleSide} />
@@ -409,13 +436,14 @@ function QuizCrystal({ position, color, onNear }: { position: [number, number, n
 }
 
 // A tower/pedestal you jump or swim up to; touch the light at the top (llevar).
-function Tower({ id, top, color, emoji, collected, onCollect }: { id: number; top: [number, number, number]; color: string; emoji: string; collected: boolean; onCollect: (id: number) => void }) {
+function Tower({ id, top, color, emoji, collected, onCollect, needsBond = false }: { id: number; top: [number, number, number]; color: string; emoji: string; collected: boolean; onCollect: (id: number) => void; needsBond?: boolean }) {
   const orb = useRef<THREE.Mesh>(null);
   const done = useRef(false);
   const [x, ty, z] = top;
   useFrame((_, dt) => {
     if (collected || done.current) return;
     if (orb.current) orb.current.rotation.y += dt * 1.5;
+    if (needsBond && !partyRt.bonded) return; // sealed until you're together
     const d = Math.hypot(playerPos.x - x, playerPos.y + 1.2 - ty, playerPos.z - z);
     if (d < 3) {
       done.current = true;
@@ -488,6 +516,7 @@ function MissionObjects({
   collected,
   onCollect,
   onQuizNear,
+  teamGate = false,
 }: {
   world: KaiWorld;
   mission: WorldMission;
@@ -495,7 +524,12 @@ function MissionObjects({
   collected: Set<number>;
   onCollect: (id: number) => void;
   onQuizNear: () => void;
+  /** in co-op, seal the final objective until both guardians are bonded */
+  teamGate?: boolean;
 }) {
+  // Only the LAST objective is sealed — you can roam and gather freely, but you
+  // have to finish the mission side by side.
+  const gateIdx = teamGate ? positions.length - 1 : -1;
   if (mission.tipo === 'construir') return null; // placement is UI-driven
   if (mission.tipo === 'quiz') {
     return <QuizCrystal position={[positions[0][0], 0, positions[0][2]]} color={world.color} onNear={onQuizNear} />;
@@ -513,7 +547,7 @@ function MissionObjects({
     return (
       <>
         {positions.map((p, i) => (
-          <Tower key={i} id={i} top={p} color={world.color} emoji={mission.emoji} collected={collected.has(i)} onCollect={onCollect} />
+          <Tower key={i} id={i} top={p} color={world.color} emoji={mission.emoji} collected={collected.has(i)} onCollect={onCollect} needsBond={i === gateIdx} />
         ))}
       </>
     );
@@ -532,7 +566,7 @@ function MissionObjects({
   return (
     <>
       {positions.map((p, i) => (
-        <Target key={i} id={i} position={p} color={world.color} emoji={mission.emoji} radius={radius} drift={drift} collected={collected.has(i)} onCollect={onCollect} />
+        <Target key={i} id={i} position={p} color={world.color} emoji={mission.emoji} radius={radius} drift={drift} collected={collected.has(i)} onCollect={onCollect} needsBond={i === gateIdx} />
       ))}
     </>
   );
@@ -761,6 +795,7 @@ function Scene({
   onQuizNear,
   avatarUrl,
   builtProps,
+  crew,
 }: {
   world: KaiWorld;
   vitality: number;
@@ -771,6 +806,7 @@ function Scene({
   onQuizNear: () => void;
   avatarUrl: string | null;
   builtProps: Placed[];
+  crew: ReturnType<typeof useParty>;
 }) {
   const sun = useMemo<[number, number, number]>(() => [60, 26, 30], []);
   const underwater = world.id === 'atlantis';
@@ -821,6 +857,9 @@ function Scene({
       <Guide world={world} />
       <Player />
       <PlayerAvatar url={avatarUrl ?? DEFAULT_AVATAR.url} />
+      {crew.room && crew.status === 'live' && (
+        <RemotePlayers room={crew.room} members={crew.members} levels={crew.levels} color={world.color} />
+      )}
       {mission && (
         <MissionObjects
           world={world}
@@ -829,6 +868,7 @@ function Scene({
           collected={collected}
           onCollect={onCollect}
           onQuizNear={onQuizNear}
+          teamGate={crew.together}
         />
       )}
       <EffectComposer>
@@ -846,9 +886,16 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   const speech = useSpeech();
   const { speak, muted, toggleMute } = speech;
 
+  // Co-op. When a party is live, the room server — not localStorage — decides
+  // which world the group is in and which mission is active, so both players
+  // are always looking at the same objective. Solo play is untouched.
+  const crew = useParty();
+  const [partyOpen, setPartyOpen] = useState(false);
+  const inParty = crew.status === 'live' && !!crew.shared;
+
   const lang = progress.lang;
-  const world = worldById(progress.world);
-  const missionIdx = progress.done[world.id] ?? 0;
+  const world = worldById(inParty ? crew.shared!.w : progress.world);
+  const missionIdx = inParty ? crew.shared!.mi : (progress.done[world.id] ?? 0);
   const mission: WorldMission | undefined = world.missions[missionIdx];
   const worldDone = missionIdx >= world.missions.length;
 
@@ -861,7 +908,13 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   const build = useBuild(world.id);
   const palette = useMemo(() => paletteFor(world.id), [world.id]);
 
-  const [collected, setCollected] = useState<Set<number>>(new Set());
+  // Solo: the local objective set. Co-op: mirrored from the room's shared set,
+  // so whatever either of you picks up counts for both.
+  const [soloCollected, setSoloCollected] = useState<Set<number>>(new Set());
+  const collected = useMemo(
+    () => (inParty ? new Set(crew.shared!.col) : soloCollected),
+    [inParty, crew.shared, soloCollected],
+  );
   const [quizOpen, setQuizOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [creatorOpen, setCreatorOpen] = useState(false);
@@ -907,7 +960,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
 
   // reset per-mission state when world or mission changes
   useEffect(() => {
-    setCollected(new Set());
+    setSoloCollected(new Set());
     setQuizOpen(false);
     completing.current = false;
     const m = world.missions[missionIdx];
@@ -923,6 +976,19 @@ export function GameWorld({ region }: { region: RegionSummary }) {
       guideSpeak(world.intro[lang]);
     }
   }, [showIntro, ready, world, lang, guideSpeak]);
+
+  // Invite link: /play?sala=ABCD. If we already know this player's name we join
+  // straight through — a kid tapping a link from a phone shouldn't have to fill
+  // in a form. Otherwise we open the panel with the code already typed in.
+  const inviteHandled = useRef(false);
+  useEffect(() => {
+    if (inviteHandled.current || !ready || !crew.ready) return;
+    inviteHandled.current = true;
+    const code = normalizeCode(new URLSearchParams(window.location.search).get('sala') ?? '');
+    if (!code) return;
+    if (crew.name) crew.join(code, crew.name, avatarUrl ?? DEFAULT_AVATAR.url, world.id, missionIdx);
+    else setPartyOpen(true);
+  }, [ready, crew, avatarUrl, world.id, missionIdx]);
 
   useEffect(() => {
     const xr = (navigator as unknown as { xr?: { isSessionSupported?: (m: string) => Promise<boolean> } }).xr;
@@ -941,7 +1007,11 @@ export function GameWorld({ region }: { region: RegionSummary }) {
     const wasLast = missionIdx + 1 >= world.missions.length;
     logEvent(`🌟 Misión completa: ${mission.title[lang]} (+${mission.xp} ✦)`);
     guideSpeak(mission.teach[lang]);
+    // Both players earn the full XP — co-op never splits the reward.
     completeMission(world.id, mission.xp);
+    // In a party the server is the one that advances everyone; it ignores a
+    // second report for the same mission, so simultaneous finishes are safe.
+    if (inParty) crew.room?.send({ t: 'done', w: world.id, mi: missionIdx });
     flash(`+${mission.xp} ✦ · ${mission.title[lang]}`);
     if (wasLast) {
       window.setTimeout(() => {
@@ -949,11 +1019,16 @@ export function GameWorld({ region }: { region: RegionSummary }) {
         flash(lang === 'es' ? `🌟 ¡Mundo completo! ${world.name.es}` : `🌟 World complete! ${world.name.en}`);
       }, 1400);
     }
-  }, [mission, missionIdx, world, lang, guideSpeak, logEvent, completeMission, flash]);
+  }, [mission, missionIdx, world, lang, guideSpeak, logEvent, completeMission, flash, inParty, crew.room]);
 
   const handleCollect = useCallback(
     (id: number) => {
-      setCollected((prev) => {
+      if (inParty) {
+        // The room owns the shared set; it echoes back and both clients update.
+        crew.room?.send({ t: 'collect', w: world.id, mi: missionIdx, id });
+        return;
+      }
+      setSoloCollected((prev) => {
         if (prev.has(id)) return prev;
         const next = new Set(prev);
         next.add(id);
@@ -961,7 +1036,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
         return next;
       });
     },
-    [mission, logEvent],
+    [mission, logEvent, inParty, crew.room, world.id, missionIdx],
   );
 
   // Detect completion from state (outside the setState updater, so React
@@ -992,9 +1067,27 @@ export function GameWorld({ region }: { region: RegionSummary }) {
       setMapOpen(false);
       playerPos.set(0, 0, 0);
       introSpoken.current = '';
+      // Travelling is a group action: the whole party goes through the portal.
+      if (inParty) crew.room?.send({ t: 'world', w: id, mi: progress.done[id] ?? 0 });
     },
-    [setWorld],
+    [setWorld, inParty, crew.room, progress.done],
   );
+
+  // The party travelled (someone else opened the map): follow them there, and
+  // remember it locally so leaving the room doesn't teleport you back.
+  const partyWorld = inParty ? crew.shared!.w : null;
+  useEffect(() => {
+    if (!partyWorld || partyWorld === progress.world) return;
+    setWorld(partyWorld);
+    playerPos.set(0, 0, 0);
+    introSpoken.current = '';
+  }, [partyWorld, progress.world, setWorld]);
+
+  // Keep the handshake current so a dropped phone reconnects into the right
+  // world instead of dragging the party back to the start.
+  useEffect(() => {
+    crew.room?.syncHello({ avatar: avatarUrl ?? DEFAULT_AVATAR.url, w: world.id, mi: missionIdx });
+  }, [crew.room, avatarUrl, world.id, missionIdx]);
 
   const done = Math.min(collected.size, mission?.n ?? 0);
   const totalDone = WORLDS.reduce((s, w) => s + Math.min(progress.done[w.id] ?? 0, w.missions.length), 0);
@@ -1024,6 +1117,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
               onQuizNear={() => setQuizOpen(true)}
               avatarUrl={avatarUrl}
               builtProps={build.props}
+              crew={crew}
             />
           </Suspense>
         </XR>
@@ -1050,6 +1144,14 @@ export function GameWorld({ region }: { region: RegionSummary }) {
 
         {/* top-right: buttons */}
         <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-2">
+          <button
+            onClick={() => setPartyOpen(true)}
+            className={`pointer-events-auto rounded-full border px-4 py-1.5 text-sm font-medium backdrop-blur-md ${
+              crew.together ? 'border-kai-jade/50 bg-kai-jade/20 text-kai-jade' : 'border-white/15 bg-black/40 text-kai-text'
+            }`}
+          >
+            👥 {crew.together ? crew.members.length + 1 : lang === 'es' ? 'Juntos' : 'Together'}
+          </button>
           <button onClick={() => setMapOpen(true)} className="pointer-events-auto rounded-full border border-kai-gold/30 bg-kai-gold/10 px-4 py-1.5 text-sm font-medium text-kai-gold backdrop-blur-md">
             🗺️ {lang === 'es' ? 'Mundos' : 'Worlds'}
           </button>
@@ -1118,6 +1220,19 @@ export function GameWorld({ region }: { region: RegionSummary }) {
                 <span className="text-xs font-medium" style={{ color: world.color }}>
                   {done}/{mission.n}
                 </span>
+              </div>
+            )}
+            {/* who contributed what — the mission is one shared bar, never a race */}
+            {inParty && crew.together && mission.tipo !== 'quiz' && (
+              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-kai-faint">
+                <span>
+                  {crew.name}: <b className="text-kai-muted">{crew.shared!.by[crew.you] ?? 0}</b>
+                </span>
+                {crew.members.map((m) => (
+                  <span key={m.id}>
+                    {m.name}: <b className="text-kai-muted">{crew.shared!.by[m.id] ?? 0}</b>
+                  </span>
+                ))}
               </div>
             )}
           </div>
@@ -1227,6 +1342,20 @@ export function GameWorld({ region }: { region: RegionSummary }) {
             input.jx = x;
             input.jy = y;
           }}
+        />
+
+        {/* co-op: room pill, mic, emotes and the join panel */}
+        <PartyLayer
+          party={crew}
+          lang={lang}
+          avatarUrl={avatarUrl ?? DEFAULT_AVATAR.url}
+          worldId={world.id}
+          missionIdx={missionIdx}
+          color={world.color}
+          // The world intro comes first; an invite link opens the panel the
+          // moment it's dismissed rather than stacking two cards on a kid.
+          open={partyOpen && !showIntro}
+          onOpenChange={setPartyOpen}
         />
       </div>
 
