@@ -1,6 +1,8 @@
 import { ImageResponse } from 'next/og'
 
 // OG image for deck.flowbond.life — the octagon seal on the void, 1200×630.
+// Se genera una sola vez al construir: el sitio se sirve estático, sin servidor.
+export const dynamic = 'force-static'
 export const alt = 'FlowBond — Investor Deck'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
