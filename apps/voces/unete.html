@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Únete · Voces para el Alma</title>
+<meta name="description" content="Activa tu membresía en Voces para el Alma y haz crecer tu presencia como especialista.">
+<link rel="canonical" href="https://voces.world/unete">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --lino:#F7F2E9; --pergamino:#FCFAF4; --oro:#B68A3E; --oro-claro:#CBA15A;
+    --salvia:#7E9078; --salvia-tenue:#E5EAE0; --pizarra:#4C6072; --tinta:#2C2722;
+    --tinta-60:rgba(44,39,34,.62); --linea:rgba(44,39,34,.14);
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --r:14px;
+    --ok:#3f7d59; --warn:#b5762a; --bad:#a4493e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--tinta);background:var(--lino);line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
+  a{color:var(--pizarra)}
+  button{font-family:var(--sans);cursor:pointer}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:500;font-size:14px;padding:11px 20px;border-radius:100px;border:1px solid transparent;transition:.2s}
+  .btn-primary{background:var(--tinta);color:var(--lino)}
+  .btn-primary:hover{background:var(--oro)}
+  .btn-primary:disabled{opacity:.55;cursor:default}
+  .btn-ghost{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+  .btn-ghost:hover{border-color:var(--tinta)}
+  input{font-family:var(--sans);font-size:14px;color:var(--tinta);background:var(--pergamino);
+    border:1px solid var(--linea);border-radius:10px;padding:10px 12px;width:100%}
+  label{display:block;font-size:12px;font-weight:600;color:var(--tinta-60);margin:0 0 5px}
+  :focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+
+  header{padding:22px 0;border-bottom:1px solid var(--linea)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:18px;color:var(--tinta);text-decoration:none}
+  .ring{width:26px;height:26px;border-radius:50%;border:2px solid var(--oro);position:relative;flex:0 0 auto}
+  .ring::after{content:"";position:absolute;inset:5px;border-radius:50%;border:1.5px solid var(--salvia)}
+
+  .hero{text-align:center;padding:54px 0 10px}
+  .hero h1{font-size:clamp(30px,5vw,44px);line-height:1.08}
+  .hero p{color:var(--tinta-60);font-size:16px;max-width:560px;margin:14px auto 0}
+
+  .promo{max-width:560px;margin:22px auto 0;background:var(--salvia-tenue);border:1px solid rgba(126,144,120,.4);
+    border-radius:16px;padding:14px 18px;text-align:center;font-size:14.5px;color:var(--tinta)}
+  .promo b{color:var(--salvia)}
+
+  .toggle{display:flex;justify-content:center;gap:6px;margin:30px auto 0;background:var(--pergamino);
+    border:1px solid var(--linea);border-radius:100px;padding:5px;width:max-content}
+  .toggle button{border:none;background:transparent;padding:8px 20px;border-radius:100px;font-size:13.5px;font-weight:600;color:var(--tinta-60)}
+  .toggle button.on{background:var(--tinta);color:var(--lino)}
+  .toggle .save{font-size:11px;color:var(--salvia);font-weight:700;margin-left:5px}
+
+  .plans{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin:34px 0 60px}
+  @media(max-width:680px){ .plans{grid-template-columns:1fr} }
+  .plan{background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:30px 28px;position:relative;display:flex;flex-direction:column}
+  .plan.feat{border-color:var(--oro);box-shadow:0 12px 40px -22px rgba(182,138,62,.6)}
+  .plan .tag{position:absolute;top:-11px;left:28px;background:var(--oro);color:#fff;font-size:11px;font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:100px}
+  .plan h3{font-size:24px}
+  .price{margin:16px 0 4px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .price .now{font-family:var(--serif);font-size:40px;color:var(--tinta);line-height:1}
+  .price .cur{font-size:14px;color:var(--tinta-60)}
+  .price .was{font-size:18px;color:var(--tinta-60);text-decoration:line-through}
+  .per{font-size:13.5px;color:var(--tinta-60);min-height:20px}
+  .usd-row{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .usd-row .u{font-family:var(--serif);font-size:27px;color:var(--pizarra);line-height:1}
+  .usd-row .uwas{font-size:15px;color:var(--tinta-60);text-decoration:line-through}
+  .usd-row .ulbl{font-size:12.5px;color:var(--tinta-60)}
+  .local{font-size:12.5px;color:var(--salvia);font-weight:600;margin-top:4px}
+  .promo-line{font-size:12.5px;color:var(--salvia);font-weight:600;margin-top:6px;min-height:18px}
+  ul.perks{list-style:none;margin:20px 0 24px;display:flex;flex-direction:column;gap:10px}
+  ul.perks li{font-size:14px;color:var(--tinta);display:flex;gap:9px;align-items:flex-start}
+  ul.perks li::before{content:"";width:16px;height:16px;flex:0 0 auto;margin-top:2px;border-radius:50%;
+    background:var(--salvia-tenue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%237E9078' stroke-width='3'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat}
+  .plan .btn{width:100%;margin-top:auto}
+  .foot-note{text-align:center;color:var(--tinta-60);font-size:12.5px;max-width:560px;margin:0 auto 40px}
+
+  .codebox{max-width:440px;margin:0 auto 26px;background:var(--pergamino);border:1px solid var(--linea);border-radius:16px;padding:16px 18px}
+  .codebox label{display:block;font-size:13px;font-weight:600;color:var(--tinta);margin-bottom:9px}
+  .codebox-row{display:flex;gap:8px}
+  .codebox-row input{flex:1;text-transform:uppercase;letter-spacing:.03em}
+  .codemsg{font-size:12.5px;margin-top:9px;min-height:16px}
+
+  /* estado de éxito / confirmación */
+  #done{display:none;min-height:70vh;align-items:center;justify-content:center;text-align:center;padding:40px 22px}
+  #done .card{max-width:460px;background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:42px 34px}
+  #done h2{font-size:28px;margin-bottom:12px}
+  #done p{color:var(--tinta-60);font-size:15px}
+
+  /* gate login */
+  #gate{display:none;position:fixed;inset:0;background:rgba(44,39,34,.5);z-index:60;align-items:center;justify-content:center;padding:22px}
+  .gate-card{background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:34px;max-width:420px;width:100%}
+  .gate-card h3{font-size:22px;text-align:center}
+  .gate-card .sub{font-size:13px;color:var(--tinta-60);text-align:center;margin:8px 0 18px}
+  .field{margin-bottom:14px}
+  #gateMsg{font-size:13px;text-align:center;min-height:18px;margin-top:10px}
+  .gx{position:absolute;top:16px;right:18px;background:none;border:none;font-size:22px;color:var(--tinta-60)}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:var(--lino);
+    padding:12px 20px;border-radius:100px;font-size:13.5px;opacity:0;transition:.25s;z-index:80;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="/"><span class="ring"></span>Voces para el Alma</a></div></header>
+
+<main id="app">
+  <div class="wrap">
+    <section class="hero">
+      <h1>Haz crecer tu presencia en Voces</h1>
+      <p>Elige tu membresía y llega a más personas que buscan tu acompañamiento. Contacto directo, sin intermediación.</p>
+      <div class="promo" id="promo" style="display:none"></div>
+    </section>
+
+    <div class="toggle">
+      <button id="tgMon" class="on" onclick="setPeriod('monthly')">Mensual</button>
+      <button id="tgYr" onclick="setPeriod('yearly')">Anual<span class="save">2 meses gratis</span></button>
+    </div>
+
+    <section class="plans" id="plans"></section>
+
+    <!-- Comisión: se ve ANTES de completar el pago, nunca después. -->
+
+    <div class="codebox">
+      <label for="codeInput">¿Tienes un código de descuento, de comunidad o de partner?</label>
+      <div class="codebox-row">
+        <input id="codeInput" type="text" placeholder="Escribe tu código" autocapitalize="characters" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')applyCode()">
+        <button class="btn btn-ghost" onclick="applyCode()">Aplicar</button>
+      </div>
+      <div id="codeMsg" class="codemsg"></div>
+    </div>
+
+    <p class="foot-note">El cobro es recurrente y se procesa de forma segura por MercadoPago. Puedes cancelar cuando quieras desde tu cuenta de MercadoPago.</p>
+  </div>
+</main>
+
+<section id="done">
+  <div class="card">
+    <span class="ring" style="margin:0 auto 16px;width:40px;height:40px"></span>
+    <h2>¡Estamos confirmando tu suscripción!</h2>
+    <p>En cuanto MercadoPago autorice tu tarjeta, tu membresía queda activa y te avisamos por correo. Puedes administrar tu perfil en <a href="/mi-voz">Mi Voz</a>.</p>
+    <a class="btn btn-primary" href="/mi-voz" style="margin-top:22px">Ir a Mi Voz</a>
+  </div>
+</section>
+
+<!-- gate login -->
+<div id="gate">
+  <div class="gate-card" style="position:relative">
+    <button class="gx" onclick="closeGate()" aria-label="Cerrar">×</button>
+    <h3>Inicia sesión</h3>
+    <p class="sub">Entra con tu cuenta de especialista para activar tu membresía.</p>
+    <div id="gateBody"></div>
+    <div id="gateMsg"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const FN_BASE = SUPABASE_URL + "/functions/v1/";
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const params = new URLSearchParams(location.search);
+// VOCES-MONEY:BEGIN
+/* ============================================================
+   VOCES · MONEDA — bloque canónico ÚNICO (v1, 2026-08-05)
+   ------------------------------------------------------------
+   FUENTE DE VERDAD: apps/voces/tools/voces-money.js
+   Se inyecta dentro de cada página, entre los marcadores VOCES-MONEY
+   (BEGIN/END), con `node tools/sync-money.js`.
+   NO editar la copia que vive dentro del HTML: se sobrescribe.
+
+   REGLAS (decisión de Steph, 2026-08-05):
+   1. UN SOLO PRECIO: el que se cobra. En Voces el cargo SIEMPRE se procesa
+      en pesos mexicanos (MercadoPago MX y Stripe cobran los centavos MXN).
+      Por eso el importe en MXN se muestra SIEMPRE, en toda pantalla pública.
+   2. La moneda del visitante es SÓLO una referencia, marcada con «≈», y se
+      calcula SIEMPRE desde el MXN cobrado — nunca desde otro precio.
+   3. Sin tipo de cambio fresco NO se convierte: se muestra sólo el peso.
+      (Una tabla fija ya causó ARS −39% y COP +22%: nunca más.)
+   4. El número se formatea con la convención de la MONEDA mostrada y se
+      acompaña del código ISO. En Colombia «33.708 COP» y no «COP 33,708»,
+      que un lector colombiano lee como treinta y tres pesos.
+============================================================ */
+window.VM = (function(){
+"use strict";
+
+/* --- país (ISO 3166-1 alpha-2) → moneda (ISO 4217) -----------------------
+   Cobertura mundial completa. Todas estas monedas existen en
+   app_vpa_fx_rates (166 códigos, verificado 2026-08-05); las que no
+   tuvieran tasa simplemente no se convierten y se ve el precio en MXN. */
+var COUNTRY_CCY = {
+AD:"EUR",AE:"AED",AF:"AFN",AG:"XCD",AI:"XCD",AL:"ALL",AM:"AMD",AO:"AOA",AR:"ARS",AS:"USD",
+AT:"EUR",AU:"AUD",AW:"AWG",AX:"EUR",AZ:"AZN",BA:"BAM",BB:"BBD",BD:"BDT",BE:"EUR",BF:"XOF",
+BG:"BGN",BH:"BHD",BI:"BIF",BJ:"XOF",BL:"EUR",BM:"BMD",BN:"BND",BO:"BOB",BQ:"USD",BR:"BRL",
+BS:"BSD",BT:"BTN",BW:"BWP",BY:"BYN",BZ:"BZD",CA:"CAD",CC:"AUD",CD:"CDF",CF:"XAF",CG:"XAF",
+CH:"CHF",CI:"XOF",CK:"NZD",CL:"CLP",CM:"XAF",CN:"CNY",CO:"COP",CR:"CRC",CU:"CUP",CV:"CVE",
+CW:"XCG",CX:"AUD",CY:"EUR",CZ:"CZK",DE:"EUR",DJ:"DJF",DK:"DKK",DM:"XCD",DO:"DOP",DZ:"DZD",
+EC:"USD",EE:"EUR",EG:"EGP",EH:"MAD",ER:"ERN",ES:"EUR",ET:"ETB",FI:"EUR",FJ:"FJD",FK:"FKP",
+FM:"USD",FO:"FOK",FR:"EUR",GA:"XAF",GB:"GBP",GD:"XCD",GE:"GEL",GF:"EUR",GG:"GGP",GH:"GHS",
+GI:"GIP",GL:"DKK",GM:"GMD",GN:"GNF",GP:"EUR",GQ:"XAF",GR:"EUR",GT:"GTQ",GU:"USD",GW:"XOF",
+GY:"GYD",HK:"HKD",HN:"HNL",HR:"EUR",HT:"HTG",HU:"HUF",ID:"IDR",IE:"EUR",IL:"ILS",IM:"IMP",
+IN:"INR",IO:"USD",IQ:"IQD",IR:"IRR",IS:"ISK",IT:"EUR",JE:"JEP",JM:"JMD",JO:"JOD",JP:"JPY",
+KE:"KES",KG:"KGS",KH:"KHR",KI:"AUD",KM:"KMF",KN:"XCD",KR:"KRW",KW:"KWD",KY:"KYD",KZ:"KZT",
+LA:"LAK",LB:"LBP",LC:"XCD",LI:"CHF",LK:"LKR",LR:"LRD",LS:"LSL",LT:"EUR",LU:"EUR",LV:"EUR",
+LY:"LYD",MA:"MAD",MC:"EUR",MD:"MDL",ME:"EUR",MF:"EUR",MG:"MGA",MH:"USD",MK:"MKD",ML:"XOF",
+MM:"MMK",MN:"MNT",MO:"MOP",MP:"USD",MQ:"EUR",MR:"MRU",MS:"XCD",MT:"EUR",MU:"MUR",MV:"MVR",
+MW:"MWK",MX:"MXN",MY:"MYR",MZ:"MZN",NA:"NAD",NC:"XPF",NE:"XOF",NF:"AUD",NG:"NGN",NI:"NIO",
+NL:"EUR",NO:"NOK",NP:"NPR",NR:"AUD",NU:"NZD",NZ:"NZD",OM:"OMR",PA:"USD",PE:"PEN",PF:"XPF",
+PG:"PGK",PH:"PHP",PK:"PKR",PL:"PLN",PM:"EUR",PN:"NZD",PR:"USD",PS:"ILS",PT:"EUR",PW:"USD",
+PY:"PYG",QA:"QAR",RE:"EUR",RO:"RON",RS:"RSD",RU:"RUB",RW:"RWF",SA:"SAR",SB:"SBD",SC:"SCR",
+SD:"SDG",SE:"SEK",SG:"SGD",SH:"SHP",SI:"EUR",SJ:"NOK",SK:"EUR",SL:"SLE",SM:"EUR",SN:"XOF",
+SO:"SOS",SR:"SRD",SS:"SSP",ST:"STN",SV:"USD",SX:"XCG",SY:"SYP",SZ:"SZL",TC:"USD",TD:"XAF",
+TG:"XOF",TH:"THB",TJ:"TJS",TL:"USD",TM:"TMT",TN:"TND",TO:"TOP",TR:"TRY",TT:"TTD",TV:"TVD",
+TW:"TWD",TZ:"TZS",UA:"UAH",UG:"UGX",US:"USD",UY:"UYU",UZ:"UZS",VA:"EUR",VC:"XCD",VE:"VES",
+VG:"USD",VI:"USD",VN:"VND",VU:"VUV",WF:"XPF",WS:"WST",XK:"EUR",YE:"YER",YT:"EUR",ZA:"ZAR",
+ZM:"ZMW",ZW:"ZWG"
+};
+
+/* País "dueño" de cada moneda: sólo para elegir la convención de separadores.
+   (es-CO ⇒ 33.708 · es-MX ⇒ 33,708 · el mismo número, leído distinto.) */
+var HOME_CC = {
+USD:"US",EUR:"ES",MXN:"MX",COP:"CO",ARS:"AR",CLP:"CL",PEN:"PE",UYU:"UY",BOB:"BO",PYG:"PY",
+BRL:"BR",VES:"VE",CRC:"CR",GTQ:"GT",HNL:"HN",NIO:"NI",DOP:"DO",CUP:"CU",PAB:"PA",GBP:"GB",
+CAD:"CA",CHF:"CH",AUD:"AU",NZD:"NZ",JPY:"JP",CNY:"CN",KRW:"KR",INR:"IN",RUB:"RU",TRY:"TR",
+ZAR:"ZA",SEK:"SE",NOK:"NO",DKK:"DK",PLN:"PL",CZK:"CZ",HUF:"HU",RON:"RO",ILS:"IL",AED:"AE",
+SAR:"SA",SGD:"SG",HKD:"HK",TWD:"TW",THB:"TH",PHP:"PH",IDR:"ID",MYR:"MY",VND:"VN",NGN:"NG",
+KES:"KE",EGP:"EG",MAD:"MA",XOF:"SN",XAF:"CM",XCD:"AG",XPF:"PF"
+};
+
+/* Monedas de inflación alta: se convierten sólo con tasa MUY fresca (≤36 h).
+   Una tasa de tres días en ARS ya miente lo suficiente para molestar. */
+var VOLATILE = ["ARS","VES","LBP","SYP","ZWL","ZWG","IRR","SDG","SSP","AFN","CUP","LAK","MMK"];
+var VOLATILE_MAX_AGE_MS = 36 * 3600 * 1000;
+
+/* `vpa_ccy2` (no `vpa_ccy`): la primera versión guardaba también la moneda que
+   venía en `?moneda=`, así que a quien abría un enlace de prueba se le quedaba
+   pegada esa moneda para siempre. Cambiar de llave descarta de una vez todas
+   las preferencias viejas. Ahora sólo se guarda lo que se elige a mano. */
+var LS_CC = "vpa_cc", LS_CCY = "vpa_ccy2", LS_FX = "vpa_fx_cache", SS_CCY = "vpa_ccy_vista";
+var MAX_AGE_MS = 3 * 24 * 3600 * 1000;   // misma regla de "stale" que el servidor
+
+var FX = null;          // {rates:{CODE:per_usd}, fetched_at, stale}
+var CC = null;          // país detectado
+var CCY = "MXN";        // moneda que ve el visitante
+var USER_PICKED = false;
+var listeners = [];
+var readyResolve, ready = new Promise(function(r){ readyResolve = r; });
+
+function ls(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(_){} }
+
+/* ---------------- tasas ---------------- */
+function usable(fx){
+  if(!fx || !fx.rates || !fx.rates.MXN || !fx.rates.USD) return false;
+  if(fx.stale) return false;
+  var t = fx.fetched_at ? Date.parse(fx.fetched_at) : 0;
+  if(!t || (Date.now() - t) > MAX_AGE_MS) return false;
+  return true;
+}
+function loadCache(){
+  try{
+    var raw = ls(LS_FX); if(!raw) return null;
+    var fx = JSON.parse(raw);
+    return usable(fx) ? fx : null;
+  }catch(_){ return null; }
+}
+async function loadRates(sb){
+  FX = loadCache();                       // arranca con lo último bueno (render inmediato)
+  if(!sb) return;
+  try{
+    var ctrl = new AbortController(), to = setTimeout(function(){ ctrl.abort(); }, 4000);
+    var res = await sb.rpc("vpa_fx_rates").abortSignal(ctrl.signal);
+    clearTimeout(to);
+    var d = res && res.data;
+    if(d && d.rates && d.rates.MXN){
+      var fx = { rates:d.rates, fetched_at:d.fetched_at, stale:!!d.stale };
+      if(usable(fx)){ FX = fx; lsSet(LS_FX, JSON.stringify(fx)); }
+      else if(fx.stale) FX = null;        // el servidor dice que está vieja: no inventamos
+    }
+  }catch(_){/* nos quedamos con el caché, o sin conversión */}
+}
+
+/* ---------------- país / moneda ---------------- */
+function ccyForCountry(cc){ return COUNTRY_CCY[String(cc||"").toUpperCase()] || null; }
+function regionOfBrowser(){
+  try{
+    var l = navigator.language || "";
+    var r = (typeof Intl.Locale === "function") ? new Intl.Locale(l).region : null;
+    return (r || (l.split("-")[1] || "")).toUpperCase() || null;
+  }catch(_){ return null; }
+}
+async function detectCountry(){
+  var saved = (ls(LS_CC) || "").toUpperCase();
+  if(saved && COUNTRY_CCY[saved]) { CC = saved; return; }
+  var reg = regionOfBrowser();
+  if(reg && COUNTRY_CCY[reg]) CC = reg;          // instantáneo, sin red
+  try{
+    var ctrl = new AbortController(), to = setTimeout(function(){ ctrl.abort(); }, 2000);
+    var r = await fetch("https://ipapi.co/json/", {signal:ctrl.signal});
+    clearTimeout(to);
+    if(r.ok){
+      var j = await r.json();
+      var c = String(j.country_code || j.country || "").toUpperCase();
+      if(c && COUNTRY_CCY[c]){ CC = c; lsSet(LS_CC, c); }
+    }
+  }catch(_){/* nos quedamos con la región del navegador */}
+}
+function ageMs(){
+  var t = FX && FX.fetched_at ? Date.parse(FX.fetched_at) : 0;
+  return t ? (Date.now() - t) : Infinity;
+}
+function canShow(code){
+  if(!code || code === "MXN") return code === "MXN";
+  if(!FX || !FX.rates) return false;             // FX sólo existe si pasó usable()
+  if(!Number(FX.rates[code])) return false;
+  if(VOLATILE.indexOf(code) >= 0 && ageMs() > VOLATILE_MAX_AGE_MS) return false;
+  return true;
+}
+function setCurrency(code, remember){
+  code = String(code||"").toUpperCase();
+  if(code === "MXN"){ CCY = "MXN"; if(remember){ USER_PICKED = true; lsSet(LS_CCY,"MXN"); } emit(); return true; }
+  if(!canShow(code)) return false;
+  CCY = code;
+  if(remember){ USER_PICKED = true; lsSet(LS_CCY, code); }
+  emit(); return true;
+}
+/* ?moneda=COP (o ?currency=COP) fuerza la moneda para VER lo que ve alguien de
+   otro país. Dura sólo la pestaña (sessionStorage): al cerrarla todo vuelve a
+   la normalidad. Lo que sí se guarda de verdad es el selector del carrito. */
+function paramCurrency(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var c = (q.get("moneda") || q.get("currency") || "").toUpperCase();
+    if(/^[A-Z]{3}$/.test(c)){ try{ sessionStorage.setItem(SS_CCY, c); }catch(_){} return c; }
+    try{ var v = sessionStorage.getItem(SS_CCY); return /^[A-Z]{3}$/.test(v||"") ? v : null; }catch(_){ return null; }
+  }catch(_){ return null; }
+}
+function pickCurrency(){
+  var forced = paramCurrency();
+  if(forced && (forced==="MXN" || canShow(forced))){ CCY = forced; USER_PICKED = true; return; }
+  var saved = (ls(LS_CCY)||"").toUpperCase();
+  if(saved && (saved==="MXN" || canShow(saved))){ CCY = saved; USER_PICKED = true; return; }
+  var auto = ccyForCountry(CC);
+  if(auto && canShow(auto)) CCY = auto;
+  else CCY = "MXN";
+}
+function emit(){ listeners.forEach(function(f){ try{ f(CCY); }catch(_){} }); }
+
+/* ---------------- formato ---------------- */
+/* SEPARADOR NEUTRO (decisión de Steph, 5-ago-2026, viendo la página).
+   El punto y la coma significan lo contrario en México y en Colombia: «55.995»
+   es cincuenta y seis mil para un colombiano y cincuenta y cinco con noventa y
+   nueve para un mexicano. Agrupar por país arregla al comprador y rompe a quien
+   da soporte. Así que los miles se separan con ESPACIO —«55 995 COP»— que se
+   lee igual en todo el mundo, y el decimal es siempre punto. Se conserva
+   localeFor() sólo para los nombres de moneda del selector. */
+/* Paraguay: Intl deduce guaraní (gn-PY, que agrupa con coma) pero los precios
+   allá se escriben 30.522 como en el resto del Cono Sur. */
+var LOCALE_OVERRIDE = { PY:"es-PY" };
+var localeCache = {};
+function localeFor(code){
+  code = String(code||"").toUpperCase();
+  if(localeCache[code]) return localeCache[code];
+  var cc = HOME_CC[code] || (ccyForCountry(CC) === code ? CC : null);
+  var loc = null;
+  if(cc && LOCALE_OVERRIDE[cc]) loc = LOCALE_OVERRIDE[cc];
+  else if(cc){
+    try{ loc = new Intl.Locale("und-" + cc).maximize().toString(); }catch(_){ loc = null; }
+    if(!loc || /^und/.test(loc)) loc = null;
+  }
+  if(!loc){ try{ loc = navigator.language || "es-MX"; }catch(_){ loc = "es-MX"; } }
+  localeCache[code] = loc; return loc;
+}
+/* Decimales: los precios grandes no llevan centavos; los chicos sí, salvo en
+   monedas sin fracción (JPY, CLP, PYG…), donde Intl ya manda. */
+function digitsFor(v){ return Math.abs(v) >= 1000 ? 0 : 2; }
+/* Siempre "cifra + código ISO" (33.709 COP · 15,03 EUR · 2,729 JPY): una sola
+   forma en todo el sitio y sin ambigüedad posible sobre de qué peso hablamos. */
+var NBSP = "\u00a0";
+/* Miles con espacio duro, decimales con punto, y el código ISO al final:
+   «55 995 COP» · «15.03 EUR» · «2 729 JPY». Una sola forma en todo el sitio. */
+function group(v, d){
+  var s;
+  try{ s = new Intl.NumberFormat("en-US", {minimumFractionDigits:d, maximumFractionDigits:d}).format(v); }
+  catch(_){ s = v.toFixed(d); }
+  return s.replace(/,/g, NBSP);
+}
+function fmt(value, code){
+  var v = Number(value); if(!isFinite(v)) return "";
+  code = String(code||CCY).toUpperCase();
+  return group(v, Math.min(digitsFor(v), maxFrac(code))) + " " + code;
+}
+/* cuántos decimales admite la moneda según el propio Intl (JPY→0, KWD→3…) */
+var fracCache = {};
+function maxFrac(code){
+  if(fracCache[code] != null) return fracCache[code];
+  var n = 2;
+  try{ n = new Intl.NumberFormat("en-US",{style:"currency",currency:code}).resolvedOptions().maximumFractionDigits; }
+  catch(_){ n = 2; }
+  fracCache[code] = n; return n;
+}
+/* El importe que SÍ se cobra. Siempre visible, siempre en pesos. */
+function mxn(pesos){
+  var v = Number(pesos)||0;
+  var d = (Math.round(v*100)%100 === 0) ? 0 : 2;
+  return "$" + group(v, d) + " MXN";   // «$8 500 MXN»: nadie lo lee como 8.5
+}
+/* Referencia en la moneda del visitante. "" si no aplica o no hay tasa fresca. */
+function approx(pesos, code){
+  code = String(code||CCY).toUpperCase();
+  if(code === "MXN") return "";
+  if(!canShow(code)) return "";
+  var v = convert(Number(pesos)||0, "MXN", code);
+  if(v == null || !(v > 0)) return "";
+  return "≈ " + fmt(v, code);
+}
+/* Precio completo para pantalla: lo que se cobra + la referencia. */
+function line(pesos, sep){ var a = approx(pesos); return mxn(pesos) + (a ? (sep||" · ") + a : ""); }
+function html(pesos, cls){
+  var a = approx(pesos);
+  return '<span class="vm-mxn">'+mxn(pesos)+'</span>' +
+         (a ? ' <span class="vm-approx'+(cls?" "+cls:"")+'">'+a+'</span>' : "");
+}
+function rate(from, to){
+  if(!FX || !FX.rates) return null;
+  from = String(from).toUpperCase(); to = String(to).toUpperCase();
+  var f = from==="USD" ? 1 : Number(FX.rates[from]);
+  var t = to==="USD"   ? 1 : Number(FX.rates[to]);
+  if(!f || !t || !isFinite(f) || !isFinite(t)) return null;
+  return t/f;
+}
+function convert(v, from, to){ var r = rate(from,to); return r==null ? null : v*r; }
+
+/* Nombre legible de moneda para el selector. */
+function ccyName(code){
+  try{
+    var mine = "es"; try{ mine = navigator.language || "es"; }catch(_){}
+    var dn = new Intl.DisplayNames([mine], {type:"currency"});
+    var n = dn.of(code);
+    return n && n !== code ? (code + " · " + n) : code;
+  }catch(_){ return code; }
+}
+function options(){
+  if(!FX || !FX.rates) return [{code:"MXN", label:ccyName("MXN")}];
+  var seen = {}, out = [{code:"MXN", label:ccyName("MXN")}];
+  Object.keys(COUNTRY_CCY).forEach(function(k){
+    var c = COUNTRY_CCY[k];
+    if(c==="MXN" || seen[c] || !canShow(c)) return;
+    seen[c] = 1; out.push({code:c, label:ccyName(c)});
+  });
+  out.sort(function(a,b){ return a.code==="MXN" ? -1 : b.code==="MXN" ? 1 : a.label.localeCompare(b.label); });
+  return out;
+}
+
+/* Lectura tolerante de un importe escrito a mano: "33.000" y "33,000" son
+   treinta y tres mil (nadie cobra 33 pesos con tres decimales); "33,50" y
+   "33.50" son treinta y tres con cincuenta. Devuelve null si no es número. */
+function parseAmount(str){
+  var s = String(str==null?"":str).trim().replace(/[^\d.,-]/g,"");
+  if(!s) return null;
+  var neg = /^-/.test(s); s = s.replace(/-/g,"");
+  if(/^\d{1,3}([.,]\d{3})+$/.test(s)) s = s.replace(/[.,]/g,"");        // 1.234.567 / 1,234,567
+  else if(/^\d+[.,]\d{1,2}$/.test(s)) s = s.replace(",", ".");           // 33,50
+  else if(/^\d+[.,]\d{3,}$/.test(s)) s = s.replace(/[.,]/g,"");          // 33.0005 → no existe: miles
+  else s = s.replace(/,/g,"");
+  var n = Number(s);
+  if(!isFinite(n)) return null;
+  return neg ? -n : n;
+}
+
+/* init: primero lo instantáneo (caché de tasas + región del navegador) para que
+   la página pinte precios de inmediato; la afinación por IP llega después y, si
+   cambia algo, avisa por onChange para repintar. Nunca bloquea el render. */
+async function init(sb){
+  await loadRates(sb);
+  var saved = (ls(LS_CC)||"").toUpperCase();
+  CC = (saved && COUNTRY_CCY[saved]) ? saved : regionOfBrowser();
+  if(CC && !COUNTRY_CCY[CC]) CC = null;
+  pickCurrency();
+  emit(); readyResolve(true);
+  if(!saved) refineByIp();
+  return CCY;
+}
+async function refineByIp(){
+  var before = CCY;
+  await detectCountry();
+  if(USER_PICKED) return;
+  pickCurrency();
+  if(CCY !== before) emit();
+}
+
+return {
+  init: init, ready: ready,
+  onChange: function(f){ listeners.push(f); },
+  currency: function(){ return CCY; },
+  country: function(){ return CC; },
+  isMXN: function(){ return CCY === "MXN"; },
+  hasRates: function(){ return !!(FX && FX.rates); },
+  fetchedAt: function(){ return FX && FX.fetched_at; },
+  ccyForCountry: ccyForCountry, countries: COUNTRY_CCY,
+  setCurrency: setCurrency, options: options, ccyName: ccyName,
+  rate: rate, convert: convert,
+  fmt: fmt, mxn: mxn, approx: approx, line: line, html: html,
+  parseAmount: parseAmount
+};
+})();
+// VOCES-MONEY:END
+/* El plan se cobra en pesos: `money` recibe CENTAVOS y devuelve el importe real. */
+const money = c => VM.mxn((c||0)/100);
+
+let PLANS=[];            // filas de app_vpa_plans (basic, pro) — importe REAL del cargo, en MXN
+let PERIOD = "monthly";
+let CODE = params.get("ref") ? params.get("ref").trim() : "";   // ?ref=CODIGO
+let PENDING = null;       // plan a suscribir tras iniciar sesión
+
+let toastT;
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),3400); }
+
+/* descuento (mismo cálculo que el servidor) para un plan según CODE validado */
+function discCents(plan){
+  const v = plan._code;              // {valid, discount_type, discount_value} | null
+  if(!v || !v.valid) return 0;
+  const base = PERIOD==="yearly" ? plan.yearly_cents : plan.monthly_cents;
+  if(v.discount_type==="percent") return Math.min(base, Math.floor(base*Math.min(v.discount_value,100)/100));
+  return Math.min(base, v.discount_value);   // 'amount' viene en centavos
+}
+
+function setPeriod(p){
+  PERIOD=p;
+  $("tgMon").classList.toggle("on",p==="monthly");
+  $("tgYr").classList.toggle("on",p==="yearly");
+  renderPlans();
+}
+
+/* ---- referencia en la moneda de quien mira -------------------------------
+   UN SOLO PRECIO: el que se cobra, en pesos. Debajo, y sólo como referencia,
+   el equivalente en la moneda del visitante calculado DESDE ESE MISMO IMPORTE.
+   (Antes convivía aquí un "precio internacional" en USD que no era lo que se
+   cobraba: a una compradora colombiana el ≈ salía de USD 19 = 61.443 COP
+   cuando el cargo real eran $299 MXN = 55.995 COP. Dos precios distintos para
+   la misma suscripción; de ahí la confusión.) */
+function localLine(plan, base, now){
+  const ref = VM.approx(now/100);
+  if(!ref) return "";
+  return `<div class="local">${ref} ${PERIOD==="yearly" ? "al año" : "al mes"}, al tipo de cambio de hoy</div>`;
+}
+
+/* La moneda del visitante y el tipo de cambio los resuelve el bloque canónico. */
+async function loadFx(){
+  await VM.init(sb);
+  // si la detección por IP afina la moneda después del primer pintado, se repinta
+  VM.onChange(()=>{ if(PLANS.length) renderPlans(); });
+}
+
+function renderPlans(){
+  const anyDisc = PLANS.some(p=>discCents(p)>0);
+  $("promo").style.display = (CODE && anyDisc) ? "block" : "none";
+  if(CODE && anyDisc) $("promo").innerHTML = `🎁 Tienes un descuento aplicado con el código <b>${esc(CODE.toUpperCase())}</b>. Ya está reflejado en los precios de abajo.`;
+
+  $("plans").innerHTML = PLANS.map(plan=>{
+    const feat = plan.id==="pro";
+    const base = PERIOD==="yearly" ? plan.yearly_cents : plan.monthly_cents;
+    const disc = discCents(plan);
+    const now = Math.max(0, base-disc);
+    const perMonth = PERIOD==="yearly" ? Math.round(now/12) : now;
+    const perks = (plan.perks_es||[]).map(x=>`<li>${esc(x)}</li>`).join("");
+    return `
+      <div class="plan${feat?" feat":""}">
+        ${feat?`<span class="tag">Recomendado</span>`:""}
+        <h3>${esc(plan.name_es)}</h3>
+        <div class="price">
+          <span class="now">${money(now)}</span>
+          ${disc>0?`<span class="was">${money(base)}</span>`:""}
+          <span class="cur">${PERIOD==="yearly" ? "al año" : "al mes"}</span>
+        </div>
+        <div class="per">${PERIOD==="yearly" ? `≈ ${money(perMonth)}/mes · 2 meses de regalo` : ""}</div>
+        ${localLine(plan, base, now)}
+        <div class="promo-line">${disc>0 ? "Precio promocional aplicado" : ""}</div>
+        <ul class="perks">${perks}</ul>
+        <button class="btn ${feat?"btn-primary":"btn-ghost"}" onclick="subscribe('${plan.id}')">Suscribirme</button>
+      </div>`;
+  }).join("");
+}
+
+/* La comisión de Voces NO se muestra en el checkout público (decisión de Steph,
+   2026-08-02): la voz la ve dentro de su panel, en “Membresía y acuerdo”. */
+
+/* valida el CODE actual contra cada plan; devuelve si alguno es válido / con descuento */
+async function validateCode(){
+  if(!CODE){ PLANS.forEach(p=>p._code=null); return {valid:false,disc:false}; }
+  await Promise.all(PLANS.map(async p=>{
+    const { data:v } = await sb.rpc("vpa_check_code",{ p_code:CODE, p_context:"plan", p_plan:p.id });
+    p._code = v || null;
+  }));
+  return { valid: PLANS.some(p=>p._code && p._code.valid), disc: PLANS.some(p=>discCents(p)>0) };
+}
+function showCodeMsg(res){
+  const m=$("codeMsg"); if(!m) return;
+  if(!CODE){ m.textContent=""; return; }
+  if(res.valid){ m.style.color="var(--salvia)"; m.textContent = res.disc ? "✓ Código aplicado — el descuento ya está reflejado abajo." : "✓ Código válido y aplicado."; }
+  else { m.style.color="var(--bad)"; m.textContent="Ese código no es válido o no aplica a estos planes."; }
+}
+/* botón Aplicar del checkout */
+async function applyCode(){
+  const val=($("codeInput").value||"").trim().toUpperCase();
+  CODE=val;
+  const m=$("codeMsg");
+  if(!val){ PLANS.forEach(p=>p._code=null); renderPlans(); if(m)m.textContent=""; try{localStorage.removeItem("vpa_ref");}catch(_){} return; }
+  if(m){ m.style.color="var(--tinta-60)"; m.textContent="Validando…"; }
+  const res=await validateCode();
+  renderPlans(); showCodeMsg(res);
+  if(res.valid){ try{ localStorage.setItem("vpa_ref", val); }catch(_){} }
+}
+
+async function loadPlans(){
+  await loadFx();
+  const { data, error } = await sb.from("app_vpa_plans").select("*").eq("active",true).in("id",["basic","pro"]).order("sort_order");
+  if(error || !data){ toast("No se pudieron cargar los planes."); return; }
+  PLANS = data;
+  let res={valid:false,disc:false};
+  if(CODE){ const ci=$("codeInput"); if(ci) ci.value=CODE.toUpperCase(); res=await validateCode(); }
+  if(params.get("period")==="yearly") PERIOD="yearly";
+  setPeriod(PERIOD);
+  showCodeMsg(res);
+}
+
+/* ============ SUSCRIBIR ============ */
+async function subscribe(planId){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ PENDING={planId}; openGate(); return; }
+
+  toast("Preparando tu suscripción…");
+  const email = session.user.email;
+  const { data, error } = await sb.rpc("vpa_start_subscription",{ payload:{ plan_id:planId, period:PERIOD, code:CODE, email } });
+  if(error){ toast("Error: "+error.message); return; }
+  if(!data || !data.ok){
+    // Ya tiene membresía viva: NO mandarlo a pagar otra vez (así casi se cobra doble
+    // a Monroy el 27-jul). Se le explica en qué va y ya.
+    if(data && data.error==="already_active"){ showMembershipState(data); return; }
+    if(data && data.error==="need_profile"){
+      toast("Primero crea tu perfil de especialista.");
+      const q=new URLSearchParams(); if(CODE) q.set("ref",CODE);
+      setTimeout(()=>location.href="/crear-perfil"+(q.toString()?"?"+q:""), 1600);
+      return;
+    }
+    toast("No se pudo iniciar la suscripción."); return;
+  }
+
+  // MEMBRESÍA DE CORTESÍA (código de 100%): no hay nada que cobrar, así que NO
+  // se manda a ninguna pasarela — Stripe y MercadoPago rechazan importe 0
+  // (`zero_amount`) y la persona se quedaba con una suscripción 'pending'
+  // imposible de pagar (ARTUROCIMA100 / URI100 / LAURA100, 30-jul al 3-ago).
+  // El total real lo decide el servidor: el RPC vuelve a verificar price_cents=0.
+  if(Number(data.amount_cents) === 0){
+    toast("Activando tu membresía de cortesía…");
+    const { data:act, error:aerr } = await sb.rpc("vpa_activate_free_subscription",
+      { p_sub:data.subscription_id });
+    if(aerr || !act || !act.ok){
+      toast("No se pudo activar tu membresía. Escríbenos y lo resolvemos contigo.");
+      return;
+    }
+    const { data:m } = await sb.rpc("vpa_my_membership");
+    if(m) showMembershipState(m); else location.reload();
+    return;
+  }
+
+  // Stripe PRIMERO: MercadoPago rechaza los cargos recurrentes con
+  // cc_rejected_high_risk (antifraude sobre suscripciones) y no hay palanca de
+  // código para bajar ese score. Stripe además trae Apple Pay y tarjetas
+  // internacionales. Si Stripe no está configurado o falla, cae a MercadoPago.
+  const url = await startCheckout("vpa-stripe-subscribe", data.subscription_id, session)
+           || await startCheckout("vpa-subscribe",        data.subscription_id, session);
+  if(!url){ toast("No se pudo abrir el pago. Escríbenos y lo resolvemos contigo."); return; }
+  location.href = url;
+}
+/* Pantalla "ya estás dentro": evita que alguien con membresía activa vuelva a pagar,
+   y le dice honestamente si su perfil sigue en revisión. */
+function showMembershipState(m){
+  const renueva = m.renews_at ? new Date(m.renews_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"}) : null;
+  const enRevision = m.profile_status && m.profile_status !== "published";
+  $("app").style.display="none";
+  const d=$("done");
+  d.innerHTML=`<div style="max-width:560px;margin:0 auto;text-align:center;padding:20px">
+    <div style="font-size:44px;line-height:1;margin-bottom:14px">${enRevision?"⏳":"✓"}</div>
+    <h2 style="font-family:var(--serif);font-size:27px;margin-bottom:12px">Tu membresía está activa</h2>
+    <p style="color:var(--tinta-60);line-height:1.65;margin-bottom:10px">
+      Plan <b>${esc((m.plan_id||"").toUpperCase())}</b> ${m.period==="yearly"?"anual":"mensual"}${renueva?` · se renueva el <b>${esc(renueva)}</b>`:""}.
+      <b>No necesitas pagar de nuevo.</b>
+    </p>
+    ${enRevision
+      ? `<p style="color:var(--tinta-60);line-height:1.65;background:rgba(182,138,62,.10);border:1px solid rgba(182,138,62,.35);border-radius:12px;padding:13px 15px;margin:14px 0">
+           Tu perfil está <b>en revisión por el equipo de Voces</b>. En cuanto lo aprueben aparece en el directorio público. Te avisamos por correo.
+         </p>`
+      : `<p style="color:var(--salvia);line-height:1.65">Tu perfil ya está publicado en el directorio. 🌿</p>`}
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a class="btn" href="/mi-voz">Ir a mi panel</a>
+      <a class="btn btn-ghost" href="/">Ver el directorio</a>
+    </div></div>`;
+  d.style.display="flex";
+}
+async function startCheckout(fn, subId, session){
+  try{
+    const r = await fetch(FN_BASE+fn,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+session.access_token },
+      body:JSON.stringify({ subscription_id:subId })
+    });
+    const j = await r.json();
+    if(r.ok && j.ok && j.checkout_url) return j.checkout_url;
+    console.warn(fn, j && (j.error||j.detail));
+  }catch(e){ console.warn(fn, e); }
+  return null;
+}
+
+/* ============ GATE LOGIN ============ */
+function openGate(){
+  $("gateBody").innerHTML=`
+    <form onsubmit="doLogin(event)">
+      <div class="field"><label>Correo</label><input id="lg_email" type="email" required autocomplete="username"></div>
+      <div class="field"><label>Contraseña</label><input id="lg_pass" type="password" required autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit" style="width:100%">Entrar</button>
+    </form>
+    <p class="sub" style="margin-top:14px">¿Aún no tienes cuenta? <a href="/crear-perfil">Regístrate aquí</a>.</p>`;
+  $("gateMsg").textContent="";
+  $("gate").style.display="flex";
+}
+function closeGate(){ $("gate").style.display="none"; PENDING=null; }
+async function doLogin(e){
+  e.preventDefault();
+  $("gateMsg").style.color=""; $("gateMsg").textContent="Entrando…";
+  const { error } = await sb.auth.signInWithPassword({ email:$("lg_email").value.trim(), password:$("lg_pass").value });
+  if(error){ $("gateMsg").style.color="var(--bad)"; $("gateMsg").textContent="Error: "+error.message; return; }
+  $("gate").style.display="none";
+  const p = PENDING; PENDING=null;
+  if(p) subscribe(p.planId);
+}
+
+/* ============ INIT ============ */
+(async function init(){
+  // Regreso desde Stripe o MercadoPago.
+  // OJO: el back_url es el mismo (?sub=<id>) para éxito, fallo Y cancelación, así que
+  // NO se puede asumir que pagó. Antes mostrábamos "confirmando tu suscripción" a todos
+  // — el rechazado se quedaba viendo una pantalla que le mentía, sin planes ni botón.
+  // Ahora se pregunta el estado real y se actúa en consecuencia.
+  const subBack = params.get("sub");
+  if(subBack){
+    if(params.get("stripe")==="cancel"){
+      history.replaceState({},"",location.pathname);
+      toast("Pago cancelado. Puedes intentarlo de nuevo cuando quieras.");
+    } else {
+      let st=null;
+      try{ const {data}=await sb.rpc("vpa_subscription_public_status",{p_sub:subBack}); st=data; }catch(_){}
+      if(st && st.found && st.status==="active"){
+        $("app").style.display="none"; $("done").style.display="flex";
+        return;
+      }
+      if(st && st.found && st.status==="pending"){
+        // Pago no completado: se le avisa claro y se le devuelven los planes.
+        history.replaceState({},"",location.pathname);
+        setTimeout(()=>toast("Tu pago no se completó. Elige tu plan e inténtalo otra vez — si tu banco lo rechaza, escríbenos y lo resolvemos."),600);
+      } else if(!st || !st.found){
+        // Sin datos: mejor mostrar los planes que una pantalla muerta.
+        history.replaceState({},"",location.pathname);
+      } else {
+        $("app").style.display="none"; $("done").style.display="flex";
+        return;
+      }
+    }
+  }
+  // Si ya tiene membresía viva, no le mostramos planes: le mostramos su estado.
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){
+      const { data:m } = await sb.rpc("vpa_my_membership");
+      if(m && m.active){ showMembershipState(m); return; }
+    }
+  }catch(_){}
+
+  await loadPlans();
+})();
+</script>
+</body>
+</html>

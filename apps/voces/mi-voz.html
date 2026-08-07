@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Mi Voz · Voces para el Alma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --lino:#F7F2E9; --pergamino:#FCFAF4; --oro:#B68A3E; --oro-claro:#CBA15A;
+    --salvia:#7E9078; --salvia-tenue:#E5EAE0; --pizarra:#4C6072; --tinta:#2C2722;
+    --tinta-60:rgba(44,39,34,.62); --linea:rgba(44,39,34,.14);
+    --serif:'Fraunces',Georgia,serif; --sans:'Inter',system-ui,sans-serif; --r:14px;
+    --ok:#3f7d59; --warn:#b5762a; --bad:#a4493e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--tinta);background:var(--lino);line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,h4{font-family:var(--serif);font-weight:400;letter-spacing:-.01em}
+  a{color:var(--pizarra)}
+  button{font-family:var(--sans);cursor:pointer}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-weight:500;font-size:14px;padding:9px 16px;border-radius:100px;border:1px solid transparent;transition:.2s}
+  .btn-primary{background:var(--tinta);color:var(--lino)}
+  .btn-primary:hover{background:var(--oro)}
+  .btn-primary:disabled{opacity:.55}
+  .btn-ghost{background:transparent;color:var(--tinta);border:1px solid var(--linea)}
+  .btn-ghost:hover{border-color:var(--tinta)}
+  .btn-sm{padding:6px 12px;font-size:13px}
+  input,select,textarea{font-family:var(--sans);font-size:14px;color:var(--tinta);background:var(--pergamino);
+    border:1px solid var(--linea);border-radius:10px;padding:10px 12px;width:100%}
+  textarea{min-height:90px;resize:vertical}
+  label{display:block;font-size:12px;font-weight:600;color:var(--tinta-60);margin:0 0 5px}
+  :focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+
+  #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .gate-card{background:var(--pergamino);border:1px solid var(--linea);border-radius:22px;padding:38px;max-width:440px;width:100%}
+  .gate-card .ring{display:block;text-align:center;margin-bottom:12px}
+  .gate-card h1{font-size:26px;text-align:center;margin-bottom:6px}
+  .gate-card p.sub{color:var(--tinta-60);font-size:14px;margin-bottom:20px;text-align:center}
+  .gate-card .field{margin-bottom:12px}
+  .claim-hero{display:flex;gap:14px;align-items:center;background:var(--lino);border:1px solid var(--linea);border-radius:16px;padding:14px;margin-bottom:18px}
+  .claim-hero .ph{width:60px;height:60px;border-radius:50%;background:var(--salvia-tenue) center/cover no-repeat;flex:none}
+  .msg{margin-top:12px;font-size:13.5px;min-height:18px}
+
+  #app{display:none;min-height:100vh}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    height:62px;padding:0 22px;background:rgba(247,242,233,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--linea)}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:18px}
+  .top-right{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--tinta-60)}
+  .bell{position:relative}
+  .bell .dot{position:absolute;top:-4px;right:-4px;background:var(--oro);color:#fff;font-size:10px;font-weight:600;min-width:16px;height:16px;border-radius:100px;display:none;align-items:center;justify-content:center;padding:0 4px}
+  .bell .dot.on{display:flex}
+  .layout{display:flex;align-items:flex-start;max-width:960px;margin:0 auto;width:100%}
+  .nav{position:sticky;top:62px;flex:none;width:190px;padding:22px 14px;height:calc(100vh - 62px);overflow:auto}
+  .nav button{display:block;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:10px;font-size:14.5px;color:var(--tinta-60);font-weight:500}
+  .nav button:hover{background:rgba(44,39,34,.05);color:var(--tinta)}
+  .nav button.active{background:var(--tinta);color:var(--lino)}
+  .main{flex:1;min-width:0;padding:26px 26px 80px}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+  .sec-head h2{font-size:24px}
+  .hint{color:var(--tinta-60);font-size:13.5px;margin:-4px 0 18px;max-width:62ch}
+  .card{background:var(--pergamino);border:1px solid var(--linea);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .card h4{font-size:16px;margin-bottom:3px}
+  .card .meta{font-size:12.5px;color:var(--tinta-60)}
+  .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.04em}
+  .pill.published{background:#e3efe7;color:var(--ok)}
+  .pill.pending{background:#f4e9d8;color:var(--warn)}
+  .pill.info{background:#e6eef4;color:var(--pizarra)}
+  .pill.hidden{background:#f3e2df;color:var(--bad)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{margin-bottom:14px}
+  /* Eco del importe: confirma en pesos lo que se acaba de escribir. */
+  .money-echo{font-size:12.5px;color:#8a8378;margin-top:5px;min-height:16px}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chkgroup{display:flex;gap:14px;flex-wrap:wrap}
+  .chk{display:flex;align-items:center;gap:7px;font-size:14px}
+  .chk input{width:auto}
+  .unread{border-left:3px solid var(--oro)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--tinta);color:var(--lino);
+    padding:12px 20px;border-radius:100px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .empty{color:var(--tinta-60);font-size:14px;padding:26px;text-align:center;border:1px dashed var(--linea);border-radius:var(--r)}
+  @media(max-width:760px){ .nav{position:static;width:100%;height:auto;display:flex;gap:6px;overflow:auto;border-bottom:1px solid var(--linea)}
+    .layout{flex-direction:column}.row2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- GATE: claim onboarding OR password login -->
+<div id="gate">
+  <div class="gate-card" id="gateCard">
+    <span class="ring"><svg width="44" height="44" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/><circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/><circle cx="17" cy="17" r="4.6" fill="#B68A3E"/></svg></span>
+    <h1>Mi Voz</h1>
+    <p class="sub">Tu espacio en Voces para el Alma.</p>
+    <div id="gateBody"></div>
+    <div class="msg" id="gateMsg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="15.5" stroke="#CBA15A" stroke-width="1"/><circle cx="17" cy="17" r="10.5" stroke="#7E9078" stroke-width="1"/><circle cx="17" cy="17" r="4.6" fill="#B68A3E"/></svg>
+      <span>Mi Voz</span>
+    </div>
+    <div class="top-right">
+      <a href="/" target="_blank">Ver sitio ↗</a>
+      <span id="whoami"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="layout">
+    <nav class="nav" id="nav"></nav>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://fgsrcxxccdjqyrpkitmk.supabase.co";
+const SUPABASE_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnc3JjeHhjY2RqcXlycGtpdG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDcxNzQsImV4cCI6MjA5MjEyMzE3NH0.vE20bvXPaLR8uaBUgVlwKwaoQgETfWcNIVpswgEj6xk";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth:{ detectSessionInUrl:false, persistSession:true, autoRefreshToken:true } });
+// VOCES-MONEY:BEGIN
+/* ============================================================
+   VOCES · MONEDA — bloque canónico ÚNICO (v1, 2026-08-05)
+   ------------------------------------------------------------
+   FUENTE DE VERDAD: apps/voces/tools/voces-money.js
+   Se inyecta dentro de cada página, entre los marcadores VOCES-MONEY
+   (BEGIN/END), con `node tools/sync-money.js`.
+   NO editar la copia que vive dentro del HTML: se sobrescribe.
+
+   REGLAS (decisión de Steph, 2026-08-05):
+   1. UN SOLO PRECIO: el que se cobra. En Voces el cargo SIEMPRE se procesa
+      en pesos mexicanos (MercadoPago MX y Stripe cobran los centavos MXN).
+      Por eso el importe en MXN se muestra SIEMPRE, en toda pantalla pública.
+   2. La moneda del visitante es SÓLO una referencia, marcada con «≈», y se
+      calcula SIEMPRE desde el MXN cobrado — nunca desde otro precio.
+   3. Sin tipo de cambio fresco NO se convierte: se muestra sólo el peso.
+      (Una tabla fija ya causó ARS −39% y COP +22%: nunca más.)
+   4. El número se formatea con la convención de la MONEDA mostrada y se
+      acompaña del código ISO. En Colombia «33.708 COP» y no «COP 33,708»,
+      que un lector colombiano lee como treinta y tres pesos.
+============================================================ */
+window.VM = (function(){
+"use strict";
+
+/* --- país (ISO 3166-1 alpha-2) → moneda (ISO 4217) -----------------------
+   Cobertura mundial completa. Todas estas monedas existen en
+   app_vpa_fx_rates (166 códigos, verificado 2026-08-05); las que no
+   tuvieran tasa simplemente no se convierten y se ve el precio en MXN. */
+var COUNTRY_CCY = {
+AD:"EUR",AE:"AED",AF:"AFN",AG:"XCD",AI:"XCD",AL:"ALL",AM:"AMD",AO:"AOA",AR:"ARS",AS:"USD",
+AT:"EUR",AU:"AUD",AW:"AWG",AX:"EUR",AZ:"AZN",BA:"BAM",BB:"BBD",BD:"BDT",BE:"EUR",BF:"XOF",
+BG:"BGN",BH:"BHD",BI:"BIF",BJ:"XOF",BL:"EUR",BM:"BMD",BN:"BND",BO:"BOB",BQ:"USD",BR:"BRL",
+BS:"BSD",BT:"BTN",BW:"BWP",BY:"BYN",BZ:"BZD",CA:"CAD",CC:"AUD",CD:"CDF",CF:"XAF",CG:"XAF",
+CH:"CHF",CI:"XOF",CK:"NZD",CL:"CLP",CM:"XAF",CN:"CNY",CO:"COP",CR:"CRC",CU:"CUP",CV:"CVE",
+CW:"XCG",CX:"AUD",CY:"EUR",CZ:"CZK",DE:"EUR",DJ:"DJF",DK:"DKK",DM:"XCD",DO:"DOP",DZ:"DZD",
+EC:"USD",EE:"EUR",EG:"EGP",EH:"MAD",ER:"ERN",ES:"EUR",ET:"ETB",FI:"EUR",FJ:"FJD",FK:"FKP",
+FM:"USD",FO:"FOK",FR:"EUR",GA:"XAF",GB:"GBP",GD:"XCD",GE:"GEL",GF:"EUR",GG:"GGP",GH:"GHS",
+GI:"GIP",GL:"DKK",GM:"GMD",GN:"GNF",GP:"EUR",GQ:"XAF",GR:"EUR",GT:"GTQ",GU:"USD",GW:"XOF",
+GY:"GYD",HK:"HKD",HN:"HNL",HR:"EUR",HT:"HTG",HU:"HUF",ID:"IDR",IE:"EUR",IL:"ILS",IM:"IMP",
+IN:"INR",IO:"USD",IQ:"IQD",IR:"IRR",IS:"ISK",IT:"EUR",JE:"JEP",JM:"JMD",JO:"JOD",JP:"JPY",
+KE:"KES",KG:"KGS",KH:"KHR",KI:"AUD",KM:"KMF",KN:"XCD",KR:"KRW",KW:"KWD",KY:"KYD",KZ:"KZT",
+LA:"LAK",LB:"LBP",LC:"XCD",LI:"CHF",LK:"LKR",LR:"LRD",LS:"LSL",LT:"EUR",LU:"EUR",LV:"EUR",
+LY:"LYD",MA:"MAD",MC:"EUR",MD:"MDL",ME:"EUR",MF:"EUR",MG:"MGA",MH:"USD",MK:"MKD",ML:"XOF",
+MM:"MMK",MN:"MNT",MO:"MOP",MP:"USD",MQ:"EUR",MR:"MRU",MS:"XCD",MT:"EUR",MU:"MUR",MV:"MVR",
+MW:"MWK",MX:"MXN",MY:"MYR",MZ:"MZN",NA:"NAD",NC:"XPF",NE:"XOF",NF:"AUD",NG:"NGN",NI:"NIO",
+NL:"EUR",NO:"NOK",NP:"NPR",NR:"AUD",NU:"NZD",NZ:"NZD",OM:"OMR",PA:"USD",PE:"PEN",PF:"XPF",
+PG:"PGK",PH:"PHP",PK:"PKR",PL:"PLN",PM:"EUR",PN:"NZD",PR:"USD",PS:"ILS",PT:"EUR",PW:"USD",
+PY:"PYG",QA:"QAR",RE:"EUR",RO:"RON",RS:"RSD",RU:"RUB",RW:"RWF",SA:"SAR",SB:"SBD",SC:"SCR",
+SD:"SDG",SE:"SEK",SG:"SGD",SH:"SHP",SI:"EUR",SJ:"NOK",SK:"EUR",SL:"SLE",SM:"EUR",SN:"XOF",
+SO:"SOS",SR:"SRD",SS:"SSP",ST:"STN",SV:"USD",SX:"XCG",SY:"SYP",SZ:"SZL",TC:"USD",TD:"XAF",
+TG:"XOF",TH:"THB",TJ:"TJS",TL:"USD",TM:"TMT",TN:"TND",TO:"TOP",TR:"TRY",TT:"TTD",TV:"TVD",
+TW:"TWD",TZ:"TZS",UA:"UAH",UG:"UGX",US:"USD",UY:"UYU",UZ:"UZS",VA:"EUR",VC:"XCD",VE:"VES",
+VG:"USD",VI:"USD",VN:"VND",VU:"VUV",WF:"XPF",WS:"WST",XK:"EUR",YE:"YER",YT:"EUR",ZA:"ZAR",
+ZM:"ZMW",ZW:"ZWG"
+};
+
+/* País "dueño" de cada moneda: sólo para elegir la convención de separadores.
+   (es-CO ⇒ 33.708 · es-MX ⇒ 33,708 · el mismo número, leído distinto.) */
+var HOME_CC = {
+USD:"US",EUR:"ES",MXN:"MX",COP:"CO",ARS:"AR",CLP:"CL",PEN:"PE",UYU:"UY",BOB:"BO",PYG:"PY",
+BRL:"BR",VES:"VE",CRC:"CR",GTQ:"GT",HNL:"HN",NIO:"NI",DOP:"DO",CUP:"CU",PAB:"PA",GBP:"GB",
+CAD:"CA",CHF:"CH",AUD:"AU",NZD:"NZ",JPY:"JP",CNY:"CN",KRW:"KR",INR:"IN",RUB:"RU",TRY:"TR",
+ZAR:"ZA",SEK:"SE",NOK:"NO",DKK:"DK",PLN:"PL",CZK:"CZ",HUF:"HU",RON:"RO",ILS:"IL",AED:"AE",
+SAR:"SA",SGD:"SG",HKD:"HK",TWD:"TW",THB:"TH",PHP:"PH",IDR:"ID",MYR:"MY",VND:"VN",NGN:"NG",
+KES:"KE",EGP:"EG",MAD:"MA",XOF:"SN",XAF:"CM",XCD:"AG",XPF:"PF"
+};
+
+/* Monedas de inflación alta: se convierten sólo con tasa MUY fresca (≤36 h).
+   Una tasa de tres días en ARS ya miente lo suficiente para molestar. */
+var VOLATILE = ["ARS","VES","LBP","SYP","ZWL","ZWG","IRR","SDG","SSP","AFN","CUP","LAK","MMK"];
+var VOLATILE_MAX_AGE_MS = 36 * 3600 * 1000;
+
+/* `vpa_ccy2` (no `vpa_ccy`): la primera versión guardaba también la moneda que
+   venía en `?moneda=`, así que a quien abría un enlace de prueba se le quedaba
+   pegada esa moneda para siempre. Cambiar de llave descarta de una vez todas
+   las preferencias viejas. Ahora sólo se guarda lo que se elige a mano. */
+var LS_CC = "vpa_cc", LS_CCY = "vpa_ccy2", LS_FX = "vpa_fx_cache", SS_CCY = "vpa_ccy_vista";
+var MAX_AGE_MS = 3 * 24 * 3600 * 1000;   // misma regla de "stale" que el servidor
+
+var FX = null;          // {rates:{CODE:per_usd}, fetched_at, stale}
+var CC = null;          // país detectado
+var CCY = "MXN";        // moneda que ve el visitante
+var USER_PICKED = false;
+var listeners = [];
+var readyResolve, ready = new Promise(function(r){ readyResolve = r; });
+
+function ls(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(_){} }
+
+/* ---------------- tasas ---------------- */
+function usable(fx){
+  if(!fx || !fx.rates || !fx.rates.MXN || !fx.rates.USD) return false;
+  if(fx.stale) return false;
+  var t = fx.fetched_at ? Date.parse(fx.fetched_at) : 0;
+  if(!t || (Date.now() - t) > MAX_AGE_MS) return false;
+  return true;
+}
+function loadCache(){
+  try{
+    var raw = ls(LS_FX); if(!raw) return null;
+    var fx = JSON.parse(raw);
+    return usable(fx) ? fx : null;
+  }catch(_){ return null; }
+}
+async function loadRates(sb){
+  FX = loadCache();                       // arranca con lo último bueno (render inmediato)
+  if(!sb) return;
+  try{
+    var ctrl = new AbortController(), to = setTimeout(function(){ ctrl.abort(); }, 4000);
+    var res = await sb.rpc("vpa_fx_rates").abortSignal(ctrl.signal);
+    clearTimeout(to);
+    var d = res && res.data;
+    if(d && d.rates && d.rates.MXN){
+      var fx = { rates:d.rates, fetched_at:d.fetched_at, stale:!!d.stale };
+      if(usable(fx)){ FX = fx; lsSet(LS_FX, JSON.stringify(fx)); }
+      else if(fx.stale) FX = null;        // el servidor dice que está vieja: no inventamos
+    }
+  }catch(_){/* nos quedamos con el caché, o sin conversión */}
+}
+
+/* ---------------- país / moneda ---------------- */
+function ccyForCountry(cc){ return COUNTRY_CCY[String(cc||"").toUpperCase()] || null; }
+function regionOfBrowser(){
+  try{
+    var l = navigator.language || "";
+    var r = (typeof Intl.Locale === "function") ? new Intl.Locale(l).region : null;
+    return (r || (l.split("-")[1] || "")).toUpperCase() || null;
+  }catch(_){ return null; }
+}
+async function detectCountry(){
+  var saved = (ls(LS_CC) || "").toUpperCase();
+  if(saved && COUNTRY_CCY[saved]) { CC = saved; return; }
+  var reg = regionOfBrowser();
+  if(reg && COUNTRY_CCY[reg]) CC = reg;          // instantáneo, sin red
+  try{
+    var ctrl = new AbortController(), to = setTimeout(function(){ ctrl.abort(); }, 2000);
+    var r = await fetch("https://ipapi.co/json/", {signal:ctrl.signal});
+    clearTimeout(to);
+    if(r.ok){
+      var j = await r.json();
+      var c = String(j.country_code || j.country || "").toUpperCase();
+      if(c && COUNTRY_CCY[c]){ CC = c; lsSet(LS_CC, c); }
+    }
+  }catch(_){/* nos quedamos con la región del navegador */}
+}
+function ageMs(){
+  var t = FX && FX.fetched_at ? Date.parse(FX.fetched_at) : 0;
+  return t ? (Date.now() - t) : Infinity;
+}
+function canShow(code){
+  if(!code || code === "MXN") return code === "MXN";
+  if(!FX || !FX.rates) return false;             // FX sólo existe si pasó usable()
+  if(!Number(FX.rates[code])) return false;
+  if(VOLATILE.indexOf(code) >= 0 && ageMs() > VOLATILE_MAX_AGE_MS) return false;
+  return true;
+}
+function setCurrency(code, remember){
+  code = String(code||"").toUpperCase();
+  if(code === "MXN"){ CCY = "MXN"; if(remember){ USER_PICKED = true; lsSet(LS_CCY,"MXN"); } emit(); return true; }
+  if(!canShow(code)) return false;
+  CCY = code;
+  if(remember){ USER_PICKED = true; lsSet(LS_CCY, code); }
+  emit(); return true;
+}
+/* ?moneda=COP (o ?currency=COP) fuerza la moneda para VER lo que ve alguien de
+   otro país. Dura sólo la pestaña (sessionStorage): al cerrarla todo vuelve a
+   la normalidad. Lo que sí se guarda de verdad es el selector del carrito. */
+function paramCurrency(){
+  try{
+    var q = new URLSearchParams(location.search);
+    var c = (q.get("moneda") || q.get("currency") || "").toUpperCase();
+    if(/^[A-Z]{3}$/.test(c)){ try{ sessionStorage.setItem(SS_CCY, c); }catch(_){} return c; }
+    try{ var v = sessionStorage.getItem(SS_CCY); return /^[A-Z]{3}$/.test(v||"") ? v : null; }catch(_){ return null; }
+  }catch(_){ return null; }
+}
+function pickCurrency(){
+  var forced = paramCurrency();
+  if(forced && (forced==="MXN" || canShow(forced))){ CCY = forced; USER_PICKED = true; return; }
+  var saved = (ls(LS_CCY)||"").toUpperCase();
+  if(saved && (saved==="MXN" || canShow(saved))){ CCY = saved; USER_PICKED = true; return; }
+  var auto = ccyForCountry(CC);
+  if(auto && canShow(auto)) CCY = auto;
+  else CCY = "MXN";
+}
+function emit(){ listeners.forEach(function(f){ try{ f(CCY); }catch(_){} }); }
+
+/* ---------------- formato ---------------- */
+/* SEPARADOR NEUTRO (decisión de Steph, 5-ago-2026, viendo la página).
+   El punto y la coma significan lo contrario en México y en Colombia: «55.995»
+   es cincuenta y seis mil para un colombiano y cincuenta y cinco con noventa y
+   nueve para un mexicano. Agrupar por país arregla al comprador y rompe a quien
+   da soporte. Así que los miles se separan con ESPACIO —«55 995 COP»— que se
+   lee igual en todo el mundo, y el decimal es siempre punto. Se conserva
+   localeFor() sólo para los nombres de moneda del selector. */
+/* Paraguay: Intl deduce guaraní (gn-PY, que agrupa con coma) pero los precios
+   allá se escriben 30.522 como en el resto del Cono Sur. */
+var LOCALE_OVERRIDE = { PY:"es-PY" };
+var localeCache = {};
+function localeFor(code){
+  code = String(code||"").toUpperCase();
+  if(localeCache[code]) return localeCache[code];
+  var cc = HOME_CC[code] || (ccyForCountry(CC) === code ? CC : null);
+  var loc = null;
+  if(cc && LOCALE_OVERRIDE[cc]) loc = LOCALE_OVERRIDE[cc];
+  else if(cc){
+    try{ loc = new Intl.Locale("und-" + cc).maximize().toString(); }catch(_){ loc = null; }
+    if(!loc || /^und/.test(loc)) loc = null;
+  }
+  if(!loc){ try{ loc = navigator.language || "es-MX"; }catch(_){ loc = "es-MX"; } }
+  localeCache[code] = loc; return loc;
+}
+/* Decimales: los precios grandes no llevan centavos; los chicos sí, salvo en
+   monedas sin fracción (JPY, CLP, PYG…), donde Intl ya manda. */
+function digitsFor(v){ return Math.abs(v) >= 1000 ? 0 : 2; }
+/* Siempre "cifra + código ISO" (33.709 COP · 15,03 EUR · 2,729 JPY): una sola
+   forma en todo el sitio y sin ambigüedad posible sobre de qué peso hablamos. */
+var NBSP = "\u00a0";
+/* Miles con espacio duro, decimales con punto, y el código ISO al final:
+   «55 995 COP» · «15.03 EUR» · «2 729 JPY». Una sola forma en todo el sitio. */
+function group(v, d){
+  var s;
+  try{ s = new Intl.NumberFormat("en-US", {minimumFractionDigits:d, maximumFractionDigits:d}).format(v); }
+  catch(_){ s = v.toFixed(d); }
+  return s.replace(/,/g, NBSP);
+}
+function fmt(value, code){
+  var v = Number(value); if(!isFinite(v)) return "";
+  code = String(code||CCY).toUpperCase();
+  return group(v, Math.min(digitsFor(v), maxFrac(code))) + " " + code;
+}
+/* cuántos decimales admite la moneda según el propio Intl (JPY→0, KWD→3…) */
+var fracCache = {};
+function maxFrac(code){
+  if(fracCache[code] != null) return fracCache[code];
+  var n = 2;
+  try{ n = new Intl.NumberFormat("en-US",{style:"currency",currency:code}).resolvedOptions().maximumFractionDigits; }
+  catch(_){ n = 2; }
+  fracCache[code] = n; return n;
+}
+/* El importe que SÍ se cobra. Siempre visible, siempre en pesos. */
+function mxn(pesos){
+  var v = Number(pesos)||0;
+  var d = (Math.round(v*100)%100 === 0) ? 0 : 2;
+  return "$" + group(v, d) + " MXN";   // «$8 500 MXN»: nadie lo lee como 8.5
+}
+/* Referencia en la moneda del visitante. "" si no aplica o no hay tasa fresca. */
+function approx(pesos, code){
+  code = String(code||CCY).toUpperCase();
+  if(code === "MXN") return "";
+  if(!canShow(code)) return "";
+  var v = convert(Number(pesos)||0, "MXN", code);
+  if(v == null || !(v > 0)) return "";
+  return "≈ " + fmt(v, code);
+}
+/* Precio completo para pantalla: lo que se cobra + la referencia. */
+function line(pesos, sep){ var a = approx(pesos); return mxn(pesos) + (a ? (sep||" · ") + a : ""); }
+function html(pesos, cls){
+  var a = approx(pesos);
+  return '<span class="vm-mxn">'+mxn(pesos)+'</span>' +
+         (a ? ' <span class="vm-approx'+(cls?" "+cls:"")+'">'+a+'</span>' : "");
+}
+function rate(from, to){
+  if(!FX || !FX.rates) return null;
+  from = String(from).toUpperCase(); to = String(to).toUpperCase();
+  var f = from==="USD" ? 1 : Number(FX.rates[from]);
+  var t = to==="USD"   ? 1 : Number(FX.rates[to]);
+  if(!f || !t || !isFinite(f) || !isFinite(t)) return null;
+  return t/f;
+}
+function convert(v, from, to){ var r = rate(from,to); return r==null ? null : v*r; }
+
+/* Nombre legible de moneda para el selector. */
+function ccyName(code){
+  try{
+    var mine = "es"; try{ mine = navigator.language || "es"; }catch(_){}
+    var dn = new Intl.DisplayNames([mine], {type:"currency"});
+    var n = dn.of(code);
+    return n && n !== code ? (code + " · " + n) : code;
+  }catch(_){ return code; }
+}
+function options(){
+  if(!FX || !FX.rates) return [{code:"MXN", label:ccyName("MXN")}];
+  var seen = {}, out = [{code:"MXN", label:ccyName("MXN")}];
+  Object.keys(COUNTRY_CCY).forEach(function(k){
+    var c = COUNTRY_CCY[k];
+    if(c==="MXN" || seen[c] || !canShow(c)) return;
+    seen[c] = 1; out.push({code:c, label:ccyName(c)});
+  });
+  out.sort(function(a,b){ return a.code==="MXN" ? -1 : b.code==="MXN" ? 1 : a.label.localeCompare(b.label); });
+  return out;
+}
+
+/* Lectura tolerante de un importe escrito a mano: "33.000" y "33,000" son
+   treinta y tres mil (nadie cobra 33 pesos con tres decimales); "33,50" y
+   "33.50" son treinta y tres con cincuenta. Devuelve null si no es número. */
+function parseAmount(str){
+  var s = String(str==null?"":str).trim().replace(/[^\d.,-]/g,"");
+  if(!s) return null;
+  var neg = /^-/.test(s); s = s.replace(/-/g,"");
+  if(/^\d{1,3}([.,]\d{3})+$/.test(s)) s = s.replace(/[.,]/g,"");        // 1.234.567 / 1,234,567
+  else if(/^\d+[.,]\d{1,2}$/.test(s)) s = s.replace(",", ".");           // 33,50
+  else if(/^\d+[.,]\d{3,}$/.test(s)) s = s.replace(/[.,]/g,"");          // 33.0005 → no existe: miles
+  else s = s.replace(/,/g,"");
+  var n = Number(s);
+  if(!isFinite(n)) return null;
+  return neg ? -n : n;
+}
+
+/* init: primero lo instantáneo (caché de tasas + región del navegador) para que
+   la página pinte precios de inmediato; la afinación por IP llega después y, si
+   cambia algo, avisa por onChange para repintar. Nunca bloquea el render. */
+async function init(sb){
+  await loadRates(sb);
+  var saved = (ls(LS_CC)||"").toUpperCase();
+  CC = (saved && COUNTRY_CCY[saved]) ? saved : regionOfBrowser();
+  if(CC && !COUNTRY_CCY[CC]) CC = null;
+  pickCurrency();
+  emit(); readyResolve(true);
+  if(!saved) refineByIp();
+  return CCY;
+}
+async function refineByIp(){
+  var before = CCY;
+  await detectCountry();
+  if(USER_PICKED) return;
+  pickCurrency();
+  if(CCY !== before) emit();
+}
+
+return {
+  init: init, ready: ready,
+  onChange: function(f){ listeners.push(f); },
+  currency: function(){ return CCY; },
+  country: function(){ return CC; },
+  isMXN: function(){ return CCY === "MXN"; },
+  hasRates: function(){ return !!(FX && FX.rates); },
+  fetchedAt: function(){ return FX && FX.fetched_at; },
+  ccyForCountry: ccyForCountry, countries: COUNTRY_CCY,
+  setCurrency: setCurrency, options: options, ccyName: ccyName,
+  rate: rate, convert: convert,
+  fmt: fmt, mxn: mxn, approx: approx, line: line, html: html,
+  parseAmount: parseAmount
+};
+})();
+// VOCES-MONEY:END
+
+const FN_BASE = SUPABASE_URL + "/functions/v1/";
+
+const $=id=>document.getElementById(id);
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+/* Formato mínimo del texto que escriben las voces: **negritas** y *cursivas*.
+   Antes los asteriscos salían literales. Se escapa PRIMERO y sólo después se
+   marcan las etiquetas, así que nada de lo que se escriba puede inyectar HTML. */
+function mdText(s){
+  let h = esc(s);
+  h = h.replace(/\*\*([^*\n](?:[^*]|\*(?!\*))*?)\*\*/g, "<strong>$1</strong>");
+  h = h.replace(/(^|[\s(¡¿"'])\*([^*\n]+?)\*(?=[\s).,;:!?"']|$)/g, "$1<em>$2</em>");
+  h = h.replace(/(^|[\s(¡¿"'])_([^_\n]+?)_(?=[\s).,;:!?"']|$)/g, "$1<em>$2</em>");
+  return h;
+}
+/* Mismo formato que ve el comprador: miles con espacio (ver bloque de moneda). */
+const _grp = (v,d)=>Number(v).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/,/g,"\u00a0");
+const usd=c=>"$"+_grp((Number(c)||0)/100, ((Number(c)||0)%100)?2:0)+" USD";
+let toastTimer; function toast(m){ const e=$("toast"); e.textContent=m; e.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>e.classList.remove("show"),3000); }
+const KIND_ES={libro:"Libro",ebook:"Ebook",audiolibro:"Audiolibro",audio:"Audio",test:"Test",curso:"Curso",coaching:"Coaching",sesion_individual:"Sesión individual",sesion_grupal:"Sesión grupal",retiro:"Retiro",conferencia:"Conferencia",masterclass:"Masterclass",otro:"Otro"};
+const KINDS=Object.keys(KIND_ES);
+const PHOTO_BASE=SUPABASE_URL+"/storage/v1/object/public/vpa-photos/";
+function img(n){ return !n?"":(String(n).startsWith("http")?n:PHOTO_BASE+n); }
+
+let ME=null;     // vpa_my_profile()
+let PLANS=[];
+let COMM=null;   // vpa_my_commission() — % que retiene Voces + si ya lo aceptaste
+
+/* ============ GATE (claim / login) ============ */
+const claimToken = new URLSearchParams(location.search).get("claim");
+
+async function initGate(){
+  if(claimToken){ await renderClaim(); }
+  else renderLogin();
+}
+function renderLogin(){
+  $("gateBody").innerHTML=`
+    <form onsubmit="doLogin(event)">
+      <div class="field"><label>Correo</label><input id="lg_email" type="email" required autocomplete="username"></div>
+      <div class="field"><label>Contraseña</label><input id="lg_pass" type="password" required autocomplete="current-password"></div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Entrar</button>
+    </form>
+    <p class="sub" style="margin-top:14px">¿Aún no tienes tu perfil? <a href="/crear-perfil">Súmate aquí</a>. Si el equipo de Voces te compartió un enlace de reclamo, ábrelo para activar tu cuenta.</p>`;
+}
+async function renderClaim(){
+  $("gateMsg").textContent="Verificando enlace…";
+  const { data:info, error } = await sb.rpc("vpa_claim_info",{ p_token:claimToken });
+  $("gateMsg").textContent="";
+  if(error || !info || !info.valid){
+    $("gateBody").innerHTML=`<p class="sub">Este enlace de reclamo ya no es válido (expiró, se usó o el perfil ya fue reclamado).</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="location.href='/mi-voz'">Ir a iniciar sesión</button>`;
+    return;
+  }
+  $("gateBody").innerHTML=`
+    <div class="claim-hero">
+      <div class="ph" style="background-image:url('${info.photo_url?esc(img(info.photo_url)):""}')"></div>
+      <div><b>${esc(info.name)}</b><div class="meta" style="font-size:12.5px;color:var(--tinta-60)">${esc(info.role_es||"")}</div>
+        <div style="font-size:12px;color:var(--oro);font-weight:600">Este perfil es tuyo — actívalo</div></div>
+    </div>
+    <form onsubmit="doClaim(event)">
+      <div class="field"><label>Tu correo</label><input id="cl_email" type="email" required autocomplete="email"></div>
+      <div class="field"><label>Crea una contraseña (mín. 8)</label><input id="cl_pass" type="password" minlength="8" required autocomplete="new-password"></div>
+      <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center">Activar mi perfil</button>
+    </form>
+    <p class="sub" style="margin-top:12px">Al activar, tu perfil queda ligado a tu cuenta y podrás administrar tu oferta, tus datos de cobro y tus mensajes con Voces.</p>`;
+}
+async function doLogin(e){
+  e.preventDefault();
+  $("gateMsg").style.color=""; $("gateMsg").textContent="Entrando…";
+  const { error } = await sb.auth.signInWithPassword({ email:$("lg_email").value.trim(), password:$("lg_pass").value });
+  if(error){ $("gateMsg").style.color="var(--bad)"; $("gateMsg").textContent="Error: "+error.message; return; }
+  $("gateMsg").textContent=""; boot();
+}
+async function doClaim(e){
+  e.preventDefault();
+  const email=$("cl_email").value.trim(), password=$("cl_pass").value;
+  $("gateMsg").style.color=""; $("gateMsg").textContent="Activando tu perfil…";
+  try{
+    const r=await fetch(FN_BASE+"vpa-claim",{ method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+SUPABASE_ANON },
+      body:JSON.stringify({ token:claimToken, email, password }) });
+    const j=await r.json();
+    if(!r.ok || !j.ok){ throw new Error(j.error==="claim_invalid"?"El enlace ya no es válido.":(j.error||"No se pudo activar")); }
+    // cuenta creada+confirmada por la función → iniciar sesión con la misma contraseña
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    history.replaceState({},"", "/mi-voz");
+    $("gateMsg").textContent=""; boot();
+  }catch(err){ $("gateMsg").style.color="var(--bad)"; $("gateMsg").textContent="Error: "+err.message; }
+}
+async function logout(){ await sb.auth.signOut(); location.href="/mi-voz"; }
+
+/* ============ BOOT ============ */
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ $("gate").style.display="flex"; $("app").style.display="none"; return; }
+  const { data:prof } = await sb.rpc("vpa_my_profile");
+  if(!prof){
+    $("gate").style.display="flex"; $("app").style.display="none";
+    $("gateBody").innerHTML=`<p class="sub">Tu cuenta (${esc(session.user.email)}) no tiene un perfil de especialista ligado todavía. Si ya te sumaste, pide a Voces tu enlace de reclamo; o <a href="/crear-perfil">crea tu perfil</a>.</p>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="logout()">Salir</button>`;
+    return;
+  }
+  ME=prof;
+  const { data:plans } = await sb.from("app_vpa_plans").select("*").order("sort_order"); PLANS=plans||[];
+  await loadCommission();
+  $("gate").style.display="none"; $("app").style.display="block";
+  $("whoami").textContent=session.user.email;
+  buildNav(); await refreshBell(); go("perfil");
+}
+
+const SECTIONS=[["perfil","Mi perfil"],["mensajes","Mensajes"],["oferta","Mi oferta"],["cobros","Cobros"],["membresia","Membresía"],["referir","Refiere y gana"]];
+function buildNav(){
+  $("nav").innerHTML=SECTIONS.map(([k,l])=>`<button data-sec="${k}" onclick="go('${k}')">${l}${k==="mensajes"?` <span class="bell"><span class="dot" id="bellDot"></span></span>`:""}</button>`).join("");
+}
+function go(sec){ document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.sec===sec)); RENDER[sec](); }
+
+async function refreshBell(){
+  const { count } = await sb.from("app_vpa_notifications").select("*",{count:"exact",head:true}).is("read_at",null);
+  const d=$("bellDot"); if(d){ if(count){ d.textContent=count; d.classList.add("on"); } else d.classList.remove("on"); }
+}
+
+/* ============ MI PERFIL (propone cambios; Voces aprueba) ============ */
+const RENDER={};
+RENDER.perfil=async ()=>{
+  const s=ME; const share=location.origin+"/?voz="+(s.slug||s.id);
+  $("main").innerHTML=`<div class="sec-head"><h2>Mi perfil</h2>
+      <button class="btn btn-ghost btn-sm" onclick="copyShare('${esc(s.slug||s.id)}')">Compartir mi perfil</button></div>
+    <div class="hint">Edita tu información y envía los cambios a Voces. <b>Se publican cuando el equipo los aprueba</b> y te avisamos aquí. Tu enlace para redes: <a href="${esc(share)}" target="_blank">${esc(share)}</a></div>
+    <div class="card">
+      <div class="field"><label>Nombre</label><input id="p_name" value="${esc(s.name||"")}"></div>
+      <div class="row2">
+        <div class="field"><label>Título profesional (ES)</label><input id="p_role_es" value="${esc(s.role_es||"")}"></div>
+        <div class="field"><label>Título (EN)</label><input id="p_role_en" value="${esc(s.role_en||"")}"></div>
+      </div>
+      <div class="field"><label>Biografía (ES)</label><textarea id="p_bio_es">${esc(s.bio_es||"")}</textarea></div>
+      <div class="field"><label>Bio (EN)</label><textarea id="p_bio_en">${esc(s.bio_en||"")}</textarea></div>
+      <div class="row2">
+        <div class="field"><label>Áreas de enfoque (ES, coma)</label><input id="p_focus_es" value="${esc((s.focus_es||[]).join(', '))}" placeholder="Inspiradora, Líder, Conexión"></div>
+        <div class="field"><label>Focus (EN, coma)</label><input id="p_focus_en" value="${esc((s.focus_en||[]).join(', '))}"></div>
+      </div>
+      <div class="field"><label>Certificaciones</label><textarea id="p_certs_es" style="min-height:70px">${esc(s.certs_es||"")}</textarea></div>
+
+      <div class="field"><label>Tu foto de perfil (se muestra circular)</label>
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center">
+          <div id="photoPrev" role="img" aria-label="Tu foto"
+               style="width:150px;height:150px;border-radius:50%;background:#efe8db center/cover no-repeat;border:1px solid var(--linea);${s.photo_url?`background-image:url('${esc(s.photo_url)}')`:""}"></div>
+          <div>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('photoFile').click()">Subir / cambiar foto</button>
+            <input type="file" id="photoFile" accept="image/jpeg,image/png,image/webp" hidden onchange="pickPhoto(this.files[0])">
+            <p class="hint" style="margin-top:8px">Sube tu foto ya lista (JPG, PNG o WebP · máx 10 MB). Se muestra circular en el directorio y en tu perfil. Se publica cuando Voces aprueba tus cambios.</p>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="p_photo" value="${esc(s.photo_url||"")}">
+      <div class="field"><label class="chk"><input type="checkbox" id="p_avail" ${s.available_now?"checked":""}> Disponible ahora para nuevas personas</label></div>
+      <div class="bi" style="font-size:11px;color:var(--oro);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:6px 0">Contacto privado (se revela sólo a quien inicia sesión y lo solicita)</div>
+      <div class="row2">
+        <div class="field"><label>Correo de contacto</label><input id="p_cemail" value="${esc(s.contact_email||"")}"></div>
+        <div class="field"><label>WhatsApp / teléfono</label><input id="p_cphone" value="${esc(s.contact_phone||"")}"></div>
+      </div>
+      <div class="field"><label>Sitio web</label><input id="p_cweb" value="${esc(s.contact_web||"")}"></div>
+      <div id="myCatsCard" hidden style="border-top:1px solid var(--linea);margin-top:1rem;padding-top:1rem">
+        <label style="font-weight:600;font-size:14px">Mis temáticas</label>
+        <div class="hint">Marca <b>todas las temáticas</b> en las que acompañas (hasta 5): tu perfil aparecerá en cada una de ellas dentro del directorio.
+          La <b>primera que marques es tu temática principal</b>, la que se ve en tu tarjeta. Como todo lo demás, se publican cuando Voces las aprueba.</div>
+        <div id="myCatsBox" style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:.7rem 0"></div>
+        <div class="hint" id="myCatsMsg"></div>
+      </div>
+      <div class="acts"><button class="btn btn-primary" onclick="proposeProfile()">Enviar cambios a Voces</button></div>
+    </div>
+`;
+  renderMyCats(s);
+};
+
+/* ============ FOTO DE PERFIL (subida directa, se muestra circular) ============ */
+let newPhotoBlob=null;      // foto recién elegida (File)
+function pickPhoto(file){
+  if(!file) return;
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type)){ toast("Usa JPG, PNG o WebP"); return; }
+  if(file.size>10*1024*1024){ toast("Máx 10 MB"); return; }
+  newPhotoBlob=file;
+  const url=URL.createObjectURL(file);
+  $("photoPrev").style.backgroundImage=`url('${url}')`;
+}
+
+function collectProfile(){
+  return { name:$("p_name").value.trim(), role_es:$("p_role_es").value.trim(), role_en:$("p_role_en").value.trim(),
+    bio_es:$("p_bio_es").value.trim(), bio_en:$("p_bio_en").value.trim(),
+    focus_es:$("p_focus_es").value.split(",").map(x=>x.trim()).filter(Boolean),
+    focus_en:$("p_focus_en").value.split(",").map(x=>x.trim()).filter(Boolean),
+    certs_es:$("p_certs_es").value.trim(), certs_en:$("p_certs_es").value.trim(),
+    photo_url:$("p_photo").value.trim(), available_now:$("p_avail").checked,
+    contact_email:$("p_cemail").value.trim(), contact_phone:$("p_cphone").value.trim(), contact_web:$("p_cweb").value.trim() };
+}
+/* ============ MIS TEMÁTICAS (varias por voz) ============
+   Viven aquí, en el panel de la voz, pero NO se publican solas: viajan con
+   "Enviar cambios a Voces" y se aplican cuando el equipo aprueba, igual que el
+   resto del perfil. Si el backend todavía no las tiene, el bloque no aparece. */
+let MYCATS=[], MYCATS_SPEC=null, ALL_CATS=[];
+async function renderMyCats(s){
+  MYCATS_SPEC = s && s.id;
+  const card=$("myCatsCard"), box=$("myCatsBox");
+  if(!card||!box||!MYCATS_SPEC) return;
+  let mine=null;
+  try{
+    const { data, error } = await sb.rpc("vpa_my_specialist_categories");
+    if(error) throw error;
+    mine = data || [];
+  }catch(_){ card.hidden = true; return; }
+  if(!ALL_CATS.length){
+    try{ const { data } = await sb.from("app_vpa_categories_public").select("id,name_es,sort_order").order("sort_order");
+      ALL_CATS = data||[]; }catch(_){ card.hidden=true; return; }
+  }
+  MYCATS = mine.length ? mine.map(r=>r.category_id) : (s.category_id?[s.category_id]:[]);
+  box.innerHTML = ALL_CATS.map(c=>`<label class="chk" style="display:flex;gap:.5rem;align-items:flex-start;font-size:13.5px">
+      <input type="checkbox" value="${esc(c.id)}" ${MYCATS.includes(c.id)?"checked":""} onchange="paintMyCatsMsg()">
+      <span>${esc(c.name_es)}</span></label>`).join("");
+  card.hidden = false;
+  paintMyCatsMsg();
+}
+function pickedCats(){ return [...document.querySelectorAll("#myCatsBox input:checked")].map(i=>i.value); }
+function catNameOf(id){ return (ALL_CATS.find(c=>c.id===id)||{}).name_es || "—"; }
+function paintMyCatsMsg(){
+  const ids=pickedCats(), m=$("myCatsMsg"); if(!m) return;
+  if(!ids.length){ m.innerHTML = `<span style="color:var(--bad)">Marca al menos una temática.</span>`; return; }
+  if(ids.length>5){ m.innerHTML = `<span style="color:var(--bad)">Máximo 5: quita ${ids.length-5}.</span>`; return; }
+  const cambio = catsChanged() ? " · <b>pendiente de enviar</b>" : "";
+  m.innerHTML = `${ids.length} de 5 · principal: <b>${esc(catNameOf(ids[0]))}</b>${cambio}`;
+}
+function catsChanged(){
+  const a=pickedCats(), b=MYCATS;
+  if(a.length!==b.length) return true;
+  if(a[0]!==b[0]) return true;                       // cambió la principal
+  return a.some(x=>!b.includes(x));
+}
+
+async function proposeProfile(){
+  // Si hay foto nueva, súbela y usa su URL antes de calcular el diff
+  try{
+    if(newPhotoBlob){
+      const uid=(ME.id||crypto.randomUUID());
+      const ext=(newPhotoBlob.name.split(".").pop()||"jpg").toLowerCase();
+      const path="profiles/"+uid+"/photo-"+crypto.randomUUID()+"."+ext;
+      const { error:pe }=await sb.storage.from("vpa-photos").upload(path,newPhotoBlob,{contentType:newPhotoBlob.type,upsert:false});
+      if(pe) throw pe;
+      $("p_photo").value=PHOTO_BASE+path;
+      newPhotoBlob=null;
+    }
+  }catch(e){ toast("No se pudo subir la foto: "+e.message); return; }
+
+  const cur=collectProfile(); const changes={};
+  Object.keys(cur).forEach(k=>{
+    const a=cur[k], b=ME[k];
+    const na=Array.isArray(a)?JSON.stringify(a):(a==null?"":String(a));
+    const nb=Array.isArray(b)?JSON.stringify(b):(b==null?"":String(b));
+    if(na!==nb) changes[k]=a;
+  });
+  // Las temáticas no son una columna: viajan como `category_ids` y las aplica
+  // vpa__apply_changes cuando Voces aprueba.
+  const cats=pickedCats();
+  if(!$("myCatsCard")?.hidden && catsChanged()){
+    if(!cats.length){ toast("Marca al menos una temática"); return; }
+    if(cats.length>3){ toast("Puedes elegir hasta 3 temáticas"); return; }
+    changes.category_ids=cats; changes.category_primary=cats[0];
+  }
+  if(!Object.keys(changes).length){ toast("No hay cambios"); return; }
+  const message=prompt("¿Quieres dejar una nota para Voces sobre estos cambios? (opcional)")||"";
+  try{ const {error}=await sb.rpc("vpa_open_change",{payload:{kind:"edit",changes,message}}); if(error)throw error;
+    toast("Cambios enviados a Voces para aprobación ✓ — te avisamos aquí en cuanto los revisen");
+    MYCATS=pickedCats(); paintMyCatsMsg();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function copyShare(slug){ const url=location.origin+"/?voz="+slug; try{ await navigator.clipboard.writeText(url); toast("Enlace copiado ✓"); }catch(_){ prompt("Tu enlace:",url); } }
+
+/* ============ MENSAJES (notificaciones + hilos) ============ */
+
+/* ============ CAMBIOS EN CRISTIANO ============
+   Un diff con nombres de campo en uuid no lo entiende nadie. Esto traduce cada
+   cambio propuesto a una línea legible, con el valor que se va a publicar. */
+const CH_LABEL={
+  name:"Nombre", role_es:"Título profesional (ES)", role_en:"Título profesional (EN)",
+  bio_es:"Biografía (ES)", bio_en:"Biografía (EN)", certs_es:"Certificaciones (ES)", certs_en:"Certificaciones (EN)",
+  focus_es:"Áreas de enfoque (ES)", focus_en:"Áreas de enfoque (EN)", photo_url:"Foto de perfil",
+  contact_email:"Correo de contacto", contact_phone:"WhatsApp / teléfono", contact_web:"Sitio web",
+  available_now:"Disponibilidad", langs:"Idiomas", modalities:"Modalidades", country:"País",
+  category_id:"Temática principal", category_ids:"Temáticas", category_primary:"Temática principal",
+  sort_order:"Orden", title:"Título de la oferta", description:"Descripción", price_cents:"Precio",
+  kind:"Tipo de oferta", cover_url:"Portada", preview_url:"Audio de muestra", file_url:"Archivo descargable",
+  file_name:"Nombre del archivo", external_url:"Enlace externo", sell_via_voces:"Se vende por Voces",
+  in_progress:"Obra en proceso", booking_url:"Enlace de agenda", booking_label:"Texto del botón de agenda",
+  status_pill:"Píldora de estado", event_at:"Fecha del evento", event_ends_at:"Fin del evento",
+  event_location:"Lugar del evento"
+};
+function chCatName(id){
+  const c=(typeof CATS!=="undefined"?CATS:(typeof ALL_CATS!=="undefined"?ALL_CATS:[])).find(x=>x.id===id);
+  return c ? (c.name_es||c.name||id) : "temática";
+}
+function chValue(k,v){
+  if(v===null||v===undefined||v==="") return "(vacío)";
+  if(k==="category_ids") return (Array.isArray(v)?v:[v]).map(chCatName).join(", ");
+  if(k==="category_id"||k==="category_primary") return chCatName(v);
+  if(k==="price_cents") return "$"+(Number(v)/100).toLocaleString("es-MX");
+  if(k==="available_now"||k==="sell_via_voces"||k==="in_progress") return v?"Sí":"No";
+  if(k==="photo_url"||k==="cover_url"||k==="preview_url"||k==="file_url") return "archivo nuevo";
+  if(Array.isArray(v)) return v.join(", ");
+  const t=String(v);
+  return t.length>90 ? t.slice(0,90)+"…" : t;
+}
+/* Lista legible de lo propuesto. `compact` = una línea para el encabezado. */
+function humanChanges(changes, compact){
+  if(!changes) return "";
+  const ks=Object.keys(changes).filter(k=>k!=="category_primary");
+  if(!ks.length) return "";
+  if(compact) return ks.map(k=>CH_LABEL[k]||k).join(", ");
+  return `<ul style="margin:.5rem 0 0 1rem;padding:0;font-size:13px;line-height:1.65">`+
+    ks.map(k=>`<li><b>${esc(CH_LABEL[k]||k)}:</b> ${esc(chValue(k,changes[k]))}</li>`).join("")+`</ul>`;
+}
+
+RENDER.mensajes=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Mensajes</h2>
+      <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Marcar leídos</button></div>
+    <div class="hint">Notificaciones de Voces y conversaciones sobre tu perfil. Cuando Voces te sugiere un cambio, puedes <b>aceptarlo</b> (se publica) o responder para conversar.</div>
+    <div id="notifs"></div>
+    <h3 style="font-size:18px;margin:20px 0 10px">Conversaciones</h3>
+    <div id="threads"><div class="empty">Cargando…</div></div>`;
+  if(!ALL_CATS.length){ try{ const { data } = await sb.from("app_vpa_categories_public").select("id,name_es,sort_order").order("sort_order"); ALL_CATS=data||[]; }catch(_){} }
+  const { data:notifs } = await sb.from("app_vpa_notifications").select("*").order("created_at",{ascending:false}).limit(30);
+  $("notifs").innerHTML=(notifs&&notifs.length)?notifs.map(n=>`<div class="card ${n.read_at?"":"unread"}">
+      <h4>${esc(n.title)}</h4>${n.body?`<div class="meta" style="margin-top:3px;color:var(--tinta)">${esc(n.body)}</div>`:""}
+      <div class="meta" style="margin-top:4px">${new Date(n.created_at).toLocaleString("es-MX")}</div></div>`).join("")
+    :`<div class="empty">Sin notificaciones.</div>`;
+  const { data:reqs } = await sb.from("app_vpa_change_requests").select("*").order("created_at",{ascending:false}).limit(50);
+  if(!reqs||!reqs.length){ $("threads").innerHTML=`<div class="empty">Sin conversaciones todavía.</div>`; }
+  else{
+    const ids=reqs.map(r=>r.id);
+    const { data:msgs } = await sb.from("app_vpa_change_messages").select("*").in("request_id",ids).order("created_at");
+    const byReq={}; (msgs||[]).forEach(m=>(byReq[m.request_id]=byReq[m.request_id]||[]).push(m));
+    $("threads").innerHTML=reqs.map(r=>{
+      const fromVoces=r.opened_role==="super_admin";
+      const kindLbl={comment:"comentario",suggestion:"sugerencia",edit:"cambio propuesto"}[r.kind]||r.kind;
+      const chg=humanChanges(r.changes,true);
+      const chgList=humanChanges(r.changes,false);
+      const thread=(byReq[r.id]||[]).map(m=>`<div style="margin:4px 0;font-size:13px"><b>${m.author_role==="super_admin"?"Voces":"Tú"}:</b> ${esc(m.body)}</div>`).join("");
+      const pill={open:"pending",applied:"published",rejected:"hidden",withdrawn:"info"}[r.status]||"pending";
+      let actions="";
+      if(r.status==="open"){
+        // Voces sugirió → puedo aceptar (se publica) o rechazar
+        if(fromVoces && chg && r.kind!=="comment"){ actions+=`<button class="btn btn-primary btn-sm" onclick="resolveMine('${r.id}','accept')">Aceptar y publicar</button>`;
+          actions+=`<button class="btn btn-ghost btn-sm" onclick="resolveMine('${r.id}','reject')">Rechazar</button>`; }
+        // yo lo abrí → puedo retirarlo
+        if(!fromVoces){ actions+=`<button class="btn btn-ghost btn-sm" onclick="resolveMine('${r.id}','withdraw')">Retirar</button>`; }
+        actions+=`<button class="btn btn-ghost btn-sm" onclick="replyMine('${r.id}')">Responder</button>`;
+      }
+      const guia = r.status!=="open" ? "" :
+        fromVoces && chgList ? `<div class="hint" style="margin-top:.6rem"><b>Qué tienes que hacer:</b> revisa la lista de arriba.
+             Si estás de acuerdo, pulsa <b>Aceptar y publicar</b> y queda en tu perfil al momento.
+             Si algo no te cuadra, pulsa <b>Responder</b> y lo conversamos: no se publica nada hasta que aceptes.</div>`
+        : fromVoces ? `<div class="hint" style="margin-top:.6rem"><b>Qué tienes que hacer:</b> es un comentario de Voces. Puedes <b>Responder</b> aquí mismo.</div>`
+        : `<div class="hint" style="margin-top:.6rem"><b>En qué va:</b> Voces está revisando lo que enviaste. Te avisamos aquí en cuanto se publique.
+             Si te adelantaste, puedes <b>Retirar</b> la propuesta.</div>`;
+      return `<div class="card"><h4>${fromVoces?"Voces":"Tú"} · ${kindLbl} <span class="pill ${pill}">${esc(r.status)}</span></h4>
+        <div class="meta">${new Date(r.created_at).toLocaleString("es-MX")}${chg?` · ${esc(chg)}`:""}</div>
+        ${chgList?`<div style="margin-top:.4rem"><div class="meta">${fromVoces?"Lo que Voces propone:":"Lo que enviaste:"}</div>${chgList}</div>`:""}
+        ${thread?`<div style="margin-top:8px">${thread}</div>`:""}
+        ${guia}
+        <div class="acts">${actions}</div></div>`;
+    }).join("");
+  }
+  await sb.rpc("vpa_mark_notifications_read"); refreshBell();
+};
+async function markAllRead(){ try{ await sb.rpc("vpa_mark_notifications_read"); toast("Listo"); refreshBell(); RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+async function resolveMine(id,action){ try{ const {error}=await sb.rpc("vpa_resolve_change",{p_request:id,p_action:action}); if(error)throw error;
+  toast(action==="accept"?"Publicado ✓":"Listo"); if(action==="accept"){ const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; } RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+async function replyMine(id){ const b=prompt("Tu respuesta:"); if(!b||!b.trim())return; try{ const {error}=await sb.rpc("vpa_reply_change",{p_request:id,p_body:b.trim()}); if(error)throw error; toast("Enviado"); RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
+
+/* ============ MI OFERTA ============ */
+RENDER.oferta=async ()=>{
+  const offs=ME.offerings||[];
+  $("main").innerHTML=`<div class="sec-head"><h2>Mi oferta</h2>
+      <button class="btn btn-primary btn-sm" onclick="editOffer()">+ Nueva oferta</button></div>
+    <div class="hint">Tus libros, sesiones, retiros, conferencias. Lo que agregues o edites queda <b>pendiente</b> hasta que Voces lo publica. Marca “vender vía Voces” para que aparezca en la tienda y se pueda comprar en el carrito.</div>
+    <div id="offForm"></div>
+    <div id="rows">${offs.length?offs.map(o=>`<div class="card"><h4>${esc(o.title)} <span class="pill ${o.status==="published"?"published":(o.status==="hidden"?"hidden":"pending")}">${esc(o.status)}</span></h4>
+      <div class="meta">${esc(KIND_ES[o.kind]||o.kind)}${o.kind==="masterclass"?" · gratuita":(o.price_cents!=null?" · $"+(o.price_cents/100).toLocaleString("es-MX")+" MXN":` · <b style="color:#a33">⚠ falta el precio</b>`)}${o.sell_via_voces?" · vía Voces":""}${o.external_url?" · 🔗 externo":""}${o.in_progress?" · en proceso":""}${SESSION_KINDS.includes(o.kind)&&!o.booking_url?` · <b style="color:#a33">⚠ falta tu enlace de agenda</b>`:""}${o.kind==="masterclass"&&!o.meeting_url?` · <b style="color:#7a5a12">enlace pendiente de enviar</b>`:""}${o.event_at?" · 📅 "+new Date(o.event_at).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}</div>
+      ${o.description?`<div class="meta" style="margin-top:4px;color:var(--tinta);white-space:pre-line">${mdText(o.description)}</div>`:""}
+      ${o.note_important?`<div class="meta" style="margin-top:6px;border-left:3px solid var(--oro);background:rgba(203,161,90,.12);border-radius:8px;padding:8px 11px;color:#5c4a1e;font-weight:600;white-space:pre-line">${mdText(o.note_important)}</div>`:""}
+      <div class="acts"><button class="btn btn-ghost btn-sm" onclick='editOffer(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="showAttendees('${o.id}')">${o.kind==="masterclass"?"Inscritos":"Asistentes"}</button></div></div>`).join(""):`<div class="empty">Aún no tienes ofertas. Agrega la primera.</div>`}</div>`;
+};
+// Punto 4 · la voz elige cómo se anuncia su producto (antes lo decidía el sistema).
+const PILL_OPTS=[["","Automático"],["disponible","Disponible ahora"],["reserva","Reserva ahora"],
+  ["proximamente","Próximamente"],["ninguna","Sin píldora"]];
+// Punto 6/8 · sesión individual o grupal = agenda obligatoria para publicar.
+const SESSION_KINDS=["sesion_individual","sesion_grupal"];
+function bookNotice(){
+  const box=document.getElementById("of_bookNotice"); if(!box) return;
+  const need=SESSION_KINDS.includes(($("of_kind")||{}).value);
+  box.innerHTML = need
+    ? `<div class="hint" style="border:1px solid #d9b25a;background:rgba(203,161,90,.12);border-radius:10px;padding:11px 13px;margin:4px 0 12px;color:#7a5a12">
+         <b>El enlace de agenda es obligatorio</b> para las sesiones individuales y grupales.
+         Puedes guardar el resto ahora, pero tu oferta <b>no se publicará</b> hasta que lo agregues.
+       </div>` : "";
+}
+/* ---- Comisión de Voces: leyenda + aceptación obligatoria ------------------
+   Nada se puede vender por la plataforma sin que la voz haya aceptado, de forma
+   explícita, el porcentaje que le corresponde a su cuenta. Queda registrado
+   quién aceptó, cuándo y bajo qué porcentaje (respaldo formal). */
+async function loadCommission(){
+  try{ const { data } = await sb.rpc("vpa_my_commission"); COMM = (data&&data.ok)?data:null; }
+  catch(_){ COMM=null; }
+}
+function commissionText(pct){
+  return `Por cada venta que realices a través de Voces, la plataforma retiene una comisión del <b>${pct}%</b>. `
+    + `Es la misma lógica que aplica en cualquier plataforma: a cambio, recibes exposición internacional, `
+    + `herramientas de gestión y cobro, y un espacio donde tu trabajo puede crecer sin límite de fronteras. `
+    + `No te estamos dando un lugar donde publicar, te estamos proponiendo un negocio en conjunto, `
+    + `con depósitos prácticamente inmediatos según la forma de cobro que hayas configurado.`;
+}
+function commissionBlock(){
+  if(!COMM) return "";
+  const pct=COMM.commission_pct;
+  const done=!!COMM.accepted;
+  return `<div id="commBox" class="hint" style="border:1px solid #d9b25a;background:rgba(203,161,90,.10);border-radius:10px;padding:13px 15px;margin:6px 0 14px;color:#5c4a1e;line-height:1.55">
+      ${commissionText(pct)}
+      ${done
+        ? `<div style="margin-top:9px;color:#4c7a4c;font-weight:600">✓ Aceptaste esta comisión el ${
+             new Date(COMM.accepted_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}.</div>`
+        : `<label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin-top:11px;font-weight:600">
+             <input type="checkbox" id="of_commOk" style="margin-top:3px">
+             <span>Entiendo y acepto la comisión del ${pct}% aplicable a mi cuenta.</span></label>`}
+    </div>`;
+}
+// Sólo estorba cuando de verdad aplica: al vender a través de Voces.
+function commissionToggle(){
+  const box=document.getElementById("commWrap"); if(!box) return;
+  const on=($("of_via")||{}).checked;
+  box.innerHTML = on ? commissionBlock() : "";
+}
+async function ensureCommissionAccepted(){
+  if(!COMM || COMM.accepted) return true;
+  const chk=document.getElementById("of_commOk");
+  if(!chk || !chk.checked){
+    toast("Marca la casilla de aceptación de la comisión para poder vender por Voces");
+    if(chk) chk.focus();
+    return false;
+  }
+  const { error } = await sb.rpc("vpa_accept_commission",{ p_pct:COMM.commission_pct, p_source:"mi-voz" });
+  if(error){ toast("No se pudo registrar la aceptación: "+error.message); return false; }
+  await loadCommission();
+  return true;
+}
+
+/* ---- Masterclass ---------------------------------------------------------
+   Sólo Pro, siempre gratuita, siempre promociona un producto YA publicado de
+   esta misma voz. Sin precio, sin archivo descargable y sin enlace de agenda:
+   es un evento en vivo, no un producto de pago. */
+const isPro = () => { const s=ME.subscription; return !!(s && s.status==="active" && s.plan_id==="pro"); };
+// Los productos que se pueden promocionar: sólo los publicados y aprobados.
+const promotables = () => (ME.offerings||[]).filter(x=>x.status==="published" && x.kind!=="masterclass");
+function kindGuard(sel){
+  // Basic elige Masterclass → se revierte y se dice por qué, con todas sus letras.
+  if(sel.value==="masterclass" && !isPro()){
+    sel.value = sel.dataset.prev || "otro";
+    toast("No puedes crear este tipo de oferta en la membresía que tienes.");
+    const w=document.getElementById("of_mcBlocked");
+    if(w) w.innerHTML=`<div class="hint" style="border:1px solid #d9b25a;background:rgba(203,161,90,.14);border-radius:10px;padding:11px 13px;margin:4px 0 12px;color:#7a5a12">
+      <b>No puedes crear este tipo de oferta en la membresía que tienes.</b><br>
+      Las Masterclass son un beneficio de la membresía <b>Pro</b>. Puedes cambiarte desde la sección <b>Membresía</b>.</div>`;
+  } else {
+    const w=document.getElementById("of_mcBlocked"); if(w) w.innerHTML="";
+  }
+  sel.dataset.prev = sel.value;
+  offerKindUI(); bookNotice();
+}
+// Muestra/oculta lo que aplica a cada tipo. Una sola función, un solo lugar.
+function offerKindUI(){
+  const k=($("of_kind")||{}).value, mc = k==="masterclass";
+  const show=(id,on)=>{ const e=document.getElementById(id); if(e) e.style.display = on?"":"none"; };
+  show("of_priceWrap", !mc);
+  show("of_freeNote",  mc);
+  show("of_promoWrap", mc);
+  show("of_meetWrap",  mc);
+  show("of_fileWrap", !mc);   // una Masterclass no entrega material descargable
+  show("of_viaWrap",  !mc);   // ni se vende
+  // La agenda NO se esconde: se deja a la vista pero en gris y sin poder
+  // escribir, igual que el enlace externo — así se entiende que no aplica en
+  // vez de parecer que el campo desapareció.
+  offDisable("of_booking",      mc);
+  offDisable("of_bookingLabel", mc);
+  const bw=document.getElementById("of_bookOff");
+  if(bw) bw.innerHTML = mc
+    ? `<div class="hint" style="color:#a49a88">Una Masterclass no se agenda por Calendly: es un evento en vivo y el acceso va por el <b>enlace de la reunión</b> de arriba.</div>`
+    : "";
+  if(mc && !promotables().length){
+    const w=document.getElementById("of_promoNote");
+    if(w) w.innerHTML=`<div class="hint" style="color:#a33"><b>Todavía no tienes ningún producto publicado y aprobado.</b>
+      Publica primero el producto que quieres promocionar; sin él no se puede crear una Masterclass.</div>`;
+  } else { const w=document.getElementById("of_promoNote"); if(w) w.innerHTML=""; }
+  meetModeUI();
+}
+// Campo que se deja a la vista pero apagado (gris, no editable), como el enlace externo.
+function offDisable(id, off){
+  const el=document.getElementById(id); if(!el) return;
+  el.disabled = off;
+  el.style.background = off ? "#efeae1" : "";
+  el.style.color      = off ? "#a49a88" : "";
+  el.style.cursor     = off ? "not-allowed" : "";
+}
+function meetModeUI(){
+  const later = (document.getElementById("of_meetLater")||{}).checked;
+  const box=document.getElementById("of_meetUrlWrap"); if(box) box.style.display = later?"none":"";
+}
+
+function editOffer(o){
+  o=o||{};
+  const kOpts=KINDS.map(k=>`<option value="${k}" ${o.kind===k?"selected":""}>${KIND_ES[k]}${k==="masterclass"&&!isPro()?" (sólo Pro)":""}</option>`).join("");
+  const promo=promotables();
+  const pOpts=`<option value="">— elige tu producto —</option>`+promo.map(x=>
+    `<option value="${x.id}" ${o.promotes_offering_id===x.id?"selected":""}>${esc(KIND_ES[x.kind]||x.kind)} · ${esc(x.title)}</option>`).join("");
+  $("offForm").innerHTML=`<div class="card">
+    <div class="row2"><div class="field"><label>Tipo</label>
+        <select id="of_kind" data-prev="${esc(o.kind||"libro")}" onchange="kindGuard(this)">${kOpts}</select></div>
+      <div class="field" id="of_priceWrap"><label>Precio (MXN) *</label>
+        <input id="of_price" type="text" inputmode="decimal" autocomplete="off" required
+               value="${o.price_cents!=null?o.price_cents/100:""}" oninput="ofPriceEcho()">
+        <div class="money-echo" id="of_price_echo">${o.price_cents!=null?"= "+VM.mxn(o.price_cents/100):""}</div>
+        <div class="hint">Todo lo que se publica en Voces lleva precio. Si tu servicio necesita cotizarse, publica una <b>Sesión individual</b> con el costo de esa primera sesión de diagnóstico y ahí acuerdan el resto.</div></div>
+      <div class="field" id="of_freeNote" style="display:none"><label>Precio</label>
+        <div class="hint" style="border:1px solid var(--linea);border-radius:10px;padding:11px 13px"><b>Las Masterclass son siempre gratuitas.</b> No lleva precio: la gente se inscribe con su correo.</div></div></div>
+    <div id="of_mcBlocked"></div>
+    <div class="field"><label>Título</label><input id="of_title" value="${esc(o.title||"")}"></div>
+    <div class="field"><label>Descripción</label><textarea id="of_desc">${esc(o.description||"")}</textarea>
+      <div class="hint">Puedes usar <b>negritas</b> escribiendo <code>**así**</code> y <i>cursivas</i> con <code>*así*</code>.</div></div>
+
+    <div class="field"><label>⚠️ Nota importante <small style="color:#a49a88">— opcional</small></label>
+      <textarea id="of_note" rows="2" maxlength="400">${esc(o.note_important||"")}</textarea>
+      <div class="hint">Se muestra aparte, en un recuadro destacado y en negritas. Para condiciones que no se pueden perder entre el resto del texto. Ej.: «Este precio incluye un aforo de hasta 100 personas. Si tu evento requiere un aforo distinto, contáctanos a voces.world@gmail.com.»</div></div>
+
+    <div class="field" id="of_promoWrap" style="display:none">
+      <label>¿Qué producto estás promocionando con esta Masterclass? *</label>
+      <select id="of_promo">${pOpts}</select>
+      <div id="of_promoNote"></div>
+      <div class="hint">Sólo aparecen tus ofertas <b>publicadas y aprobadas</b>. La Masterclass es la puerta de entrada a ese producto.</div></div>
+
+    <div class="field" id="of_meetWrap" style="display:none">
+      <label>🔗 Enlace de la reunión</label>
+      <label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin:4px 0 8px">
+        <input type="checkbox" id="of_meetLater" ${o.meeting_link_later&&!o.meeting_url?"checked":""} onchange="meetModeUI()" style="margin-top:3px">
+        <span>Prefiero enviarlo después a quienes se inscriban</span></label>
+      <div id="of_meetUrlWrap">
+        <input id="of_meetUrl" type="url" placeholder="https://meet.google.com/… o https://zoom.us/j/…" value="${esc(o.meeting_url||"")}">
+        <div class="hint">Tu enlace <b>nunca es público</b>: sólo le llega por correo a quien se inscribe. Si lo dejas para después, podrás enviárselo a todos desde esta misma página con el botón <b>Enviar enlace</b>.</div></div></div>
+
+    <div class="field"><label>Enlace externo (Amazon / tu tienda) <small style="color:#a49a88">— deshabilitado por ahora</small></label>
+      <input id="of_url" value="${esc(o.external_url||"")}" disabled style="background:#efeae1;color:#a49a88;cursor:not-allowed">
+      <div class="hint" style="color:#a49a88">Esta función todavía no está lista. Sube tu archivo aquí abajo o véndelo a través de Voces.</div></div>
+
+    <div class="row2">
+      <div class="field"><label>Imagen de portada</label>
+        <div id="of_coverPrev" style="width:100%;height:120px;border-radius:10px;background:#efe8db center/cover no-repeat;border:1px solid var(--linea);${o.cover_url?`background-image:url('${esc(o.cover_url)}')`:""}"></div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_coverFile').click()">Subir portada</button>
+        <input type="file" id="of_coverFile" accept="image/*" hidden onchange="uploadOfferMedia(this.files[0],'cover')">
+        <input type="hidden" id="of_cover" value="${esc(o.cover_url||"")}">
+      </div>
+      <div class="field"><label>Audio / muestra <small style="color:#a49a88">— mp3, m4a, wav</small></label>
+        <div id="of_audioPrev">${o.preview_url?`<audio controls src="${esc(o.preview_url)}" style="width:100%"></audio>`:`<div style="color:#a49a88;font-size:13px;padding:8px 0">Sin audio</div>`}</div>
+        <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_audioFile').click()">Subir audio</button>
+        <input type="file" id="of_audioFile" accept="audio/*" hidden onchange="uploadOfferMedia(this.files[0],'preview')">
+        <input type="hidden" id="of_preview" value="${esc(o.preview_url||"")}">
+      </div>
+    </div>
+
+    <div class="field" id="of_fileWrap"><label>Archivo descargable <small style="color:#a49a88">— PDF, Word, ePub, ZIP…</small></label>
+      <div id="of_filePrev">${o.file_url?`<a href="${esc(o.file_url)}" target="_blank" rel="noopener">📄 ${esc(o.file_name||"Ver archivo")}</a>`:`<div style="color:#a49a88;font-size:13px;padding:4px 0">Sin archivo</div>`}</div>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="document.getElementById('of_docFile').click()">Subir archivo</button>
+      <input type="file" id="of_docFile" hidden onchange="uploadOfferMedia(this.files[0],'file')">
+      <input type="hidden" id="of_file" value="${esc(o.file_url||"")}">
+      <input type="hidden" id="of_fileName" value="${esc(o.file_name||"")}">
+    </div>
+
+    <div id="of_bookWrap">
+    <div id="of_bookNotice"></div>
+    <div class="field"><label>Enlace de agenda <small style="color:#a49a88">— Calendly u otro</small></label>
+      <input id="of_booking" type="url" placeholder="https://calendly.com/tu-usuario/sesion" value="${esc(o.booking_url||"")}">
+      <div class="hint">Tu link no será compartido, para evitar reservas sin pago por este medio. El usuario verá directamente tu calendario y elegirá la fecha. Voces te enviará un correo con la confirmación de la reserva, el nombre del usuario y la confirmación de pago.</div></div>
+    <div class="field"><label>Leyenda del botón de agenda <small style="color:#a49a88">— opcional, ej. «Reserva tu sesión gratuita»</small></label>
+      <input id="of_bookingLabel" maxlength="120" value="${esc(o.booking_label||"")}">
+      <div id="of_bookOff"></div></div>
+    </div>
+
+    <div class="field"><label>Píldora de estado <small style="color:#a49a88">— cómo se ve tu producto en la tienda</small></label>
+      <select id="of_pill">${PILL_OPTS.map(([v,l])=>`<option value="${v}" ${(o.status_pill||"")===v?"selected":""}>${l}</option>`).join("")}</select></div>
+
+    <div class="field"><label>📅 Fecha y hora del evento <small style="color:#a49a88">— talleres, conferencias y Masterclass</small></label>
+      <input id="of_eventAt" type="datetime-local" value="${toLocalInput(o.event_at)}">
+      <div class="hint">Si pones fecha, tu taller o conferencia aparece en el <b>calendario público</b> de la página principal, visible para cualquier visitante. Déjalo vacío en libros, audios o sesiones que se agendan después de contratar.<br><b>La hora se guarda en tu zona horaria</b> y cada visitante la ve en la suya — si tu público está en otro país, dilo también en la descripción.</div></div>
+    <div class="row2">
+      <div class="field"><label>Fin del evento <small style="color:#a49a88">— opcional</small></label>
+        <input id="of_eventEnd" type="datetime-local" value="${toLocalInput(o.event_ends_at)}"></div>
+      <div class="field"><label>Sede / lugar o enlace <small style="color:#a49a88">— opcional</small></label>
+        <input id="of_eventPlace" maxlength="200" value="${esc(o.event_location||"")}"></div>
+    </div>
+
+    <div id="of_viaWrap">
+      <div class="field"><label class="chk"><input type="checkbox" id="of_via" ${o.sell_via_voces?"checked":""} onchange="commissionToggle()"> Vender a través de Voces (aparece en la tienda)</label></div>
+      <div id="commWrap"></div>
+    </div>
+    <div class="field"><label class="chk"><input type="checkbox" id="of_wip" ${o.in_progress?"checked":""}> Obra en proceso</label></div>
+    <div class="acts"><button class="btn btn-primary" onclick="saveOffer('${o.id||""}')">Guardar</button>
+      <button class="btn btn-ghost" onclick="$('offForm').innerHTML=''">Cancelar</button></div>
+  </div>`;
+  bookNotice(); commissionToggle(); offerKindUI();
+  /* #offForm vive ARRIBA de la lista de ofertas, así que al picar "Editar" en una
+     oferta de más abajo el formulario se dibujaba fuera de la vista y parecía que
+     el botón no hacía nada ("no cambia de ventana"). Lo traemos a la vista. */
+  const box=$("offForm");
+  if(box){ box.scrollIntoView({behavior:"smooth",block:"start"}); const t=$("of_title"); if(t) setTimeout(()=>t.focus(),350); }
+}
+// ISO → valor de <input type="datetime-local"> en hora local
+function toLocalInput(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d.getTime())) return "";
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+const OFFER_BAD_EXT=["exe","bat","cmd","com","scr","msi","app","dll","js","mjs","jar","sh","bash","bin","apk","deb","dmg","pkg","svg","vbs","ps1","wsf","cpl","gadget","jse","msc"];
+async function uploadOfferMedia(file, slot){
+  if(!file) return;
+  const ext=(file.name.split(".").pop()||"").toLowerCase();
+  if(slot==="cover"){ if(!/^image\//.test(file.type)) return toast("Elige una imagen"); }
+  else if(slot==="preview"){ if(!/^audio\//.test(file.type)) return toast("Elige un audio"); }
+  else { if(OFFER_BAD_EXT.includes(ext)) return toast("Por seguridad no se permite ese tipo de archivo (ejecutable/script)."); }
+  const maxMB = slot==="cover"?8:60;
+  if(file.size>maxMB*1024*1024) return toast("Máx "+maxMB+" MB");
+  const safeExt=ext||(slot==="cover"?"jpg":slot==="preview"?"mp3":"pdf");
+  const path="offers/"+(ME.id||"anon")+"/"+slot+"-"+crypto.randomUUID()+"."+safeExt;
+  toast("Subiendo…");
+  try{
+    const { error }=await sb.storage.from("vpa-photos").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});
+    if(error) throw error;
+    const url=PHOTO_BASE+path;
+    if(slot==="cover"){ $("of_cover").value=url; $("of_coverPrev").style.backgroundImage=`url('${url}')`; }
+    else if(slot==="preview"){ $("of_preview").value=url; $("of_audioPrev").innerHTML=`<audio controls src="${url}" style="width:100%"></audio>`; }
+    else { $("of_file").value=url; if(!$("of_fileName").value.trim()) $("of_fileName").value=file.name;
+           $("of_filePrev").innerHTML=`<a href="${url}" target="_blank" rel="noopener">📄 ${esc(file.name)}</a>`; }
+    toast("Listo ✓");
+  }catch(e){ toast("Error al subir: "+e.message); }
+}
+/* «33.000» son treinta y tres mil, no treinta y tres: con un input numérico se
+   publicaba el precio equivocado sin aviso. Aquí se lee tolerante y se enseña
+   en pesos lo que quedará guardado. */
+function ofPriceEcho(){
+  const el=$("of_price"), out=$("of_price_echo"); if(!el||!out) return;
+  const n=VM.parseAmount(el.value);
+  out.textContent = el.value.trim()==="" ? "" : (n==null ? "— no parece un importe —" : "= "+VM.mxn(n));
+}
+async function saveOffer(id){
+  const priceNum=VM.parseAmount($("of_price").value);
+  const price = $("of_price").value.trim()==="" || priceNum==null ? "" : String(priceNum);
+  const kind=$("of_kind").value, mc = kind==="masterclass";
+  const p={ id:id||"", kind, title:$("of_title").value.trim(), description:$("of_desc").value.trim(),
+    note_important:$("of_note").value.trim(),
+    price_cents:mc?"0":(price===""?"":Math.round(Number(price)*100)), external_url:$("of_url").value.trim(),
+    cover_url:$("of_cover").value.trim(), preview_url:$("of_preview").value.trim(),
+    file_url:mc?"":$("of_file").value.trim(), file_name:mc?"":$("of_fileName").value.trim(),
+    booking_url:mc?"":$("of_booking").value.trim(), booking_label:$("of_bookingLabel").value.trim(),
+    status_pill:$("of_pill").value,
+    promotes_offering_id: mc?$("of_promo").value:"",
+    meeting_url: mc && !$("of_meetLater").checked ? $("of_meetUrl").value.trim() : "",
+    meeting_link_later: mc ? $("of_meetLater").checked : false,
+    event_at:$("of_eventAt").value?new Date($("of_eventAt").value).toISOString():"",
+    event_ends_at:$("of_eventEnd").value?new Date($("of_eventEnd").value).toISOString():"",
+    event_location:$("of_eventPlace").value.trim(),
+    sell_via_voces:mc?false:$("of_via").checked, in_progress:$("of_wip").checked };
+  if(!p.title) return toast("Escribe un título");
+  // Reglas que el backend también exige — aquí se avisan antes de gastar el viaje.
+  if(mc){
+    if(!isPro()) return toast("No puedes crear este tipo de oferta en la membresía que tienes.");
+    if(!p.promotes_offering_id) return toast("Elige el producto que estás promocionando con tu Masterclass.");
+    if(!p.meeting_link_later && !p.meeting_url) return toast("Pon el enlace de la reunión, o marca «Prefiero enviarlo después».");
+  } else if(p.price_cents===""){
+    return toast("Escribe el precio de tu oferta. Si necesitas cotizar, publica una «Sesión individual» con el costo de esa primera sesión.");
+  }
+  // Vender por Voces exige aceptar la comisión vigente (el backend también lo exige).
+  if(p.sell_via_voces && !(await ensureCommissionAccepted())) return;
+  const needsBooking = SESSION_KINDS.includes(p.kind) && !p.booking_url;
+  try{ const {error}=await sb.rpc("vpa_upsert_offering",{payload:p}); if(error)throw error;
+    toast(needsBooking
+      ? "Guardado — falta tu enlace de agenda para que Voces pueda publicarla"
+      : "Guardado — pendiente de publicación por Voces ✓");
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; $("offForm").innerHTML=""; RENDER.oferta(); }
+  catch(e){
+    const m=e&&e.message||"";
+    if(/commission_terms_required/.test(m)){ toast("Falta aceptar la comisión de Voces para poder vender."); await loadCommission(); commissionToggle(); return; }
+    if(/booking_required/.test(m)){ toast("Falta tu enlace de agenda: sin él la sesión no se puede publicar."); return; }
+    if(/masterclass_requires_pro/.test(m)){ toast("No puedes crear este tipo de oferta en la membresía que tienes."); return; }
+    if(/masterclass_needs_product/.test(m)){ toast("Elige un producto tuyo ya publicado y aprobado para promocionar."); return; }
+    if(/price_required/.test(m)){ toast("Escribe el precio de tu oferta: Voces ya no maneja «precio a convenir»."); return; }
+    if(/meeting_url_invalid/.test(m)){ toast("El enlace de la reunión debe empezar con https://"); return; }
+    toast("Error: "+m);
+  }
+}
+
+/* ---- Inscritos a una oferta ----------------------------------------------
+   Vale para las Masterclass gratuitas (quien se inscribió) y también para las
+   conferencias de pago y grabadas (quien compró): en ambos casos la voz
+   necesita nombres y correos para dar seguimiento. */
+async function showAttendees(id){
+  toast("Cargando…");
+  try{
+    const {data,error}=await sb.rpc("vpa_offering_attendees",{p_offering:id}); if(error)throw error;
+    const list=data.attendees||[], o=data.offering||{};
+    const rows=list.length?list.map(a=>`<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--linea)">${esc(a.name||"—")}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--linea)"><a href="mailto:${esc(a.email)}">${esc(a.email)}</a></td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--linea);white-space:nowrap">${a.paid?"compra":"inscripción"}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid var(--linea);white-space:nowrap">${a.at?new Date(a.at).toLocaleDateString("es-MX",{day:"numeric",month:"short"}):""}</td>
+      </tr>`).join(""):`<tr><td colspan="4" style="padding:14px 8px;color:#a49a88">Todavía no hay nadie inscrito.</td></tr>`;
+    const mails=list.map(a=>a.email).join(", ");
+    const mc = o.kind==="masterclass";
+    $("offForm").innerHTML=`<div class="card">
+      <h4 style="margin:0 0 4px">Inscritos · ${esc(o.title||"")}</h4>
+      <div class="meta" style="margin-bottom:10px"><b>${data.count}</b> persona(s)${o.event_at?` · 📅 ${new Date(o.event_at).toLocaleString("es-MX",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}`:""}</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr><th style="text-align:left;padding:6px 8px">Nombre</th><th style="text-align:left;padding:6px 8px">Correo</th>
+            <th style="text-align:left;padding:6px 8px">Cómo</th><th style="text-align:left;padding:6px 8px">Cuándo</th></tr>
+        ${rows}</table></div>
+      ${mc?`<div class="field" style="margin-top:14px"><label>🔗 Enlace de la reunión</label>
+        <input id="mc_link" type="url" placeholder="https://meet.google.com/…" value="${esc(o.meeting_url||"")}">
+        <div class="hint">Al enviarlo le llega por correo a todas las personas inscritas. Si lo cambias, se les reenvía el nuevo.</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="sendMeetingLink('${esc(id)}')">Enviar enlace a los inscritos</button></div>`:""}
+      <div class="acts" style="margin-top:12px">
+        ${list.length?`<button class="btn btn-ghost btn-sm" onclick="copyText('${esc(mails).replace(/'/g,"&#39;")}')">Copiar todos los correos</button>`:""}
+        <button class="btn btn-ghost btn-sm" onclick="$('offForm').innerHTML=''">Cerrar</button></div>
+    </div>`;
+    $("offForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){ toast("Error: "+(e.message||e)); }
+}
+function copyText(s){ (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject())
+  .then(()=>toast("Copiado ✓")).catch(()=>prompt("Correos", s)); }
+async function sendMeetingLink(id){
+  const url=($("mc_link")||{}).value||"";
+  if(!/^https?:\/\//i.test(url.trim())) return toast("El enlace debe empezar con https://");
+  try{
+    const {data,error}=await sb.rpc("vpa_send_meeting_link",{p_offering:id,p_url:url.trim()}); if(error)throw error;
+    toast(data.sent ? `Enlace enviado a ${data.sent} persona(s) ✓` : "Enlace guardado — todos los inscritos ya lo tenían");
+    const {data:me}=await sb.rpc("vpa_my_profile"); if(me) ME=me;
+    showAttendees(id);
+  }catch(e){ toast("Error: "+(e.message||e)); }
+}
+
+/* ============ COBROS ============ */
+/* Métodos de cobro internacionales. Cada voz puede tener varios y elegir el principal.
+   El % que conserva lo define su acuerdo de reparto (sección "Membresía y acuerdo");
+   aquí sólo se define POR DÓNDE le llega el dinero. */
+/* Cada riel con su VELOCIDAD real, porque es lo que de verdad importa al cobrar.
+   PayPal funciona casi en todo el mundo pero retiene el dinero días y cobra caro,
+   así que aquí siempre va al final y con su advertencia. */
+const PAY_KINDS={
+  clabe:      {label:"Transferencia SPEI (México)", tag:"⚡ En minutos", speed:"Llega en minutos · sin costo",
+               hint:"Transferencia bancaria en pesos a tu CLABE. Es la forma más rápida y barata dentro de México.", fields:["clabe","bank_name","holder_name"]},
+  dolarapp:   {label:"DolarApp / ARQ", tag:"⚡ En minutos", speed:"Llega en minutos · sin costo",
+               hint:"Recibe en dólares digitales. Lo más rápido es tu <b>CLABE de DolarApp</b> (te llega por transferencia SPEI) o tu <b>dirección de wallet</b> con su token y su red. El tag/correo sirve si prefieres que te busquemos en la app.", fields:["clabe","asset","wallet_address","chain","account_id","email"]},
+  usdc:       {label:"USDC o USDT · dólar digital", tag:"⚡ En minutos", speed:"Llega en minutos · comisión de red mínima",
+               hint:"Dólares digitales directo a tu wallet, desde cualquier país. Revisa MUY bien el <b>token</b> y la <b>red</b>: un envío con el token equivocado o por la red equivocada se pierde para siempre.", fields:["asset","wallet_address","chain"]},
+  wise:       {label:"Wise", tag:"✅ Mejor tipo de cambio", speed:"1–2 días hábiles · comisión baja",
+               hint:"El mejor tipo de cambio real para recibir en tu moneda. Usa el correo de tu cuenta Wise.", fields:["email","holder_name"]},
+  payoneer:   {label:"Payoneer (dólares, euros, libras)", tag:"", speed:"1–3 días hábiles · sin comisión de transferencia internacional",
+               hint:"Pega los datos de tu <b>cuenta receptora</b> de Payoneer (en la app: <b>Recibir → Datos de la cuenta</b>): dólares = número de cuenta + <i>routing</i> · libras = número de cuenta + <i>sort code</i> (ponlo en Routing) · euros = IBAN + BIC. Escribe el <b>titular exactamente</b> como aparece en tu cuenta Payoneer, y elige abajo la moneda (USD, EUR o GBP).", fields:["holder_name","account_number","routing","iban","swift","bank_name","email"]},
+  mercadopago:{label:"MercadoPago", tag:"", speed:"1–2 días hábiles",
+               hint:"Depósito a tu cuenta MercadoPago. En las ventas con tarjeta el dinero te llega automático al momento de la compra.", fields:["email"]},
+  bank_intl:  {label:"Banco internacional", tag:"", speed:"2–5 días hábiles · tu banco suele cobrar comisión",
+               hint:"Transferencia SWIFT/IBAN a tu banco fuera de México.", fields:["holder_name","iban","account_number","swift","routing","bank_name"]},
+  paypal:     {label:"PayPal", tag:"🐢 Tarda varios días", speed:"3–5 días hábiles (a veces más) · comisión alta",
+               hint:"Funciona en casi todos los países, pero <b>PayPal retiene el dinero varios días</b> y cobra comisión alta más su propio tipo de cambio. Elígelo sólo si no tienes ninguna de las opciones de arriba.", fields:["email","holder_name"]},
+  credit:     {label:"Dejarlo como crédito en Voces", tag:"", speed:"Inmediato",
+               hint:"No recibes dinero: tu saldo queda como crédito para usar dentro de Voces.", fields:[]}
+};
+
+/* Qué conviene según dónde vive la voz. El orden ES la recomendación.
+   REGLA: aquí sólo se ofrece lo que DE VERDAD existe en su país. Ofrecer un riel
+   que no opera ahí hace perder el tiempo a la voz — le pasó a Laura (Perú), que
+   intentó una billetera tipo ARQ/DolarApp que no existe en Perú y luego Stripe,
+   donde Perú no es país registrable. */
+const RAILS_BY_COUNTRY={
+  MX:["clabe","dolarapp","usdc","mercadopago","wise","payoneer","bank_intl","paypal"],
+  AR:["dolarapp","usdc","wise","payoneer","bank_intl","paypal"],
+  PE:["payoneer","usdc","wise","bank_intl","paypal"],
+  CO:["payoneer","usdc","wise","bank_intl","paypal"], CL:["payoneer","usdc","wise","bank_intl","paypal"],
+  UY:["payoneer","usdc","wise","bank_intl","paypal"], EC:["payoneer","usdc","wise","bank_intl","paypal"],
+  BR:["wise","payoneer","usdc","bank_intl","paypal"], CR:["payoneer","usdc","wise","bank_intl","paypal"],
+  PA:["payoneer","usdc","wise","bank_intl","paypal"], GT:["payoneer","usdc","wise","bank_intl","paypal"],
+  DO:["payoneer","usdc","wise","bank_intl","paypal"], SV:["payoneer","usdc","bank_intl","paypal"],
+  HN:["payoneer","usdc","bank_intl","paypal"], PR:["payoneer","usdc","wise","bank_intl","paypal"],
+  // Wise no envía a estos destinos: no se ofrecen ahí
+  BO:["usdc","payoneer","bank_intl","paypal"], PY:["usdc","payoneer","bank_intl","paypal"],
+  NI:["usdc","payoneer","bank_intl"], VE:["usdc","payoneer","bank_intl"], CU:["usdc","bank_intl"],
+  ES:["wise","payoneer","bank_intl","usdc","paypal"], US:["wise","payoneer","usdc","bank_intl","paypal"],
+  CA:["wise","payoneer","usdc","bank_intl","paypal"], GB:["wise","payoneer","bank_intl","usdc","paypal"],
+  FR:["wise","payoneer","bank_intl","usdc","paypal"], DE:["wise","payoneer","bank_intl","usdc","paypal"],
+  IT:["wise","payoneer","bank_intl","usdc","paypal"], PT:["wise","payoneer","bank_intl","usdc","paypal"],
+  NL:["wise","payoneer","bank_intl","usdc","paypal"]
+};
+const RAILS_DEFAULT=["payoneer","usdc","wise","bank_intl","paypal"];
+/* Aviso corto cuando en su país falta algo que en otros sí hay, para que no lo busque. */
+const RAIL_NOTE={
+  PE:"En Perú no operan DolarApp/ARQ ni las cuentas Stripe locales. Lo más ágil aquí es <b>Payoneer</b> o <b>USDC</b>; Wise también deposita en soles.",
+  VE:"En Venezuela no llegan Wise ni PayPal. Lo que sí funciona es <b>USDC</b> (dólar digital) o una transferencia internacional.",
+  BO:"Wise no envía a Bolivia. Usa <b>Payoneer</b>, <b>USDC</b> o transferencia internacional.",
+  PY:"Wise no envía a Paraguay. Usa <b>Payoneer</b>, <b>USDC</b> o transferencia internacional.",
+  AR:"En Argentina puedes recibir por <b>DolarApp/ARQ</b> (dólares digitales) o <b>USDC</b>, que esquivan el tipo de cambio oficial.",
+  CU:"Sólo podemos pagarte por <b>USDC</b> o transferencia internacional."
+};
+function railsFor(country){
+  const cc=(country||"MX").toUpperCase();
+  const base=RAILS_BY_COUNTRY[cc]||RAILS_DEFAULT;
+  // si ya tiene un método guardado de otro riel (se mudó, se lo puso Voces), no se lo escondemos
+  const suyos=(MYPAY||[]).map(m=>m.kind).filter(k=>k&&!base.includes(k)&&k!=="credit");
+  return [...base,...[...new Set(suyos)],"credit"];
+}
+function flagOf(c){
+  if(!c||c.length!==2) return "🌍";
+  try{ return String.fromCodePoint(...[...c.toUpperCase()].map(ch=>0x1F1E6+ch.charCodeAt(0)-65)); }
+  catch(_){ return "🌍"; }
+}
+const COUNTRY_LIST=[["MX","México"],["AR","Argentina"],["CO","Colombia"],["CL","Chile"],["PE","Perú"],
+ ["ES","España"],["US","Estados Unidos"],["UY","Uruguay"],["EC","Ecuador"],["BO","Bolivia"],["PY","Paraguay"],
+ ["VE","Venezuela"],["BR","Brasil"],["CR","Costa Rica"],["PA","Panamá"],["GT","Guatemala"],["SV","El Salvador"],
+ ["HN","Honduras"],["NI","Nicaragua"],["DO","República Dominicana"],["CU","Cuba"],["PR","Puerto Rico"],
+ ["CA","Canadá"],["GB","Reino Unido"],["FR","Francia"],["DE","Alemania"],["IT","Italia"],["PT","Portugal"],["NL","Países Bajos"]];
+const COUNTRY_ES={MX:"México",AR:"Argentina",CO:"Colombia",CL:"Chile",PE:"Perú",ES:"España",
+  US:"Estados Unidos",UY:"Uruguay",EC:"Ecuador",BO:"Bolivia",PY:"Paraguay",VE:"Venezuela",
+  BR:"Brasil",CR:"Costa Rica",PA:"Panamá",GT:"Guatemala",SV:"El Salvador",HN:"Honduras",
+  NI:"Nicaragua",DO:"República Dominicana",CU:"Cuba",PR:"Puerto Rico",CA:"Canadá",
+  GB:"Reino Unido",FR:"Francia",DE:"Alemania",IT:"Italia",PT:"Portugal",NL:"Países Bajos"};
+const countryName=c=>COUNTRY_ES[(c||"").toUpperCase()]||c||"—";
+const PAY_LBL={email:"Correo de la cuenta",holder_name:"Titular de la cuenta",account_id:"Tag / usuario",
+  clabe:"CLABE (18 dígitos)",bank_name:"Banco",wallet_address:"Dirección de tu wallet",chain:"Red",
+  asset:"Token que quieres recibir",
+  iban:"IBAN",account_number:"Número de cuenta",swift:"SWIFT / BIC",routing:"Routing number"};
+/* ===== Regla dura de token/red (espejo de vpa__check_crypto en la base) =====
+   Sólo USDC y USDT OFICIALES, y sólo en las redes donde de verdad se aceptan.
+   Arq/DolarApp es más estricta que una wallet propia. Si esto y la base llegaran
+   a separarse manda la base: el guardado falla con el mensaje exacto. */
+const CRYPTO_CHAINS={
+  USDC:{ dolarapp:["polygon","ethereum"], usdc:["polygon","base","arbitrum","optimism","ethereum"] },
+  USDT:{ dolarapp:["polygon","ethereum","tron"], usdc:["polygon","ethereum","tron"] }
+};
+/* Comisión que cobra Arq por red (regla temporal). Va en la etiqueta de cada red
+   para que la voz elija informada, no después de que le descuenten 3 dólares. */
+const NET_FEE={polygon:0,ethereum:3,tron:3};
+const NET_NOTE={
+  polygon:"Polygon no cobra comisión: es la red recomendada.",
+  ethereum:"Ethereum cobra 3 USD por envío. Polygon es gratis.",
+  tron:"Tron cobra 3 USD por envío y sólo acepta USDT. Polygon es gratis."
+};
+const netLabel=c=>c.toUpperCase()+(c in NET_FEE?(NET_FEE[c]?` — ${NET_FEE[c]} USD de comisión`:" — sin comisión"):"");
+const chainsFor=(kind,asset)=>CRYPTO_CHAINS[asset==="USDT"?"USDT":"USDC"][kind==="dolarapp"?"dolarapp":"usdc"];
+/* Al cambiar el token cambian las redes posibles: se reconstruyen sin volver a
+   dibujar el formulario (no se pierde lo que ya escribió). */
+function cryptoSync(kind,preferred){
+  const sel=$("pf_chain"); if(!sel) return;
+  const asset=$("pf_asset")?$("pf_asset").value:"USDC";
+  const list=chainsFor(kind,asset), want=preferred||sel.value;
+  sel.innerHTML=list.map(c=>`<option value="${c}">${netLabel(c)}</option>`).join("");
+  sel.value=list.includes(want)?want:list[0];
+  const n=$("cryptoNote");
+  if(n) n.innerHTML=`Vas a recibir <b>${asset}</b> en <b>${sel.value.toUpperCase()}</b>. ${NET_NOTE[sel.value]||""}`;
+}
+const mx=c=>"$"+_grp((c||0)/100,2);
+let MYPAY=[], MYEARN=null;
+
+/* ============ TIPO DE CAMBIO PARA LA VOZ ============
+   Su saldo se acumula en MXN (así cobran los compradores) y se le paga en la
+   moneda de su método. Aquí se muestra la equivalencia REAL y en LOS DOS
+   SENTIDOS, para que no tenga que sacar la cuenta ni adivinar. */
+/* El tipo de cambio y el formato salen del bloque canónico: la voz ve
+   exactamente los mismos números que su comprador. */
+/* Precio de un plan: el cargo real en pesos + su equivalente en la moneda de
+   la voz, calculado DESDE ese cargo. Antes se pintaba aquí un "USD 19" que no
+   era lo que se cobraba (el cargo son $299 MXN) y no cuadraba con el ≈ local. */
+function planPrice(p){
+  if(!p.monthly_cents) return "Gratis";
+  const mine=myCurrency();
+  const refM=VM.approx(p.monthly_cents/100, mine);
+  const refY=VM.approx(p.yearly_cents/100, mine);
+  return `<b>${VM.mxn(p.monthly_cents/100)}</b> al mes${refM?` <span class="meta">(${refM})</span>`:""}
+    <div class="meta">o ${VM.mxn(p.yearly_cents/100)} al año${refY?` (${refY})`:""} · 2 meses de regalo</div>`;
+}
+async function loadFxRates(){ await VM.init(sb); return VM.hasRates(); }
+function myCurrency(){
+  const def = MYPAY.find(m=>m.is_default) || MYPAY[0];
+  const c = (def && def.currency) || VM.ccyForCountry(ME.country) || "MXN";
+  return String(c).toUpperCase();
+}
+const nfmt=(v,d)=>Number(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const fxPair=(from,to)=>VM.rate(from,to);
+function fxLine(a,b){
+  const r=fxPair(a,b), r2=fxPair(b,a);
+  if(!r||!r2) return "";
+  return `<div style="display:flex;justify-content:space-between;gap:1rem;padding:.35rem 0;border-bottom:1px dashed rgba(44,39,34,.12)">
+      <span><b>1 ${a}</b> = ${nfmt(r, r>=100?0:(r>=1?2:4))} ${b}</span>
+      <span style="opacity:.75"><b>1 ${b}</b> = ${nfmt(r2, r2>=100?0:(r2>=1?2:4))} ${a}</span>
+    </div>`;
+}
+function balanceInMyCurrency(e){
+  const mine=myCurrency(); if(mine==="MXN"||!VM.hasRates()) return "";
+  const r=fxPair("MXN",mine); if(!r) return "";
+  const v=(e.available_cents||0)/100*r;
+  return `<div class="hint" style="margin-top:.6rem">Tu saldo disponible equivale a
+    <b>${nfmt(v, v>=100?0:2)} ${esc(mine)}</b> al tipo de cambio de hoy (${nfmt(fxPair(mine,"MXN"),2)} MXN por ${esc(mine)}).</div>`;
+}
+function fxCard(){
+  if(!VM.hasRates()){ return `<div class="card"><h4>Tipo de cambio</h4>
+      <div class="hint">No pudimos leer el tipo de cambio ahora mismo. Tus montos siguen en pesos.</div></div>`; }
+  const mine=myCurrency();
+  const rows=[fxLine("USD","MXN")];
+  if(mine!=="MXN"&&mine!=="USD"){ rows.push(fxLine("USD",mine)); rows.push(fxLine("MXN",mine)); }
+  const when=VM.fetchedAt()?new Date(VM.fetchedAt()).toLocaleString("es-MX",{dateStyle:"medium",timeStyle:"short"}):"hoy";
+  return `<div class="card">
+    <h4>Tipo de cambio de hoy</h4>
+    <div class="hint" style="margin-bottom:.5rem">Tus ventas se cobran en <b>pesos mexicanos (MXN)</b> y tu pago se convierte
+      a <b>${esc(mine)}</b>${mine==="MXN"?"":" con esta tasa"}. Te la mostramos <b>en los dos sentidos</b> para que puedas comprobar cualquier monto.</div>
+    ${rows.join("")}
+    <div class="hint" style="margin-top:.55rem">Tasa real de mercado, actualizada ${esc(when)}.
+      Al momento de pagarte se guarda la tasa exacta que se usó, y queda en tu historial.</div>
+  </div>`;
+}
+
+RENDER.cobros=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div><div class="hint">Cargando…</div>`;
+  const [{data:methods},{data:earn}]=await Promise.all([
+    sb.rpc("vpa_my_payout_methods"), sb.rpc("vpa_my_earnings"), loadFxRates()]);
+  MYPAY=methods||[]; MYEARN=earn||{};
+  const e=MYEARN;
+  $("main").innerHTML=`<div class="sec-head"><h2>Cobros</h2></div>
+    <div class="hint">Aquí defines <b>cómo recibes tu dinero</b>. Puedes tener varios métodos y marcar uno como principal; Voces te paga por ese. Cuánto te toca de cada venta lo define tu acuerdo de reparto (ve a “Membresía y acuerdo”).</div>
+    <div class="card">
+      <h4>Tu saldo</h4>
+      <div class="row2">
+        <div><div class="hint">Disponible por cobrar</div><div style="font-size:1.6rem;font-weight:700">${mx(e.available_cents)}</div></div>
+        <div><div class="hint">En camino</div><div style="font-size:1.6rem;font-weight:700">${mx(e.paying_cents)}</div></div>
+      </div>
+      <div class="row2" style="margin-top:.6rem">
+        <div><div class="hint">Ya cobrado</div><div>${mx(e.paid_cents)}</div></div>
+        <div><div class="hint">Recibido directo en tus ventas con tarjeta</div><div>${mx(e.auto_split_cents)}</div></div>
+      </div>
+      ${e.auto_split_cents?`<div class="hint" style="margin-top:.6rem">En las compras con tarjeta tu parte llega <b>directo a tu cuenta</b> al momento; por eso ese monto no aparece como “por cobrar”.</div>`:``}
+    </div>
+      ${balanceInMyCurrency(e)}
+    </div>
+
+    ${fxCard()}
+
+    <div class="card">
+      <h4>Tus métodos de cobro</h4>
+      ${MYPAY.length?MYPAY.map(m=>`<div class="card" style="margin:.5rem 0">
+        <div><b>${esc(PAY_KINDS[m.kind]?.label||m.kind)}</b> ${m.is_default?`<span class="pill">Principal</span>`:``}</div>
+        <div class="hint">${esc(payDesc(m))}</div>
+        <div class="acts">
+          ${m.is_default?``:`<button class="btn" onclick="setDefaultPay('${m.id}')">Hacer principal</button>`}
+          <button class="btn" onclick="editPay('${m.id}')">Editar</button>
+          <button class="btn" onclick="delPay('${m.id}')">Eliminar</button>
+        </div></div>`).join(""):`<div class="hint">Todavía no agregas ninguno. Sin un método de cobro no podemos enviarte tu dinero.</div>`}
+      <div class="acts"><button class="btn btn-primary" onclick="newPay()">+ Agregar método de cobro</button></div>
+      <div id="payForm"></div>
+    </div>
+
+    ${(e.payouts||[]).length?`<div class="card"><h4>Pagos que te hemos enviado</h4>
+      ${e.payouts.map(p=>`<div style="padding:.4rem 0;border-bottom:1px solid #eee">
+        <b>${mx(p.amount_cents)}</b> · ${esc(PAY_KINDS[p.kind]?.label||p.kind)} ·
+        ${p.status==="paid"?"Pagado":(p.status==="processing"?"En camino":(p.status==="failed"?"Falló":"Pendiente"))}
+        ${p.paid_at?` · ${new Date(p.paid_at).toLocaleDateString("es-MX")}`:``}
+        ${p.provider_ref?`<div class="hint">Referencia: ${esc(p.provider_ref)}</div>`:``}
+      </div>`).join("")}</div>`:``}
+
+    ${(e.lines||[]).length?`<div class="card"><h4>De dónde viene tu saldo</h4>
+      ${e.lines.map(l=>`<div style="padding:.35rem 0;border-bottom:1px solid #eee">
+        <b>${mx(l.amount_cents)}</b> · ${esc(l.title||"Venta")}
+        <span class="hint">${l.status==="settled_source"?"recibido directo":(l.status==="paid"?"cobrado":(l.status==="paying"?"en camino":"por cobrar"))}
+        · ${new Date(l.created_at).toLocaleDateString("es-MX")}</span>
+      </div>`).join("")}</div>`:``}`;
+};
+
+function payDesc(m){
+  if(m.kind==="usdc") return `${m.asset||"USDC"} · ${m.wallet_address||""} · red ${String(m.chain||"").toUpperCase()}`;
+  if(m.kind==="dolarapp"&&m.wallet_address) return `${m.asset||"USDC"} · ${m.wallet_address} · red ${String(m.chain||"").toUpperCase()}`;
+  if(m.kind==="clabe") return `CLABE ••••${m.clabe_last4||"----"} · ${m.bank_name||""}`;
+  if(m.kind==="bank_intl") return `Cuenta ••••${m.iban_last4||m.account_last4||"----"} · ${m.swift||""} · ${m.country||""}`;
+  return m.email||m.account_id||m.holder_name||"—";
+}
+
+/* Se abre con lo MEJOR para su país, nunca con PayPal. */
+function newPay(kind){ payForm(null, kind||railsFor(ME.country)[0]); }
+function editPay(id){ const m=MYPAY.find(x=>x.id===id); if(m) payForm(m, m.kind); }
+
+/* País → moneda: lo resuelve el bloque canónico (242 países, mismas tasas y
+   mismo formato que ve el comprador). Default USD si no conocemos el país. */
+const curOf=(c)=>VM.ccyForCountry(c)||"USD";
+const CUR_OPTS=[...new Set(Object.values(VM.countries))].sort();   // estático: no depende del tipo de cambio
+
+function payForm(m, kind){
+  const order=railsFor(ME.country);
+  kind = kind || order[0];
+  const k=PAY_KINDS[kind]||PAY_KINDS[order[0]];
+  const val=f=>{ if(!m) return ""; if(f==="clabe"||f==="iban"||f==="account_number") return ""; return m[f]||""; };
+  $("payForm").innerHTML=`<div class="card" style="margin-top:.6rem">
+    <div class="field"><label>Método <small style="font-weight:400;color:var(--tinta-60)">— ordenados de más rápido a más lento para ${flagOf(ME.country)} ${esc(countryName(ME.country))}</small></label>
+      <select id="pk" onchange="payForm(${m?`MYPAY.find(x=>x.id==='${m.id}')`:"null"}, this.value)">
+        ${order.map(v=>{const o=PAY_KINDS[v]; return `<option value="${v}" ${v===kind?"selected":""}>${o.tag?o.tag+" · ":""}${o.label}</option>`;}).join("")}
+      </select></div>
+    ${RAIL_NOTE[(ME.country||"MX").toUpperCase()]?`<div class="hint" style="background:var(--salvia-tenue,rgba(126,144,120,.12));border-radius:10px;padding:.55rem .7rem;margin-bottom:.5rem">${RAIL_NOTE[(ME.country||"MX").toUpperCase()]}</div>`:""}
+    <div class="hint"><b>${esc(k.speed)}</b></div>
+    <div class="hint">${k.hint}</div>
+    ${kind==="paypal"?`<div class="hint" style="color:#a33">Ojo: si tienes cualquiera de las opciones de arriba, vas a recibir tu dinero <b>mucho antes</b> y con menos comisión.</div>`:``}
+    ${k.fields.map(f=>f==="chain"
+      ?`<div class="field"><label>${PAY_LBL[f]}</label><select id="pf_chain" onchange="cryptoSync('${kind}',this.value)"></select></div>
+        <div id="cryptoNote" class="hint"></div>`
+      :f==="asset"
+      ?`<div class="field"><label>${PAY_LBL[f]}</label>
+          <select id="pf_asset" onchange="cryptoSync('${kind}')">
+            ${["USDC","USDT"].map(a=>`<option value="${a}" ${(val("asset")||"USDC")===a?"selected":""}>${a}</option>`).join("")}
+          </select></div>`
+      :`<div class="field"><label>${PAY_LBL[f]}${(f==="clabe"||f==="iban"||f==="account_number")&&m?" (vuelve a escribirla)":""}</label><input id="pf_${f}" value="${esc(val(f))}"></div>`).join("")}
+    ${(kind==="usdc"||kind==="dolarapp")?`<div class="hint" style="color:#a33">⚠️ Revisa el token, la red y la dirección carácter por carácter. Un envío con el token equivocado o por la red equivocada NO se puede recuperar.</div>`:``}
+    <div class="row2">
+      <div class="field"><label>País de tu cuenta</label>
+        <select id="pf_country" onchange="payForm(${m?`MYPAY.find(x=>x.id==='${m.id}')`:"null"}, document.getElementById('pk').value)">
+          ${COUNTRY_LIST.map(([c,n])=>`<option value="${c}" ${(m?.country||ME.country||"MX")===c?"selected":""}>${flagOf(c)} ${esc(n)}</option>`).join("")}
+        </select></div>
+      <div class="field"><label>Moneda en que quieres recibir <small style="font-weight:400;color:var(--tinta-60)">— sugerida por tu país</small></label>
+        <select id="pf_currency">${CUR_OPTS.map(c=>`<option value="${c}" ${(m?.currency||curOf(m?.country||ME.country))===c?"selected":""}>${c}</option>`).join("")}</select></div>
+    </div>
+    <label style="display:block;margin:.4rem 0"><input type="checkbox" id="pf_default" ${(!MYPAY.length||m?.is_default)?"checked":""}> Usar como método principal</label>
+    <div class="acts">
+      <button class="btn btn-primary" onclick="savePay('${m?m.id:""}')">Guardar método</button>
+      <button class="btn" onclick="document.getElementById('payForm').innerHTML=''">Cancelar</button>
+    </div></div>`;
+  // Las redes dependen del token elegido, así que se llenan después de dibujar.
+  if(k.fields.includes("chain")) cryptoSync(kind, val("chain"));
+}
+
+async function savePay(id){
+  const kind=$("pk").value, p={kind, country:$("pf_country").value.trim()||"MX",
+    currency:$("pf_currency").value.trim()||curOf($("pf_country").value), is_default:$("pf_default").checked};
+  if(id) p.id=id;
+  (PAY_KINDS[kind]?.fields||[]).forEach(f=>{ const el=$("pf_"+f); if(el&&el.value.trim()) p[f]=el.value.trim(); });
+  try{ const {error}=await sb.rpc("vpa_save_payout_method",{payload:p}); if(error)throw error;
+    toast("Método de cobro guardado ✓"); $("payForm").innerHTML=""; RENDER.cobros();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function setDefaultPay(id){
+  try{ const {error}=await sb.rpc("vpa_set_default_payout_method",{p_id:id}); if(error)throw error;
+    toast("Listo ✓"); RENDER.cobros(); }catch(e){ toast("Error: "+e.message); }
+}
+async function delPay(id){
+  if(!confirm("¿Eliminar este método de cobro?")) return;
+  try{ const {error}=await sb.rpc("vpa_delete_payout_method",{p_id:id}); if(error)throw error;
+    toast("Eliminado"); RENDER.cobros(); }catch(e){ toast("Error: "+e.message); }
+}
+
+/* ============ MEMBRESÍA ============ */
+RENDER.membresia=async ()=>{
+  await loadFxRates();
+  const sub=ME.subscription; const cur=sub?sub.plan_id:"free";
+  const pts=ME.points||0, credits=ME.credits_cents||0;
+  // acuerdo de reparto vigente o propuesto
+  const { data:deals } = await sb.from("app_vpa_deals").select("*").order("created_at",{ascending:false}).limit(5);
+  const proposed=(deals||[]).find(d=>d.status==="proposed");
+  const agreed=(deals||[]).find(d=>d.status==="agreed");
+  $("main").innerHTML=`<div class="sec-head"><h2>Membresía y acuerdo</h2></div>
+    <div class="hint">Tu plan define tu exposición y tus créditos de marketing. Tu <b>acuerdo de reparto</b> define qué % de cada venta conservas. Para cambiar de plan, escríbele a Voces.</div>
+    ${proposed?`<div class="card unread">
+      <h4>Voces te propone un acuerdo de reparto</h4>
+      <div class="meta" style="margin-top:3px;color:var(--tinta)">Conservas el <b>${proposed.specialist_pct}%</b> de cada venta; el resto es para Voces por la exposición y las conexiones.${proposed.note?" — "+esc(proposed.note):""}</div>
+      <div class="acts"><button class="btn btn-primary btn-sm" onclick="respondDeal('accept')">Aceptar acuerdo</button>
+        <button class="btn btn-ghost btn-sm" onclick="respondDeal('decline')">Rechazar</button></div></div>`:""}
+    ${agreed?`<div class="card"><h4>Tu acuerdo vigente <span class="pill published">activo</span></h4>
+      <div class="meta">Conservas el <b>${agreed.specialist_pct}%</b> de cada venta. Se aplica automáticamente en cada compra.</div></div>`:
+      `<div class="card"><div class="meta">Sin acuerdo personalizado: aplica el reparto por defecto de tu plan.</div></div>`}
+    ${COMM?`<div class="card" style="display:block">
+      <h4>Comisión de Voces <span class="pill ${COMM.accepted?"published":"pending"}">${COMM.commission_pct}%</span></h4>
+      <div class="meta" style="margin-top:6px;color:var(--tinta);line-height:1.55">${commissionText(COMM.commission_pct)}</div>
+      ${COMM.accepted
+        ? `<div class="meta" style="margin-top:9px;color:#4c7a4c;font-weight:600">✓ Aceptada el ${new Date(COMM.accepted_at).toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}</div>`
+        : `<label class="chk" style="display:flex;gap:9px;align-items:flex-start;margin-top:11px;font-weight:600">
+             <input type="checkbox" id="memCommOk" style="margin-top:3px">
+             <span>Entiendo y acepto la comisión del ${COMM.commission_pct}% aplicable a mi cuenta.</span></label>
+           <div class="acts"><button class="btn btn-primary btn-sm" onclick="acceptCommissionFromMembership()">Aceptar comisión</button></div>`}
+    </div>`:""}
+    <div class="card" style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <div><div class="meta">Tu plan actual</div><h3 style="font-size:22px">${esc((PLANS.find(p=>p.id===cur)||{}).name_es||cur)}</h3>
+        ${sub?`<div class="meta">${esc(sub.status)} · ${esc(sub.period||"")}</div>`:`<div class="meta">Gratis</div>`}</div>
+      <div style="margin-left:auto;text-align:right"><div class="meta">Voces Points</div><h3 style="font-size:22px">${pts}</h3></div>
+      <div style="text-align:right"><div class="meta">Créditos de marketing</div><h3 style="font-size:22px">${usd(credits)}</h3></div>
+    </div>
+    <div class="row2" style="grid-template-columns:1fr 1fr;gap:12px">
+      ${PLANS.map(p=>`<div class="card ${p.id===cur?"unread":""}">
+        <h4>${esc(p.name_es)} ${p.id===cur?'<span class="pill published">actual</span>':''}</h4>
+        <div class="meta">${planPrice(p)}</div>
+        <div class="meta" style="margin-top:4px;color:var(--tinta)"><b>${p.commission_pct}%</b> de comisión en tus ventas</div>
+        <ul style="margin:8px 0 0 16px;font-size:12.5px;color:var(--tinta-60)">${(p.perks_es||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>`;
+};
+async function acceptCommissionFromMembership(){
+  const chk=document.getElementById("memCommOk");
+  if(!chk||!chk.checked){ toast("Marca la casilla para confirmar que aceptas la comisión"); return; }
+  try{ const {error}=await sb.rpc("vpa_accept_commission",{ p_pct:COMM.commission_pct, p_source:"membresia" });
+    if(error) throw error; await loadCommission(); toast("Comisión aceptada ✓"); RENDER.membresia();
+  }catch(e){ toast("Error: "+e.message); }
+}
+async function respondDeal(action){
+  try{ const {error}=await sb.rpc("vpa_deal_respond",{p_action:action}); if(error)throw error;
+    toast(action==="accept"?"Acuerdo aceptado ✓":"Acuerdo rechazado");
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; RENDER.membresia(); }catch(e){ toast("Error: "+e.message); }
+}
+
+/* ============ REFIERE Y GANA ============ */
+RENDER.referir=async ()=>{
+  $("main").innerHTML=`<div class="sec-head"><h2>Refiere y gana</h2></div>
+    <div class="hint">Comparte tu enlace personal. Cuando alguien se registra y activa su membresía con él, sumas Voces Points y queda ligado a ti. (Los descuentos son aparte: los activa Voces con códigos propios.)</div>
+    <div id="refBody"><div class="card"><div class="meta">Cargando tu enlace…</div></div></div>`;
+  const { data, error } = await sb.rpc("vpa_my_referral_code");
+  if(error || !data || !data.ok){ $("refBody").innerHTML=`<div class="card"><div class="meta">No se pudo cargar tu enlace${error?": "+esc(error.message):""}.</div></div>`; return; }
+  const link = location.origin + "/crear-perfil?ref=" + data.code;
+  window.__refLink=link;
+  const wa = "https://wa.me/?text=" + encodeURIComponent("Súmate a Voces para el Alma con mi enlace: " + link);
+  $("refBody").innerHTML=`
+    <div class="card" style="display:block">
+      <div class="meta">Tu código</div>
+      <h3 style="font-size:22px;letter-spacing:.03em">${esc(data.code)}</h3>
+      <div class="field" style="margin-top:12px"><label>Tu enlace de referido</label>
+        <input id="refLink" readonly value="${esc(link)}" onclick="this.select()"></div>
+      <div class="acts">
+        <button class="btn btn-primary btn-sm" onclick="copyRefLink()">Copiar enlace</button>
+        <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${wa}">Compartir por WhatsApp</a>
+      </div>
+    </div>
+    <div class="card" style="display:flex;gap:22px;flex-wrap:wrap;align-items:center">
+      <div><div class="meta">Referidos</div><h3 style="font-size:22px">${data.referrals||0}</h3></div>
+      <div><div class="meta">Usos del enlace</div><h3 style="font-size:22px">${data.uses||0}</h3></div>
+      <div style="margin-left:auto;text-align:right"><div class="meta">Puntos por referido</div><h3 style="font-size:22px">+${data.points_per_use||0}</h3></div>
+    </div>`;
+};
+function copyRefLink(){
+  const l=window.__refLink||"";
+  try{ navigator.clipboard.writeText(l); toast("Enlace copiado ✓"); }
+  catch(_){ const i=$("refLink"); if(i){ i.select(); try{document.execCommand("copy");}catch(e){} } toast("Enlace copiado ✓"); }
+}
+
+/* ============ INIT ============ */
+(async function(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session && !claimToken){ boot(); } else { $("gate").style.display="flex"; initGate(); }
+})();
+</script>
+</body>
+</html>
