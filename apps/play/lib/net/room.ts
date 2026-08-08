@@ -12,7 +12,7 @@
 // The socket reconnects on its own with backoff, replaying the handshake, so a
 // phone that locks its screen mid-mission rejoins the party on wake.
 // =============================================================================
-import type { ClientMsg, Member, ServerMsg, Shared } from './protocol';
+import type { BuiltProp, ClientMsg, Member, ServerMsg, Shared } from './protocol';
 
 /** A remote player as the scene needs them: where they are, and where they're headed. */
 export interface Remote {
@@ -37,6 +37,8 @@ export interface RoomEvents {
   status: (s: RoomStatus, detail?: string) => void;
   roster: (members: Member[], you: string) => void;
   shared: (s: Shared) => void;
+  /** the party's creations in the current world changed */
+  built: (list: BuiltProp[]) => void;
   signal: (from: string, data: unknown) => void;
   emote: (id: string, e: string) => void;
 }
@@ -68,6 +70,8 @@ export class RoomClient {
   you = '';
   members: Member[] = [];
   shared: Shared | null = null;
+  /** everything the party has built in the world they're currently in */
+  built: BuiltProp[] = [];
   status: RoomStatus = 'off';
 
   on<K extends keyof RoomEvents>(ev: K, fn: RoomEvents[K]) {
@@ -194,6 +198,22 @@ export class RoomClient {
         this.handlers.shared?.(msg.s);
         return;
 
+      case 'built':
+        this.built = msg.list;
+        this.handlers.built?.(this.built);
+        return;
+
+      case 'build1':
+        if (this.built.some((b) => b.id === msg.b.id)) return;
+        this.built = [...this.built, msg.b];
+        this.handlers.built?.(this.built);
+        return;
+
+      case 'unbuilt':
+        this.built = this.built.filter((b) => b.id !== msg.id);
+        this.handlers.built?.(this.built);
+        return;
+
       case 'sig':
         this.handlers.signal?.(msg.from, msg.d);
         return;
@@ -266,6 +286,7 @@ export class RoomClient {
     this.remotes.clear();
     this.members = [];
     this.shared = null;
+    this.built = [];
     this.you = '';
     this.setStatus('off');
   }
