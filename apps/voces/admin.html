@@ -170,6 +170,8 @@
        background:#fdecec;border:1px solid #f3c2c2;color:#8c2b2b;font-size:13.5px;line-height:1.5"></div>
   <div class="drawer-foot">
     <button class="btn btn-ghost" onclick="closeDrawer()">Cancelar</button>
+    <button class="btn btn-ghost" id="dupBtn" style="display:none" onclick="dupFromForm()"
+      title="Crea otra oferta igual a ésta, en borrador">⧉ Duplicar oferta</button>
     <button class="btn btn-ghost" id="suggestBtn" style="display:none" onclick="saveAsSuggestion()">Proponer a la voz</button>
     <button class="btn btn-primary" id="saveBtn" onclick="saveForm()">Guardar y publicar</button>
   </div>
@@ -959,7 +961,8 @@ async function saveOrder(sec){
           <select class="btn-sm" style="padding:6px;border-radius:8px" onchange="quickStatus('${sec}','${i.id}',this.value)">${stOpts}</select>
           <button class="btn btn-ghost btn-sm" onclick='openForm("${sec}", ${JSON.stringify(i).replace(/'/g,"&#39;")})'>Editar</button>
           ${sec==="specialists"?specActions(i):""}
-          ${sec==="offerings"?`<button class="btn btn-ghost btn-sm" onclick="offerAttendees('${i.id}')">${i.kind==="masterclass"?"Inscritos":"Asistentes"}</button>`:""}
+          ${sec==="offerings"?`<button class="btn btn-ghost btn-sm" title="Crea otra igual, en borrador" onclick="dupFromList('${i.id}')">⧉ Duplicar</button>
+          <button class="btn btn-ghost btn-sm" onclick="offerAttendees('${i.id}')">${i.kind==="masterclass"?"Inscritos":"Asistentes"}</button>`:""}
         </div></div>`;
     }).join("");
   };
@@ -967,7 +970,7 @@ async function saveOrder(sec){
 function labelOf(sec){ return (SECTIONS.find(s=>s[0]===sec)||["",sec])[1]; }
 function hintOf(sec){ return ({
   specialists:"Crea y edita las voces del directorio. Solo los 'published' se ven en el sitio. El correo/teléfono son privados y se revelan a quien inicia sesión.",
-  offerings:"Lo que ofrece cada voz: libros, ebooks, audiolibros, coaching, sesiones, retiros, conferencias y <b>Masterclass</b>. Solo los 'published' se ven en el perfil público. <b>Todas llevan precio</b> — el «a convenir» ya no existe. La <b>Masterclass</b> es la excepción: siempre gratuita, sólo para voces con membresía <b>Pro</b>, promociona un producto ya publicado de esa misma voz y la gente se inscribe con su correo (botón <b>Inscritos</b>).",
+  offerings:"Lo que ofrece cada voz: libros, ebooks, audiolibros, coaching, sesiones, retiros, conferencias y <b>Masterclass</b>. Solo los 'published' se ven en el perfil público. <b>Todas llevan precio</b> — el «a convenir» ya no existe. La <b>Masterclass</b> es la excepción: siempre gratuita, sólo para voces con membresía <b>Pro</b>, promociona un producto ya publicado de esa misma voz y la gente se inscribe con su correo (botón <b>Inscritos</b>).<br>¿La misma oferta en varias fechas? Usa <b>⧉ Duplicar</b>: crea una copia idéntica en <b>borrador</b> (no se ve en el sitio) y sólo hay que cambiarle la fecha, el nombre y el enlace.",
   categories:"Las temáticas del directorio. Edita nombres, descripciones e íconos. Incluye la nueva “Historias de Transformación”.",
   workshops:"Talleres y retiros. Define fecha, modalidad, precio y especialista.",
   products:"Tienda de contenidos digitales (ebooks, audios, cursos, guías).",
@@ -1197,6 +1200,8 @@ function openForm(sec,item){
   $("drawerBody").innerHTML=f.map(fd=>fieldHtml(fd,fieldVal(item,fd))).join("");
   // "Proponer a la voz" sólo tiene sentido al editar un perfil/oferta existente
   $("suggestBtn").style.display = (item && (sec==="specialists"||sec==="offerings")) ? "" : "none";
+  // Duplicar: sólo con una oferta ya creada delante (no tiene sentido al crear una nueva)
+  $("dupBtn").style.display = (item && sec==="offerings") ? "" : "none";
   if(sec==="offerings") wireOfferingForm();
   showFormError("");
   openDrawer();
@@ -1422,6 +1427,59 @@ async function saveForm(){
   }
   finally{ $("saveBtn").disabled=false; $("saveBtn").textContent="Guardar"; }
 }
+/* ============ DUPLICAR OFERTA ============================================
+   Publicar el mismo taller doce veces (una por mes) significaba llenar el
+   formulario entero doce veces. Duplicar copia la oferta tal cual y la deja en
+   `draft`: NO sale en el sitio público (la vista `app_vpa_offerings_public`
+   sólo muestra `published`), así que la copia se puede dejar a medias mientras
+   la voz cambia lo que cambia — fecha, nombre, enlace — y sólo después se
+   publica desde el selector de estado.
+   El título lleva «(copia)», y «(copia 2)», «(copia 3)»… si ya hay otras: doce
+   filas con el mismo nombre serían imposibles de distinguir en la lista.
+   Se copia la fila COMPLETA (menos id/slug/fechas de sistema): la RPC lee sólo
+   las llaves que conoce, así que una columna nueva de oferta se copia sola sin
+   tener que acordarse de esta lista. */
+function copyTitle(orig, taken){
+  const base = String(orig||"").replace(/\s*\(copia(?:\s+\d+)?\)\s*$/i,"").trim() || "Sin título";
+  const used = new Set((taken||[]).map(t=>String(t||"").trim().toLowerCase()));
+  let name = base+" (copia)";
+  for(let n=2; used.has(name.toLowerCase()); n++) name = base+" (copia "+n+")";
+  return name;
+}
+// Desde la lista: se copia lo que está guardado en la base.
+function dupFromList(id){
+  const o=(OFFS||[]).find(x=>x.id===id);
+  if(!o) return toast("No encuentro esa oferta — recarga la lista.");
+  return dupOffering(o);
+}
+// Desde el formulario abierto: se copia lo que está EN PANTALLA, incluidos los
+// cambios que todavía no se han guardado (es lo que se está viendo).
+function dupFromForm(){
+  if(!current.item || current.entity!=="offerings") return;
+  const p=collect(); delete p.id;
+  if(!p.specialist_id) p.specialist_id=current.item.specialist_id;
+  return dupOffering(p);
+}
+async function dupOffering(o){
+  const payload=Object.assign({},o);
+  ["id","slug","created_at","updated_at"].forEach(k=>delete payload[k]);
+  const spec=payload.specialist_id||"";
+  payload.title=copyTitle(o.title,(OFFS||[]).filter(x=>x.specialist_id===spec).map(x=>x.title));
+  payload.status="draft";                       // borrador: nunca sale al sitio público
+  const btn=$("dupBtn"); if(btn) btn.disabled=true;
+  try{
+    const { error } = await sb.rpc("vpa_upsert_offering",{ payload });
+    if(error) throw error;
+    toast("Copia creada en borrador ✓ — «"+payload.title+"»");
+    closeDrawer(); RENDER.offerings();
+  }catch(e){
+    const t=saveErrorText(e&&e.message);
+    if($("drawer").classList.contains("open")) showFormError(t);
+    toast(t);
+  }
+  finally{ if(btn) btn.disabled=false; }
+}
+
 function openDrawer(){ $("drawer").classList.add("open"); $("drawerBg").classList.add("open"); }
 function closeDrawer(){ $("drawer").classList.remove("open"); $("drawerBg").classList.remove("open"); }
 function toLocalInput(iso){ if(!iso) return ""; const d=new Date(iso); if(isNaN(d)) return ""; const p=n=>String(n).padStart(2,"0");

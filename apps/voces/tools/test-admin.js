@@ -42,6 +42,7 @@ const ITEMS = [
 ];
 
 const reorders = [];   // lo que la página mandó a vpa_reorder
+const upserts  = [];   // lo que la página mandó a vpa_upsert_offering (duplicar)
 
 async function stub(ctx) {
   const json = (route, body) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
@@ -52,6 +53,13 @@ async function stub(ctx) {
     if (url.includes("/auth/v1/")) return json(route, {});
     if (url.includes("/rpc/vpa_ensure_member") || url.includes("/rpc/vpa_my_role")) return json(route, "super_admin");
     if (url.includes("/rpc/vpa_reorder")) { reorders.push(body); return json(route, null); }
+    if (url.includes("/rpc/vpa_upsert_offering")) {
+      upserts.push(body.payload);
+      // la copia entra en la lista, como haría la base: así el 2º duplicado ve
+      // que «(copia)» ya está ocupada y tiene que llamarse «(copia 2)»
+      OFFS.push(Object.assign({}, body.payload, { id: "of-new-" + upserts.length }));
+      return json(route, "of-new-" + upserts.length);
+    }
     if (url.includes("/rpc/")) return json(route, null);
     if (url.includes("app_vpa_specialists")) return json(route, SPECS);
     if (url.includes("app_vpa_offerings")) return json(route, OFFS);
@@ -138,6 +146,48 @@ const sesion = {
   ok("el servidor recibe pendientes al final", ultimo.p_ids.slice(-2).join(",") === "of-4,of-5", ultimo.p_ids.join(","));
   await page.evaluate(() => moveRow("offerings", "of-3", 1));   // vuelve a su sitio
   await page.waitForTimeout(300);
+
+  // ---------------- Duplicar oferta ----------------
+  // La misma oferta en doce fechas: se copia y sólo se cambia lo que cambia.
+  console.log("— Duplicar oferta");
+  await page.evaluate(() => go("offerings"));
+  await page.waitForTimeout(600);
+  ok("cada oferta tiene botón Duplicar",
+    (await page.$$eval("#rows .card .acts button", e => e.filter(b => b.textContent.includes("Duplicar")).length)) === 5);
+
+  await page.evaluate(() => dupFromList("of-1"));
+  await page.waitForTimeout(700);
+  const c1 = upserts[0] || {};
+  ok("la copia nace en borrador", c1.status === "draft", JSON.stringify(c1.status));
+  ok("el título dice (copia)", c1.title === "Ebook del perdón (copia)", c1.title);
+  ok("no arrastra el id del original", c1.id === undefined, String(c1.id));
+  ok("conserva la voz dueña", c1.specialist_id === "sp-1", c1.specialist_id);
+  ok("conserva tipo y precio", c1.kind === "ebook" && c1.price_cents === 8800, `${c1.kind}/${c1.price_cents}`);
+
+  await page.evaluate(() => dupFromList("of-1"));
+  await page.waitForTimeout(700);
+  ok("la segunda copia se llama (copia 2)", (upserts[1] || {}).title === "Ebook del perdón (copia 2)", (upserts[1] || {}).title);
+  await page.evaluate(() => dupFromList("of-new-1"));   // duplicar una copia
+  await page.waitForTimeout(700);
+  ok("duplicar una copia no encadena «(copia) (copia)»",
+    (upserts[2] || {}).title === "Ebook del perdón (copia 3)", (upserts[2] || {}).title);
+
+  // el botón del formulario: sólo con una oferta ya creada delante
+  await page.evaluate(() => openForm("offerings"));
+  await page.waitForTimeout(300);
+  ok("al crear una oferta nueva NO se ofrece duplicar", await page.isHidden("#dupBtn"));
+  await page.evaluate(it => openForm("offerings", it), OFFS.find(o => o.id === "of-3"));
+  await page.waitForTimeout(400);
+  ok("al editar una existente SÍ se ofrece duplicar", await page.isVisible("#dupBtn"));
+  await page.click("#dupBtn");
+  await page.waitForTimeout(700);
+  const cf = upserts[3] || {};
+  ok("duplicar desde el formulario copia lo que está en pantalla",
+    cf.status === "draft" && cf.title === "Curso de finanzas (copia)" && cf.specialist_id === "sp-2",
+    JSON.stringify([cf.status, cf.title, cf.specialist_id]));
+  ok("y cierra el formulario", await page.evaluate(() => !$("drawer").classList.contains("open")));
+  await page.evaluate(() => go("offerings"));
+  await page.waitForTimeout(500);
 
   // ---------------- TEMA 2 · directorio de voces ----------------
   console.log("— Directorio de voces");

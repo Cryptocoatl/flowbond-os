@@ -43,6 +43,47 @@ const ok = (n, c, extra = "") => { if (c) { pass++; } else { fail++; console.log
   });
   ok("crear-perfil registra 33000, no 33", eco === "33000", `→ ${eco}`);
 
+  // --- mi-voz · duplicar una oferta -----------------------------------------
+  // Sin sesión real: se le pone a la página un perfil de mentira y se le cambia
+  // `sb.rpc` por un espía, para ver EXACTAMENTE qué payload manda al servidor.
+  await page.goto(`${BASE}/mi-voz.html`, { waitUntil: "networkidle", timeout: 45000 });
+  errores.length = 0;
+  const dup = await page.evaluate(async () => {
+    const OFERTA = { id:"o1", slug:"taller-luna", status:"published", created_at:"2026-01-01", updated_at:"2026-02-02",
+      specialist_id:"sp-1", kind:"taller", title:"Exploración Nexus", description:"desc", note_important:"ojo",
+      price_cents:150000, currency:"MXN", cover_url:"http://x/c.jpg", booking_url:"https://cal/x",
+      event_at:"2026-09-05T19:00:00Z", sell_via_voces:false, in_progress:false };
+    ME = { id:"sp-1", offerings:[OFERTA], subscription:{ plan_id:"basic", status:"active" } };
+    const enviados = [];
+    sb.rpc = async (fn, args) => {
+      enviados.push([fn, args]);
+      if (fn === "vpa_my_profile") return { data: ME };
+      if (fn === "vpa_upsert_offering") {
+        ME.offerings.push(Object.assign({}, args.payload, { id: "o" + (ME.offerings.length + 1), status: "pending" }));
+        return { data: "o2" };
+      }
+      return { data: null };
+    };
+    await RENDER.oferta();
+    await dupMyOffer("o1");
+    await dupMyOffer("o1");
+    const p1 = (enviados.find(e => e[0] === "vpa_upsert_offering") || [])[1].payload;
+    const p2 = enviados.filter(e => e[0] === "vpa_upsert_offering")[1][1].payload;
+    return { p1, t2: p2.title, filas: document.querySelectorAll("#rows .card").length,
+             etiquetas: [...document.querySelectorAll("#rows .pill")].map(e => e.textContent) };
+  });
+  ok("mi-voz: la copia no lleva id ni estado (lo pone el servidor)",
+    dup.p1.id === undefined && dup.p1.status === undefined, JSON.stringify([dup.p1.id, dup.p1.status]));
+  ok("mi-voz: el título dice (copia)", dup.p1.title === "Exploración Nexus (copia)", dup.p1.title);
+  ok("mi-voz: copia precio, fecha, agenda y nota",
+    dup.p1.price_cents === 150000 && dup.p1.event_at === "2026-09-05T19:00:00Z" &&
+    dup.p1.booking_url === "https://cal/x" && dup.p1.note_important === "ojo", JSON.stringify(dup.p1));
+  ok("mi-voz: no arrastra el slug del original (se genera solo)", dup.p1.slug === undefined, String(dup.p1.slug));
+  ok("mi-voz: la segunda copia se llama (copia 2)", dup.t2 === "Exploración Nexus (copia 2)", dup.t2);
+  ok("mi-voz: las copias aparecen en la lista", dup.filas === 3, String(dup.filas));
+  ok("mi-voz: los estados se leen en español", dup.etiquetas.join(",") === "publicada,pendiente,pendiente", dup.etiquetas.join(","));
+  ok("mi-voz: duplicar no lanza errores de JS", errores.length === 0, errores.slice(0, 2).join(" | "));
+
   await browser.close();
   console.log(`\n${fail === 0 ? "✅" : "❌"}  ${pass} comprobaciones OK, ${fail} fallidas`);
   process.exit(fail === 0 ? 0 : 1);

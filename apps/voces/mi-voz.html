@@ -846,17 +846,23 @@ async function resolveMine(id,action){ try{ const {error}=await sb.rpc("vpa_reso
 async function replyMine(id){ const b=prompt("Tu respuesta:"); if(!b||!b.trim())return; try{ const {error}=await sb.rpc("vpa_reply_change",{p_request:id,p_body:b.trim()}); if(error)throw error; toast("Enviado"); RENDER.mensajes(); }catch(e){ toast("Error: "+e.message);} }
 
 /* ============ MI OFERTA ============ */
+/* Los estados en pantalla, en español: al duplicar una oferta aparecen copias en
+   `borrador` y «draft» no le dice nada a nadie. Borrador va en azul (info) y no
+   en rojo: no es un error, es algo a medio escribir que todavía no se ve. */
+const OFF_ST_ES   ={published:"publicada",pending:"pendiente",draft:"borrador",hidden:"oculta"};
+const OFF_ST_CLASS={published:"published",pending:"pending", draft:"info",     hidden:"hidden"};
 RENDER.oferta=async ()=>{
   const offs=ME.offerings||[];
   $("main").innerHTML=`<div class="sec-head"><h2>Mi oferta</h2>
       <button class="btn btn-primary btn-sm" onclick="editOffer()">+ Nueva oferta</button></div>
-    <div class="hint">Tus libros, sesiones, retiros, conferencias. Lo que agregues o edites queda <b>pendiente</b> hasta que Voces lo publica. Marca “vender vía Voces” para que aparezca en la tienda y se pueda comprar en el carrito.</div>
+    <div class="hint">Tus libros, sesiones, retiros, conferencias. Lo que agregues o edites queda <b>pendiente</b> hasta que Voces lo publica. Marca “vender vía Voces” para que aparezca en la tienda y se pueda comprar en el carrito.<br>¿Lo mismo en varias fechas? Dale a <b>⧉ Duplicar</b>: se crea una copia idéntica sin publicar y sólo le cambias la fecha, el nombre y el enlace.</div>
     <div id="offForm"></div>
-    <div id="rows">${offs.length?offs.map(o=>`<div class="card"><h4>${esc(o.title)} <span class="pill ${o.status==="published"?"published":(o.status==="hidden"?"hidden":"pending")}">${esc(o.status)}</span></h4>
+    <div id="rows">${offs.length?offs.map(o=>`<div class="card"><h4>${esc(o.title)} <span class="pill ${OFF_ST_CLASS[o.status]||"pending"}">${esc(OFF_ST_ES[o.status]||o.status)}</span></h4>
       <div class="meta">${esc(KIND_ES[o.kind]||o.kind)}${o.kind==="masterclass"?" · gratuita":(o.price_cents!=null?" · $"+(o.price_cents/100).toLocaleString("es-MX")+" MXN":` · <b style="color:#a33">⚠ falta el precio</b>`)}${o.sell_via_voces?" · vía Voces":""}${o.external_url?" · 🔗 externo":""}${o.in_progress?" · en proceso":""}${SESSION_KINDS.includes(o.kind)&&!o.booking_url?` · <b style="color:#a33">⚠ falta tu enlace de agenda</b>`:""}${o.kind==="masterclass"&&!o.meeting_url?` · <b style="color:#7a5a12">enlace pendiente de enviar</b>`:""}${o.event_at?" · 📅 "+new Date(o.event_at).toLocaleString("es-MX",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""}</div>
       ${o.description?`<div class="meta" style="margin-top:4px;color:var(--tinta);white-space:pre-line">${mdText(o.description)}</div>`:""}
       ${o.note_important?`<div class="meta" style="margin-top:6px;border-left:3px solid var(--oro);background:rgba(203,161,90,.12);border-radius:8px;padding:8px 11px;color:#5c4a1e;font-weight:600;white-space:pre-line">${mdText(o.note_important)}</div>`:""}
       <div class="acts"><button class="btn btn-ghost btn-sm" onclick='editOffer(${JSON.stringify(o).replace(/'/g,"&#39;")})'>Editar</button>
+        <button class="btn btn-ghost btn-sm" title="Crea otra igual, sin publicar" onclick="dupMyOffer('${o.id}')">⧉ Duplicar</button>
         <button class="btn btn-ghost btn-sm" onclick="showAttendees('${o.id}')">${o.kind==="masterclass"?"Inscritos":"Asistentes"}</button></div></div>`).join(""):`<div class="empty">Aún no tienes ofertas. Agrega la primera.</div>`}</div>`;
 };
 // Punto 4 · la voz elige cómo se anuncia su producto (antes lo decidía el sistema).
@@ -1079,6 +1085,7 @@ function editOffer(o){
     </div>
     <div class="field"><label class="chk"><input type="checkbox" id="of_wip" ${o.in_progress?"checked":""}> Obra en proceso</label></div>
     <div class="acts"><button class="btn btn-primary" onclick="saveOffer('${o.id||""}')">Guardar</button>
+      ${o.id?`<button class="btn btn-ghost" title="Crea otra oferta igual a ésta, sin publicar" onclick="dupMyOffer('${o.id}')">⧉ Duplicar oferta</button>`:""}
       <button class="btn btn-ghost" onclick="$('offForm').innerHTML=''">Cancelar</button></div>
   </div>`;
   bookNotice(); commissionToggle(); offerKindUI();
@@ -1163,14 +1170,59 @@ async function saveOffer(id){
     const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data; $("offForm").innerHTML=""; RENDER.oferta(); }
   catch(e){
     const m=e&&e.message||"";
-    if(/commission_terms_required/.test(m)){ toast("Falta aceptar la comisión de Voces para poder vender."); await loadCommission(); commissionToggle(); return; }
-    if(/booking_required/.test(m)){ toast("Falta tu enlace de agenda: sin él la sesión no se puede publicar."); return; }
-    if(/masterclass_requires_pro/.test(m)){ toast("No puedes crear este tipo de oferta en la membresía que tienes."); return; }
-    if(/masterclass_needs_product/.test(m)){ toast("Elige un producto tuyo ya publicado y aprobado para promocionar."); return; }
-    if(/price_required/.test(m)){ toast("Escribe el precio de tu oferta: Voces ya no maneja «precio a convenir»."); return; }
-    if(/meeting_url_invalid/.test(m)){ toast("El enlace de la reunión debe empezar con https://"); return; }
-    toast("Error: "+m);
+    toast(offerErrText(m));
+    // La comisión se puede aceptar aquí mismo: se vuelve a pintar la casilla.
+    if(/commission_terms_required/.test(m)){ await loadCommission(); commissionToggle(); }
   }
+}
+// Los errores del servidor, dichos como se los diría una persona a otra.
+function offerErrText(m){
+  m = m || "";
+  if(/commission_terms_required/.test(m)) return "Falta aceptar la comisión de Voces para poder vender.";
+  if(/booking_required/.test(m))          return "Falta tu enlace de agenda: sin él la sesión no se puede publicar.";
+  if(/masterclass_requires_pro/.test(m))  return "No puedes crear este tipo de oferta en la membresía que tienes.";
+  if(/masterclass_needs_product/.test(m)) return "Elige un producto tuyo ya publicado y aprobado para promocionar.";
+  if(/price_required/.test(m))            return "Escribe el precio de tu oferta: Voces ya no maneja «precio a convenir».";
+  if(/meeting_url_invalid/.test(m))       return "El enlace de la reunión debe empezar con https://";
+  return "Error: "+m;
+}
+
+/* ---- Duplicar una oferta -------------------------------------------------
+   Para publicar lo mismo en varias fechas ya no hay que volver a llenar el
+   formulario entero: se copia la oferta tal cual y sólo se cambia lo que
+   cambia (fecha, nombre, enlace). La copia NO sale al sitio — nace sin
+   publicar, igual que cualquier oferta nueva, y se ve en el sitio cuando
+   Voces la publica. El título lleva «(copia)» para poder distinguirlas.
+   Se manda la fila completa menos las llaves del sistema: la RPC lee sólo lo
+   que conoce, así que una columna nueva se copia sola. */
+function copyTitle(orig, taken){
+  const base = String(orig||"").replace(/\s*\(copia(?:\s+\d+)?\)\s*$/i,"").trim() || "Sin título";
+  const used = new Set((taken||[]).map(t=>String(t||"").trim().toLowerCase()));
+  let name = base+" (copia)";
+  for(let n=2; used.has(name.toLowerCase()); n++) name = base+" (copia "+n+")";
+  return name;
+}
+async function dupMyOffer(id){
+  const o=(ME.offerings||[]).find(x=>x.id===id);
+  if(!o) return toast("No encuentro esa oferta — recarga la página.");
+  /* Copiar una oferta que se vende por Voces es "crear" una oferta de venta, y el
+     servidor exige la comisión aceptada igual que al guardarla. La casilla vive
+     dentro del formulario, así que en vez de soltar un error se abre la oferta
+     ahí mismo para aceptarla. */
+  if(o.sell_via_voces && COMM && !COMM.accepted){
+    toast("Antes de duplicar una oferta que se vende por Voces hay que aceptar la comisión — te abro la oferta para marcarla.");
+    return editOffer(o);
+  }
+  const p=Object.assign({},o);
+  ["id","slug","status","created_at","updated_at"].forEach(k=>delete p[k]);  // el estado lo pone el servidor
+  p.title=copyTitle(o.title,(ME.offerings||[]).map(x=>x.title));
+  toast("Duplicando…");
+  try{
+    const {error}=await sb.rpc("vpa_upsert_offering",{payload:p}); if(error) throw error;
+    const {data}=await sb.rpc("vpa_my_profile"); if(data) ME=data;
+    $("offForm").innerHTML=""; RENDER.oferta();
+    toast("Copia creada ✓ — «"+p.title+"», sin publicar. Edítala y guárdala.");
+  }catch(e){ toast(offerErrText(e&&e.message)); }
 }
 
 /* ---- Inscritos a una oferta ----------------------------------------------
