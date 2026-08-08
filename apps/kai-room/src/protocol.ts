@@ -36,6 +36,17 @@ export interface Shared {
   by: Record<string, number>;
 }
 
+/** A creation placed in the world by one of the players. */
+export interface BuiltProp {
+  id: string;
+  /** member id of whoever placed it */
+  by: string;
+  kind: string;
+  x: number;
+  z: number;
+  rot: number;
+}
+
 // ---- client → server --------------------------------------------------------
 export type ClientMsg =
   /** first message; the first player into an empty room sets where the party starts */
@@ -50,6 +61,12 @@ export type ClientMsg =
   | { t: 'done'; w: string; mi: number }
   /** WebRTC offer/answer/ICE, relayed verbatim to one peer */
   | { t: 'sig'; to: string; d: unknown }
+  /** place a creation — the room keeps it so your teammate sees it too */
+  | { t: 'build'; b: { id: string; kind: string; x: number; z: number; rot: number } }
+  /** take back one of YOUR creations */
+  | { t: 'unbuild'; id: string }
+  /** take back all of YOUR creations in this world — never your teammate's */
+  | { t: 'buildclear' }
   /** microphone turned on/off */
   | { t: 'voice'; on: boolean }
   /** one-tap emoji, for when talking isn't happening */
@@ -65,6 +82,9 @@ export type ServerMsg =
   | { t: 'sig'; from: string; d: unknown }
   | { t: 'voice'; id: string; on: boolean }
   | { t: 'emote'; id: string; e: string }
+  | { t: 'built'; w: string; list: BuiltProp[] }
+  | { t: 'build1'; w: string; b: BuiltProp }
+  | { t: 'unbuilt'; w: string; id: string }
   | { t: 'full' }
   | { t: 'err'; m: string };
 
