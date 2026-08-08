@@ -14,13 +14,14 @@ const CAPS: Cap[] = [
   { start: 0.0, end: 2.5, es: "Proteger y rescatar la vida", en: "Protecting and rescuing life" },
   { start: 2.5, end: 5.6, es: "Cuidar el agua, cerrar el ciclo de los residuos", en: "Caring for water, closing the waste loop" },
   { start: 5.6, end: 8.8, es: "Devolverle su valor a la naturaleza", en: "Restoring the value of nature" },
-  { start: 8.8, end: 12.83, es: "Una comunidad organizada y descentralizada", en: "An organized, decentralized community" },
-  { start: 12.83, end: 16.83, es: "puede ser la punta de flecha que inspire al mundo", en: "can be the arrowhead that inspires the world" },
-  { start: 16.83, end: 22.5, es: "Donde la naturaleza encuentra la tecnología", en: "Where nature meets technology" },
-  { start: 22.5, end: 99, es: "TulumCoin le da voz a los proyectos que regeneran", en: "TulumCoin gives voice to the projects that regenerate" },
+  { start: 8.8, end: 12.9, es: "Una comunidad organizada y descentralizada", en: "An organized, decentralized community" },
+  { start: 12.9, end: 18.4, es: "puede ser la punta de flecha que inspire al mundo", en: "can be the arrowhead that inspires the world" },
+  { start: 18.4, end: 99, es: "TulumCoin le da voz a los proyectos que regeneran", en: "TulumCoin gives voice to the projects that regenerate" },
 ];
 
-const DUR = 26.7; // seconds of footage (re-cut)
+// v4 re-cut: the real-estate development renders (old 13.0–17.0s) were removed —
+// we own the regeneration/community/ceremony footage; those renders we did not.
+const DUR = 22.63; // seconds of footage (v4)
 
 export default function ImmersiveScroll() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -39,8 +40,8 @@ export default function ImmersiveScroll() {
     if (!section || !video) return;
 
     const isMobile = window.innerWidth <= 760;
-    const rendition = isMobile ? "/assets/tulum-scroll-v3-sm.mp4" : "/assets/tulum-scroll-v3.mp4";
-    video.poster = isMobile ? "/assets/tulum-scroll-v3-poster-sm.webp" : "/assets/tulum-scroll-v3-poster.webp";
+    const rendition = isMobile ? "/assets/tulum-scroll-v4-sm.mp4" : "/assets/tulum-scroll-v4.mp4";
+    video.poster = isMobile ? "/assets/tulum-scroll-v4-poster-sm.webp" : "/assets/tulum-scroll-v4-poster.webp";
     let objectUrl: string | null = null;
 
     // ---- caption index from a time (shared by both modes) ----
@@ -150,7 +151,7 @@ export default function ImmersiveScroll() {
         <video
           ref={videoRef}
           className="immersive-video"
-          poster="/assets/tulum-scroll-v3-poster.webp"
+          poster="/assets/tulum-scroll-v4-poster.webp"
           preload="auto"
           muted
           playsInline

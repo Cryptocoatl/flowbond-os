@@ -1,9 +1,10 @@
 "use client";
-// FBID session. Primary path is email + password (signInWithPassword) — instant,
-// no round-trip. Fallback for anyone without a password is a MAGIC LINK that
-// redirects back to this same origin (emailRedirectTo), where supabase-js picks
-// up the token and the session lands — no 6-digit code (those weren't arriving).
-// auth.uid() is the soulbound FBID root the RPCs and edge function key on.
+// FBID session. TWO ways in, both reliable on mobile:
+//   • Código por correo (default): we email an 8-digit code (Supabase OTP over
+//     Resend SMTP); you type it here → verifyOtp → session. No cross-browser
+//     magic-link redirect to break on a phone.
+//   • Contraseña: signInWithPassword for anyone who set one.
+// auth.uid() is the soulbound FBID root the RPCs and worker key on.
 //
 // Two faces: a full login PANEL when signed out (the gate to the whole verify
 // flow) and a compact identity CHIP when signed in. The panel carries id
@@ -12,7 +13,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { humaneError } from "@/lib/errors";
 
-type Mode = "password" | "link";
+type Mode = "code" | "password";
+type Stage = "idle" | "busy" | "sent";
 
 type Intro = { panelId?: string; eyebrow: string; title: string; blurb: React.ReactNode };
 const DEFAULT_INTRO: Intro = {
@@ -20,8 +22,8 @@ const DEFAULT_INTRO: Intro = {
   title: "Tu identidad soulbound",
   blurb: (
     <>
-      Tu FBID es tu raíz de identidad en FlowBond. Entra una vez con tu correo.
-      <span className="en"> Sign in once with your email — your soulbound FBID.</span>
+      Tu FBID es tu raíz de identidad en FlowBond. Entra con tu correo.
+      <span className="en"> Sign in with your email — your soulbound FBID.</span>
     </>
   ),
 };
@@ -32,8 +34,9 @@ export default function FbidBar(
   const [uid, setUid] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<Mode>("password");
-  const [stage, setStage] = useState<"idle" | "sent" | "busy">("idle");
+  const [code, setCode] = useState("");
+  const [mode, setMode] = useState<Mode>("code");
+  const [stage, setStage] = useState<Stage>("idle");
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
@@ -50,30 +53,38 @@ export default function FbidBar(
     return () => sub.subscription.unsubscribe();
   }, [onSession]);
 
-  async function signInPassword() {
-    setStage("busy"); setMsg("");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setMsg("Correo o contraseña no coinciden. · Email or password didn't match.");
-      setStage("idle");
-      return;
-    }
-    setMsg(""); setStage("idle");
-  }
+  const cleanEmail = () => email.trim().toLowerCase();
 
-  async function sendMagicLink() {
+  // ---- email OTP: send an 8-digit code ----
+  async function sendCode() {
+    if (!cleanEmail()) return;
     setStage("busy"); setMsg("");
-    // include the path so it exactly matches an allowlisted callback (/, /admin)
-    const redirect = typeof window !== "undefined"
-      ? window.location.origin + window.location.pathname
-      : undefined;
     const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirect, shouldCreateUser: true },
+      email: cleanEmail(),
+      options: { shouldCreateUser: true }, // no emailRedirectTo → OTP code, not a link
     });
     if (error) { setMsg(humaneError(error)); setStage("idle"); return; }
-    setMsg("Te enviamos un enlace mágico — ábrelo desde este dispositivo y entrarás solo. · Check your inbox for a magic link.");
+    setCode("");
+    setMsg(`Te enviamos un código de 8 dígitos a ${cleanEmail()}. · We emailed you an 8-digit code.`);
     setStage("sent");
+  }
+
+  // ---- email OTP: verify the code the user typed ----
+  async function verifyCode() {
+    const token = code.replace(/\s/g, "");
+    if (token.length < 6) { setMsg("Escribe el código completo. · Enter the full code."); return; }
+    setStage("busy"); setMsg("");
+    const { error } = await supabase.auth.verifyOtp({ email: cleanEmail(), token, type: "email" });
+    if (error) { setMsg("Código incorrecto o expirado. · Wrong or expired code."); setStage("sent"); return; }
+    // onAuthStateChange lands the session and flips this to the chip.
+  }
+
+  // ---- password ----
+  async function signInPassword() {
+    setStage("busy"); setMsg("");
+    const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail(), password });
+    if (error) { setMsg("Correo o contraseña no coinciden. · Email or password didn't match."); setStage("idle"); return; }
+    setMsg(""); setStage("idle");
   }
 
   // ---- signed in: compact identity chip ----
@@ -89,6 +100,8 @@ export default function FbidBar(
     );
   }
 
+  const busy = stage === "busy";
+
   // ---- signed out: the login panel (the gate to verification) ----
   return (
     <div className="fbid-login" id={intro.panelId}>
@@ -98,11 +111,49 @@ export default function FbidBar(
         <p>{intro.blurb}</p>
       </div>
 
-      {mode === "password" ? (
-        <form
-          className="fbid-form"
-          onSubmit={(e) => { e.preventDefault(); if (email && password && stage !== "busy") signInPassword(); }}
-        >
+      {mode === "code" ? (
+        stage !== "sent" ? (
+          // step 1 — enter email, request a code
+          <form className="fbid-form" onSubmit={(e) => { e.preventDefault(); if (cleanEmail() && !busy) sendCode(); }}>
+            <input
+              type="email" placeholder="tu@correo.com" value={email} autoComplete="email" inputMode="email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button className="fbid-btn primary" type="submit" disabled={!cleanEmail() || busy}>
+              {busy ? "Enviando…" : "Enviarme un código"}
+            </button>
+            <button type="button" className="fbid-link"
+              onClick={() => { setMode("password"); setStage("idle"); setMsg(""); }}>
+              Tengo contraseña →
+            </button>
+          </form>
+        ) : (
+          // step 2 — enter the 8-digit code
+          <form className="fbid-form" onSubmit={(e) => { e.preventDefault(); if (!busy) verifyCode(); }}>
+            <input
+              type="text" placeholder="8 dígitos" value={code}
+              inputMode="numeric" autoComplete="one-time-code" maxLength={8} pattern="[0-9]*"
+              style={{ letterSpacing: "0.4em", textAlign: "center", fontSize: "1.15em" }}
+              onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
+              autoFocus
+            />
+            <button className="fbid-btn primary" type="submit" disabled={code.length < 6 || busy}>
+              {busy ? "Entrando…" : "Entrar"}
+            </button>
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+              <button type="button" className="fbid-link" onClick={sendCode} disabled={busy}>
+                Reenviar código
+              </button>
+              <button type="button" className="fbid-link"
+                onClick={() => { setStage("idle"); setCode(""); setMsg(""); }}>
+                Cambiar correo
+              </button>
+            </div>
+          </form>
+        )
+      ) : (
+        // password mode
+        <form className="fbid-form" onSubmit={(e) => { e.preventDefault(); if (cleanEmail() && password && !busy) signInPassword(); }}>
           <input
             type="email" placeholder="tu@correo.com" value={email} autoComplete="email" inputMode="email"
             onChange={(e) => setEmail(e.target.value)}
@@ -111,35 +162,14 @@ export default function FbidBar(
             type="password" placeholder="contraseña" value={password} autoComplete="current-password"
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button className="fbid-btn primary" type="submit" disabled={!email || !password || stage === "busy"}>
-            {stage === "busy" ? "Entrando…" : "Entrar"}
+          <button className="fbid-btn primary" type="submit" disabled={!cleanEmail() || !password || busy}>
+            {busy ? "Entrando…" : "Entrar"}
           </button>
           <button type="button" className="fbid-link"
-            onClick={() => { setMode("link"); setStage("idle"); setMsg(""); }}>
-            ¿Sin contraseña? Envíame un enlace mágico →
+            onClick={() => { setMode("code"); setStage("idle"); setMsg(""); }}>
+            ← Entrar con código por correo
           </button>
         </form>
-      ) : (
-        <div className="fbid-form">
-          {stage !== "sent" ? (
-            <>
-              <input
-                type="email" placeholder="tu@correo.com" value={email} autoComplete="email" inputMode="email"
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && email && sendMagicLink()}
-              />
-              <button className="fbid-btn primary" disabled={!email || stage === "busy"} onClick={sendMagicLink}>
-                {stage === "busy" ? "Enviando…" : "Enviar enlace mágico"}
-              </button>
-            </>
-          ) : (
-            <button className="fbid-btn primary" onClick={sendMagicLink}>Reenviar enlace</button>
-          )}
-          <button type="button" className="fbid-link"
-            onClick={() => { setMode("password"); setStage("idle"); setMsg(""); }}>
-            ← Entrar con contraseña
-          </button>
-        </div>
       )}
 
       {msg && <p className="fbid-msg">{msg}</p>}

@@ -1,40 +1,44 @@
 "use client";
 // ============================================================
 // VerifyOG — three signatures, one jaguar.
-// Badges and tier render ONLY from the SERVER status returned by
-// tulumcoin_recompute_status (via the verify-og edge function).
-// The client never decides who is OG.
+// Recognition renders ONLY from the credentials the WORKER grants after
+// resolving a signed claim against the FROZEN snapshot ledger. The client
+// never decides who is OG; a signature proves you WERE in a past block.
 //
 // Flow is gated: you MUST be signed into your FBID first (Paso 1). Until then
 // the three wallet cards are LOCKED — tapping one glides you to the login panel
 // instead of throwing an error. Once signed in they unlock (Paso 2) and each
-// connect → sign → scan binds that chain to your soulbound FBID.
+// connect → sign → claim binds that wallet to your soulbound FBID.
 // ============================================================
 import { useEffect, useRef, useState } from "react";
 import { useAccount, useConnect, useConfig } from "wagmi";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useNear } from "@/providers/Web3Providers";
-import { verifyNear, verifyEvm, verifySolana, type VerifyResult } from "@/lib/verify";
+import { verifyNear, verifyEvm, verifySolana, fetchProfile, type ClaimResult, type Profile } from "@/lib/verify";
 import { humaneError } from "@/lib/errors";
 import FbidBar from "@/components/FbidBar";
 
-type CardState = "idle" | "signing" | "scanning" | "done" | "error";
-type ServerStatus = NonNullable<VerifyResult["status"]>;
+type CardState = "idle" | "signing" | "claiming" | "done" | "error";
 
-const ASSET_LABELS: Record<string, string> = {
-  tulumcoin_near: "Tulumcoin (NEAR)",
-  og_nft_near: "NFT fundacional",
-  tlmc_op: "TLMC · Optimism",
-  petgascoin_bnb: "PetgasCoin · BNB",
-  refi_nft: "ReFi Tulum NFT",
-  xelva_nft: "Xelva NFT",
+// Credential → human label, and which credentials each chain card can grant.
+const CRED_LABEL: Record<string, string> = {
+  OG_JAGUAR: "OG Jaguar · Tulumcoin (NEAR)",
+  TLMC_STEWARD: "TLMC Steward · Optimism",
+  PETGAS_HOLDER: "PetgasCoin · BNB",
+  XELVA_HOLDER: "Xelva · Solana",
+  GORILLAE_OG: "Gorillae OG · Solana",
+  XELVA_PHOENIX: "Xelva Phoenix · OG 2022",
+};
+const CHAIN_CREDS: Record<string, string[]> = {
+  near: ["OG_JAGUAR"],
+  evm: ["TLMC_STEWARD", "PETGAS_HOLDER"],
+  solana: ["XELVA_HOLDER", "GORILLAE_OG", "XELVA_PHOENIX"],
 };
 
 export default function VerifyOG() {
   const [uid, setUid] = useState<string | null>(null);
-  const [status, setStatus] = useState<ServerStatus | null>(null);
-  const [holdings, setHoldings] = useState<Record<string, VerifyResult["holdings"]>>({});
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [cards, setCards] = useState<Record<string, CardState>>({ near: "idle", evm: "idle", solana: "idle" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selloRef = useRef<HTMLDivElement>(null);
@@ -44,12 +48,18 @@ export default function VerifyOG() {
     set(chain, "error");
     setErrors((p) => ({ ...p, [chain]: humaneError(e) }));
   };
-  const apply = (chain: string, r: VerifyResult) => {
+  const apply = (chain: string, r: ClaimResult) => {
     if (!r.ok) { fail(chain, r.error ?? "verification failed"); return; }
-    setHoldings((p) => ({ ...p, [chain]: r.holdings }));
-    setStatus(r.status ?? null);
+    if (r.profile) setProfile(r.profile);
     set(chain, "done");
   };
+
+  // On sign-in, load any credentials this FBID already earned (so returning
+  // users see their status without re-signing).
+  useEffect(() => {
+    if (!uid) { setProfile(null); return; }
+    fetchProfile().then((p) => { if (p) setProfile(p); }).catch(() => {});
+  }, [uid]);
 
   // Not signed in → don't error, guide. Glide to the login panel and flag it.
   const [nudge, setNudge] = useState(false);
@@ -75,19 +85,18 @@ export default function VerifyOG() {
       set("near", "signing");
       const wallet = await near.selector.wallet();
       const accountId = near.selector.store.getState().accounts[0].accountId;
-      set("near", "scanning");
+      set("near", "claiming");
       apply("near", await verifyNear(wallet, accountId));
     } catch (e) { fail("near", e); }
   }
 
-  // ---- EVM · EIP-191 (one signature → BNB + Optimism reads) ----
+  // ---- EVM · EIP-191 (one signature → OP + BSC checked server-side) ----
   const wagmi = useConfig();
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   function connectEvm() {
-    // Prefer an injected wallet (MetaMask/Rabbit/Brave) when one is present;
-    // otherwise fall back to WalletConnect so mobile / no-extension users can
-    // pair by QR. Without this, connectors[0]=injected silently no-ops on phones.
+    // Prefer an injected wallet (MetaMask/Rabby/Brave) when present; otherwise
+    // fall back to WalletConnect so mobile / no-extension users can pair by QR.
     const hasInjected = typeof window !== "undefined" && !!(window as { ethereum?: unknown }).ethereum;
     const injected = connectors.find((c) => c.type === "injected" || c.id === "injected");
     const wc = connectors.find((c) => c.id === "walletConnect");
@@ -99,6 +108,7 @@ export default function VerifyOG() {
       if (!uid) return goLogin();
       if (!isConnected || !address) { connectEvm(); return; }
       set("evm", "signing");
+      set("evm", "claiming");
       apply("evm", await verifyEvm(wagmi, address));
     } catch (e) { fail("evm", e); }
   }
@@ -111,31 +121,30 @@ export default function VerifyOG() {
       if (!uid) return goLogin();
       if (!sol.connected || !sol.publicKey || !sol.signMessage) { solModal.setVisible(true); return; }
       set("solana", "signing");
+      set("solana", "claiming");
       apply("solana", await verifySolana(sol.signMessage, sol.publicKey.toBase58()));
     } catch (e) { fail("solana", e); }
   }
 
-  // Tier copy — server flags only (prototype status() text, verbatim)
-  const s = status;
+  // Tier copy — derived from the credentials the worker granted.
+  const creds = new Set(profile?.credentials ?? []);
+  const og = creds.has("OG_JAGUAR");
+  const steward = creds.has("TLMC_STEWARD");
   let tierName: string | null = null;
   let tierSub = "";
-  if (s) {
-    const og = s.og_jaguar, steward = s.tlmc_steward;
+  if (creds.size > 0) {
     if (og && steward) {
       tierName = "OG JAGUAR + TLMC STEWARD";
       tierSub = "La memoria de NEAR y el futuro en Optimism laten en un solo sello. Custodias el origen y siembras lo que viene.";
     } else if (og) {
       tierName = "OG JAGUAR";
-      tierSub = "Guardas el origen: Tulumcoin y los NFTs fundacionales en NEAR. El territorio reconoce a los primeros.";
+      tierSub = "Guardas el origen: Tulumcoin en NEAR. El territorio reconoce a los primeros.";
     } else if (steward) {
       tierName = "TLMC STEWARD";
       tierSub = "Sostienes el nuevo ciclo en Optimism. El jaguar camina contigo hacia el lanzamiento.";
     } else {
       tierName = "SEMILLA";
-      tierSub = "Primera firma registrada. La semilla está plantada — sigue verificando para despertar al jaguar.";
-    }
-    if (s.refi_multiplier && (og || steward)) {
-      tierSub += " Tus NFTs de ReFi Tulum multiplican ×1.5 cada beneficio.";
+      tierSub = "Primera firma reconocida. La semilla está plantada — sigue verificando para despertar al jaguar.";
     }
   }
 
@@ -147,6 +156,8 @@ export default function VerifyOG() {
   }, [tierName, cards]);
 
   const locked = !uid;
+  const chainCreds = (chain: string): string[] =>
+    (CHAIN_CREDS[chain] ?? []).filter((c) => creds.has(c));
 
   return (
     <>
@@ -178,14 +189,14 @@ export default function VerifyOG() {
         </div>
 
         <div className="wallet-grid" aria-disabled={locked}>
-          <Card title="NEAR" sub="Tulumcoin OG · NFTs fundacionales"
-            state={cards.near} error={errors.near} holdings={holdings.near} locked={locked}
+          <Card title="NEAR" sub="Tulumcoin OG"
+            state={cards.near} error={errors.near} granted={chainCreds("near")} locked={locked}
             cta={near.selector?.isSignedIn() ? "Firmar con NEAR" : "Conectar NEAR"} onClick={onNear} />
-          <Card title="EVM" sub="TLMC (Optimism) · PetgasCoin (BNB) · ReFi NFTs"
-            state={cards.evm} error={errors.evm} holdings={holdings.evm} locked={locked}
-            cta={isConnected ? "Firmar · lee BNB + OP" : "Conectar EVM"} onClick={onEvm} />
-          <Card title="SOLANA" sub="Xelvas · pases del Fest"
-            state={cards.solana} error={errors.solana} holdings={holdings.solana} locked={locked}
+          <Card title="EVM" sub="TLMC (Optimism) · PetgasCoin (BNB)"
+            state={cards.evm} error={errors.evm} granted={chainCreds("evm")} locked={locked}
+            cta={isConnected ? "Firmar · OP + BNB" : "Conectar EVM"} onClick={onEvm} />
+          <Card title="SOLANA" sub="Xelva · Gorillae · Phoenix OG"
+            state={cards.solana} error={errors.solana} granted={chainCreds("solana")} locked={locked}
             cta={sol.connected ? "Firmar con Solana" : "Conectar Solana"} onClick={onSolana} />
         </div>
       </div>
@@ -195,12 +206,16 @@ export default function VerifyOG() {
           <SelloSeal />
           <div className="tier-name">{tierName}</div>
           <p className="tier-sub">{tierSub}</p>
+          {typeof profile?.total_xp === "number" && (
+            <div className="tier-xp">{profile.total_xp} XP</div>
+          )}
           <div className="badges">
-            <Badge on={!!s?.og_jaguar}>OG Jaguar</Badge>
-            <Badge on={!!(s?.og_jaguar && s?.tlmc_steward)}>+ TLMC Steward</Badge>
-            <Badge on={!!s?.petgas_ally} tone="green">Petgas Ally</Badge>
-            <Badge on={!!s?.refi_multiplier} tone="blue">ReFi ×1.5 beneficios</Badge>
-            <Badge on={!!s?.xelva_holder}>Xelva · Fest</Badge>
+            <Badge on={og}>OG Jaguar</Badge>
+            <Badge on={steward}>TLMC Steward</Badge>
+            <Badge on={creds.has("PETGAS_HOLDER")} tone="green">PetgasCoin</Badge>
+            <Badge on={creds.has("XELVA_HOLDER")}>Xelva</Badge>
+            <Badge on={creds.has("GORILLAE_OG")} tone="blue">Gorillae OG</Badge>
+            <Badge on={creds.has("XELVA_PHOENIX")} tone="blue">Xelva Phoenix</Badge>
           </div>
         </div>
       )}
@@ -227,32 +242,33 @@ function SelloSeal() {
 }
 
 function Card(p: { title: string; sub: string; state: CardState; error?: string; locked?: boolean;
-  holdings?: VerifyResult["holdings"]; cta: string; onClick: () => void }) {
+  granted?: string[]; cta: string; onClick: () => void }) {
+  const matched = (p.granted?.length ?? 0) > 0;
   return (
     <div className={`wallet-card ${p.state === "done" ? "verified" : ""} ${p.locked ? "is-locked" : ""}`}>
-      {p.state === "done" && <div className="badge-ok">✓</div>}
+      {p.state === "done" && matched && <div className="badge-ok">✓</div>}
       {p.locked && <div className="lock-badge" aria-hidden="true">🔒</div>}
       <h3>{p.title}</h3>
       <div className="w-chain">{p.sub}</div>
       <ul className="assets">
-        {p.holdings?.length
-          ? p.holdings.map((h) => (
-              <li key={h.asset_key} className={h.balance_raw !== "0" ? "found" : ""}>
-                <span>{ASSET_LABELS[h.asset_key] ?? h.asset_key}</span><b>{h.balance_raw}</b>
-              </li>))
-          : <li><span>Esperando firma…</span><b>—</b></li>}
+        {p.state === "done" && !matched
+          ? <li><span>Firma verificada · sin reconocimiento OG</span><b>—</b></li>
+          : matched
+            ? p.granted!.map((c) => (
+                <li key={c} className="found"><span>{CRED_LABEL[c] ?? c}</span><b>✓</b></li>))
+            : <li><span>Esperando firma…</span><b>—</b></li>}
       </ul>
-      <button className="w-btn" disabled={p.state === "signing" || p.state === "scanning" || p.state === "done"}
+      <button className="w-btn" disabled={p.state === "signing" || p.state === "claiming" || p.state === "done"}
         onClick={p.onClick}>
-        {p.state === "signing" ? "Firmando…" : p.state === "scanning" ? "Escaneando…"
-          : p.state === "done" ? "Verificado ✓" : p.locked ? "🔒 " + p.cta : p.cta}
+        {p.state === "signing" ? "Firmando…" : p.state === "claiming" ? "Verificando…"
+          : p.state === "done" ? (matched ? "Reconocido ✓" : "Firmado ✓") : p.locked ? "🔒 " + p.cta : p.cta}
       </button>
       <div className={`sig-state ${p.state === "error" ? "err" : ""}`}>
         {p.state === "error" ? p.error
-          : p.state === "done" ? "Vinculado a tu FBID soulbound"
+          : p.state === "done" ? (matched ? "Vinculado a tu FBID soulbound" : "Wallet vinculada · no estaba en el snapshot OG")
           : p.locked ? "Entra con tu FBID para verificar"
-          : p.state === "signing" ? (p.title === "EVM" ? "Una firma · leyendo BNB + Optimism…" : "Mensaje enviado · firma sin gas, sin permisos")
-          : p.state === "scanning" ? "Firma verificada · escaneando holdings…"
+          : p.state === "signing" ? (p.title === "EVM" ? "Una firma · válida en OP + BNB" : "Mensaje enviado · firma sin gas, sin permisos")
+          : p.state === "claiming" ? "Firma verificada · resolviendo contra el snapshot…"
           : "Sin gas · sin permisos · sin mover fondos"}
       </div>
     </div>

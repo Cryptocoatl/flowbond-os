@@ -54,9 +54,9 @@ export default function VerifySection() {
 
 function SkeletonCards({ note }: { note: string }) {
   const cards = [
-    ["NEAR", "Tulumcoin OG · NFTs fundacionales", "Conectar NEAR"],
-    ["EVM", "TLMC (Optimism) · PetgasCoin (BNB) · ReFi NFTs", "Conectar EVM"],
-    ["SOLANA", "Xelvas · pases del Fest", "Conectar Solana"],
+    ["NEAR", "Tulumcoin OG", "Conectar NEAR"],
+    ["EVM", "TLMC (Optimism) · PetgasCoin (BNB)", "Conectar EVM"],
+    ["SOLANA", "Xelvas", "Conectar Solana"],
   ] as const;
   return (
     <div className="wallet-grid" aria-busy={note ? true : undefined}>

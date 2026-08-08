@@ -35,6 +35,7 @@ import { setupModal, WalletSelectorModal } from "@near-wallet-selector/modal-ui"
 import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
 import { setupHereWallet } from "@near-wallet-selector/here-wallet";
+import { setupNearMobileWallet } from "@near-wallet-selector/near-mobile-wallet";
 import "@/styles/vendor/near-modal-ui.css"; // vendored — Google Fonts @import stripped
 
 const NearCtx = createContext<{ selector: WalletSelector | null; modal: WalletSelectorModal | null }>({
@@ -55,7 +56,19 @@ export default function Web3Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     setupWalletSelector({
       network: "mainnet",
-      modules: [setupMyNearWallet(), setupMeteorWallet(), setupHereWallet()],
+      // HERE first: most reliable NEP-413 signMessage on iOS (top-level deeplink,
+      // not an iframe). NEAR Mobile kept for desktop QR-scan. MyNearWallet = web
+      // redirect fallback that needs no app.
+      modules: [
+        setupHereWallet(),
+        setupNearMobileWallet({ dAppMetadata: {
+          name: "TulumCoin · Verify OG",
+          logoUrl: "https://tulum.flowme.one/assets/tulum-coin-sm.webp",
+          url: "https://tulum.flowme.one",
+        } }),
+        setupMeteorWallet(),
+        setupMyNearWallet(),
+      ],
     }).then((selector) => {
       const modal = setupModal(selector, { contractId: "" }); // signMessage-only, no contract
       setNear({ selector, modal });

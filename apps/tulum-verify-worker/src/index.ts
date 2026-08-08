@@ -23,18 +23,30 @@ export interface Env {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SUPABASE_ANON_KEY: string;
+  HELIUS_API_KEY?: string; // Solana DAS — for admin-panel collection snapshots
   RATE_KV: KVNamespace;
 }
 
 const DOMAIN = "tulum.flowme.one";
 const CHAINS = new Set(["near", "evm", "solana"]);
-const json = (o: unknown, s = 200) =>
-  new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", ...cors() } });
-const cors = () => ({
-  "access-control-allow-origin": "https://tulum.flowme.one",
+
+// Origins allowed to call this worker from a browser. Production plus the CF
+// Pages preview host used for on-device testing. An exact match is reflected
+// back (credentialed CORS can't use "*"); anything else gets the prod origin.
+const ALLOWED_ORIGINS = new Set([
+  "https://tulum.flowme.one",
+  "https://test.tulum-flowme.pages.dev",
+]);
+const corsOrigin = (origin: string | null): string =>
+  origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://tulum.flowme.one";
+const cors = (origin: string | null = null) => ({
+  "access-control-allow-origin": corsOrigin(origin),
+  "vary": "Origin",
   "access-control-allow-headers": "authorization, content-type",
   "access-control-allow-methods": "POST, GET, OPTIONS",
 });
+const json = (o: unknown, s = 200, origin: string | null = null) =>
+  new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", ...cors(origin) } });
 
 // The canonical message the wallet signs. Server composes it; client only shows
 // it. Embeds the "moves no funds" promise the page already makes.
@@ -142,23 +154,83 @@ function normalize(chain: string, address: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// admin: snapshot a Solana collection/token into a frozen holder set.
+// Present-state read (Solana has no cheap history) — same evidence class the
+// Xelva/Gorillae snapshots use. Enumerates via Helius DAS. Admin-gated.
+// ---------------------------------------------------------------------------
+type Holder = { address_norm: string; balance: string; token_ids?: string[] };
+
+async function heliusDas(env: Env, method: string, params: unknown): Promise<any> {
+  if (!env.HELIUS_API_KEY) throw new Error("HELIUS_API_KEY not set on the worker");
+  const res = await fetch(`https://mainnet.helius-rpc.com/?api-key=${env.HELIUS_API_KEY}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: "admin", method, params }),
+  });
+  const jsn = (await res.json()) as { result?: any; error?: unknown };
+  if (jsn.error) throw new Error(`DAS ${method}: ${JSON.stringify(jsn.error).slice(0, 160)}`);
+  return jsn.result;
+}
+
+async function enumerateSolana(env: Env, kind: "ft" | "nft", contract: string): Promise<{ holders: Holder[]; slot: number }> {
+  const slot = (await heliusDas(env, "getSlot", [])) as number;
+  if (kind === "nft") {
+    const byOwner = new Map<string, string[]>();
+    let page = 1;
+    for (;;) {
+      const res = await heliusDas(env, "getAssetsByGroup", { groupKey: "collection", groupValue: contract, page, limit: 1000 });
+      const items: any[] = res?.items ?? [];
+      for (const it of items) {
+        const owner = it.ownership?.owner;
+        if (!owner) continue;
+        const arr = byOwner.get(owner) ?? [];
+        arr.push(it.id);
+        byOwner.set(owner, arr);
+      }
+      if (items.length < 1000) break;
+      page += 1;
+      if (page > 60) break; // safety cap (~60k NFTs)
+    }
+    const holders = [...byOwner.entries()].map(([owner, ids]) => ({ address_norm: owner, balance: String(ids.length), token_ids: ids }));
+    return { holders, slot: Number(slot) || 0 };
+  }
+  // ft
+  const byOwner = new Map<string, bigint>();
+  let cursor: string | undefined;
+  for (;;) {
+    const page: any = await heliusDas(env, "getTokenAccounts", { mint: contract, limit: 1000, cursor });
+    const accounts: any[] = page?.token_accounts ?? [];
+    for (const a of accounts) {
+      const amt = BigInt(a.amount ?? "0");
+      if (amt > 0n) byOwner.set(a.owner, (byOwner.get(a.owner) ?? 0n) + amt);
+    }
+    if (!page?.cursor || accounts.length === 0) break;
+    cursor = page.cursor;
+  }
+  const holders = [...byOwner.entries()].map(([owner, bal]) => ({ address_norm: owner, balance: bal.toString() }));
+  return { holders, slot: Number(slot) || 0 };
+}
+
+// ---------------------------------------------------------------------------
 // routes
 // ---------------------------------------------------------------------------
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
-    if (req.method === "OPTIONS") return new Response(null, { headers: cors() });
+    const origin = req.headers.get("origin");
+    if (req.method === "OPTIONS") return new Response(null, { headers: cors(origin) });
     const url = new URL(req.url);
     const jwt = req.headers.get("authorization")?.replace("Bearer ", "") ?? "";
     const ip = req.headers.get("cf-connecting-ip") ?? "0.0.0.0";
+    const j = (o: unknown, s = 200) => json(o, s, origin);
 
     try {
       const { data: { user } } = await userClient(env, jwt).auth.getUser();
-      if (!user) return json({ error: "auth required" }, 401);
+      if (!user) return j({ error: "auth required" }, 401);
 
       // ---- POST /nonce ----
       if (req.method === "POST" && url.pathname === "/nonce") {
         const { chain } = (await req.json()) as { chain: string };
-        if (!CHAINS.has(chain)) return json({ error: "bad chain" }, 400);
+        if (!CHAINS.has(chain)) return j({ error: "bad chain" }, 400);
         const issuedAt = new Date().toISOString();
         // pre-compute a nonce to bake into the message, then persist both via RPC
         const nonce = crypto.randomUUID().replace(/-/g, "");
@@ -168,17 +240,17 @@ export default {
           fbid: user.id, chain, nonce, message,
           expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
         });
-        if (error) return json({ error: error.message }, 500);
-        return json({ nonce, message, expiresAt: new Date(Date.now() + 10 * 60_000).toISOString() });
+        if (error) return j({ error: error.message }, 500);
+        return j({ nonce, message, expiresAt: new Date(Date.now() + 10 * 60_000).toISOString() });
       }
 
       // ---- POST /claim ----
       if (req.method === "POST" && url.pathname === "/claim") {
-        if (!(await rateOk(env.RATE_KV, [user.id, ip]))) return json({ error: "rate limited" }, 429);
+        if (!(await rateOk(env.RATE_KV, [user.id, ip]))) return j({ error: "rate limited" }, 429);
         const body = (await req.json()) as {
           chain: string; address: string; signature: string; publicKey?: string; nonce: string;
         };
-        if (!CHAINS.has(body.chain)) return json({ error: "bad chain" }, 400);
+        if (!CHAINS.has(body.chain)) return j({ error: "bad chain" }, 400);
 
         const svc = serviceClient(env);
         // rebuild the message SERVER-SIDE from the nonce row — never trust a client message
@@ -187,9 +259,9 @@ export default {
           .select("message, expires_at, consumed_at, fbid, chain")
           .eq("nonce", body.nonce)
           .single();
-        if (!nrow || nrow.fbid !== user.id || nrow.chain !== body.chain) return json({ error: "nonce not found" }, 400);
-        if (nrow.consumed_at) return json({ error: "nonce already used" }, 400);
-        if (new Date(nrow.expires_at) < new Date()) return json({ error: "nonce expired" }, 400);
+        if (!nrow || nrow.fbid !== user.id || nrow.chain !== body.chain) return j({ error: "nonce not found" }, 400);
+        if (nrow.consumed_at) return j({ error: "nonce already used" }, 400);
+        if (new Date(nrow.expires_at) < new Date()) return j({ error: "nonce expired" }, 400);
         const message = nrow.message as string;
 
         const verified =
@@ -198,7 +270,7 @@ export default {
             : body.chain === "evm"
               ? await verifyEvm({ address: body.address, message, signature: body.signature })
               : verifySolana({ address: body.address, message, signature: body.signature });
-        if (!verified) return json({ error: "signature invalid" }, 401);
+        if (!verified) return j({ error: "signature invalid" }, 401);
 
         const scheme = body.chain === "near" ? "nep413" : body.chain === "solana" ? "solana-ed25519" : "eip4361";
         const addr = normalize(body.chain, body.address);
@@ -213,20 +285,90 @@ export default {
           verified: true, granted: (result as any)?.granted ?? null, ms: Date.now() - started,
           err: error?.message ?? null,
         }));
-        if (error) return json({ error: error.message }, 409);
-        return json(result);
+        if (error) return j({ error: error.message }, 409);
+        return j(result);
       }
 
       // ---- GET /profile ----
       if (req.method === "GET" && url.pathname === "/profile") {
         const { data, error } = await userClient(env, jwt).rpc("tulum_get_profile", { p_user_id: user.id });
-        if (error) return json({ error: error.message }, 500);
-        return json(data);
+        if (error) return j({ error: error.message }, 500);
+        return j(data);
       }
 
-      return json({ error: "not found" }, 404);
+      // ---- POST /admin/snapshot ----  (admin adds an OG collection → frozen)
+      if (req.method === "POST" && url.pathname === "/admin/snapshot") {
+        // gate on the existing tulumcoin admin RBAC, evaluated in the user's context
+        const { data: adminRole } = await userClient(env, jwt).rpc("tulumcoin_my_admin_role");
+        if (adminRole !== "admin" && adminRole !== "super_admin") return j({ error: "admin only" }, 403);
+
+        const b = (await req.json()) as {
+          key: string; chain: string; kind: "ft" | "nft"; contract: string;
+          credential: string; label?: string; base_xp?: number;
+        };
+        if (b.chain !== "solana") return j({ error: "El panel congela colecciones de Solana; usa el CLI para EVM/NEAR." }, 400);
+        if (!b.key || !b.contract || !b.credential || (b.kind !== "ft" && b.kind !== "nft")) {
+          return j({ error: "faltan campos: key, contract, credential, kind(ft|nft)" }, 400);
+        }
+
+        const svc = serviceClient(env);
+        // reject a duplicate key up front (unique constraint would 500 later)
+        const { data: existing } = await svc.from("tulum_snapshots").select("id,is_frozen").eq("key", b.key).maybeSingle();
+        if (existing) return j({ error: `ya existe un snapshot con key '${b.key}'` }, 409);
+
+        const { holders, slot } = await enumerateSolana(env, b.kind, b.contract);
+        if (holders.length === 0) return j({ error: "0 holders — verifica el contrato/collection address" }, 422);
+
+        // rate card first so the claim RPC grants XP for this credential
+        await svc.from("tulum_xp_rate_card").upsert(
+          { credential: b.credential, base_xp: b.base_xp ?? 100, requires_validator: false, multiplier_applies: false },
+          { onConflict: "credential" },
+        );
+
+        const balanceSum = holders.reduce((a, h) => a + BigInt(h.balance), 0n).toString();
+        const { data: snapRow, error: se } = await svc.from("tulum_snapshots").insert({
+          key: b.key, chain: "solana", network: "solana-mainnet", contract: b.contract, kind: b.kind,
+          credential: b.credential, block_height: slot, rpc_endpoint: "https://mainnet.helius-rpc.com (DAS, admin panel)",
+          evidence_class: "present-state", total_supply: null,
+          config_hash: "admin:" + b.contract, notes: b.label ?? null, is_frozen: false,
+        }).select("id").single();
+        if (se) return j({ error: `insert snapshot: ${se.message}` }, 500);
+        const snapshotId = snapRow!.id as string;
+
+        for (let i = 0; i < holders.length; i += 1000) {
+          const rows = holders.slice(i, i + 1000).map((h) => ({
+            snapshot_id: snapshotId, address_norm: h.address_norm, balance: h.balance, token_ids: h.token_ids ?? null,
+          }));
+          const { error: he } = await svc.from("tulum_snapshot_holders").insert(rows);
+          if (he) return j({ error: `insert holders: ${he.message}` }, 500);
+        }
+
+        const { error: fe } = await svc.from("tulum_snapshots").update({
+          holder_count: holders.length, balance_sum: balanceSum, is_frozen: true,
+        }).eq("id", snapshotId);
+        if (fe) return j({ error: `freeze: ${fe.message}` }, 500);
+
+        console.log(JSON.stringify({ evt: "admin_snapshot", by: user.id, key: b.key, credential: b.credential, holders: holders.length }));
+        return j({ ok: true, snapshot_id: snapshotId, holder_count: holders.length, credential: b.credential });
+      }
+
+      // ---- POST /admin/xp ----  (admin tunes the benefit weight of a credential)
+      if (req.method === "POST" && url.pathname === "/admin/xp") {
+        const { data: adminRole } = await userClient(env, jwt).rpc("tulumcoin_my_admin_role");
+        if (adminRole !== "admin" && adminRole !== "super_admin") return j({ error: "admin only" }, 403);
+        const { credential, base_xp } = (await req.json()) as { credential: string; base_xp: number };
+        if (!credential || typeof base_xp !== "number") return j({ error: "credential + base_xp requeridos" }, 400);
+        const { error } = await serviceClient(env).from("tulum_xp_rate_card").upsert(
+          { credential, base_xp, requires_validator: false, multiplier_applies: false },
+          { onConflict: "credential" },
+        );
+        if (error) return j({ error: error.message }, 500);
+        return j({ ok: true, credential, base_xp });
+      }
+
+      return j({ error: "not found" }, 404);
     } catch (e) {
-      return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+      return j({ error: e instanceof Error ? e.message : String(e) }, 500);
     }
   },
 };

@@ -15,7 +15,7 @@ SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
 # Per-FBID + per-IP rate limiting for /claim
 [[kv_namespaces]]
 binding = "RATE_KV"
-id = "PLACEHOLDER_CREATE_WITH_wrangler_kv_namespace_create_RATE_KV"
+id = "dfcd7c5f9a0c487c84f10fc7f5c8dd9a"
 
 [env.test]
 name = "tulum-verify-worker-test"
@@ -23,7 +23,7 @@ name = "tulum-verify-worker-test"
 SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
 [[env.test.kv_namespaces]]
 binding = "RATE_KV"
-id = "PLACEHOLDER_TEST_KV"
+id = "dfcd7c5f9a0c487c84f10fc7f5c8dd9a"
 
 [env.production]
 name = "tulum-verify-worker"
@@ -31,4 +31,4 @@ name = "tulum-verify-worker"
 SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
 [[env.production.kv_namespaces]]
 binding = "RATE_KV"
-id = "PLACEHOLDER_PROD_KV"
+id = "e502f0ed758141249db9789bd7fe00ce"
