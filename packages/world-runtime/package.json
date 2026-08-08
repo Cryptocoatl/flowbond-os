@@ -1,0 +1,26 @@
+{
+  "name": "@flowbond/world-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./scene": "./src/scene/RegionScene.ts",
+    "./descent": "./src/descent/CesiumDescent.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@flowbond/state-engine": "workspace:*",
+    "@sparkjsdev/spark": "^0.1.10",
+    "three": "^0.178.0"
+  },
+  "devDependencies": {
+    "@flowbond/config": "workspace:*",
+    "@types/three": "^0.178.0",
+    "typescript": "^5.7.3"
+  }
+}

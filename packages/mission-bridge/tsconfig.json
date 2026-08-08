@@ -1,0 +1,4 @@
+{
+  "extends": "@flowbond/config/tsconfig/base",
+  "include": ["src"]
+}

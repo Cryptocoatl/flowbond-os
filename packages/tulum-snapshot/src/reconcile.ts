@@ -14,7 +14,9 @@ export type Reconcile = {
   endpoint: string;
   evidenceClass: string;
   holderCount: number;
-  balanceSum: string;
+  balanceSum: string; // the ledger — post-exclusion
+  supplySum: string | null; // what totalSupply() is checked against — pre-exclusion
+  excludedSum: string | null;
   totalSupply: string | null;
   supplyMatches: boolean | null; // null when totalSupply unknown / not applicable
   merkleRoot: string;
@@ -31,19 +33,33 @@ export function reconcile(e: ContractEntry, snap: ChainSnapshot): Reconcile {
 
   let supplyMatches: boolean | null = null;
   if (snap.evidenceClass === "replay") {
+    // Check the invariant against the PRE-exclusion sum. Comparing the
+    // post-exclusion ledger here would report every exclude-list entry as a
+    // broken replay and make an excluded snapshot impossible to freeze.
+    const invariantSum = snap.supplySum ?? snap.balanceSum;
     if (snap.totalSupply == null) {
       errors.push("EVM replay without a totalSupply() reading — cannot cross-check. Do not freeze.");
     } else {
-      supplyMatches = BigInt(snap.balanceSum) === BigInt(snap.totalSupply);
+      supplyMatches = BigInt(invariantSum) === BigInt(snap.totalSupply);
       if (!supplyMatches) {
+        const delta = BigInt(invariantSum) - BigInt(snap.totalSupply);
         errors.push(
-          `balance sum ${snap.balanceSum} != totalSupply ${snap.totalSupply} — replay is broken. Hard stop.`,
+          `replayed supply ${invariantSum} != totalSupply ${snap.totalSupply} (off by ${delta}) — ` +
+            `the fold is missing or double-counting transfers. Hard stop. ` +
+            `(This compares pre-exclusion supply; the ${snap.excludedSum ?? "0"} held by excluded ` +
+            `addresses is NOT the cause.)`,
         );
       }
     }
     if (snap.holders.length < 10) {
       errors.push(`holder count ${snap.holders.length} < 10 on a replay — treat as wrong address. Hard stop.`);
     }
+  }
+
+  // Adapters flag unfreezable conditions in prose (negative folds, GC'd state).
+  // A warning nobody acts on is just decoration — promote them to hard stops.
+  for (const w of snap.warnings) {
+    if (/do not freeze/i.test(w)) errors.push(w);
   }
 
   const top10 = [...snap.holders]
@@ -58,6 +74,8 @@ export function reconcile(e: ContractEntry, snap: ChainSnapshot): Reconcile {
     evidenceClass: snap.evidenceClass,
     holderCount: snap.holders.length,
     balanceSum: snap.balanceSum,
+    supplySum: snap.supplySum ?? null,
+    excludedSum: snap.excludedSum ?? null,
     totalSupply: snap.totalSupply ?? null,
     supplyMatches,
     merkleRoot: root,
@@ -77,7 +95,11 @@ export function printReconcile(r: Reconcile): void {
   console.log(`  block         ${r.block}`);
   console.log(`  endpoint      ${r.endpoint}`);
   console.log(`  holders       ${r.holderCount}`);
-  console.log(`  balance sum   ${r.balanceSum}`);
+  console.log(`  ledger sum    ${r.balanceSum}   (credited — after exclusions)`);
+  if (r.excludedSum && r.excludedSum !== "0") {
+    console.log(`  excluded      ${r.excludedSum}   (held by exclude-list addresses)`);
+  }
+  if (r.supplySum) console.log(`  replayed sum  ${r.supplySum}   (all holders — checked vs totalSupply)`);
   console.log(`  totalSupply   ${r.totalSupply ?? "(n/a)"}`);
   console.log(`  supply match  ${r.supplyMatches === null ? "(n/a)" : r.supplyMatches ? "✓ exact" : "✗ MISMATCH"}`);
   console.log(`  merkle root   ${r.merkleRoot}`);

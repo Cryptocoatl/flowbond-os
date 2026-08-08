@@ -76,7 +76,7 @@ const REGISTRY: ContractEntry[] = [
     contract: "ptlc.tkn.near",
     kind: "ft",
     credential: "OG_JAGUAR",
-    blockHeight: PENDING, // TODO(human): pin an archival block
+    blockHeight: 207_082_246, // pinned "now" — NEAR final block 2026-07-15
     evidenceClass: "archival",
     excludeList: [],
     notes: "NEP-141; no holder enumeration — candidates via NearBlocks, truth via archival ft_balance_of.",
@@ -89,7 +89,7 @@ const REGISTRY: ContractEntry[] = [
     contract: "0x2d940cA35332B7d65fcB264d59242550a6e02f18",
     kind: "ft",
     credential: "TLMC_STEWARD",
-    blockHeight: PENDING, // TODO(human): pin an Optimism block
+    blockHeight: 154_263_800, // pinned "now" — Optimism block 2026-07-15 (finality margin below tip)
     evidenceClass: "replay",
     excludeList: [],
     notes: "Zero public index footprint — our Transfer replay is the first real read. If holders < 10 → STOP, do not freeze.",
@@ -102,7 +102,7 @@ const REGISTRY: ContractEntry[] = [
     contract: "0x46617e7bca14de818d9E5cFf2aa106b72CB33fe3",
     kind: "ft",
     credential: "PETGAS_HOLDER",
-    blockHeight: PENDING, // TODO(human): pin a BSC block
+    blockHeight: 110_149_300, // pinned "now" — BNB block 2026-07-15 (finality margin below tip)
     evidenceClass: "replay",
     excludeList: [
       { address: "0x0847b9441E8D5e3D59550B04442d342849534099", reason: "Petgas deployer" },
@@ -118,7 +118,36 @@ const REGISTRY: ContractEntry[] = [
     blockHeight: PENDING, // Solana: current slot at read time (present-state)
     evidenceClass: "present-state",
     excludeList: [],
-    notes: "Present-state read; Solana has no accessible historical state — weaker evidence class than EVM replay / NEAR archival.",
+    notes: "New official $XELVA (Jan 2025). Present-state read; Solana has no accessible historical state.",
+  },
+  {
+    // Gorillae Gang NFT — the community's founding collection. Registry says
+    // "OG Verified tier auto-granted to current holders." Collection mint
+    // resolved from sample NFT via DAS getAsset → grouping[collection].
+    key: "gorillae",
+    chain: "solana",
+    network: "solana-mainnet",
+    contract: "HmGMC5bekWUZVgG6nkDk7r82uBty8VJFHa1WuEPnzmhZ",
+    kind: "nft",
+    credential: "GORILLAE_OG",
+    blockHeight: PENDING,
+    evidenceClass: "present-state",
+    excludeList: [],
+    notes: "Gorillae Gang Metaplex collection (~3,947 NFTs, ~1,031 holders). Top OG tier for the Xelva community.",
+  },
+  {
+    // Old $XELVA (2022) — per the Xelva registry the STRONGEST OG signal: only
+    // ever distributed as staking rewards (no sale, no DEX). Holding it = staked.
+    key: "xelva_old",
+    chain: "solana",
+    network: "solana-mainnet",
+    contract: "xLvawiUDbXmaLdNi71s4Ry8y4ykXJetwZ9LZ124jMpi",
+    kind: "ft",
+    credential: "XELVA_PHOENIX",
+    blockHeight: PENDING,
+    evidenceClass: "present-state",
+    excludeList: [],
+    notes: "Dormant 2022 XELVA token (~1,483 holders). Distributed only via the dead staking program — reliable Phoenix OG signal.",
   },
 ];
 

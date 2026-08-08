@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "tulum-snapshot": "node --experimental-strip-types ./src/cli.ts"
+    "tulum-snapshot": "node --import tsx ./src/cli.ts"
   },
   "dependencies": {
     "@noble/hashes": "^1.7.0",
