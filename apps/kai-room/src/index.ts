@@ -11,7 +11,7 @@
 // Deliberately stateless beyond the room: no accounts, no database, no logs of
 // what anyone said. A room evaporates when the last player leaves.
 // =============================================================================
-import { MAX_MEMBERS, normalizeCode, type ClientMsg, type Member, type ServerMsg, type Shared } from './protocol';
+import { MAX_MEMBERS, normalizeCode, type BuiltProp, type ClientMsg, type Member, type ServerMsg, type Shared } from './protocol';
 
 export interface Env {
   ROOM: DurableObjectNamespace;
@@ -20,6 +20,9 @@ export interface Env {
 
 /** SDP blobs are the big ones; anything past this is not a real game message. */
 const MAX_MSG_BYTES = 24_000;
+
+/** Creations kept per world. Old ones fall off the front rather than growing forever. */
+const MAX_BUILDS_PER_WORLD = 300;
 
 function allowed(env: Env, origin: string | null): boolean {
   const list = (env.ALLOWED_ORIGINS ?? '')
@@ -63,6 +66,8 @@ export default {
 export class KaiRoom implements DurableObject {
   private ctx: DurableObjectState;
   private shared: Shared = { w: 'selva', mi: 0, col: [], by: {} };
+  /** what the party has built, per world id */
+  private builds: Record<string, BuiltProp[]> = {};
   private seq = 0;
 
   constructor(ctx: DurableObjectState, _env: Env) {
@@ -70,6 +75,8 @@ export class KaiRoom implements DurableObject {
     ctx.blockConcurrencyWhile(async () => {
       const s = await ctx.storage.get<Shared>('shared');
       if (s) this.shared = s;
+      const b = await ctx.storage.get<Record<string, BuiltProp[]>>('builds');
+      if (b) this.builds = b;
     });
   }
 
@@ -131,9 +138,16 @@ export class KaiRoom implements DurableObject {
   }
 
   private async setShared(next: Shared) {
+    const worldChanged = next.w !== this.shared.w;
     this.shared = next;
     await this.ctx.storage.put('shared', next);
     this.broadcast({ t: 's', s: next });
+    // Arriving in a new world, everyone needs to see what is already built there.
+    if (worldChanged) this.broadcast({ t: 'built', w: next.w, list: this.builds[next.w] ?? [] });
+  }
+
+  private async saveBuilds() {
+    await this.ctx.storage.put('builds', this.builds);
   }
 
   // ---- message handling -----------------------------------------------------
@@ -172,6 +186,7 @@ export class KaiRoom implements DurableObject {
 
         const me: Member = { id: next.id, name: next.name, avatar: next.avatar, voice: next.voice };
         this.send(ws, { t: 'welcome', you: me.id, room: a.room, members: this.roster().filter((r) => r.id !== me.id), s: this.shared });
+        this.send(ws, { t: 'built', w: this.shared.w, list: this.builds[this.shared.w] ?? [] });
         this.broadcast({ t: 'join', m: me }, ws);
         return;
       }
@@ -218,6 +233,53 @@ export class KaiRoom implements DurableObject {
             break;
           }
         }
+        return;
+      }
+
+      case 'build': {
+        const b = msg.b;
+        if (!b || typeof b.id !== 'string' || typeof b.kind !== 'string') return;
+        if (!Number.isFinite(b.x) || !Number.isFinite(b.z) || !Number.isFinite(b.rot)) return;
+        const w = this.shared.w;
+        const list = this.builds[w] ?? [];
+        if (list.some((p) => p.id === b.id)) return;
+        const item: BuiltProp = {
+          id: b.id.slice(0, 40),
+          by: a.id,
+          kind: b.kind.slice(0, 24),
+          // Same clamp the client uses, enforced here so a bad client can't
+          // scatter props outside the world.
+          x: Math.max(-150, Math.min(150, b.x)),
+          z: Math.max(-150, Math.min(150, b.z)),
+          rot: b.rot,
+        };
+        this.builds[w] = [...list, item].slice(-MAX_BUILDS_PER_WORLD);
+        await this.saveBuilds();
+        this.broadcast({ t: 'build1', w, b: item });
+        return;
+      }
+
+      case 'unbuild': {
+        // You can only take back your OWN creations.
+        const w = this.shared.w;
+        const list = this.builds[w] ?? [];
+        const id = String(msg.id ?? '');
+        const target = list.find((p) => p.id === id && p.by === a.id);
+        if (!target) return;
+        this.builds[w] = list.filter((p) => p !== target);
+        await this.saveBuilds();
+        this.broadcast({ t: 'unbuilt', w, id: target.id });
+        return;
+      }
+
+      case 'buildclear': {
+        // Clearing wipes only what YOU placed — a teammate's work is never
+        // collateral damage.
+        const w = this.shared.w;
+        const list = this.builds[w] ?? [];
+        this.builds[w] = list.filter((p) => p.by !== a.id);
+        await this.saveBuilds();
+        this.broadcast({ t: 'built', w, list: this.builds[w] });
         return;
       }
 

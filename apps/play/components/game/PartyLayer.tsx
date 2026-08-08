@@ -149,6 +149,8 @@ export function PartyLayer({
     party.join(c, nameDraft || (lang === 'es' ? 'Guardián' : 'Guardian'), avatarUrl, worldId, missionIdx);
   };
 
+  // The invite is deliberately zero-tap on the other end: the code is in the
+  // link, so whoever opens it lands in the room without meeting a form.
   const invite = typeof window !== 'undefined' ? `${window.location.origin}/play?sala=${party.code}` : '';
 
   return (
@@ -210,9 +212,11 @@ export function PartyLayer({
         </div>
       )}
 
-      {/* ---- the bond hint, only when it actually matters ---- */}
+      {/* ---- the bond hint ----
+           Sits under the party pill, not at the bottom of the screen: the build
+           palette lives down there and was covering it. */}
       {live && party.members.length > 0 && (
-        <div className="pointer-events-none absolute bottom-32 left-1/2 -translate-x-1/2 text-center text-[11px] text-kai-faint">
+        <div className="pointer-events-none absolute left-1/2 top-14 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/35 px-3 py-1 text-center text-[11px] text-kai-faint backdrop-blur-sm">
           {t.hint} ({BOND_RADIUS} m)
         </div>
       )}

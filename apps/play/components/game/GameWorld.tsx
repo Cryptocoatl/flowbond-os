@@ -984,9 +984,13 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   useEffect(() => {
     if (inviteHandled.current || !ready || !crew.ready) return;
     inviteHandled.current = true;
-    const code = normalizeCode(new URLSearchParams(window.location.search).get('sala') ?? '');
+    const q = new URLSearchParams(window.location.search);
+    const code = normalizeCode(q.get('sala') ?? '');
     if (!code) return;
-    if (crew.name) crew.join(code, crew.name, avatarUrl ?? DEFAULT_AVATAR.url, world.id, missionIdx);
+    // `?nombre=` makes an invite link zero-tap: a kid opening it from a phone
+    // lands straight in the room without meeting a form.
+    const name = (q.get('nombre') ?? '').slice(0, 16) || crew.name;
+    if (name) crew.join(code, name, avatarUrl ?? DEFAULT_AVATAR.url, world.id, missionIdx);
     else setPartyOpen(true);
   }, [ready, crew, avatarUrl, world.id, missionIdx]);
 
@@ -1051,10 +1055,34 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   // Place a creation in the world; counts toward a `construir` mission.
   const doPlace = useCallback(() => {
     const p = build.place(buildKind);
+    // In a party the room keeps it too, so your teammate sees what you made.
+    if (inParty) crew.room?.send({ t: 'build', b: { id: p.id, kind: p.kind, x: p.x, z: p.z, rot: p.rot } });
     logEvent(`${BUILD_KINDS[buildKind].emoji} Colocaste: ${BUILD_KINDS[buildKind][lang]}`);
     if (mission?.tipo === 'construir') handleCollect(collected.size);
     return p;
-  }, [build, buildKind, lang, mission, collected.size, handleCollect, logEvent]);
+  }, [build, buildKind, lang, mission, collected.size, handleCollect, logEvent, inParty, crew.room]);
+
+  const doUndo = useCallback(() => {
+    const removed = build.undo();
+    if (removed && inParty) crew.room?.send({ t: 'unbuild', id: removed.id });
+  }, [build, inParty, crew.room]);
+
+  const doClear = useCallback(() => {
+    build.clear();
+    // The room only ever clears YOUR creations — a teammate's stay put.
+    if (inParty) crew.room?.send({ t: 'buildclear' });
+  }, [build, inParty, crew.room]);
+
+  // What the world shows: your own creations plus your teammates'. Your own
+  // come from the local list (they survive leaving the room); the room's copy
+  // of yours is filtered out so nothing is drawn twice.
+  const visibleProps = useMemo<Placed[]>(() => {
+    if (!inParty) return build.props;
+    const theirs = crew.built
+      .filter((b) => b.by !== crew.you)
+      .map((b) => ({ id: b.id, kind: b.kind as BuildKind, x: b.x, z: b.z, rot: b.rot }));
+    return [...build.props, ...theirs];
+  }, [inParty, build.props, crew.built, crew.you]);
 
   // open the build palette automatically during a build mission
   useEffect(() => {
@@ -1116,7 +1144,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
               onCollect={handleCollect}
               onQuizNear={() => setQuizOpen(true)}
               avatarUrl={avatarUrl}
-              builtProps={build.props}
+              builtProps={visibleProps}
               crew={crew}
             />
           </Suspense>
@@ -1257,7 +1285,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
           <div className="pointer-events-auto absolute bottom-24 left-1/2 max-w-[92vw] -translate-x-1/2 rounded-2xl border border-kai-jade/30 bg-black/55 px-3 py-2.5 backdrop-blur-md">
             <div className="mb-1.5 flex items-center justify-between gap-4">
               <span className="text-[11px] font-medium text-kai-jade">🔨 {lang === 'es' ? 'Crea tu mundo' : 'Build your world'}</span>
-              <span className="text-[10px] text-kai-faint">{build.props.length} {lang === 'es' ? 'creaciones' : 'placed'}</span>
+              <span className="text-[10px] text-kai-faint">{visibleProps.length} {lang === 'es' ? 'creaciones' : 'placed'}{inParty && crew.together ? ` · ${lang === 'es' ? 'juntos' : 'together'}` : ''}</span>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-1.5">
               {palette.map((k) => (
@@ -1274,10 +1302,10 @@ export function GameWorld({ region }: { region: RegionSummary }) {
               <button onClick={doPlace} className="rounded-xl border border-kai-jade/50 bg-kai-jade/20 px-4 py-2 text-sm font-semibold text-kai-jade active:scale-95">
                 ➕ {lang === 'es' ? 'Colocar' : 'Place'}
               </button>
-              <button onClick={build.undo} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Deshacer' : 'Undo'}>
+              <button onClick={doUndo} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Deshacer' : 'Undo'}>
                 ↩︎
               </button>
-              <button onClick={build.clear} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Borrar todo' : 'Clear'}>
+              <button onClick={doClear} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Borrar todo' : 'Clear'}>
                 🗑️
               </button>
             </div>
@@ -1374,6 +1402,31 @@ export function GameWorld({ region }: { region: RegionSummary }) {
             <button onClick={() => setShowIntro(false)} className="mt-5 rounded-full bg-kai-gold px-7 py-2 text-sm font-semibold text-black">
               {lang === 'es' ? 'Comenzar' : 'Begin'}
             </button>
+
+            {/* One tap back into the room you were last in — a 7-year-old should
+                never have to retype a code to play with someone again. */}
+            {crew.status === 'off' &&
+              (crew.code && crew.name ? (
+                <button
+                  onClick={() => {
+                    crew.join(crew.code, crew.name, avatarUrl ?? DEFAULT_AVATAR.url, world.id, missionIdx);
+                    setShowIntro(false);
+                  }}
+                  className="mt-3 w-full rounded-full border border-kai-jade/50 bg-kai-jade/15 px-5 py-2.5 text-sm font-semibold text-kai-jade"
+                >
+                  👥 {lang === 'es' ? `Jugar juntos · sala ${crew.code}` : `Play together · room ${crew.code}`}
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowIntro(false);
+                    setPartyOpen(true);
+                  }}
+                  className="mt-3 w-full rounded-full border border-white/15 bg-black/30 px-5 py-2.5 text-sm text-kai-text"
+                >
+                  👥 {lang === 'es' ? 'Jugar con alguien más' : 'Play with someone'}
+                </button>
+              ))}
           </div>
         </div>
       )}

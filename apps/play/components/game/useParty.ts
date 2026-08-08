@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RoomClient, type RoomStatus } from '@/lib/net/room';
 import { VoiceClient, type VoiceState } from '@/lib/net/voice';
-import { makeCode, normalizeCode, type Member, type Shared } from '@/lib/net/protocol';
+import { makeCode, normalizeCode, type BuiltProp, type Member, type Shared } from '@/lib/net/protocol';
 
 const KEY = 'kai.party.v1';
 
@@ -64,6 +64,8 @@ export interface Party {
   room: RoomClient | null;
   /** live speaking level 0..1 per member id; read per frame, never in render */
   levels: Map<string, number>;
+  /** everything the party has built in the current world (yours included) */
+  built: BuiltProp[];
 }
 
 const NO_LEVELS = new Map<string, number>();
@@ -80,6 +82,7 @@ export function useParty(): Party {
   const [name, setNameState] = useState('');
   const [voice, setVoice] = useState<VoiceState>('off');
   const [lastEmote, setLastEmote] = useState<{ id: string; e: string; n: number } | null>(null);
+  const [built, setBuilt] = useState<BuiltProp[]>([]);
   // Bumped whenever the underlying clients are swapped, so the memo below hands
   // the scene the CURRENT RoomClient instead of a stale ref read.
   const [session, setSession] = useState(0);
@@ -142,6 +145,7 @@ export function useParty(): Party {
         knownIds.current = now;
       });
       room.on('shared', (s) => setShared({ ...s }));
+      room.on('built', (list) => setBuilt([...list]));
       room.on('signal', (from, d) => void vc.onSignal(from, d));
       room.on('emote', (id, e) => setLastEmote({ id, e, n: ++emoteN.current }));
 
@@ -163,6 +167,7 @@ export function useParty(): Party {
     knownIds.current = new Set();
     setMembers([]);
     setShared(null);
+    setBuilt([]);
     setYou('');
     setStatus('off');
     setVoice('off');
@@ -212,8 +217,9 @@ export function useParty(): Party {
       sendEmote,
       room: roomRef.current,
       levels: voiceRef.current?.levels ?? NO_LEVELS,
+      built,
     }),
     // `session` is what makes the two refs above safe to read here.
-    [session, ready, status, code, you, members, shared, name, setName, join, leave, suggestCode, voice, toggleMic, lastEmote, sendEmote],
+    [session, ready, status, code, you, members, shared, built, name, setName, join, leave, suggestCode, voice, toggleMic, lastEmote, sendEmote],
   );
 }

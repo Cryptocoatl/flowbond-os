@@ -135,6 +135,42 @@ try {
   const em = await b.wait((m) => m.t === 'emote');
   check('emote relays', em.e === '❤️');
 
+  // --- building together: what one makes, the other sees -------------------
+  a.send({ t: 'build', b: { id: 'a1', kind: 'tree', x: 5, z: 6, rot: 0 } });
+  const b1 = await b.wait((m) => m.t === 'build1');
+  check("B sees A's creation appear", b1.b.id === 'a1' && b1.b.by === wa.you && b1.b.kind === 'tree');
+
+  b.send({ t: 'build', b: { id: 'b1', kind: 'flower', x: -3, z: 2, rot: 1 } });
+  await a.wait((m) => m.t === 'build1' && m.b.id === 'b1');
+  check("A sees B's creation appear", true);
+
+  // out-of-bounds coordinates are clamped by the server, not trusted
+  a.send({ t: 'build', b: { id: 'a2', kind: 'rock', x: 9999, z: -9999, rot: 0 } });
+  const clamped = await b.wait((m) => m.t === 'build1' && m.b.id === 'a2');
+  check('server clamps a bad coordinate', clamped.b.x === 150 && clamped.b.z === -150, `${clamped.b.x},${clamped.b.z}`);
+
+  // you cannot take back someone else's work
+  b.send({ t: 'unbuild', id: 'a1' });
+  await sleep(250);
+  check("B cannot delete A's creation", !b.msgs.some((m) => m.t === 'unbuilt' && m.id === 'a1'));
+
+  // but you can take back your own
+  a.send({ t: 'unbuild', id: 'a1' });
+  const un = await b.wait((m) => m.t === 'unbuilt');
+  check('A can take back their own creation', un.id === 'a1');
+
+  // clearing wipes only YOUR creations. Take the LATEST 'built' — B already got
+  // one at join time, so waiting for "a built message" would match that stale one.
+  a.send({ t: 'buildclear' });
+  await sleep(300);
+  const cleared = [...b.msgs].reverse().find((m) => m.t === 'built');
+  check("clear removes only the sender's work", cleared.list.length === 1 && cleared.list[0].id === 'b1', JSON.stringify(cleared.list.map((x) => x.id)));
+
+  // travelling shows the new world's creations, not the old world's
+  a.send({ t: 'world', w: 'espiritu', mi: 0 });
+  const fresh = await b.wait((m) => m.t === 'built' && m.w === 'espiritu');
+  check('a new world starts with its own (empty) creations', fresh.list.length === 0);
+
   // --- leaving ------------------------------------------------------------
   a.ws.close();
   const left = await b.wait((m) => m.t === 'leave');
