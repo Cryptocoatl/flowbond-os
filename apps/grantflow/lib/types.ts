@@ -53,6 +53,88 @@ export interface Application {
   notes: string | null;
   submitted_at: string | null;
   decision_at: string | null;
+  review_state: ReviewState;
+  submitted_by: string | null;
+  submission_method: string | null;
+  submission_ref: string | null;
+  submission_url: string | null;
+}
+
+/**
+ * Draft-readiness axis, orthogonal to `stage` (the funding lifecycle).
+ * A draft can only reach 'ready' once every required audit round has a passing
+ * result newer than the last section edit — enforced by grantflow.audit_gate().
+ */
+export const REVIEW_STATES = ['drafting', 'in_audit', 'ready', 'submitted'] as const;
+export type ReviewState = (typeof REVIEW_STATES)[number];
+
+export const REVIEW_STATE_LABEL: Record<ReviewState, string> = {
+  drafting: 'Drafting',
+  in_audit: 'In Audit',
+  ready: 'Ready for Review',
+  submitted: 'Submitted by Steph',
+};
+
+export interface AuditRound {
+  key: string;
+  round_no: number;
+  label: string;
+  description: string | null;
+  required: boolean;
+  active: boolean;
+  checklist: string[];
+}
+
+/** One flagged problem, anchored to the section it lives in. */
+export interface AuditFinding {
+  severity: 'blocker' | 'warning' | 'note';
+  section_key: string | null;
+  claim: string;
+  issue: string;
+  suggestion: string;
+  /** Round 2 only: can this claim be traced back to a provided source? */
+  traceability?: 'traceable' | 'unverifiable' | 'contradicted';
+  source?: string | null;
+}
+
+export interface AuditResult {
+  id: string;
+  application_id: string;
+  round_key: string;
+  cycle: number;
+  verdict: 'pass' | 'fail' | 'waived';
+  notes: string | null;
+  findings: AuditFinding[];
+  auditor: string;
+  model: string | null;
+  created_at: string;
+}
+
+export interface DraftSection {
+  id: string;
+  application_id: string;
+  key: string;
+  label: string;
+  position: number;
+  body: string;
+  word_limit: number | null;
+  required: boolean;
+  source_note: string | null;
+  updated_by: string | null;
+  updated_at: string;
+}
+
+export interface SubmissionItem {
+  id: string;
+  application_id: string;
+  label: string;
+  required: boolean;
+  done: boolean;
+  url: string | null;
+  note: string | null;
+  checked_by: string | null;
+  checked_at: string | null;
+  position: number;
 }
 
 export interface Contact {

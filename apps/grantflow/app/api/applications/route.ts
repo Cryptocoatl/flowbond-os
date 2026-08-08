@@ -34,11 +34,23 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body?.id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  for (const k of ['stage', 'project_slug', 'owner', 'amount_requested', 'notes', 'submitted_at', 'decision_at']) {
+  // NOTE: submitted_at / submitted_by / submission_* are deliberately NOT writable
+  // here. Recording a submission goes through /api/applications/[id]/submit, which
+  // takes the submitter from the session and requires an explicit confirm.
+  for (const k of ['stage', 'project_slug', 'owner', 'amount_requested', 'notes', 'decision_at', 'review_state']) {
     if (k in body) patch[k] = body[k];
   }
   if (patch.stage && !STAGES.includes(patch.stage as never)) {
     return NextResponse.json({ error: 'invalid stage' }, { status: 400 });
+  }
+  if (patch.review_state !== undefined) {
+    // 'submitted' is unreachable from this route by design.
+    if (!['drafting', 'in_audit', 'ready'].includes(patch.review_state as string)) {
+      return NextResponse.json(
+        { error: 'review_state must be drafting, in_audit or ready here — use /submit to record a submission' },
+        { status: 400 },
+      );
+    }
   }
   const { data, error } = await dbAdmin().from('applications').update(patch).eq('id', body.id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
