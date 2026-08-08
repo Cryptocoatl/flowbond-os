@@ -1,0 +1,453 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================================================================== */
+/* FlowRoom — 1MWD deck system                                          */
+/*                                                                      */
+/* Taken from the We Speak Dance / 1 Billion Hearts deck, not invented:  */
+/* heavy condensed caps, saturated colour blocks, full-bleed photography */
+/* under hard-edged panels, rotated side tabs, Netflix scrubber motifs.  */
+/*                                                                      */
+/* THE LEGIBILITY RULE, and it is not negotiable:                       */
+/* body copy is either on a solid panel or on a scrim of ≥78% opacity.   */
+/* Nothing that moves ever sits under text. No low-contrast greys for    */
+/* anything anyone has to read.                                          */
+/* ==================================================================== */
+
+/* --------------------------------------------------------------------
+   Palette — read off the 1MWD mark itself, not invented.
+
+   The goddess is gold, the heart on her chest runs the full rainbow, and
+   she stands in a deep violet-black cosmos shot through with purple
+   nebula and gold sparks. So gold leads, the rainbow supplies the
+   section accents, and the ground is violet-black rather than neutral.
+   -------------------------------------------------------------------- */
+:root {
+  --ink: #0d0716;
+  --ink-2: #1a1030;
+  --paper: #ffffff;
+
+  /* Gold — the goddess. The primary accent everywhere. */
+  --gold: #f0c46a;
+  --gold-hi: #ffe7a6;
+
+  /* The heart, unrolled. Section accents rotate through these. */
+  --rose: #ff4fcf;
+  --violet: #a24bff;
+  --azure: #4fa8ff;
+  --sun: #ffd84f;
+  --aqua: #52e3c2;
+
+  /* The full gradient, for the once-or-twice moments. */
+  --rb-0: #ff4fcf;
+  --rb-1: #a24bff;
+  --rb-2: #4fa8ff;
+  --rb-3: #ffd84f;
+
+  --hair: rgb(255 255 255 / 0.16);
+  --hair-ink: rgb(0 0 0 / 0.18);
+
+  --font-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --font-cond: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    /* Lenis drives the scroll; native smooth would fight it. */
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* ---- Type ------------------------------------------------------ */
+
+  /* The deck headline. Heavy condensed caps, tight, never below 2rem. */
+  .t-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.88;
+    letter-spacing: 0.005em;
+  }
+
+  .t-sub {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+  }
+
+  .t-tag {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.82rem;
+  }
+
+  .t-mono {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+  }
+
+  /* Body copy.
+     Sized against viewport HEIGHT as well as width. A short laptop window and
+     a tall phone need different type for the same paragraph to fit a pinned
+     stage, and width alone cannot know that — which is why chapters kept
+     overflowing off the bottom. */
+  .t-body {
+    font-size: clamp(0.95rem, 0.62vh + 0.42vw, 1.1rem);
+    line-height: 1.58;
+    color: rgb(255 255 255 / 0.93);
+    max-width: 64ch;
+  }
+
+  .on-color .t-body,
+  .on-paper .t-body {
+    color: rgb(0 0 0 / 0.86);
+  }
+
+  .u-rainbow {
+    background: linear-gradient(96deg, var(--rb-0), var(--rb-1) 34%, var(--rb-2) 66%, var(--rb-3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---- Structure -------------------------------------------------- */
+
+  /* The rotated section tab on the right edge. Signature deck element. */
+  .u-tab {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 2.75rem;
+    display: grid;
+    place-items: center;
+    z-index: 20;
+  }
+
+  @media (max-width: 640px) {
+    .u-tab {
+      width: 1.6rem;
+    }
+    .u-tab span {
+      letter-spacing: 0.2em;
+      font-size: 0.62rem;
+    }
+    .u-pad {
+      padding-right: 2.4rem;
+    }
+  }
+  .u-tab span {
+    writing-mode: vertical-rl;
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.34em;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  /* The mandatory scrim under any text that sits over photography. */
+  .u-scrim-l {
+    background: linear-gradient(
+      100deg,
+      rgb(11 11 12 / 0.94) 0%,
+      rgb(11 11 12 / 0.88) 38%,
+      rgb(11 11 12 / 0.45) 68%,
+      rgb(11 11 12 / 0.15) 100%
+    );
+  }
+  .u-scrim-b {
+    background: linear-gradient(
+      to top,
+      rgb(11 11 12 / 0.95) 0%,
+      rgb(11 11 12 / 0.8) 34%,
+      rgb(11 11 12 / 0.25) 68%,
+      transparent 100%
+    );
+  }
+
+  /* A solid slab. What body copy sits on when there is no scrim. */
+  .u-slab {
+    background: var(--ink);
+    border: 1px solid var(--hair);
+  }
+}
+
+@layer utilities {
+  .u-pad {
+    padding: clamp(1.15rem, 2.2vh + 1vw, 3.6rem);
+    padding-right: clamp(3.4rem, 5vw, 5.5rem); /* clear of the side tab */
+    padding-bottom: clamp(3.6rem, 4vh, 5rem);  /* clear of the HUD */
+  }
+
+  /* Inside a focus card everything shrinks together, so a long stage
+     description and a short one both land inside the same frame. */
+  .focus-card {
+    font-size: clamp(0.86rem, 0.6vh + 0.38vw, 1.02rem);
+  }
+  .focus-card .t-body,
+  .focus-card p {
+    font-size: inherit;
+  }
+  .focus-card .t-sub {
+    font-size: clamp(1.05rem, 1.5vh + 0.5vw, 1.55rem);
+  }
+}
+
+/* Ken Burns on slide photography. Slow, and never under text. */
+@keyframes kb {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.15) translate3d(-1.4%, -1.2%, 0);
+  }
+}
+.u-kb {
+  animation: kb 22s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .u-kb {
+    transform: scale(1.06);
+  }
+}
+
+/* ==================================================================== */
+/* Print — the PDF                                                      */
+/*                                                                      */
+/* The film cannot be printed: every chapter is one viewport tall and    */
+/* half of it is a photograph. So printing swaps in a separate linear    */
+/* document, black on white, with real page breaks.                     */
+/* ==================================================================== */
+
+.print-doc {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Everything on screen goes; the print document arrives. */
+  body > #root > *:not(.print-doc-host),
+  .print-doc-host > *:not(.print-doc) {
+    display: none !important;
+  }
+
+  .print-doc {
+    display: block !important;
+    position: static !important;
+    max-width: none;
+    color: #000;
+  }
+
+  .print-doc h1 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 30pt;
+    line-height: 0.92;
+    margin: 0 0 14pt;
+  }
+  .print-doc h2 {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    font-size: 17pt;
+    line-height: 1;
+    margin: 0 0 8pt;
+  }
+  .print-doc h3 {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14pt;
+    margin: 0 0 6pt;
+  }
+  .print-doc h4 {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11pt;
+    margin: 0 0 4pt;
+  }
+  .print-doc p {
+    margin: 0 0 7pt;
+    max-width: none;
+  }
+  .print-doc ul {
+    margin: 0 0 8pt 14pt;
+    padding: 0;
+  }
+  .print-doc li {
+    margin-bottom: 4pt;
+  }
+
+  .pd-kicker {
+    font-family: var(--font-cond);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 8.5pt;
+  }
+  .pd-meta {
+    font-size: 9.5pt;
+    line-height: 1.5;
+    margin-bottom: 16pt !important;
+  }
+  .pd-tech {
+    font-family: var(--font-mono);
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .pd-figure {
+    font-family: var(--font-display);
+    font-size: 28pt;
+    margin-bottom: 2pt;
+  }
+
+  .pd-cover {
+    border-bottom: 2pt solid #000;
+    padding-bottom: 12pt;
+    margin-bottom: 14pt;
+  }
+  .pd-terms {
+    border: 1pt solid #000;
+    padding: 9pt 11pt;
+    margin-top: 12pt;
+  }
+
+  /* Sections open a new page; blocks never break across one. */
+  .pd-section {
+    break-before: page;
+    border-bottom: 1pt solid #000;
+    padding-bottom: 5pt;
+    margin: 0 0 12pt;
+  }
+  .pd-block {
+    break-inside: avoid;
+    margin-bottom: 11pt;
+  }
+  .pd-callout {
+    border-left: 2.5pt solid #000;
+    padding-left: 9pt;
+  }
+  .pd-row {
+    border-bottom: 0.5pt solid #999;
+    padding-bottom: 4pt;
+  }
+  .pd-response {
+    border: 0.75pt dashed #000;
+    padding: 6pt 8pt;
+    margin-top: 5pt;
+    font-size: 9.5pt;
+  }
+  .pd-foot {
+    border-top: 1pt solid #000;
+    margin-top: 14pt;
+    padding-top: 6pt;
+    font-family: var(--font-mono);
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* ==================================================================== */
+/* FlowMe — CSS only.                                                   */
+/*                                                                      */
+/* Deliberately no GSAP here. FlowMe renders eagerly on every page load, */
+/* and importing the animation stack for one media-query check dragged   */
+/* ScrollTrigger and Lenis into the entry bundle. A guide should not be  */
+/* able to take the room down with it.                                   */
+/* ==================================================================== */
+
+@keyframes fmCard {
+  from { opacity: 0; transform: translateY(18px) scale(0.975); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes fmIn {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fmPulse {
+  0%, 100% { transform: scale(1); opacity: 0.18; }
+  50%      { transform: scale(1.18); opacity: 0.3; }
+}
+
+.fm-card { animation: fmCard 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* Driven off the attribute, so the component never has to juggle classes. */
+.fm-card [data-fm] { animation: fmIn 0.34s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fm-pulse { animation: fmPulse 2.6s ease-in-out infinite; opacity: 0.18; }
+
+/* Stagger without JS: each animated child waits a little longer. */
+.fm-card [data-fm]:nth-of-type(2) { animation-delay: 0.05s; }
+.fm-card [data-fm]:nth-of-type(3) { animation-delay: 0.1s; }
+.fm-card [data-fm]:nth-of-type(4) { animation-delay: 0.15s; }
+.fm-card [data-fm]:nth-of-type(5) { animation-delay: 0.2s; }

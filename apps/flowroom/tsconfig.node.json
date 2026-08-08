@@ -1,0 +1,20 @@
+{
+  // The two halves that never run in the browser: the Pages Function and the
+  // seed script. Kept out of the app's tsconfig so browser code cannot reach
+  // for a Node or Workers global by accident.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node", "@cloudflare/workers-types"]
+  },
+  // src/content comes along because the seed script imports the room content —
+  // the same typed blocks the browser renders, which is the point.
+  "include": ["functions", "scripts", "src/content", "vite.config.ts", "tailwind.config.ts"]
+}

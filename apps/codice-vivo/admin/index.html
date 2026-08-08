@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Códice Vivo · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Figtree:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--night:#0B0E14;--night-2:#070910;--pane:#111624;--pane-2:#151B2C;--bone:#EDE6D6;--bone-dim:#B4AC9C;--gold:#C9A25C;--gold-dim:rgba(201,162,92,.30);--jade:#4C9B84;--jade-b:#63BCA2;--red:#c76b5c}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--night);color:var(--bone);font-family:'Figtree',sans-serif;font-weight:300;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;font-weight:600}
+a{color:var(--gold)}
+.wrap{max-width:1000px;margin:0 auto;padding:24px}
+input,textarea,select,button{font-family:inherit;font-size:14px}
+input,textarea,select{width:100%;background:var(--night-2);border:1px solid var(--gold-dim);color:var(--bone);padding:9px 11px;border-radius:4px}
+textarea{resize:vertical;min-height:52px;line-height:1.5}
+label{display:block;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-dim);margin:0 0 5px}
+.btn{display:inline-block;background:var(--gold);color:var(--night);border:1px solid var(--gold);padding:9px 18px;border-radius:4px;cursor:pointer;letter-spacing:.08em;font-weight:400}
+.btn.ghost{background:transparent;color:var(--gold)}
+.btn.sm{padding:6px 12px;font-size:.8rem}
+.btn:disabled{opacity:.5;cursor:default}
+/* login */
+.login{max-width:400px;margin:12vh auto;text-align:center}
+.login .mark{font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;color:var(--gold)}
+.login h1{font-size:2rem;margin:8px 0 4px}
+.login p{color:var(--bone-dim);margin-bottom:26px}
+.login .row{margin-bottom:14px;text-align:left}
+.msg{font-size:.82rem;margin-top:12px;min-height:18px}
+.msg.err{color:var(--red)}.msg.ok{color:var(--jade-b)}
+/* app */
+header.bar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gold-dim);padding:16px 24px}
+header.bar .mark{font-family:'Cormorant Garamond',serif;font-size:1.15rem}
+header.bar .mark small{display:block;font-family:'Figtree';font-size:.56rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
+header.bar .who{font-size:.78rem;color:var(--bone-dim)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--gold-dim);padding:0 24px}
+.tabs button{background:none;border:none;color:var(--bone-dim);padding:14px 14px;cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-size:.72rem;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--pane);border:1px solid rgba(237,230,214,.08);border-radius:6px;padding:18px 20px;margin-bottom:16px}
+.card h3{font-size:1.15rem;margin-bottom:2px}
+.card .k{font-size:.66rem;letter-spacing:.12em;color:var(--jade-b);text-transform:uppercase;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:680px){.grid2{grid-template-columns:1fr}}
+.row{margin-bottom:12px}
+.saved{color:var(--jade-b);font-size:.78rem;margin-left:10px}
+.pill{display:inline-block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid var(--gold-dim);color:var(--gold)}
+.pill.lock{color:var(--red);border-color:var(--red)}
+.pill.live{color:var(--jade-b);border-color:var(--jade)}
+/* chat */
+#chat{max-height:44vh;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px}
+.m{padding:10px 13px;border-radius:8px;max-width:82%}
+.m.user{align-self:flex-end;background:var(--gold);color:var(--night)}
+.m.assistant{align-self:flex-start;background:var(--pane-2);border:1px solid var(--gold-dim)}
+.m .ap{font-size:.7rem;color:var(--jade-b);margin-top:6px}
+.chatbar{display:flex;gap:8px;margin-top:12px}
+.chatbar input{flex:1}
+/* log */
+.logline{font-size:.78rem;padding:8px 0;border-bottom:1px solid rgba(237,230,214,.06);color:var(--bone-dim);display:flex;gap:12px}
+.logline b{color:var(--gold);font-weight:400;min-width:130px}
+.logline time{color:var(--bone-dim);opacity:.7;margin-left:auto;white-space:nowrap}
+.hint{font-size:.78rem;color:var(--bone-dim);background:rgba(76,155,132,.08);border-left:2px solid var(--jade);padding:10px 12px;border-radius:0 4px 4px 0;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login">
+  <div class="mark">The Mayan Experience · Códice Vivo</div>
+  <h1>Admin</h1>
+  <p>Ingreso con handle + código de acceso</p>
+  <div class="row"><label>Handle</label><input id="handle" placeholder="@moenchi88" autocomplete="username"></div>
+  <div class="row"><label>Código de acceso</label><input id="code" type="password" placeholder="tu código privado" autocomplete="current-password"></div>
+  <button class="btn" id="enter" style="width:100%">Entrar</button>
+  <div id="lmsg" class="msg"></div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <header class="bar">
+    <div class="mark">Códice Vivo<small>Admin OS</small></div>
+    <div><span class="who" id="who"></span> · <a href="#" id="logout">salir</a> · <a href="/codiceVivo/" target="_blank">ver página ↗</a></div>
+  </header>
+  <div class="tabs">
+    <button data-t="edit" class="on">Editar</button>
+    <button data-t="sections">Secciones</button>
+    <button data-t="media">Imágenes</button>
+    <button data-t="trans">Transparencia</button>
+    <button data-t="claudia">ClaudIA</button>
+    <button data-t="log">Registro</button>
+  </div>
+  <div class="wrap">
+
+    <div class="tab on" data-t="edit">
+      <div class="hint">Edita el texto en los dos idiomas y guarda. El cambio entra en vivo al instante y queda registrado. Vacío = se mantiene el texto original.</div>
+      <div id="fields"></div>
+    </div>
+
+    <div class="tab" data-t="sections">
+      <div class="hint">Agrega bloques nuevos (capítulos, etapas del camino, aliados). Aparecen al final de la página, en ambos idiomas.</div>
+      <div class="card">
+        <h3>Nuevo bloque</h3>
+        <div class="row"><label>Tipo</label>
+          <select id="s-kind"><option value="chapter">Capítulo</option><option value="roadmap_stage">Etapa del camino</option><option value="ally">Aliado</option><option value="custom">Libre</option></select></div>
+        <div class="grid2">
+          <div class="row"><label>Título (EN)</label><input id="s-ten"></div>
+          <div class="row"><label>Título (ES)</label><input id="s-tes"></div>
+          <div class="row"><label>Texto (EN)</label><textarea id="s-ben"></textarea></div>
+          <div class="row"><label>Texto (ES)</label><textarea id="s-bes"></textarea></div>
+        </div>
+        <button class="btn" id="s-add">Agregar bloque</button> <span id="s-msg" class="saved"></span>
+      </div>
+      <div id="s-list"></div>
+    </div>
+
+    <div class="tab" data-t="media">
+      <div class="hint">Sube imagen de atmósfera para cada slot. <b>Regla dura §2:</b> nada de glifos, códices, pirámides ni iconografía cultural — solo atmósfera. Debes confirmarlo para subir.</div>
+      <div id="media"></div>
+    </div>
+
+    <div class="tab" data-t="trans">
+      <div class="hint">Los números de transparencia y afirmaciones sobre aliados <b>no salen a la página pública</b> hasta que un super_admin los libere (requieren acuerdos firmados). Puedes capturarlos y quedan registrados; se muestran como “—” hasta liberarse.</div>
+      <div id="trans"></div>
+    </div>
+
+    <div class="tab" data-t="claudia">
+      <div class="hint">Pídele a ClaudIA que edite por ti (“cambia el lede del hero a…”, “agrega una etapa 2029…”). Aplica los cambios y todo queda en el registro.</div>
+      <div id="chat"></div>
+      <div class="chatbar"><input id="cmsg" placeholder="Escribe a ClaudIA…"><button class="btn" id="csend">Enviar</button></div>
+    </div>
+
+    <div class="tab" data-t="log">
+      <div id="log"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var FIELDS=[
+  ["hero.eyebrow","Hero · antetítulo"],["hero.maya","Hero · línea maya"],["hero.lede","Hero · entrada"],
+  ["historia.h2","La historia · título"],["historia.intro","La historia · intro"],
+  ["capas.h2","El códice · título"],["capas.intro","El códice · intro"],
+  ["circulo.h2","El círculo · título"],["circulo.intro","El círculo · intro"],
+  ["retorno.h2","El retorno · título"],["retorno.intro","El retorno · intro"],
+  ["camino.h2","El camino · título"],["camino.intro","El camino · intro"],
+  ["closing.h2","Cierre · título"],["closing.maya","Cierre · línea maya"]
+];
+var NUMFIELDS=[["transparency.stories","Historias consentidas"],["transparency.sessions","Sesiones registradas"],["transparency.funds","Tareas completadas"]];
+var MEDIASLOTS=[["dome_interior_01","Domo · interior"],["cenote_light_01","Cenote · luz"],["selva_canopy_01","Selva · dosel"]];
+
+var token=sessionStorage.getItem("cv_tok")||"", ST={};
+var $=function(s){return document.querySelector(s)};
+function lmsg(t,ok){var e=$("#lmsg");e.textContent=t;e.className="msg "+(ok?"ok":"err")}
+function api(path,opts){opts=opts||{};opts.headers=Object.assign({authorization:"Bearer "+token},opts.headers||{});return fetch("/api/codice/"+path,opts).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j}})})}
+
+// ---- handle + access-code login ----
+$("#enter").onclick=doLogin;
+$("#code").addEventListener("keydown",function(e){if(e.key==="Enter")doLogin()});
+function doLogin(){var handle=$("#handle").value.trim(),code=$("#code").value;
+  if(handle&&handle[0]!=="@")handle="@"+handle;
+  if(!handle||!code)return lmsg("Ingresa handle y código");
+  $("#enter").disabled=true;lmsg("Entrando…",true);
+  fetch("/api/codice/login",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({handle:handle,code:code})})
+  .then(function(r){return r.json()}).then(function(j){$("#enter").disabled=false;
+    if(j.token){token=j.token;sessionStorage.setItem("cv_tok",token);boot()}else lmsg(j.error||"Handle o código inválido")})
+  .catch(function(){$("#enter").disabled=false;lmsg("Error de red")})}
+
+// ---- boot / load state ----
+function boot(){api("state").then(function(r){
+  if(!r.ok){sessionStorage.removeItem("cv_tok");token="";$("#login").style.display="block";$("#app").style.display="none";if(r.j&&r.j.error)lmsg("Sin acceso para este correo");return}
+  ST=r.j;$("#login").style.display="none";$("#app").style.display="block";
+  $("#who").textContent=r.j.who.handle+" · "+r.j.who.role;
+  renderFields();renderSections();renderMedia();renderTrans();renderLog();renderChat();
+})}
+function ovmap(){var m={};(ST.overrides||[]).forEach(function(o){m[o.key]=o});return m}
+
+// ---- Editar ----
+function renderFields(){var m=ovmap(),h="";FIELDS.forEach(function(f){var k=f[0];
+  h+='<div class="card"><h3>'+f[1]+'</h3><div class="k">'+k+'</div><div class="grid2">'+
+     '<div class="row"><label>Inglés (EN)</label><textarea id="e_'+k+'.en">'+esc((m[k+".en"]||{}).value||"")+'</textarea></div>'+
+     '<div class="row"><label>Español (ES)</label><textarea id="e_'+k+'.es">'+esc((m[k+".es"]||{}).value||"")+'</textarea></div></div>'+
+     '<button class="btn sm" onclick="saveField(\''+k+'\')">Guardar</button><span class="saved" id="sv_'+k+'"></span></div>'})
+  $("#fields").innerHTML=h}
+window.saveField=function(k){var en=$("#e_"+k+"\\.en").value,es=$("#e_"+k+"\\.es").value;
+  Promise.all([save(k+".en",en),save(k+".es",es)]).then(function(){$("#sv_"+k).textContent="✓ guardado en vivo";setTimeout(function(){$("#sv_"+k).textContent=""},2500)})}
+function save(key,value,locked){return api("save",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({key:key,value:value,governance_locked:locked})})}
+
+// ---- Secciones ----
+function renderSections(){var h="";(ST.sections||[]).forEach(function(s){var p=s.payload||{};
+  h+='<div class="card"><span class="pill live">'+s.kind+'</span> <h3 style="display:inline;margin-left:8px">'+esc(p.title_es||p.title_en||"(sin título)")+'</h3><p style="color:var(--bone-dim);margin-top:6px">'+esc(p.body_es||p.body_en||"")+'</p></div>'})
+  $("#s-list").innerHTML=h}
+$("#s-add").onclick=function(){var payload={title_en:$("#s-ten").value,title_es:$("#s-tes").value,body_en:$("#s-ben").value,body_es:$("#s-bes").value};
+  api("section",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({kind:$("#s-kind").value,payload:payload,position:(ST.sections||[]).length})})
+  .then(function(){$("#s-msg").textContent="✓ agregado";["s-ten","s-tes","s-ben","s-bes"].forEach(function(i){$("#"+i).value=""});boot()})}
+
+// ---- Imágenes ----
+function renderMedia(){var mm={};(ST.media||[]).forEach(function(x){if(!mm[x.slot])mm[x.slot]=x});var h="";
+  MEDIASLOTS.forEach(function(s){var cur=mm[s[0]];
+    h+='<div class="card"><h3>'+s[1]+'</h3><div class="k">'+s[0]+'</div>'+
+       (cur?'<img src="'+cur.url+'" style="max-width:100%;border-radius:4px;margin-bottom:10px">':'<p style="color:var(--bone-dim);margin-bottom:10px">Actualmente: degradado CSS (sin imagen)</p>')+
+       '<div class="row"><input type="file" accept="image/*" id="f_'+s[0]+'"></div>'+
+       '<label style="text-transform:none;letter-spacing:0;display:flex;gap:8px;align-items:flex-start;font-size:.82rem"><input type="checkbox" id="ack_'+s[0]+'" style="width:auto;margin-top:3px"> Confirmo: sin glifos, códices, pirámides ni iconografía cultural (solo atmósfera).</label>'+
+       '<button class="btn sm" style="margin-top:10px" onclick="upload(\''+s[0]+'\')">Subir</button> <span class="saved" id="mv_'+s[0]+'"></span></div>'})
+  $("#media").innerHTML=h}
+window.upload=function(slot){var f=$("#f_"+slot).files[0],ack=$("#ack_"+slot).checked;
+  if(!f)return alert("Elige un archivo");if(!ack)return alert("Debes confirmar la regla de contenido §2");
+  var fd=new FormData();fd.append("file",f);fd.append("slot",slot);fd.append("content_rule_ack","true");
+  $("#mv_"+slot).textContent="subiendo…";
+  api("media",{method:"POST",body:fd}).then(function(r){if(r.ok){$("#mv_"+slot).textContent="✓ en vivo";boot()}else $("#mv_"+slot).textContent=r.j.error||"error"})}
+
+// ---- Transparencia ----
+function renderTrans(){var m=ovmap(),h="";NUMFIELDS.forEach(function(f){var k=f[0],o=m[k]||{},locked=o.governance_locked!==false;
+  h+='<div class="card"><h3>'+f[1]+'</h3><div class="k">'+k+' '+(o.value?(locked?'<span class="pill lock">bloqueado</span>':'<span class="pill live">en vivo</span>'):'')+'</div>'+
+     '<div class="row"><input id="t_'+k+'" value="'+esc(o.value||"")+'" placeholder="—"></div>'+
+     '<button class="btn sm" onclick="saveNum(\''+k+'\')">Guardar (bloqueado)</button> '+
+     (ST.who.role==="super_admin"?'<button class="btn sm ghost" onclick="release(\''+k+'\')">Liberar a público</button>':'')+
+     ' <span class="saved" id="tv_'+k+'"></span></div>'})
+  $("#trans").innerHTML=h}
+window.saveNum=function(k){save(k,$("#t_"+k).value,true).then(function(){$("#tv_"+k).textContent="✓ guardado (bloqueado)";boot()})}
+window.release=function(k){if(!confirm("¿Liberar este dato a la página pública? Requiere acuerdo firmado."))return;
+  api("release",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({key:k})}).then(function(){boot()})}
+
+// ---- ClaudIA ----
+function renderChat(){var h="";(ST.chat||[]).forEach(function(m){if(m.role!=="user"&&m.role!=="assistant")return;
+  var ap=m.meta&&m.meta.applied?'<div class="ap">✎ '+m.meta.applied.length+' cambio(s) aplicados</div>':"";
+  h+='<div class="m '+m.role+'">'+esc(m.content)+ap+'</div>'})
+  var c=$("#chat");c.innerHTML=h;c.scrollTop=c.scrollHeight}
+$("#csend").onclick=sendChat;$("#cmsg").addEventListener("keydown",function(e){if(e.key==="Enter")sendChat()});
+function sendChat(){var t=$("#cmsg").value.trim();if(!t)return;$("#cmsg").value="";
+  $("#chat").insertAdjacentHTML("beforeend",'<div class="m user">'+esc(t)+'</div>');$("#chat").scrollTop=1e9;
+  api("chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({message:t})}).then(function(){boot()})}
+
+// ---- Registro ----
+function renderLog(){var h="";(ST.log||[]).forEach(function(l){
+  h+='<div class="logline"><b>'+esc(l.action)+'</b><span>'+esc(l.actor_email||"")+' → '+esc(l.target||"")+'</span><time>'+new Date(l.created_at).toLocaleString("es-MX")+'</time></div>'})
+  $("#log").innerHTML=h||'<p style="color:var(--bone-dim)">Sin actividad aún.</p>'}
+
+// ---- tabs / util ----
+document.querySelectorAll(".tabs button").forEach(function(b){b.onclick=function(){
+  document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on")});b.classList.add("on");
+  document.querySelectorAll(".tab").forEach(function(t){t.classList.toggle("on",t.dataset.t===b.dataset.t)})}})
+$("#logout").onclick=function(e){e.preventDefault();sessionStorage.removeItem("cv_tok");
+  fetch("/api/codice/logout",{method:"POST"}).finally(function(){location.reload()})}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+
+boot(); // gate cookie (or stored token) authenticates; falls back to login view on 401
+</script>
+</body>
+</html>

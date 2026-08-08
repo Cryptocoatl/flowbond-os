@@ -1,0 +1,24 @@
+name = "sanitemplo-api"
+main = "src/index.ts"
+compatibility_date = "2026-07-24"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets (NEVER in this file — set with `wrangler secret put`):
+#   SUPABASE_SERVICE_ROLE_KEY   service role → sanitemplo_create_order / allocate / settle
+#   SUPABASE_ANON_KEY           auth.getUser(jwt) → resolve the caller's FBID
+#   SANITEMPLO_ADMIN_TOKEN      shared token gating POST /settle (admin/cron only)
+# Vars:
+#   SUPABASE_URL                https://fgsrcxxccdjqyrpkitmk.supabase.co
+
+[vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+
+[env.test]
+name = "sanitemplo-api-test"
+[env.test.vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+
+[env.production]
+name = "sanitemplo-api"
+[env.production.vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"

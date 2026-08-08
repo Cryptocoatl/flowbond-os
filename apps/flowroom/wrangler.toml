@@ -1,0 +1,18 @@
+name = "flowroom"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets are set with `wrangler pages secret put <NAME> --project-name flowroom`
+# and never live in this file:
+#   SUPABASE_SERVICE_ROLE_KEY · SUPABASE_ANON_KEY · RESEND_API_KEY
+
+[vars]
+SUPABASE_URL = "https://fgsrcxxccdjqyrpkitmk.supabase.co"
+RESEND_FROM = "FlowRoom <room@danz.now>"
+SITE_ORIGIN = "https://1mwd.danz.now"
+
+# Attachments are not wired to any UI yet, so the R2 binding is deliberately
+# absent — the Worker guards on `env.ROOM_FILES` and simply refuses uploads.
+# Re-add it alongside `wrangler r2 bucket create flowroom-files` when the
+# comment-attachment flow ships.

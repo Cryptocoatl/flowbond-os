@@ -9,7 +9,7 @@ import WebSocket from 'ws';
 
 const URL = process.argv[2] ?? 'ws://localhost:8788';
 const CODE = process.argv[3] ?? 'TST1';
-const ORIGIN = 'http://localhost:3070';
+const ORIGIN = process.argv[4] ?? 'http://localhost:3070';
 
 const log = [];
 let failures = 0;

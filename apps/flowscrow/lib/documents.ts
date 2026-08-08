@@ -3,7 +3,7 @@
 
 export const PARTIES = {
   steph: { full: 'Estefanía Ferrera', short: 'Steph', role: 'Founder & CEO, FlowBond Tech Inc.' },
-  russell: { full: 'Russell Herod', short: 'Russell', role: 'Early Contributor — DANZ & FlowB' },
+  russell: { full: 'Russell Herod', short: 'Russell', role: 'Co-founder & Shareholder — FlowBond Tech Inc.' },
   deven: { full: 'Deven', short: 'Deven', role: 'Contributor' },
   entity: 'FlowBond Tech Inc.',
 };
@@ -79,7 +79,7 @@ export const FINALIZE_STEPS = [
   { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” log in with cryptokoh@gmail.com, and you’ll return here verified — that’s what unlocks signing. No password, ever.' },
   { n: 2, key: 'read', title: 'Read the cover note & the Agreement', detail: 'Read the cover note and the full Mutual Dissolution, Wind-Up and Release Agreement, including Exhibits 1–3. If any detail is wrong, tell Estefanía before you sign — she’s open to your review of the wording.' },
   { n: 3, key: 'sign-agreement', title: 'Sign the Agreement (DocuSign)', detail: 'Once verified, sign the Agreement — this also serves as your Consent to Voluntary Dissolution (Exhibit 1) and resignation. It’s executed and delivered by both Parties before any transfer, resignation, or Dissolution filing occurs (Section 5) — your obligations only arise after full execution.' },
-  { n: 4, key: 'sign-ack', title: 'Receive your Acknowledgment of Contribution', detail: 'Because the Company is being dissolved, no founder title survives it. Your contribution to the early DANZ and FlowB workstreams is recognized in the separate Acknowledgment of Contribution (Document 2), stated without disparagement — yours to reference anywhere.' },
+  { n: 4, key: 'sign-ack', title: 'Receive your Acknowledgment of Contribution', detail: 'The Acknowledgment records the historical fact that you were a co-founder and shareholder of FlowBond Tech Inc. and contributed to the early DANZ and FlowB workstreams. The Dissolution ends the entity and any ongoing role — it does not alter that history. Yours to reference truthfully anywhere.' },
   { n: 5, key: 'transfer', title: 'Complete the Exhibit 2 transfers (Phase B)', detail: 'Only the Company-only items in Exhibit 2: domains (flowbond.tech, danz.now, flowb.me, pee.network) to Estefanía’s Namecheap “stepbysteph”; Mercury, Stripe, Coinbase; the former FlowBond Tech GitHub org; Telegram/Base/Farcaster; FlowBond social profiles. Wallet seeds & keys via secure channel only. Nothing personal, nothing outside scope.' },
   { n: 6, key: 'done', title: 'Dissolution filings complete (Phase C)', detail: 'Final federal and Texas franchise tax returns filed, Certificate of Account Status obtained from the Comptroller, then the Certificate of Termination filed with the Texas Secretary of State. Once that’s confirmed, the Dissolution and the mutual release take effect and escrow releases — tracked openly for you and every witness the whole way.' },
 ];
@@ -215,14 +215,14 @@ export const ACKNOWLEDGMENT = {
   title: 'Acknowledgment of Contribution',
   issuedBy: 'Estefanía Ferrera, on behalf of FlowBond Tech Inc.',
   recognitionOf: 'Russell Herod',
-  role: 'Early Contributor — DANZ & FlowB',
+  role: 'Co-founder & Shareholder — FlowBond Tech Inc.',
   period: 'August 13, 2025 → March 30, 2026',
   scope: [
-    'Recognized as an early contributor to the initial infrastructure of the DANZ and FlowB workstreams.',
-    'The Company is being dissolved and will cease to exist; no founder title survives it. This acknowledgment is stated without any disparagement.',
+    'Co-founder and shareholder of FlowBond Tech Inc.; contributed to the initial infrastructure of the DANZ and FlowB workstreams.',
+    'The Dissolution ends the entity and any ongoing role. It does not alter this historical fact. Stated without any disparagement.',
   ],
   acknowledgment:
-    'Estefanía Ferrera and FlowBond Tech Inc. recognize Russell Herod as an early contributor to the DANZ and FlowB workstreams, and the contribution he made to their initial infrastructure. Russell is free to reference this acknowledgment in his professional materials.',
+    'Estefanía Ferrera and FlowBond Tech Inc. acknowledge that Russell Herod was a co-founder and shareholder of FlowBond Tech Inc. and contributed to the early DANZ and FlowB workstreams. Russell may truthfully describe this historical role for résumé, portfolio, professional, legal, and historical purposes.',
   also: [
     {
       name: 'Roman',
