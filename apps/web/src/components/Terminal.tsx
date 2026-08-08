@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { FLOWME } from '@/content/site'
+import { INTELLIGENCE } from '@/content/site'
 
-const LINES = FLOWME.terminal
+const LINES = INTELLIGENCE.terminal
 
 /** The animated FlowMe OS terminal — typewriter playback ported from the
  *  prototype. Reduced-motion shows the full transcript at once. Starts when the

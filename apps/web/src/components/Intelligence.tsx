@@ -1,21 +1,21 @@
-import { FLOWME } from '@/content/site'
+import { INTELLIGENCE } from '@/content/site'
 import { Terminal } from './Terminal'
 
-export function FlowMeOS() {
+export function Intelligence() {
   return (
-    <section className="flowme" id="flowme">
-      <div className="section-tag reveal">{FLOWME.tag}</div>
+    <section className="flowme" id="intelligence">
+      <div className="section-tag reveal">{INTELLIGENCE.tag}</div>
       <div className="fm-grid">
         <div className="fm-copy reveal">
           <h2>
-            The OS that <span className="v">thinks with you.</span>
+            Not a chatbot <span className="v">bolted on the side.</span>
           </h2>
-          <p>
-            <b>FlowMe OS</b> is the agentic intelligence woven through the FlowBond stack — a Claude-powered operating layer that
-            reasons over identity, presence, and value, so your product can act, not just store.
+          <p>{INTELLIGENCE.body}</p>
+          <p style={{ marginTop: '18px' }}>
+            <b>{INTELLIGENCE.bodyB}</b>
           </p>
           <div className="fm-list">
-            {FLOWME.list.map((item) => (
+            {INTELLIGENCE.list.map((item) => (
               <div key={item.ic}>
                 <span className="ic">{item.ic}</span>
                 <p>{item.body}</p>
