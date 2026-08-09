@@ -1,0 +1,43 @@
+# FlowBond gitleaks configuration — FG-042
+# Run locally:  gitleaks detect --source . --config .gitleaks.toml
+# Pre-commit hook: see .pre-commit-config.yaml
+title = "flowbond-os"
+
+[extend]
+# Inherit the gitleaks default ruleset (catches sk-ant-*, ghp_*, vca_*,
+# PRIVATE KEY, etc.) without duplicating every rule.
+useDefault = true
+
+# ── FlowBond-specific additions ──────────────────────────────────────────
+
+[[rules]]
+id          = "supabase-jwt"
+description = "Supabase JWT token (anon or service_role)"
+regex       = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}'''
+tags        = ["supabase", "jwt"]
+[rules.allowlist]
+# Placeholder / public anon key in CI env examples is fine
+regexes = ['''SUPABASE_ANON_KEY=<your''', '''NEXT_PUBLIC_SUPABASE_ANON_KEY=<your''']
+
+[[rules]]
+id          = "flowbond-weak-password"
+description = "Known FlowBond plaintext passwords appearing in source"
+regex       = '''(?i)(FlowBond-\d+:\d+|FlowNation\d+|Pass4u)'''
+tags        = ["password", "flowbond"]
+[rules.allowlist]
+# Allow references in operator backlog/log (redacted context, not usage)
+paths = ['''BACKLOG\.md$''', '''AUDIT-LOG\.md$''']
+
+# ── Global allowlist ─────────────────────────────────────────────────────
+
+[allowlist]
+description = "Known safe paths / generated files"
+paths = [
+  '''^(\.gitleaks\.toml|\.pre-commit-config\.yaml)$''',
+  '''(^|/)node_modules/''',
+  '''(^|/)\.pnpm-store/''',
+  '''(^|/)\.turbo/''',
+  '''(^|/)\.next/''',
+  '''(^|/)dist/''',
+  '''\.lock$''',
+]
