@@ -1,0 +1,45 @@
+{
+  // fbid.flowbond.life — el hub de identidad FlowBond, migrado de Vercel a
+  // Cloudflare Workers. Es la pieza más crítica del stack: si esto se cae,
+  // nadie entra a ninguna app.
+  //
+  // ORDEN DE LA MUDANZA (no invertirlo): primero se despliega con
+  // `workers_dev: true` y SIN el bloque `routes`, se compara ruta por ruta
+  // contra el hub viejo en *.workers.dev, y sólo entonces se borra el registro
+  // DNS que apunta a Vercel y se descomenta el custom domain. Cloudflare se
+  // niega a adjuntar un dominio que ya tiene un registro apuntando a otro lado
+  // (error 100117), y el registro viejo es justamente el plan de vuelta atrás.
+  //
+  // ⚠️ En la zona flowbond.life viven el Email Routing y los registros de envío
+  // (MX, SPF, DKIM `resend._domainkey`, `send.flowbond.life`). Tocarlos deja sin
+  // correo a todo el ecosistema — y sin correo no hay login. Sólo se toca el
+  // registro `fbid`.
+  "name": "fbid",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Los NEXT_PUBLIC_* se hornean en el build; aquí sólo van los que el Worker
+  // lee en tiempo de ejecución y no son secretos. Los secretos
+  // (SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET, RESEND_API_KEY) van por
+  // `wrangler secret put` — ⚠️ NUNCA con valor vacío: un secreto vacío TAPA el
+  // valor horneado (`??=` no reemplaza "") y rompe todo en silencio. Si uno sale
+  // vacío, se borra, no se re-sube.
+  "vars": {
+    "FBID_FROM_EMAIL": "FlowBond ID <id@flowbond.life>",
+    "ALERT_EMAIL": "cryptocoatl101@gmail.com"
+  },
+  // Se deja `workers_dev` encendido a propósito: fbid.cryptocoatl101.workers.dev
+  // es la puerta de servicio para diagnosticar el hub cuando el dominio real
+  // esté en duda (y fue donde se verificó toda la migración antes del corte).
+  "workers_dev": true,
+  // Corte hecho el 2026-08-09: se borró el CNAME a cname.vercel-dns.com y
+  // wrangler creó el registro de este custom domain. Plan de vuelta atrás en
+  // scratchpad/ROLLBACK-fbid-dns.md.
+  "routes": [
+    { "pattern": "fbid.flowbond.life", "custom_domain": true }
+  ]
+}

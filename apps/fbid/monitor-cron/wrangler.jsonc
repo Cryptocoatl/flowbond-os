@@ -1,0 +1,19 @@
+{
+  // Sustituye el cron que vivía en `vercel.json` del hub. Cada 6 horas llama a
+  // fbid.flowbond.life/api/monitor, que corre 14 comprobaciones (salud HTTP de
+  // las apps + invariantes de RLS en la base) y **sólo manda correo si algo se
+  // rompió** — silencio = todo bien.
+  "name": "fbid-monitor-cron",
+  "main": "worker.js",
+  "compatibility_date": "2025-03-01",
+  // Encendido a propósito: da un botón de «auditar ahora» sin esperar 6 horas.
+  // No expone nada — el handler `fetch` exige el mismo CRON_SECRET y contesta
+  // 401 sin él.
+  "workers_dev": true,
+  "vars": {
+    "HUB_URL": "https://fbid.flowbond.life"
+  },
+  "triggers": {
+    "crons": ["0 */6 * * *"]
+  }
+}

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Constant login/security audit — runs on a Vercel Cron (see vercel.json).
+// Constant login/security audit — lo dispara el Worker `fbid-monitor-cron` cada
+// 6 h (antes era un Vercel Cron; ver monitor-cron/wrangler.jsonc).
 // Energy-efficient by design: cheap HTTP + one DB round-trip every run; it only
 // spends an email (via Resend) when something actually REGRESSES.
 //
-// Secured: Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`; we reject
+// Secured: el cron manda `Authorization: Bearer <CRON_SECRET>`; we reject
 // anything else, so the endpoint can't be abused to spam checks/alerts.
 
 export const dynamic = 'force-dynamic'
@@ -15,16 +16,20 @@ type Check = { name: string; ok: boolean; detail: string }
 
 // Live FBID surfaces that must stay healthy. okCodes = acceptable HTTP statuses
 // (a healthy auth callback redirects; a homepage is 200; 404/5xx/connect-fail = bad).
+// OJO: el hub NO se comprueba a sí mismo desde aquí. En Cloudflare, una
+// subpetición de un Worker a su propio script se detecta como bucle y contesta
+// 522 — por su dominio propio Y por su workers.dev. Quien mira al hub desde
+// fuera es el Worker `fbid-monitor-cron` (otro script, sin bucle): observa y
+// manda lo que vio en `?hub=` y `?guard=`, y aquí se juzga y se alerta, para
+// que la decisión y el correo sigan viviendo en un solo sitio.
 const HTTP_CHECKS: { name: string; url: string; ok: number[] }[] = [
   // Homepages may legitimately redirect (apex→www, locale, auth) — accept 2xx/3xx,
   // treat only 404/5xx/connect-fail as broken.
-  { name: 'hub', url: 'https://fbid.flowbond.life/', ok: [200, 307, 308] },
   { name: 'astroflow', url: 'https://astro.flowbond.life/', ok: [200, 307, 308] },
   { name: 'danz', url: 'https://danz-now.vercel.app/', ok: [200, 307, 308] },
   { name: 'flowdesk', url: 'https://flowdesk.flowbond.life/', ok: [200, 307, 308] },
   { name: 'flowgarden-callback', url: 'https://www.flowgarden.life/auth/callback', ok: [200, 302, 307, 308] },
   { name: 'flowme-callback', url: 'https://flowme.one/auth/callback', ok: [200, 302, 307, 308] },
-  { name: 'hub-add-email-guard', url: 'https://fbid.flowbond.life/api/accounts/add-email', ok: [401, 405] },
 ]
 
 async function httpCheck(c: { name: string; url: string; ok: number[] }): Promise<Check> {
@@ -81,7 +86,21 @@ export async function GET(req: NextRequest) {
   }
 
   const [http, db] = await Promise.all([Promise.all(HTTP_CHECKS.map(httpCheck)), dbChecks()])
-  const checks = [...http, ...db]
+
+  // Lo que el cron vio del hub desde fuera. Si no viene (una llamada a mano),
+  // no se inventa nada: se omite en vez de dar un falso verde o una falsa alarma.
+  const observed: Check[] = []
+  const fold = (name: string, param: string, want: number[]) => {
+    const raw = req.nextUrl.searchParams.get(param)
+    if (raw === null) return
+    const code = Number(raw)
+    const ok = want.includes(code)
+    observed.push({ name, ok, detail: `HTTP ${code} visto desde fuera${ok ? '' : ` (want ${want.join('/')})`}` })
+  }
+  fold('hub', 'hub', [200, 307, 308])
+  fold('hub-add-email-guard', 'guard', [401, 405])
+
+  const checks = [...observed, ...http, ...db]
   const failures = checks.filter((c) => !c.ok)
   if (failures.length) await alert(failures)
 
