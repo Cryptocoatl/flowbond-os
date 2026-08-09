@@ -16,12 +16,34 @@ export async function GET(request: NextRequest) {
   // (hub callback + ?app=… + a second `redirect=<app callback>`) splits into
   // additional top-level params here — thread them all through to the
   // destination so the hub callback can hand off to the app.
-  const redirect = url.searchParams.get('redirect')
+  const requested = url.searchParams.get('redirect')
 
-  // redirect MUST be an allowlisted callback (open-redirect guard).
-  if (!tokenHash || !redirect || !isAllowedRedirect(redirect)) {
+  // The hub's OWN callback is the safety net. Supabase interpolates
+  // {{ .RedirectTo }} as the Site URL — the hub ROOT — whenever the email was
+  // requested with no `emailRedirectTo`, or with one that isn't in Supabase's
+  // uri_allow_list. The root is not (and must not be) an allowlisted callback,
+  // so the old guard answered `?error=bad_confirm` to a perfectly valid token:
+  // a real user, a real email, and no way in. That is the single worst failure
+  // this system can have, so it now degrades to signing them into the hub
+  // instead of stranding them.
+  const hubCallback = `${url.origin}/auth/callback`
+  const sameOriginRoot = (raw: string) => {
+    try {
+      const u = new URL(raw)
+      return u.origin === url.origin && (u.pathname === '/' || u.pathname === '')
+    } catch {
+      return false
+    }
+  }
+  const wanted = requested && !sameOriginRoot(requested) ? requested : hubCallback
+
+  // No token at all = nothing to redeem; that IS a broken link.
+  if (!tokenHash) {
     return NextResponse.redirect(`${url.origin}/?error=bad_confirm`)
   }
+  // Open-redirect guard: an unknown destination NEVER receives the token —
+  // but the person still gets in, through the hub.
+  const redirect = isAllowedRedirect(wanted) ? wanted : hubCallback
 
   const dest = new URL(redirect)
   let firstRedirectSkipped = false

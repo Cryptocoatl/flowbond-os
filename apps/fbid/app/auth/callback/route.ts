@@ -20,7 +20,7 @@ const APP_CALLBACKS: Record<string, string> = {
   claudia: 'https://claudiaflow.life/auth/callback',
   grantflow: 'https://grants.claudiaflow.life/auth/callback',
   reciprociudad: 'https://reciprociudad.lat/auth/callback',
-  voces: 'https://voces.flowme.one/admin',
+  voces: 'https://voces.world/mi-voz', // panel de la voz, en el dominio canónico
 }
 
 /**

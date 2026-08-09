@@ -37,7 +37,26 @@ export const ALLOWED_CALLBACKS: readonly AllowedCallback[] = Object.freeze([
   { origin: 'https://www.brandmark.click', path: '/proveedores/callback' },   // brandmark (www)
   { origin: 'https://reciprociudad.lat', path: '/auth/callback' },             // reciprociudad (+ /team console)
   { origin: 'https://www.reciprociudad.lat', path: '/auth/callback' },         // reciprociudad (www)
-  { origin: 'https://voces.flowme.one', path: '/admin' },                      // voces para el alma (static admin, hash session)
+  // Voces para el Alma — sitio estático (sesión en el hash). Cada pantalla que
+  // puede pedir un enlace de acceso necesita SU ruta aquí: la validación es por
+  // (origen, ruta) exactos, así que una ruta faltante = el correo llega, la
+  // persona hace clic y aterriza en el hub sin poder volver. Dominio canónico:
+  // voces.world (voces.flowme.one sigue sirviendo el mismo sitio).
+  { origin: 'https://voces.world', path: '/' },
+  { origin: 'https://voces.world', path: '/mi-voz' },
+  { origin: 'https://voces.world', path: '/unete' },
+  { origin: 'https://voces.world', path: '/crear-perfil' },
+  { origin: 'https://voces.world', path: '/admin' },
+  { origin: 'https://www.voces.world', path: '/' },
+  { origin: 'https://www.voces.world', path: '/mi-voz' },
+  { origin: 'https://www.voces.world', path: '/unete' },
+  { origin: 'https://www.voces.world', path: '/crear-perfil' },
+  { origin: 'https://www.voces.world', path: '/admin' },
+  { origin: 'https://voces.flowme.one', path: '/' },
+  { origin: 'https://voces.flowme.one', path: '/mi-voz' },
+  { origin: 'https://voces.flowme.one', path: '/unete' },
+  { origin: 'https://voces.flowme.one', path: '/crear-perfil' },
+  { origin: 'https://voces.flowme.one', path: '/admin' },
   { origin: 'https://ops.claudiaflow.life', path: '/auth/callback' },          // flowops (POS, CF Worker)
   // ---- local development ----
   { origin: 'http://localhost:5173', path: '/proveedores/callback' }, // brandmark-web (vite dev)
