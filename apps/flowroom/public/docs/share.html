@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sharing this room — 1MWD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/docs/room.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:var(--void);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:58rem;margin:0 auto;padding:0 clamp(1.1rem,4vw,2.6rem)}
+.spec{display:flex;height:3px}.spec i{flex:1}
+
+.top{padding:clamp(2.6rem,7vw,4.6rem) 0 clamp(1.6rem,4vw,2.6rem);position:relative;overflow:hidden}
+.moon{position:absolute;right:-8rem;top:-6rem;width:26rem;height:26rem;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#2B2038 0%,#1A1324 46%,#0F0A16 70%,transparent 72%);
+  pointer-events:none;opacity:.8}
+.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 1.2rem;position:relative}
+h1{font-family:"Fraunces",serif;font-weight:600;letter-spacing:-.025em;
+  font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.02;margin:0 0 1rem;max-width:18ch;position:relative}
+h1 em{font-style:italic;font-weight:300;
+  background:linear-gradient(90deg,var(--rose),var(--amber) 32%,var(--teal) 64%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(1rem,2vw,1.15rem);color:var(--ink-2);max-width:46ch;margin:0;position:relative}
+
+section{padding:clamp(1.8rem,4.5vw,3rem) 0;border-top:1px solid var(--rule)}
+h2{font-family:"Fraunces",serif;font-size:clamp(1.3rem,3vw,1.7rem);font-weight:600;
+  margin:0 0 1rem;letter-spacing:-.015em}
+h3{font-family:"Fraunces",serif;font-size:1.1rem;font-weight:600;margin:0 0 .3rem}
+p{margin:0 0 .9rem;color:var(--ink-2);max-width:62ch}
+p strong{color:var(--ink);font-weight:600}
+
+.roles{display:grid;gap:.7rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.role{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:1.2rem 1.3rem}
+.role .tag{font-family:"Space Mono",monospace;font-size:.58rem;letter-spacing:.14em;
+  text-transform:uppercase;padding:.2rem .55rem;border-radius:20px;border:1px solid;display:inline-block;margin:0 0 .7rem}
+.role.e .tag{color:var(--green);border-color:rgba(63,203,134,.42)}
+.role.c .tag{color:var(--teal);border-color:rgba(49,194,214,.42)}
+.role.v .tag{color:var(--ink-3);border-color:var(--rule-2)}
+.role p{font-size:.9rem;margin:0 0 .5rem}
+.role ul{margin:.4rem 0 0;padding-left:1.05rem;color:var(--ink-3);font-size:.85rem}
+.role li{margin:.2rem 0}
+
+.builder{background:var(--card);border:1px solid var(--rule-2);border-radius:16px;
+  padding:clamp(1.3rem,3.5vw,2rem)}
+.row{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.picks{display:flex;flex-wrap:wrap;gap:.5rem;margin:.2rem 0 0}
+.pick{display:inline-flex;align-items:center;gap:.45rem;background:rgba(11,8,16,.6);
+  border:1px solid var(--rule-2);border-radius:20px;padding:.4rem .8rem;cursor:pointer;
+  font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);transition:border-color .18s,color .18s,background .18s}
+.pick:hover{color:var(--ink-2);border-color:var(--rule-2)}
+.pick input{accent-color:var(--violet);margin:0}
+.pick.on{color:var(--ink);border-color:var(--violet);background:rgba(179,107,255,.09)}
+.mk{margin-top:1.2rem;border:0;border-radius:.6rem;padding:.85rem 1.4rem;font:inherit;
+  font-weight:600;color:#140D1C;cursor:pointer;
+  background:linear-gradient(90deg,var(--amber),var(--rose) 52%,var(--violet));
+  background-size:200% 100%;transition:background-position .6s var(--ease)}
+.mk:hover{background-position:100% 0}
+.mk[disabled]{opacity:.5;cursor:default}
+
+.out{margin-top:1.3rem;border-top:1px solid var(--rule);padding-top:1.2rem;display:none}
+.out.on{display:block;animation:unfold .35s var(--ease)}
+.link{display:flex;gap:.6rem;align-items:stretch;flex-wrap:wrap}
+.link code{flex:1;min-width:14rem;background:rgba(11,8,16,.75);border:1px solid var(--rule-2);
+  border-radius:.55rem;padding:.7rem .8rem;font-family:"Space Mono",monospace;font-size:.72rem;
+  color:var(--teal);word-break:break-all;line-height:1.5}
+.copy{border:1px solid var(--rule-2);background:transparent;color:var(--ink-2);border-radius:.55rem;
+  padding:.7rem 1.1rem;font:inherit;font-size:.85rem;cursor:pointer;white-space:nowrap;
+  transition:color .18s,border-color .18s}
+.copy:hover{color:var(--ink);border-color:var(--violet)}
+.copy.done{color:var(--green);border-color:rgba(63,203,134,.5)}
+.say{margin-top:1rem;background:rgba(11,8,16,.5);border:1px solid var(--rule);
+  border-left:2px solid var(--violet);border-radius:.5rem;padding:.9rem 1rem;
+  font-size:.9rem;color:var(--ink-2);white-space:pre-wrap}
+
+.keys{margin-top:.4rem}
+.keyrow{display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;
+  border-bottom:1px solid var(--rule);padding:.8rem 0}
+.keyrow .who{font-weight:600;color:var(--ink)}
+.keyrow .det{font-family:"Space Mono",monospace;font-size:.6rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}
+.keyrow button{background:transparent;border:1px solid var(--rule-2);color:var(--ink-3);
+  border-radius:20px;padding:.28rem .7rem;font:inherit;font-size:.72rem;cursor:pointer}
+.keyrow button:hover{color:var(--ink);border-color:var(--violet)}
+.empty{color:var(--ink-3);font-size:.9rem}
+
+.note{background:rgba(255,174,61,.06);border:1px solid rgba(255,174,61,.24);
+  border-left:2px solid var(--amber);border-radius:.5rem;padding:1rem 1.1rem;margin:1rem 0 0}
+.note p{margin:0 0 .5rem;color:var(--ink-2);font-size:.9rem}
+.note p:last-child{margin:0}
+.note b{color:var(--amber);font-family:"Space Mono",monospace;font-size:.6rem;
+  letter-spacing:.14em;text-transform:uppercase;display:block;margin:0 0 .5rem}
+
+footer{padding:2.4rem 0 3.4rem;border-top:1px solid var(--rule);display:flex;gap:1.4rem;
+  flex-wrap:wrap;font-family:"Space Mono",monospace;font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3)}
+footer a{color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<div class="spec">
+  <i style="background:var(--rose)"></i><i style="background:var(--amber)"></i><i style="background:var(--green)"></i>
+  <i style="background:var(--teal)"></i><i style="background:var(--indigo)"></i><i style="background:var(--violet)"></i>
+</div>
+
+<div class="wrap">
+
+  <section class="top" style="border:0">
+    <div class="moon" aria-hidden="true"></div>
+    <p class="kicker">Your desk · Admin</p>
+    <h1>Give someone <em>their own way in</em>.</h1>
+    <p class="sub">Every person gets a personal link. You choose which documents it opens and whether they can write on them. Nobody sees a list of who else is here.</p>
+  </section>
+
+  <section>
+    <h2>Three kinds of access</h2>
+    <p>Pick by what you want back from the person. The difference is not what they can see — it is what they can <strong>do</strong> once they are looking.</p>
+
+    <div class="roles">
+      <div class="role e">
+        <span class="tag">Editor</span>
+        <h3>Decide with you</h3>
+        <p>For Kay, for counsel, for anyone whose “yes” actually counts.</p>
+        <ul>
+          <li>Marks any paragraph: agreed, question, we already have this, different timing, not this</li>
+          <li>Leaves notes anyone in the room can read</li>
+        </ul>
+      </div>
+      <div class="role c">
+        <span class="tag">Commenter</span>
+        <h3>Weigh in, not sign off</h3>
+        <p>For an advisor you want thinking out loud without their view reading as a decision.</p>
+        <ul>
+          <li>Leaves notes</li>
+          <li>Cannot mark paragraphs agreed or rejected</li>
+        </ul>
+      </div>
+      <div class="role v">
+        <span class="tag">Viewer</span>
+        <h3>Just read it</h3>
+        <p>For an investor, a board member, anyone being shown rather than consulted.</p>
+        <ul>
+          <li>Reads the document, clean — no buttons, no marks, no notes, nothing to click</li>
+          <li>Never sees what anyone else wrote</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Worth knowing</b>
+      <p>A Viewer's page has none of the marking controls in it at all — not hidden, not greyed out, <strong>not there</strong>. They cannot tell the room is annotatable, and they never see another person's questions. That is what makes it safe to send document 04 to someone outside the decision.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Make a link</h2>
+    <div class="builder">
+      <div class="row">
+        <label class="fld">
+          <span>Who is it for</span>
+          <input id="who" maxlength="80" placeholder="Their name" autocomplete="off">
+        </label>
+        <label class="fld">
+          <span>What they can do</span>
+          <select id="role">
+            <option value="editor">Editor — mark and comment</option>
+            <option value="commenter">Commenter — comment only</option>
+            <option value="viewer" selected>Viewer — read only, clean page</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="fld" style="margin-bottom:.3rem"><span>Which documents it opens</span></label>
+      <div class="picks" id="docs">
+        <label class="pick"><input type="checkbox" value="1"> 01 · One Pager</label>
+        <label class="pick"><input type="checkbox" value="2"> 02 · Roadmap</label>
+        <label class="pick on"><input type="checkbox" value="3" checked> 03 · Structure &amp; IP</label>
+        <label class="pick"><input type="checkbox" value="4"> 04 · DANZ</label>
+      </div>
+
+      <label class="fld" style="margin-top:1.1rem">
+        <span>Where the link lands them</span>
+        <select id="land">
+          <option value="">The room, so they choose</option>
+          <option value="3-STRUCTURE-AND-IP-ANALYSIS">Straight into 03 · Structure &amp; IP</option>
+          <option value="4-DANZ-1MWD-BOUNDARY-AND-CROSS-EQUITY">Straight into 04 · DANZ</option>
+        </select>
+      </label>
+
+      <button class="mk" id="make">Make their link</button>
+
+      <div class="out" id="out">
+        <div class="link">
+          <code id="url"></code>
+          <button class="copy" id="copy">Copy link</button>
+        </div>
+        <div class="say" id="say"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Links you have made</h2>
+    <p>Kept in this browser only, so you can find a link again without asking anyone. It is a list of what you sent — not a list of who has opened it.</p>
+    <div class="keys" id="keys"></div>
+  </section>
+
+  <section>
+    <h2>How to send it</h2>
+    <p><strong>Send the link to one person.</strong> The link is the key: whoever holds it has the access you chose, so it should go in a direct message or an email to a single person, not into a group thread.</p>
+    <p><strong>They do not need a password.</strong> They click, and they are in, greeted by name. Nothing to sign up for, nothing to install.</p>
+    <p><strong>Their name is already on it.</strong> When an Editor marks a paragraph agreed, it says their name — because you put it on the key when you made it.</p>
+
+    <div class="note">
+      <b>The one limit, stated plainly</b>
+      <p>Right now a link can't be switched off on its own. If one needs to be taken back — a person leaves, a message is forwarded — tell Steph, and every link is reissued at once. Everyone gets a new one; the old ones stop working.</p>
+      <p>Per-link revocation is the next thing to build here, and it is the thing that turns this from a document room into a full data room.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span><a href="/docs/">← Back to the documents</a></span>
+    <span>Private document room</span>
+    <span>Admin · Vandana</span>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const KEYS = 'flowroom.1mwd.sharedkeys';
+  const DOCNAME = { '1': '01 · One Pager', '2': '02 · Roadmap', '3': '03 · Structure & IP', '4': '04 · DANZ' };
+
+  /* Checkboxes that look like the rest of the room. */
+  $('docs').addEventListener('change', (e) => {
+    e.target.closest('.pick').classList.toggle('on', e.target.checked);
+  });
+
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEYS) || '[]'); } catch { return []; } };
+  const write = (v) => { try { localStorage.setItem(KEYS, JSON.stringify(v)); } catch {} };
+
+  function renderKeys() {
+    const list = read();
+    const box = $('keys');
+    box.textContent = '';
+    if (!list.length) {
+      const p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = 'Nothing yet. The first link you make shows up here.';
+      box.appendChild(p);
+      return;
+    }
+    list.slice().reverse().forEach((k) => {
+      const row = document.createElement('div');
+      row.className = 'keyrow';
+
+      const left = document.createElement('div');
+      const who = document.createElement('div');
+      who.className = 'who';
+      who.textContent = k.name;
+      const det = document.createElement('div');
+      det.className = 'det';
+      det.textContent = k.role + ' · ' + k.docs.map((d) => DOCNAME[d]).join(', ');
+      left.appendChild(who); left.appendChild(det);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Copy link';
+      btn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(k.url).catch(() => {});
+        btn.textContent = 'Copied';
+        setTimeout(() => (btn.textContent = 'Copy link'), 1600);
+      });
+
+      row.appendChild(left); row.appendChild(btn);
+      box.appendChild(row);
+    });
+  }
+
+  $('make').addEventListener('click', async () => {
+    const name = $('who').value.trim();
+    const role = $('role').value;
+    const docs = [...$('docs').querySelectorAll('input:checked')].map((i) => i.value);
+    const land = $('land').value;
+
+    if (!name) { $('who').focus(); return; }
+    if (!docs.length) { alert('Choose at least one document for them to open.'); return; }
+    if (land && !docs.includes(land[0])) {
+      alert('That link lands on a document their key does not open. Tick it above, or land them in the room.');
+      return;
+    }
+
+    const btn = $('make');
+    btn.disabled = true;
+    const res = await fetch('/docs/mint', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name, role, docs }),
+    }).then((r) => r.json()).catch(() => ({ ok: false }));
+    btn.disabled = false;
+
+    if (!res.ok) { alert('That link could not be made. Reload the page and try again.'); return; }
+
+    const url = location.origin + '/docs/' + land + '?k=' + res.token;
+    $('url').textContent = url;
+    $('out').classList.add('on');
+
+    const verb = role === 'viewer'
+      ? 'It opens straight to the document — nothing to sign up for.'
+      : role === 'commenter'
+        ? 'You can leave a note on any paragraph. It opens with your name already on it.'
+        : 'You can mark any paragraph — agreed, a question, already handled — and leave notes. It opens with your name already on it.';
+    $('say').textContent =
+      name + ', here is your own link to the 1MWD documents. ' + verb +
+      ' Please keep it to yourself — it is personal to you.\n\n' + url;
+
+    const list = read();
+    list.push({ name, role, docs, url, at: new Date().toISOString() });
+    write(list);
+    renderKeys();
+  });
+
+  $('copy').addEventListener('click', async () => {
+    await navigator.clipboard.writeText($('url').textContent).catch(() => {});
+    $('copy').textContent = 'Copied';
+    $('copy').classList.add('done');
+    setTimeout(() => { $('copy').textContent = 'Copy link'; $('copy').classList.remove('done'); }, 1800);
+  });
+
+  renderKeys();
+})();
+</script>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>

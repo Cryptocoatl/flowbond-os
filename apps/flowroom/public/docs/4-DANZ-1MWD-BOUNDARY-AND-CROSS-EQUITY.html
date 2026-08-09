@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DANZ × 1MWD — Boundary &amp; Cross-Equity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F5F2; --card:#FFFFFF; --ink:#1D1A16; --ink-2:#55504A; --ink-3:#8A837A;
+  --rule:#E4DFD8; --rule-2:#D0C9BF;
+  --rose:#C0345C; --green:#2F8F5F; --indigo:#3E4A94; --teal:#237F92; --violet:#7C3F9C; --amber:#C97F1E;
+  --flag:#A8202F; --flagbg:#FBEFEF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
+
+header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
+.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 .9rem}
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.1rem);
+  line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
+.intro{color:var(--ink-2);max-width:50ch;margin:0 0 1.4rem}
+.docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:1rem;
+  display:flex;flex-wrap:wrap;gap:.4rem 2rem}
+
+h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.35rem,3.2vw,1.8rem);
+  line-height:1.15;letter-spacing:-.012em;margin:2.6rem 0 .9rem;
+  padding-top:1.3rem;border-top:1px solid var(--rule)}
+h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.08rem;margin:1.7rem 0 .5rem}
+h4{font-family:"Space Mono",monospace;font-size:.65rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);margin:1.5rem 0 .5rem}
+p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.42rem}
+.lede{font-size:1.05rem;color:var(--ink-2)}
+q{font-family:"Fraunces",serif;font-style:italic}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.3rem 0}
+.col{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem;position:relative;overflow:hidden}
+.col::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+.col.a::after{background:var(--rose)} .col.b::after{background:var(--teal)}
+.col h5{margin:.2rem 0 .1rem;font-family:"Fraunces",serif;font-size:1.08rem;font-weight:600}
+.col .tag{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);display:block}
+.col ul{margin:.7rem 0 0;padding-left:1.05rem;font-size:.89rem}
+.col li{margin-bottom:.3rem;color:var(--ink-2)}
+
+.flag,.note,.good{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
+.flag{background:var(--flagbg);border-left:4px solid var(--flag);color:#5E1620}
+.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);color:var(--ink-2)}
+.good{background:#EFF6F1;border-left:4px solid var(--green);color:#204634}
+.flag b.t,.note b.t,.good b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
+.flag b.t{color:var(--flag)} .note b.t{color:var(--teal)} .good b.t{color:var(--green)}
+.flag p:last-child,.note p:last-child,.good p:last-child{margin:0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:10px;margin:1.3rem 0;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  padding:.7rem .9rem;border-bottom:1px solid var(--rule-2);vertical-align:bottom}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-weight:600}
+.fill{color:var(--ink-3);font-family:"Space Mono",monospace;font-size:.78rem}
+
+.commit{counter-reset:c;margin:1.3rem 0;padding:0;list-style:none}
+.commit li{counter-increment:c;background:var(--card);border:1px solid var(--rule);
+  border-radius:10px;padding:.9rem 1rem .9rem 3rem;margin-bottom:.5rem;position:relative;font-size:.93rem}
+.commit li::before{content:counter(c);position:absolute;left:1rem;top:.95rem;
+  font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:var(--violet)}
+.commit li b{display:block;margin-bottom:.1rem}
+.commit li span{color:var(--ink-2)}
+
+.timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1.3rem 0}
+.tl{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:.9rem}
+.tl .yr{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.25rem}
+.tl b{display:block;font-family:"Fraunces",serif;font-size:.98rem;margin-bottom:.15rem}
+.tl p{margin:0;font-size:.84rem;color:var(--ink-2)}
+
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
+.sig{border-top:1px solid var(--ink);padding-top:.55rem}
+.sig b{display:block;font-size:.95rem} .sig span{font-size:.82rem;color:var(--ink-3)}
+
+footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
+  font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
+
+@media(max-width:640px){ .two,.sigs,.timeline{grid-template-columns:1fr} }
+@media print{ body{background:#fff} .flag,.note,.good,.tablewrap,.col,.commit li{break-inside:avoid} }
+</style>
+<link rel="stylesheet" href="/docs/room.css">
+</head>
+<body data-doc="4">
+<div class="wrap">
+
+<header>
+  <p class="kicker">Document 4 of 4 · DANZ × 1MWD</p>
+  <h1>Two movements, one interface, equity both ways</h1>
+  <p class="intro">The honest version of how danz.now and 1 Million Women Dance relate — including where they genuinely overlap, why that's fine, and the equity Steph is offering Vandana in the other direction.</p>
+  <div class="docmeta">
+    <span>Vandana Hart × Steph Ferrera</span>
+    <span>Not legal advice</span>
+    <span>August 2026 · Draft</span>
+  </div>
+</header>
+
+<h2>1 · Why this is its own document now</h2>
+<p class="lede">The earlier draft treated DANZ as a conflict to disclose and wall off. That was wrong, and it undersold what's actually happening.</p>
+<p>DANZ isn't a competing product hiding in the corner. It's a separate movement and brand with its own thesis — <strong>tokenised rewards for movement, wearables, on-chain</strong> — that may one day be the layer 1MWD plugs into. Steph is also offering Vandana equity in it. That makes this a two-way relationship between two companies, not a disclosure paragraph inside a personal role agreement.</p>
+<p>So it gets its own paper, its own terms, and its own signature line.</p>
+
+<h2>2 · What each one is</h2>
+
+<div class="two">
+  <div class="col a">
+    <span class="tag">Building now</span>
+    <h5>1 Million Women Dance</h5>
+    <ul>
+      <li>Community and creators, first and always</li>
+      <li>Purpose, movement, events, activations</li>
+      <li>HEART points — recognition, not currency</li>
+      <li>Loyalty, subscriptions, brand partnerships</li>
+      <li>Women, cause-linked, broadcast-driven</li>
+      <li><strong>No token. No coin. No chain.</strong></li>
+    </ul>
+  </div>
+  <div class="col b">
+    <span class="tag">Activates from 2030</span>
+    <h5>danz.now (DANZ)</h5>
+    <ul>
+      <li>Movement rewarded, measured, on-chain</li>
+      <li>Wearables and bracelets as the input</li>
+      <li>Token rewards for dancing</li>
+      <li>Steph's own vision, her own movement</li>
+      <li>Built to plug <em>into</em> 1MWD, not against it</li>
+      <li><strong>Dance On The Moon, 2035</strong></li>
+    </ul>
+  </div>
+</div>
+
+<p>Both of you already agree that a coin is not the way for 1MWD right now. Worth writing down <em>why</em>, so the decision holds when someone inevitably suggests it again:</p>
+<ul>
+  <li>The moment HEART points have monetary value, they are plausibly a regulated instrument, and the compliance burden lands on a company that hasn't launched yet.</li>
+  <li>A token closes doors at exactly the brand tier you're aiming for. Apple, Spotify, and Sony conversations get materially harder.</li>
+  <li>If 1BH turns out to be tax-exempt, a token under a nonprofit umbrella is a serious complication.</li>
+  <li>And the real one: it changes why a woman is dancing. A point that means <em>she was seen</em> is a different object from a point that means <em>she was paid</em>.</li>
+</ul>
+
+<div class="good"><b class="t">The reframe worth making to Vandana</b>
+  <p>DANZ being a separate company isn't a risk to 1MWD — it's a shield. It keeps every token, wearable, and on-chain question quarantined in a different entity with a different cap table and a different regulator conversation. 1MWD stays clean, brand-safe, and boring in exactly the way that lets it sign Apple. Vandana should <em>want</em> DANZ separate.</p></div>
+
+<h2>3 · Timing, which defuses almost all of this</h2>
+<div class="timeline">
+  <div class="tl"><span class="yr">2026 → 2030</span><b>1MWD builds the million</b><p>DANZ is not in active development. 1MWD has the entire runway to itself, uncontested.</p></div>
+  <div class="tl"><span class="yr">2030</span><b>The celebration, and DANZ activates</b><p>A million women reached. DANZ turns on: wearables, movement measurement, on-chain rewards.</p></div>
+  <div class="tl"><span class="yr">2035</span><b>Dance On The Moon</b><p>The north star. Everything before it is preparation.</p></div>
+</div>
+<p>This matters more than any clause in this document. <strong>The overlap is theoretical for roughly four years.</strong> Two people agreeing rules for a situation four years out, before either has anything to lose by conceding, is the easiest negotiation either of you will ever have. It gets exponentially harder the day DANZ has users.</p>
+<div class="note"><b class="t">The moon is not decoration</b>
+  <p>Steph already has artwork on the lunar surface — selected by Space Blue for the Lunaprise Moon Museum, delivered on Intuitive Machines' Odysseus lander in February 2024. Dance On The Moon is a longer reach than that, obviously. But it is a stated 2035 goal from someone who has already put work up there once, not a metaphor.</p></div>
+
+<h2>4 · The overlap, stated honestly</h2>
+<p>The earlier draft claimed a clean split into different fields. That was too neat. The truth is closer to this: <strong>DANZ and 1MWD are different layers of the same future, not different markets.</strong> Both are about women and movement. Both could involve the same person dancing. If 1MWD ever adds wearables or on-chain rewards, that <em>is</em> DANZ's territory.</p>
+<p>Pretending otherwise would produce a document that falls apart the first time reality touches it. So the structure isn't a wall between two fields. It's <strong>a defined interface between two companies, plus a pre-agreed right of first refusal in both directions.</strong></p>
+
+<h2>5 · Five commitments, both ways</h2>
+<ol class="commit">
+  <li><b>1MWD's application layer never crosses.</b><span>The HEART engine, the Dance-Her-Dance relay, the dream model, the heart-colour system — owned by 1MWD, never appears in DANZ, ever. This is guaranteed by the ownership split in Document 3, not by good faith.</span></li>
+  <li><b>DANZ does not launch a women's cause-mobilisation product.</b><span>DANZ will not build or operate a product whose primary purpose is mobilising women around social causes through dance. That category belongs to 1MWD.</span></li>
+  <li><b>DANZ is built to plug into 1MWD.</b><span>This is the plan, not a hypothetical. When DANZ activates, its wearables, movement measurement, and reward systems are intended to be available to 1MWD as infrastructure — on most-favoured-customer terms, offered to 1MWD before any third party. 1MWD is always free to decline and build elsewhere.</span></li>
+  <li><b>1MWD offers DANZ the work first.</b><span>The mirror. If 1MWD decides to build a movement-reward layer itself or with someone else, it tells DANZ first and gives it a fair chance. Neither company can be held up; each keeps the right to walk.</span></li>
+  <li><b>No data ever crosses.</b><span>No shared users, no shared accounts, no shared analytics, no cross-promotion without both boards agreeing in writing. Two companies, two databases, two consent regimes.</span></li>
+</ol>
+
+<div class="note"><b class="t">Why first refusal beats exclusivity</b>
+  <p>A hard non-compete between two companies the same person controls is close to unenforceable and reads badly in diligence. A right of first refusal is enforceable, is normal, and converts the overlap from a threat into a pipeline. It also means neither company can be held up — each keeps the right to walk.</p></div>
+
+<h2>6 · Equity for Vandana in DANZ</h2>
+<p class="lede">Steph is offering Vandana equity in danz.now, so she holds real ownership in the wearable and on-chain future rather than watching it from outside.</p>
+<p>This is a genuinely good instinct. It permanently kills the <q>you're competing with us</q> fear, because after it Vandana profits either way. But it needs structuring properly or it creates two new problems.</p>
+
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:28%">Term</th><th>Proposed</th></tr></thead>
+  <tbody>
+    <tr><td><b>Amount</b></td><td><span class="fill">[___]%</span> of danz.now, fully diluted at grant</td></tr>
+    <tr><td><b>Rationale</b></td><td>Founding advisor. Vandana holds a defined advisory role — movement strategy, creator and artist network, brand — so the grant has a business reason, not just goodwill.</td></tr>
+    <tr><td><b>Vesting</b></td><td><strong>Milestone-based, not time-based.</strong> Tied to DANZ activation and early milestones rather than a calendar. See the flag below — this is the one term a long horizon changes.</td></tr>
+    <tr><td><b>Independence</b></td><td>Vested equity is retained even if the 1MWD relationship ends. The two deals do not cross-default.</td></tr>
+    <tr><td><b>Instrument</b></td><td>To be determined with counsel, alongside DANZ's own entity structure.</td></tr>
+    <tr><td><b>Not consideration</b></td><td>Explicitly recited as separate from, and not payment for, anything in the 1MWD agreements. See the flag below.</td></tr>
+  </tbody>
+</table></div>
+
+<div class="flag"><b class="t">A 2030 horizon breaks normal vesting — read this before picking a number</b>
+  <p>A standard three-year vest, started now, completes in 2029 — before DANZ has a product, a user, or a launch. Vandana would be fully vested in a shell, and there would be nothing left to align her to the work that actually matters. That's a bad outcome for both of you.</p>
+  <p>Two better options. <strong>Milestone vesting:</strong> tranches release on entity formation, first wearable integration, first product launch, first 1MWD integration. <strong>Or grant later:</strong> a binding side letter now promising the equity, with the grant itself made when DANZ activates. The second is cleaner and cheaper.</p></div>
+
+<div class="flag"><b class="t">Don't form the DANZ entity yet just to do this</b>
+  <p>Incorporating now means five years of Delaware franchise tax, annual reports, registered agent fees, and filings for a company with no operations — plus a stale cap table and a stale valuation. A <strong>binding side letter</strong> committing the equity on formation is just as real to Vandana, costs almost nothing, and doesn't create five years of administrative debt.</p>
+  <p>This is a change from the earlier draft, which suggested forming both entities together. That made sense when DANZ was a 2027 project. At 2030 it doesn't.</p></div>
+
+<div class="flag"><b class="t">Sequence this carefully — it matters</b>
+  <p>If Vandana receives DANZ equity at the same moment she accepts a FlowBond-favourable IP position, it can look like the shares bought the concession. That's damaging to both of you: it undermines the IP agreement in diligence and it puts Vandana in an awkward position with her own board and investors.</p>
+  <p>Two fixes, both easy. <strong>Sign the 1MWD agreements first and close them completely.</strong> Then paper the DANZ grant separately, on a later date, in its own document, with a recital stating plainly that it is independent consideration for an advisory role and is not connected to the 1MWD arrangements. Have both counsels confirm the framing.</p></div>
+
+<div class="flag"><b class="t">Also for counsel</b>
+  <p>An equity grant to a non-employee has tax consequences on receipt or vesting depending on the instrument and jurisdiction. Vandana should get her own advice before accepting — not Steph's counsel, hers. Offer to cover the cost of that review; it's a small amount of money and a large amount of trust.</p></div>
+
+<h2>7 · What's already built on danz.now</h2>
+<p>You asked to lay out the current state so we know what we're actually starting from. I don't have the repo, so this is the inventory to fill — point me at the codebase and I'll generate it properly.</p>
+
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:26%">Area</th><th style="width:16%">Status</th><th>Notes · which IP layer</th></tr></thead>
+  <tbody>
+    <tr><td><b>Marketing / pitch site</b></td><td class="fill">[live?]</td><td class="fill">[url, what it says, who's seen it]</td></tr>
+    <tr><td><b>Brand &amp; identity</b></td><td class="fill">[ ]</td><td class="fill">[logo, system, naming, trademark status]</td></tr>
+    <tr><td><b>Domain &amp; handles</b></td><td class="fill">[ ]</td><td class="fill">[danz.now + social handles secured?]</td></tr>
+    <tr><td><b>Auth / accounts</b></td><td class="fill">[ ]</td><td class="fill">[FBID? → platform layer, FlowBond]</td></tr>
+    <tr><td><b>Database &amp; schema</b></td><td class="fill">[ ]</td><td class="fill">[prefix, tables, RLS status]</td></tr>
+    <tr><td><b>Gesture / movement ledger</b></td><td class="fill">[ ]</td><td class="fill">[the core DANZ primitive — spec'd or built?]</td></tr>
+    <tr><td><b>Wearable integration</b></td><td class="fill">[not started?]</td><td class="fill">[which device, which protocol]</td></tr>
+    <tr><td><b>Token / chain work</b></td><td class="fill">[not started?]</td><td class="fill">[deliberately deferred]</td></tr>
+    <tr><td><b>Mobile app</b></td><td class="fill">[ ]</td><td class="fill">[native, PWA, or neither]</td></tr>
+    <tr><td><b>Entity</b></td><td class="fill">[ ]</td><td class="fill">[formed? where? cap table open?]</td></tr>
+    <tr><td><b>Trademark</b></td><td class="fill">[open item]</td><td class="fill">"DANZ" registration is already on the action list</td></tr>
+  </tbody>
+</table></div>
+
+<div class="note"><b class="t">One structural note</b>
+  <p>Everything below that is marked not started is deliberate, not behind. DANZ doesn't activate until 2030. The point of the inventory is to know exactly what exists today so nobody later mistakes a pitch site for a product.</p></div>
+
+<h2>8 · Open items</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:58%">Item</th><th>Owner</th></tr></thead>
+  <tbody>
+    <tr><td><b>Fill the build inventory in section 7</b></td><td>Steph</td></tr>
+    <tr><td><b>Decide: side letter now, or entity now</b> — the side letter is recommended</td><td>Steph + counsel</td></tr>
+    <tr><td><b>Agree Vandana's DANZ percentage and her advisory role</b></td><td>Both</td></tr>
+    <tr><td><b>Confirm the sequencing</b> — 1MWD closes first, DANZ grant papered after</td><td>Both + counsel</td></tr>
+    <tr><td><b>Vandana takes independent advice on the grant</b></td><td>Vandana</td></tr>
+    <tr><td><b>Accept or amend the five commitments in section 5</b></td><td>Both</td></tr>
+    <tr><td><b>File the "DANZ" trademark</b> — already an open action, unrelated to this deal</td><td>Steph</td></tr>
+  </tbody>
+</table></div>
+
+<div class="sigs">
+  <div class="sig"><b>Vandana Hart</b><span>Founder &amp; CEO, 1 Million Women Dance</span></div>
+  <div class="sig"><b>Estefanía Ferrera</b><span>Founder, danz.now · CEO, FlowBond Tech</span></div>
+</div>
+
+<footer>
+  <span>Document 4 of 4 · DANZ × 1MWD</span>
+  <span>Supersedes §4 of Document 3</span>
+  <span>August 2026 · Draft</span>
+</footer>
+
+</div>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>

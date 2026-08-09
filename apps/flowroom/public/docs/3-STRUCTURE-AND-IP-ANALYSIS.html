@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1MWD — Structure &amp; IP Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F5F2; --card:#FFFFFF; --ink:#1D1A16; --ink-2:#55504A; --ink-3:#8A837A;
+  --rule:#E4DFD8; --rule-2:#D0C9BF;
+  --rose:#C0345C; --green:#2F8F5F; --indigo:#3E4A94; --teal:#237F92; --violet:#7C3F9C;
+  --flag:#A8202F; --flagbg:#FBEFEF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
+
+header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
+.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 .9rem}
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.2rem);
+  line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
+.intro{color:var(--ink-2);max-width:50ch;margin:0 0 1.4rem}
+.docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:1rem;
+  display:flex;flex-wrap:wrap;gap:.4rem 2rem}
+
+h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.4rem,3.2vw,1.85rem);
+  line-height:1.15;letter-spacing:-.012em;margin:2.8rem 0 .9rem;
+  padding-top:1.4rem;border-top:1px solid var(--rule)}
+h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.1rem;margin:1.8rem 0 .5rem}
+h4{font-family:"Space Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);margin:1.6rem 0 .5rem}
+p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.4rem}
+.lede{font-size:1.05rem;color:var(--ink-2)}
+q{font-family:"Fraunces",serif;font-style:italic}
+
+/* entity map */
+.ents{margin:1.3rem 0}
+.ent{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.9rem;
+  background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  padding:.85rem 1rem;margin-bottom:.5rem}
+.ent.sub{margin-left:1.5rem}
+.ent .d{width:9px;height:9px;border-radius:50%;margin-top:.5rem}
+.ent b{display:block;font-family:"Fraunces",serif;font-size:1rem;font-weight:600}
+.ent p{margin:.1rem 0 0;font-size:.88rem;color:var(--ink-2)}
+.ent .tag{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-top:.25rem}
+
+/* stack */
+.stack{border:1px solid var(--rule-2);border-radius:10px;overflow:hidden;margin:1.4rem 0;background:var(--card)}
+.lay{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem;padding:1.05rem 1.1rem;
+  border-bottom:1px solid var(--rule)}
+.lay:last-child{border-bottom:0}
+.lay .b{width:5px;border-radius:3px}
+.lay h5{margin:0 0 .25rem;font-family:"Fraunces",serif;font-size:1.02rem;font-weight:600;
+  display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline}
+.own{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:.14rem .45rem;border-radius:3px}
+.o1{background:#FAE8EE;color:#8E1F3E} .o2{background:#E7EFF9;color:#26386F}
+.lay p{margin:0;font-size:.89rem;color:var(--ink-2)}
+
+.test{border:1px dashed var(--rule-2);border-radius:10px;background:var(--card);
+  padding:1.2rem;text-align:center;margin:1.3rem 0}
+.test .t{font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.5rem}
+.test q{font-size:1.15rem;display:block;line-height:1.35}
+.test .sp{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1.8rem;margin-top:.8rem;
+  font-family:"Space Mono",monospace;font-size:.7rem;color:var(--ink-2)}
+
+.flag,.note{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
+.flag{background:var(--flagbg);border-left:4px solid var(--flag);color:#5E1620}
+.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);color:var(--ink-2)}
+.flag b.t,.note b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
+.flag b.t{color:var(--flag)} .note b.t{color:var(--teal)}
+.flag p:last-child,.note p:last-child{margin:0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:10px;margin:1.3rem 0;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  padding:.7rem .9rem;border-bottom:1px solid var(--rule-2);vertical-align:bottom}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-weight:600}
+
+.hats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.2rem 0}
+.hat{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1rem}
+.hat b{display:block;font-family:"Fraunces",serif;font-size:1rem;margin-bottom:.15rem}
+.hat p{margin:0;font-size:.86rem;color:var(--ink-2)}
+
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
+.sig{border-top:1px solid var(--ink);padding-top:.55rem}
+.sig b{display:block;font-size:.95rem}
+.sig span{font-size:.82rem;color:var(--ink-3)}
+
+footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
+  font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
+
+@media(max-width:640px){ .hats,.sigs{grid-template-columns:1fr} .ent.sub{margin-left:.7rem} }
+@media print{ body{background:#fff} .stack,.flag,.note,.tablewrap,.test{break-inside:avoid} }
+</style>
+<link rel="stylesheet" href="/docs/room.css">
+</head>
+<body data-doc="3">
+<div class="wrap">
+
+<header>
+  <p class="kicker">Document 3 of 3 · Structure &amp; IP analysis</p>
+  <h1>Who owns what, and why the line sits there</h1>
+  <p class="intro">The commercial position on entities, intellectual property, and conflicts — written before the lawyers draft, so they're drafting something both of us already agreed to.</p>
+  <div class="docmeta">
+    <span>Vandana Hart × Steph Ferrera</span>
+    <span>Not legal advice</span>
+    <span>August 2026 · Draft</span>
+  </div>
+</header>
+
+<h2>1 · The five entities</h2>
+<p>Your voice note settled the biggest open question in the agreement draft: <strong>1MWD becomes its own company, sitting under 1 Billion Hearts as the umbrella.</strong> That's the right shape, and it's what makes the equity real rather than notional.</p>
+
+<div class="ents">
+  <div class="ent"><span class="d" style="background:var(--violet)"></span>
+    <div><b>1 Billion Hearts</b><p>The umbrella. Holds the movement, the philosophy, the heart-colour concept. Separate IP. Steph holds no interest and claims none.</p>
+    <span class="tag">Parent · legal form to confirm</span></div></div>
+  <div class="ent sub"><span class="d" style="background:var(--rose)"></span>
+    <div><b>1 Million Women Dance, Inc.</b><p>New company. The platform, the community, the campaign, the data. Steph's equity lives here. Investors who want the women's business come in here.</p>
+    <span class="tag">The deal · to be formed</span></div></div>
+  <div class="ent sub"><span class="d" style="background:#DE8C24"></span>
+    <div><b>We Speak Dance</b><p>Vandana's IP, stays outside, unchanged. Season 2 is the launch engine — its audience is pointed at 1MWD.</p>
+    <span class="tag">Separate · unchanged</span></div></div>
+  <div class="ent"><span class="d" style="background:var(--indigo)"></span>
+    <div><b>FlowBond Tech</b><p>Steph's company. Infrastructure vendor to 1MWD under a licence. Not a shareholder, not a partner — a supplier, on paper, at a founding-partner rate.</p>
+    <span class="tag">Vendor · Steph is CEO</span></div></div>
+  <div class="ent sub"><span class="d" style="background:var(--teal)"></span>
+    <div><b>danz.now (DANZ)</b><p>A separate dance product in the FlowBond family. Disclosed deliberately — see section 4.</p>
+    <span class="tag">Disclosed · field-of-use split required</span></div></div>
+</div>
+
+<div class="flag"><b class="t">The one thing that could still break this</b>
+  <p>If 1 Billion Hearts is a tax-exempt organisation, it has no owners and cannot issue equity. A for-profit subsidiary owned by a nonprofit parent is a perfectly workable structure — but it changes the instrument, the tax treatment, and how investors come in. Confirm 1BH's legal form and tax status before anything is signed.</p></div>
+
+<h2>2 · The IP disagreement, stated fairly</h2>
+<p class="lede">You said it plainly: <q>anything you built for 1 Million Women Dance is going to be owned by 1 Million Women Dance.</q> I agree with the principle entirely. The work is defining <em>built for</em> precisely enough that it protects you without describing something I'm not able to give.</p>
+
+<p>Two honest constraints:</p>
+<ul>
+  <li><strong>The platform isn't mine to assign.</strong> FlowBond is a live business with other clients running on the same infrastructure. Assigning it to 1MWD would breach those contracts.</li>
+  <li><strong>A literal reading breaks in the other direction too.</strong> If 1MWD owns the generic video-upload pipeline because it happened to be written during our build, then no other product I ever work on can upload a video — and 1MWD ends up owning plumbing it has no use for and can't maintain.</li>
+</ul>
+
+<p>So the line isn't philosophical. It's architectural.</p>
+
+<h2>3 · Three layers</h2>
+
+<div class="stack">
+  <div class="lay"><span class="b" style="background:var(--rose)"></span>
+    <div><h5>Application layer <span class="own o1">1MWD owns outright</span></h5>
+      <p>The HEART points engine and its economy. The Dance-Her-Dance relay mechanic. The dream and cause data model. The heart-colour system. The campaign engine. Every screen, all front-end code, all UX, all brand and copy, the 1MWD database schema, and the admin tooling. Assigned permanently. Never licensed to anyone else, DANZ included.</p></div></div>
+  <div class="lay"><span class="b" style="background:var(--green)"></span>
+    <div><h5>Data layer <span class="own o1">1MWD owns absolutely</span></h5>
+      <p>Every woman, every profile, every dance, every relay, every engagement event, and everything derived from any of it. FlowBond processes on instruction and holds no rights of its own — including no right to use it in aggregate or anonymised form. Exportable at any time; returned within thirty days of any exit, for any reason, including non-payment.</p></div></div>
+  <div class="lay"><span class="b" style="background:var(--indigo)"></span>
+    <div><h5>Platform layer <span class="own o2">FlowBond owns · 1MWD licenses</span></h5>
+      <p>Generic, multi-tenant infrastructure that exists independently of this project: identity and authentication, hosting and content delivery, the transcoding pipeline, the database engine, the AI agent framework, analytics plumbing, email and funnel infrastructure. Pre-existing or independently developed. Licensed, not assigned.</p></div></div>
+</div>
+
+<div class="test">
+  <span class="t">The test, applied to every commit</span>
+  <q>Would this code exist if 1 Million Women Dance had never been imagined?</q>
+  <div class="sp"><span>YES → platform layer, FlowBond</span><span>NO → 1MWD, assigned</span></div>
+</div>
+
+<p>A test only helps if it's applied at the time. So: a <strong>shared IP register</strong> — one living sheet listing every module, which layer it sits in, who signed off, and when. Reviewed at each release. Any disagreement gets resolved the week the code is written, not years later in a data room with lawyers billing by the hour.</p>
+
+<h3>The four guarantees that make this safe for 1MWD</h3>
+<p>What you actually need isn't ownership of plumbing. It's certainty that 1MWD can never be held hostage and that a buyer is never blocked. These deliver exactly that:</p>
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:30%">Guarantee</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td><b>Source escrow</b></td><td>The platform layer's source sits with a third-party agent, released to 1MWD automatically if FlowBond fails, materially breaches, changes control, or if Steph ceases to control FlowBond.</td></tr>
+    <tr><td><b>A priced buyout</b></td><td>1MWD may buy a perpetual, irrevocable, transferable, sublicensable licence to the platform layer at any time, for a sum fixed now. Pre-agreeing the number means it can never become leverage during an acquisition.</td></tr>
+    <tr><td><b>Category exclusivity</b></td><td>FlowBond will not serve any competing women's cause-driven dance platform for the term plus twenty-four months.</td></tr>
+    <tr><td><b>No data lock-in</b></td><td>Unconditional export and return, already drafted into the services agreement.</td></tr>
+  </tbody>
+</table></div>
+
+<p>With those in place, diligence finds a company that owns its product, its data, and its brand, and holds a secured, priced, escrowed licence to its infrastructure. That passes. What doesn't pass is an undocumented dependency on a founder's other company — which is what we're both trying to avoid.</p>
+
+<div class="note"><b class="t">Worth naming out loud</b>
+  <p>The licence is also why this MVP is affordable. Building the platform layer from scratch is a twelve-month project costing several hundred thousand dollars. 1MWD gets it at roughly half commercial rate, deferred entirely until $300,000 is raised. That's the trade: the plumbing stays FlowBond's, and 1MWD reaches the launch date for a fraction of what it would otherwise cost.</p></div>
+
+<h2>4 · DANZ — see Document 4</h2>
+<p>DANZ is a dance platform. 1MWD is a dance platform. That overlap is real and it is disclosed here deliberately, because learning it from a diligence questionnaire in eight months would damage trust in a way no clause repairs.</p>
+<p>It has outgrown a section in this document. DANZ is a separate movement and brand with its own thesis — tokenised movement rewards, wearables, on-chain — that doesn't activate until 2030 and reaches for Dance On The Moon in 2035, and Steph is offering Vandana equity in it. That's a two-way relationship between two companies, so it has <strong>its own paper: Document 4, <em>DANZ × 1MWD — Boundary &amp; Cross-Equity</em></strong>.</p>
+<p>The short version, which the rest of this document depends on:</p>
+<ul>
+  <li><strong>Nothing 1MWD-specific ever crosses.</strong> The HEART engine, the relay mechanic, the dream model, the heart-colour system belong to 1MWD and cannot appear in DANZ — guaranteed by the ownership split in section 3, not by good intentions.</li>
+  <li><strong>DANZ will not build a women's cause-mobilisation product.</strong> That category is 1MWD's.</li>
+  <li><strong>Rights of first refusal run both ways</strong> on movement-reward technology, rather than a hard non-compete between two companies the same person controls.</li>
+  <li><strong>No data crosses, in either direction.</strong></li>
+  <li><strong>1MWD stays free of tokens</strong> — and DANZ being a separate entity is what keeps every token and on-chain question quarantined away from 1MWD's cap table and brand partnerships.</li>
+</ul>
+<p>My preference is still that we say all of this to each other on the call before any of it becomes a clause. It's a relationship question first and a legal one second.</p>
+
+<h2>5 · Steph's two hats</h2>
+<div class="hats">
+  <div class="hat"><b>Inside 1MWD</b><p>Head of Operations and Product. Reports to Vandana. Holds equity. Acts in 1MWD's interest.</p></div>
+  <div class="hat"><b>Inside FlowBond</b><p>Founder and CEO. Vendor to 1MWD. Acts in FlowBond's interest.</p></div>
+</div>
+<p>Those two interests are aligned almost always and opposed occasionally — at renewal, at a price change, at termination. The handling is simple and should be written down: <strong>Steph recuses herself from any 1MWD-side decision about the FlowBond relationship.</strong> Vandana holds sole authority on 1MWD's side for renewing, amending, expanding, or terminating it. Disclosed in advance, approved in writing, minuted.</p>
+
+<h2>6 · What changes in the two agreements</h2>
+<p>Once the shape above is agreed, these are the specific edits — nothing else in either document moves.</p>
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:26%">Where</th><th>Change</th></tr></thead>
+  <tbody>
+    <tr><td><b>Role agreement §10</b></td><td>Replace the pre-existing-IP carve-out with the three-layer split and the test. Add the IP register as a standing obligation on both parties.</td></tr>
+    <tr><td><b>Role agreement §9.4</b></td><td>Investor-introduction commission stays out. Confirm the replacement — fundraising equity, flat fee, or both — with securities counsel.</td></tr>
+    <tr><td><b>Role agreement §1</b></td><td>Simplify. The entity question is answered in principle; keep the condition precedent only until 1MWD is actually formed.</td></tr>
+    <tr><td><b>Services agreement §5</b></td><td>Same three-layer language, mirrored. Add the escrow and the priced buyout.</td></tr>
+    <tr><td><b>Services agreement §6</b></td><td>Unchanged — the data terms already say what they need to say.</td></tr>
+    <tr><td><b>New side letter</b></td><td>DANZ field of use and category exclusivity.</td></tr>
+  </tbody>
+</table></div>
+
+<h2>7 · Open questions</h2>
+<div class="tablewrap"><table>
+  <thead><tr><th style="width:56%">Question</th><th>Owner</th></tr></thead>
+  <tbody>
+    <tr><td><b>Legal form and tax status of 1 Billion Hearts</b></td><td>Vandana</td></tr>
+    <tr><td><b>Is the 15% ceiling inclusive of the base 10%, or additive to 25%?</b> The original draft flagged this itself and it was never resolved.</td><td>Both</td></tr>
+    <tr><td><b>Vesting commencement date</b> — should reflect when Steph actually started, not signature</td><td>Both</td></tr>
+    <tr><td><b>The platform-layer buyout price</b> — fixed now, while neither side has leverage</td><td>Both</td></tr>
+    <tr><td><b>Does Kay accept the three-layer split?</b> Better to hear the objection now than after we've built to it.</td><td>Vandana → Kay</td></tr>
+    <tr><td><b>Which investors see which entity</b> — 1BH, 1MWD, or both</td><td>Vandana</td></tr>
+  </tbody>
+</table></div>
+
+<h2>8 · Why this much paper</h2>
+<p>You've deliberately kept things at high-level agreements so far, including with two other people, and that was the right call while this was still forming. It stops being the right call the moment money arrives — two warm investors means a priced round, and a priced round means every one of those understandings gets read by someone whose job is to find the gaps.</p>
+<p>Better we close them ourselves, now, while we're both excited and neither of us has anything to defend. The version of this that fails isn't the one where the product doesn't work. It's the one where in eighteen months there's a room full of lawyers and two women who used to be excited together.</p>
+
+<div class="sigs">
+  <div class="sig"><b>Vandana Hart</b><span>Founder &amp; CEO, 1 Million Women Dance</span></div>
+  <div class="sig"><b>Estefanía Ferrera</b><span>Head of Ops &amp; Product, 1MWD · CEO, FlowBond Tech</span></div>
+</div>
+
+<footer>
+  <span>Document 3 of 3 · Structure &amp; IP</span>
+  <span>Items for counsel require counsel</span>
+  <span>August 2026 · Draft</span>
+</footer>
+
+</div>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>

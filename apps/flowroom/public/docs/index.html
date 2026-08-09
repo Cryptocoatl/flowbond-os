@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>1 Million Women Dance — Private Document Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0B0810; --card:#150F1D; --card-2:#1C1427;
+  --ink:#F6F1F7; --ink-2:#B4A4BF; --ink-3:#786A83;
+  --rule:#271D33; --rule-2:#3A2C49;
+  --rose:#FF4D7E; --amber:#FFAE3D; --green:#3FCB86; --teal:#31C2D6; --indigo:#6E7BFF; --violet:#B36BFF;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:64rem;margin:0 auto;padding:0 clamp(1.1rem,4vw,2.6rem)}
+
+.spec{display:flex;height:3px;position:sticky;top:0;z-index:30}
+.spec i{flex:1}
+
+/* ---------- hero ---------- */
+.hero{position:relative;padding:clamp(3rem,9vw,6.5rem) 0 clamp(2.4rem,6vw,4rem);overflow:hidden}
+.moon{
+  position:absolute;right:-9rem;top:-5rem;width:30rem;height:30rem;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #2B2038 0%, #1A1324 46%, #0F0A16 70%, transparent 72%);
+  filter:blur(1px);pointer-events:none;opacity:.85;
+}
+.moon::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  box-shadow:inset -22px -14px 60px rgba(179,107,255,.16), inset 14px 10px 44px rgba(255,77,126,.07);
+}
+.hero-in{position:relative;z-index:1}
+.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 1.3rem}
+h1{font-family:"Fraunces",serif;font-weight:600;letter-spacing:-.025em;
+  font-size:clamp(2.3rem,7vw,4.6rem);line-height:1;margin:0 0 1.1rem;max-width:17ch}
+h1 em{font-style:italic;font-weight:300;
+  background:linear-gradient(90deg,var(--rose),var(--amber) 30%,var(--teal) 62%,var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(1rem,2.1vw,1.24rem);color:var(--ink-2);max-width:44ch;margin:0 0 2.2rem}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.45rem 2.2rem;border-top:1px solid var(--rule);padding-top:1.1rem;
+  font-family:"Space Mono",monospace;font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.hero-meta b{color:var(--ink-2);font-weight:400}
+
+/* ---------- arc ---------- */
+.arc{padding:clamp(2rem,5vw,3.4rem) 0;border-top:1px solid var(--rule)}
+.arc-line{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;position:relative}
+.arc-line::before{
+  content:"";position:absolute;left:6%;right:6%;top:14px;height:1px;
+  background:linear-gradient(90deg,var(--rose),var(--teal),var(--violet));opacity:.45;
+}
+.node{position:relative;padding-top:2.5rem;text-align:center}
+.node::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  width:13px;height:13px;border-radius:50%;border:2px solid var(--void)}
+.node.n1::before{background:var(--rose);box-shadow:0 0 0 3px rgba(255,77,126,.18)}
+.node.n2::before{background:var(--teal);box-shadow:0 0 0 3px rgba(49,194,214,.18)}
+.node.n3::before{background:var(--violet);box-shadow:0 0 0 3px rgba(179,107,255,.22)}
+.node .yr{font-family:"Space Mono",monospace;font-size:.68rem;letter-spacing:.16em;color:var(--ink-3);display:block}
+.node b{display:block;font-family:"Fraunces",serif;font-size:clamp(1rem,2.2vw,1.25rem);font-weight:600;margin:.25rem 0 .2rem}
+.node p{margin:0;font-size:.85rem;color:var(--ink-2);max-width:22ch;margin-inline:auto}
+
+/* ---------- how to read ---------- */
+.howto{padding:clamp(1.8rem,4vw,2.6rem) 0;border-top:1px solid var(--rule)}
+h2{font-family:"Space Mono",monospace;font-size:.67rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 1.2rem;font-weight:700}
+.howto p{color:var(--ink-2);max-width:56ch;margin:0 0 .8rem}
+.howto p:last-child{margin:0}
+.howto strong{color:var(--ink)}
+
+/* ---------- docs ---------- */
+.docs{padding:clamp(1.8rem,4vw,2.6rem) 0 1rem;border-top:1px solid var(--rule)}
+.doc{
+  display:grid;grid-template-columns:3.2rem minmax(0,1fr) auto;gap:1.2rem;align-items:start;
+  background:var(--card);border:1px solid var(--rule);border-radius:14px;
+  padding:1.35rem 1.4rem;margin-bottom:.7rem;text-decoration:none;
+  transition:border-color .18s ease, background .18s ease, transform .18s ease;
+}
+.doc:hover,.doc:focus-visible{background:var(--card-2);border-color:var(--rule-2);transform:translateY(-1px)}
+.doc:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+.dnum{font-family:"Fraunces",serif;font-size:1.9rem;font-weight:300;line-height:1;color:var(--ink-3)}
+.d1 .dnum{color:var(--rose)} .d2 .dnum{color:var(--amber)}
+.d3 .dnum{color:var(--indigo)} .d4 .dnum{color:var(--teal)}
+.dbody h3{font-family:"Fraunces",serif;font-size:1.28rem;font-weight:600;margin:0 0 .3rem;letter-spacing:-.01em}
+.dbody p{margin:0 0 .55rem;font-size:.93rem;color:var(--ink-2)}
+.dmeta{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;
+  font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3)}
+.gate{
+  font-family:"Space Mono",monospace;font-size:.6rem;letter-spacing:.11em;text-transform:uppercase;
+  padding:.24rem .55rem;border-radius:20px;border:1px solid var(--rule-2);color:var(--ink-3);white-space:nowrap;
+}
+.gate.open{border-color:rgba(63,203,134,.4);color:var(--green)}
+.gate.close{border-color:rgba(255,77,126,.4);color:var(--rose)}
+.arrow{font-size:1.1rem;color:var(--ink-3);align-self:center}
+
+/* ---------- access ---------- */
+.access{padding:clamp(1.8rem,4vw,2.6rem) 0;border-top:1px solid var(--rule)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:30rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.61rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  padding:.75rem .95rem;border-bottom:1px solid var(--rule-2)}
+td{padding:.7rem .95rem;border-bottom:1px solid var(--rule);color:var(--ink-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-weight:600}
+.yes{color:var(--green)} .no{color:var(--ink-3)}
+.access p{color:var(--ink-2);max-width:56ch;margin:0 0 .9rem}
+
+/* ---------- close ---------- */
+.close{padding:clamp(2.4rem,6vw,4rem) 0 1.5rem;border-top:1px solid var(--rule)}
+.close blockquote{margin:0;font-family:"Fraunces",serif;font-style:italic;font-weight:300;
+  font-size:clamp(1.3rem,3.4vw,2rem);line-height:1.3;color:var(--ink);max-width:26ch}
+.close p{color:var(--ink-2);margin:1.2rem 0 0;max-width:46ch;font-size:.95rem}
+
+footer{padding:1.6rem 0 3.2rem;border-top:1px solid var(--rule);margin-top:2rem;
+  font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
+
+@media(max-width:720px){
+  .arc-line{grid-template-columns:1fr;gap:1.4rem}
+  .arc-line::before{display:none}
+  .node{padding-top:0;text-align:left;padding-left:1.6rem}
+  .node::before{top:.5rem;left:0;transform:none}
+  .node p{margin-inline:0}
+  .doc{grid-template-columns:2.4rem minmax(0,1fr);row-gap:.7rem}
+  .arrow{display:none}
+  .gate{grid-column:2}
+  .moon{right:-14rem;opacity:.5}
+}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} .doc{transition:none} }
+</style>
+<link rel="stylesheet" href="/docs/room.css">
+</head>
+<body>
+
+<div class="spec">
+  <i style="background:var(--rose)"></i><i style="background:var(--amber)"></i><i style="background:var(--green)"></i>
+  <i style="background:var(--teal)"></i><i style="background:var(--indigo)"></i><i style="background:var(--violet)"></i>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="moon" aria-hidden="true"></div>
+    <div class="hero-in">
+      <p class="kicker">Private · For Vandana Hart and invited advisors</p>
+      <h1>Everything, <em>written down</em>, before we begin.</h1>
+      <p class="sub">Four documents. The vision, the plan, the structure, and the second company. Read in any order — but read three before you agree to two.</p>
+      <div class="hero-meta">
+        <span><b>Prepared by</b> Steph Ferrera</span>
+        <span><b>For</b> 1 Million Women Dance</span>
+        <span><b>August 2026</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="arc">
+    <h2>The arc</h2>
+    <div class="arc-line">
+      <div class="node n1"><span class="yr">2026</span><b>The first dance</b><p>Season 2 launches. The platform opens. The relay begins.</p></div>
+      <div class="node n2"><span class="yr">2030</span><b>One million women</b><p>The goal reached, and celebrated. DANZ activates.</p></div>
+      <div class="node n3"><span class="yr">2035</span><b>Dance On The Moon</b><p>The north star. Everything before it is preparation.</p></div>
+    </div>
+  </section>
+
+  <section class="howto">
+    <h2>How to read this</h2>
+    <p>Nothing here is decided. It's a draft of the shared picture, written so we can argue with a document instead of with each other.</p>
+    <p><strong>If you have ten minutes</strong>, read Document 1. <strong>If you're deciding something</strong>, read Document 3 — it's where the real questions live, and Document 2 can't start until it's settled. <strong>If you're an advisor</strong>, Documents 3 and 4 are the ones worth your time.</p>
+    <p>Items marked for counsel genuinely need counsel. Nothing in these pages is legal or tax advice.</p>
+  </section>
+
+  <section class="docs">
+    <h2>The documents</h2>
+
+    <div class="doc d1" data-docid="1" data-pending>
+      <span class="dnum">01</span>
+      <span class="dbody">
+        <h3>The One Pager</h3>
+        <p>The whole vision on one screen. The loop, what version one is, who's who, where we go first.</p>
+        <span class="dmeta"><span>2 min</span><span>Anyone with the link</span><span>Shareable</span></span>
+      </span>
+      <span class="gate pending">In preparation</span>
+    </div>
+
+    <div class="doc d2" data-docid="2" data-pending>
+      <span class="dnum">02</span>
+      <span class="dbody">
+        <h3>Execution Roadmap</h3>
+        <p>Sixty actions across six phases. Every line has an owner, an estimate, and the actual filing or tool. Gates between phases. Tick as you go.</p>
+        <span class="dmeta"><span>15 min</span><span>Core team</span><span>Working doc</span></span>
+      </span>
+      <span class="gate pending">In preparation</span>
+    </div>
+
+    <a class="doc d3" data-docid="3" href="3-STRUCTURE-AND-IP-ANALYSIS">
+      <span class="dnum">03</span>
+      <span class="dbody">
+        <h3>Structure &amp; IP Analysis</h3>
+        <p>The five entities. The IP disagreement stated fairly, and the three-layer answer. The four guarantees. What changes in each agreement, and the six open questions.</p>
+        <span class="dmeta"><span>12 min</span><span>Vandana, Kay, counsel</span><span>Decide here first</span></span>
+      </span>
+      <span class="gate close">Restricted</span>
+    </a>
+
+    <a class="doc d4" data-docid="4" href="4-DANZ-1MWD-BOUNDARY-AND-CROSS-EQUITY">
+      <span class="dnum">04</span>
+      <span class="dbody">
+        <h3>DANZ × 1MWD</h3>
+        <p>The second company, disclosed in full. Where the two genuinely overlap, the five commitments, and the equity going the other way — to Vandana, in DANZ.</p>
+        <span class="dmeta"><span>10 min</span><span>Vandana and counsel only</span><span>Contains equity terms</span></span>
+      </span>
+      <span class="gate close">Restricted</span>
+    </a>
+  </section>
+
+
+  <section class="admin" data-owner-only hidden>
+    <h2>Your desk</h2>
+    <p>You hold admin on this room. Give someone their own link, choose which of
+      the four documents it opens, and choose whether they can mark and comment
+      or only read.</p>
+    <a class="admin-go" href="/docs/share">Set up who sees what →</a>
+  </section>
+
+  <section class="access">
+    <h2>Who sees what</h2>
+    <p>Access is set per document, and <strong>Vandana holds admin</strong> — she adds and removes people, including her own advisors, without going through anyone.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Document</th><th>Vandana</th><th>Advisors</th><th>Counsel</th><th>Core team</th></tr></thead>
+        <tbody>
+          <tr><td><b>01 · One Pager</b></td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+          <tr><td><b>02 · Roadmap</b></td><td class="yes">Yes</td><td class="no">By invitation</td><td class="no">—</td><td class="yes">Yes</td></tr>
+          <tr><td><b>03 · Structure &amp; IP</b></td><td class="yes">Yes</td><td class="yes">Kay</td><td class="yes">Yes</td><td class="no">—</td></tr>
+          <tr><td><b>04 · DANZ</b></td><td class="yes">Yes</td><td class="no">By invitation</td><td class="yes">Yes</td><td class="no">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="close">
+    <blockquote>The version of this that fails isn't the one where the product doesn't work.</blockquote>
+    <p>It's the one where in eighteen months there's a room full of lawyers and two women who used to be excited together. Every page here exists so that doesn't happen — and then we go make the world dance.</p>
+  </section>
+
+  <footer>
+    <span>Private document room</span>
+    <span>Not for circulation</span>
+    <span>Draft · August 2026</span>
+  </footer>
+
+</div>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>
