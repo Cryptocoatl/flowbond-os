@@ -81,6 +81,9 @@ export const DOC_TITLES: Record<string, string> = {
 
 const opens = (pass: Pass, doc: string) => !pass.d || pass.d.includes(doc);
 
+/** Code and colour. No document text lives in any of these. */
+const PUBLIC_ASSETS = new Set(['room.css', 'room.js', 'gate.js']);
+
 /* ------------------------------------------------------------------ */
 /* Signed keys — byte-identical to the scheme in functions/api          */
 /* ------------------------------------------------------------------ */
@@ -191,7 +194,24 @@ export const onRequest: PagesFunction<Env> = async (ctx) => {
   const { request, env } = ctx;
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, '');
-  const file = (path.split('/').pop() ?? '').replace(/\.html$/i, '').toLowerCase();
+  const rawFile = (path.split('/').pop() ?? '').toLowerCase();
+  const file = rawFile.replace(/\.html$/i, '');
+
+  /**
+   * The room's own furniture, served to anyone who asks.
+   *
+   * This is not a loosening — it is the fix for a gate that locked itself out.
+   * The gate page is HTML served from here, and it asks the browser for its
+   * stylesheet and its script. Those requests carry no cookie yet, so they were
+   * being answered with the gate page itself: a stylesheet that was HTML, and a
+   * script that was HTML. The result was an unstyled page whose sign-in form had
+   * no code behind it.
+   *
+   * None of these files contain a word of any document. They are code and
+   * colour, and they are safe to hand to a stranger — the documents behind them
+   * are not.
+   */
+  if (PUBLIC_ASSETS.has(rawFile)) return ctx.next();
 
   if (!env.ROOM_SECRET) {
     return html(gatePage({ misconfigured: true }), 503);
@@ -383,11 +403,11 @@ function gatePage(opts: { invited?: boolean; misconfigured?: boolean } = {}) {
     <form id="gate-form" autocomplete="off">
       <label class="fld">
         <span>Your name</span>
-        <input name="name" required maxlength="80" autocomplete="name" placeholder="">
+        <input id="g-name" name="name" required maxlength="80" autocomplete="name" placeholder="">
       </label>
       <label class="fld">
         <span>Key</span>
-        <input name="key" inputmode="numeric" maxlength="12" placeholder="••••">
+        <input id="g-key" name="key" inputmode="numeric" maxlength="12" placeholder="••••">
       </label>
       <button type="submit" class="gate-go">Open the room</button>
       <p class="gate-err" id="gate-err" role="alert" hidden></p>

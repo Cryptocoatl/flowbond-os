@@ -123,6 +123,13 @@
       t.setAttribute('data-reveal', '');
       io.observe(t);
     });
+
+    // A reveal that never fires is a blank page. Whatever the observer has not
+    // reached in a second and a half gets shown anyway — the animation is worth
+    // having, and worth nothing at the price of hiding the document.
+    setTimeout(() => {
+      targets.forEach((t) => t.classList.add('is-in'));
+    }, 1500);
   }
 
   /* ================================================================
@@ -142,7 +149,7 @@
     'blockquote',
     '.intro',
     '.lede',
-    'tbody tr',
+    '.tablewrap',
     'li',
     'p',
   ].join(',');
