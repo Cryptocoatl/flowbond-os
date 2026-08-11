@@ -154,7 +154,11 @@
     'p',
   ].join(',');
 
-  const SKIP = '.docmeta, .kicker, .hat, .hats, .close, .rail, .thread, .stamps, .drawer, .whoami';
+  // `.invlist` is the stack inventory in doc 05: forty short entries that are a
+  // reference table, not an argument. Annotating each one individually would
+  // bury the rails that matter under a wall of them.
+  const SKIP =
+    '.docmeta, .kicker, .hat, .hats, .close, .rail, .thread, .stamps, .drawer, .whoami, .invlist';
 
   function findBlocks() {
     const all = Array.from(document.querySelectorAll(CANDIDATES)).filter((n) => {
