@@ -292,3 +292,34 @@ body {
   .vault-root, body { background: #fff !important; color: #000 !important; }
   .doc-paper { box-shadow: none; border: 1px solid #ccc; }
 }
+
+/* ── identity switch ──────────────────────────────────────────────────────
+   Sits above the document so it is impossible to miss when the browser has
+   remembered somebody else's code. Sticky, not fixed: it must not sit on top
+   of the signature controls on a short phone screen. */
+.v-switch{
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; flex-wrap: wrap;
+  padding: 9px 14px;
+  background: rgba(18,10,38,.86);
+  border-bottom: 1px solid rgba(179,136,255,.28);
+  backdrop-filter: blur(10px);
+  font-size: 12.5px;
+}
+.v-switch__who{ color: var(--v-dim); }
+.v-switch__who b{ color: var(--v-ink); font-weight: 600; }
+.v-switch__btn{
+  appearance: none; cursor: pointer;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(124,77,255,.18);
+  border: 1px solid rgba(179,136,255,.5);
+  color: var(--v-ink); font-size: 12.5px; font-weight: 600;
+  transition: background .28s cubic-bezier(.22,.61,.36,1), transform .28s cubic-bezier(.22,.61,.36,1);
+}
+.v-switch__btn:hover{ background: rgba(124,77,255,.34); transform: translateY(-1px); }
+@media print{ .v-switch{ display: none; } }
+
+/* The keypad no longer auto-submits, so the dots grow with what you type and
+   the Open button is the commit. Give the dots room to breathe at 8+ digits. */
+.pin-dots{ flex-wrap: wrap; max-width: 280px; margin-left: auto; margin-right: auto; }

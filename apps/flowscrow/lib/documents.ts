@@ -20,9 +20,10 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
     ],
   },
   russell: {
-    title: 'Russell — your cover note and the agreement are below',
+    title: 'Russell — this is the final version',
     paras: [
-      'Welcome, Russell. The cover note and the full Mutual Dissolution, Wind-Up and Release Agreement are below. Read it, and when you’re ready, verify with FBID and we sign together.',
+      'Everything is already done except one thing. I signed on July 9. The document below has not changed since. It needs your signature by end of day Wednesday, August 12.',
+      'There is nothing to negotiate in it and nothing being asked of you beyond the signature — no money, no work, no further involvement. Read it, then sign. It takes about ten minutes.',
     ],
   },
   roman: {
@@ -65,27 +66,83 @@ export const PERSONAL: Record<string, { title: string; paras: string[] }> = {
   },
 };
 
-// Part 1 — the cover note (the email to Russell), shown before the agreement.
+// Part 1 — the cover note (the final call), shown before the agreement.
 export const MESSAGE = {
   to: 'Russell',
   paragraphs: [
-    'Russell — Thank you for the openness in where we landed. Dissolving the company together is the cleanest and kindest way to close this chapter. This agreement covers it: we voluntarily dissolve FlowBond Tech Inc. and wind it down properly; the FlowBond and DANZ domains, code, and names come to Estefanía to carry forward; you commit not to use the FlowBond or DANZ names going forward; and we give each other a full mutual release and close the accounts. Keys and seeds stay out of the document and are handled securely. The FlowScrow checklist below shows the order of steps so nothing is left hanging. — Estefanía',
+    'Russell — this is the final version of the Dissolution, and the last one I will send.',
+    'I asked to dissolve on **March 30**. I signed on **July 9**. It has been waiting for you here ever since. Every witness has opened this vault. The record shows you never have.',
+    'In the meantime I closed **Stripe** and **Mercury** myself, so there is nothing left inside them to move in either direction. What is still open is your signature — nothing else.',
+    'I need the executed Dissolution as a document I can hand to a third party this week. That is the entire reason for the deadline: **a partner I am closing with has formally requested certified proof that FlowBond Tech Inc. is dissolved** before that partnership can proceed. I cannot produce that proof without you.',
+    'To be exact about what this asks of you: **no money, no work, no ongoing obligation.** You release me and I release you. You confirm you will not claim FlowBond or DANZ. That is the whole of it.',
+    'Sign by **end of day Wednesday, August 12, 2026**. If it is not executed by then, I stop asking and hand it to counsel to pursue in Travis County — judicial dissolution and the remedies in Sections 4 and 9. I would rather not spend either of our money on that. It ends in the same place.',
+    '— Estefanía',
   ],
   signoff: '',
 };
 
-// Russell's clear path to finalize, every step.
+// The deadline block — the first thing Russell sees. Sharp, dated, unambiguous.
+export const URGENCY = {
+  eyebrow: 'Signature required',
+  headline: 'By end of day Wednesday, August 12, 2026',
+  sub:
+    'A partner requires certified proof that FlowBond Tech Inc. is dissolved before that partnership can proceed. The dissolution cannot be filed, and that proof cannot be issued, until this is executed by both parties.',
+  after:
+    'If it is not executed by then, Estefanía proceeds through counsel in Travis County, Texas — judicial dissolution and the remedies reserved in Sections 4 and 9.',
+};
+
+// The transparent ledger — where this actually stands today. No valuation, no
+// project inventory: just the state of the closing and who it waits on.
+export const LEDGER = [
+  { k: 'Dissolution requested', v: 'March 30, 2026', tone: 'fact' as const },
+  { k: 'Agreement signed by Estefanía', v: 'July 9, 2026 — FBID-verified, sealed', tone: 'good' as const },
+  { k: 'Witnesses who have opened this vault', v: 'Jackson · Jeff · Ryan · Roman · Nia', tone: 'good' as const },
+  { k: 'Opened by Russell', v: 'Never — no record of access', tone: 'stop' as const },
+  { k: 'Stripe', v: 'Closed by Estefanía — nothing to transfer', tone: 'good' as const },
+  { k: 'Mercury', v: 'Closed by Estefanía — nothing to transfer', tone: 'good' as const },
+  { k: 'Agreement signed by Russell', v: 'Outstanding — this is the only blocker', tone: 'stop' as const },
+  { k: 'Dissolution filings (Phase C)', v: 'Cannot begin until both parties execute', tone: 'pending' as const },
+];
+
+// What signing protects Russell from. Straight from the operative sections —
+// this is the safety, and it is the reason signing costs him nothing.
+export const PROTECTION = {
+  title: 'What signing protects you from',
+  lead:
+    'The release runs in both directions. These are the operative sections of the agreement you are being asked to sign — read them in the full text below.',
+  items: [
+    { s: 'Section 7', t: 'Estefanía releases you', d: 'A full, irrevocable mutual release of every claim arising out of the Company on or before Closing. She gives up her claims against you at the same moment you give up yours — nothing is clawed back from you.' },
+    { s: 'Section 2', t: 'You walk out clean', d: 'You resign from every position — director, officer, employee, contractor, signatory, agent — and confirm there is no outstanding compensation, fee, or reimbursement between you and the Company.' },
+    { s: 'Section 6', t: 'No work is owed', d: 'Neither party owes the other any work, service, or support beyond the discrete closing steps. There is no ongoing obligation.' },
+    { s: 'Section 5', t: 'You sign before anything moves', d: 'Your obligations arise only upon full execution. No transfer, resignation, or filing happens before both parties have signed and delivered.' },
+    { s: 'Section 10', t: 'Neither of us disparages the other', d: 'Mutual non-disparagement, binding on Estefanía exactly as it is on you.' },
+    { s: 'Section 11', t: 'The terms stay private', d: 'Both parties keep the non-public terms confidential, except as needed to complete the dissolution filings.' },
+    { s: 'Section 12', t: 'No keys in the document', d: 'Seed phrases and private keys are never written into the agreement or its exhibits. They move only through a secure channel, if at all.' },
+    { s: 'Section 1 · D', t: 'Harmonik is untouched', d: 'Harmonik Habitats and everything outside the FlowBond / DANZ / FlowB scope are expressly excluded. Nothing personal is in scope.' },
+  ],
+};
+
+// What the signature actually commits him to. Three lines, no softening.
+export const COMMITMENT = [
+  { s: 'Section 2', t: 'Consent to dissolve FlowBond Tech Inc. and resign from all positions in it.' },
+  { s: 'Section 4', t: 'Waive and never claim any right in the FlowBond or DANZ names — perpetually, in every jurisdiction.' },
+  { s: 'Sections 3 & 7', t: 'Release any claim to the Company, its domains, its code, and its brand, and transfer what the Company holds to Estefanía.' },
+];
+
+// Russell's path, reduced to what it actually is. Three steps, one of them his.
 export const FINALIZE_STEPS = [
-  { n: 1, key: 'fbid', title: 'Verify with FBID', detail: 'Tap “Verify with FBID,” log in with cryptokoh@gmail.com, and you’ll return here verified — that’s what unlocks signing. No password, ever.' },
-  { n: 2, key: 'read', title: 'Read the cover note & the Agreement', detail: 'Read the cover note and the full Mutual Dissolution, Wind-Up and Release Agreement, including Exhibits 1–3. If any detail is wrong, tell Estefanía before you sign — she’s open to your review of the wording.' },
-  { n: 3, key: 'sign-agreement', title: 'Sign the Agreement (DocuSign)', detail: 'Once verified, sign the Agreement — this also serves as your Consent to Voluntary Dissolution (Exhibit 1) and resignation. It’s executed and delivered by both Parties before any transfer, resignation, or Dissolution filing occurs (Section 5) — your obligations only arise after full execution.' },
-  { n: 4, key: 'sign-ack', title: 'Receive your Acknowledgment of Contribution', detail: 'Because the Company is being dissolved, no founder title survives it. Your contribution to the early DANZ and FlowB workstreams is recognized in the separate Acknowledgment of Contribution (Document 2), stated without disparagement — yours to reference anywhere.' },
-  { n: 5, key: 'transfer', title: 'Complete the Exhibit 2 transfers (Phase B)', detail: 'Only the Company-only items in Exhibit 2: domains (flowbond.tech, danz.now, flowb.me, pee.network) to Estefanía’s Namecheap “stepbysteph”; Mercury, Stripe, Coinbase; the former FlowBond Tech GitHub org; Telegram/Base/Farcaster; FlowBond social profiles. Wallet seeds & keys via secure channel only. Nothing personal, nothing outside scope.' },
-  { n: 6, key: 'done', title: 'Dissolution filings complete (Phase C)', detail: 'Final federal and Texas franchise tax returns filed, Certificate of Account Status obtained from the Comptroller, then the Certificate of Termination filed with the Texas Secretary of State. Once that’s confirmed, the Dissolution and the mutual release take effect and escrow releases — tracked openly for you and every witness the whole way.' },
+  { n: 1, key: 'read', title: 'Read it', detail: 'The full Mutual Dissolution, Wind-Up and Release Agreement is below, unchanged since July 9 — the same text Estefanía already signed. About ten minutes.' },
+  { n: 2, key: 'sign-agreement', title: 'Sign it', detail: 'DocuSign is in your email at cryptokoh@gmail.com — open it and sign. If you can’t find it, sign here instead: verify with FBID using cryptokoh@gmail.com and the button unlocks. Either route is binding under ESIGN/UETA. Signing also serves as your Consent to Dissolution (Exhibit 1) and resignation.' },
+  { n: 3, key: 'done', title: 'Estefanía takes it from there', detail: 'Once both signatures are in, she handles the rest herself — final tax filings, the Texas Comptroller clearance, and the Certificate of Termination. Stripe and Mercury are already closed. Nothing further is asked of you.' },
 ];
 
 export const GUIDE_FAQ = [
-  { q: 'What do I do first?', a: 'Verify with FBID using cryptokoh@gmail.com (step 1). That single login unlocks signing.', keys: ['first', 'start', 'begin', 'fbid', 'login', 'verify'] },
+  { q: 'What do I do first?', a: 'Open the DocuSign email sent to cryptokoh@gmail.com and sign. If you can’t find it, verify with FBID here using the same address and sign in the vault instead — both are binding.', keys: ['first', 'start', 'begin', 'fbid', 'login', 'verify', 'docusign'] },
+  { q: 'Why the deadline?', a: 'A partner Estefanía is closing with has formally requested certified proof that FlowBond Tech Inc. is dissolved before that partnership can proceed. That proof cannot be issued until both parties execute. The date is end of day Wednesday, August 12, 2026.', keys: ['deadline', 'date', 'urgent', 'rush', 'why now', 'august', 'hurry'] },
+  { q: 'What is being asked of me?', a: 'Your signature. No money, no work, no ongoing obligation — Sections 2 and 6 are explicit about that.', keys: ['asked', 'owe', 'money', 'pay', 'work', 'obligation', 'cost'] },
+  { q: 'What protects me in this?', a: 'Section 7 is a full mutual release — Estefanía releases every claim against you at the same moment you release yours. Section 10 binds her to non-disparagement exactly as it binds you. Section 5 means nothing moves until both have signed.', keys: ['protect', 'safe', 'release', 'risk', 'liability', 'sue', 'claim against me'] },
+  { q: 'What about Stripe and Mercury?', a: 'Already closed by Estefanía. There is nothing left in either account to transfer in either direction, so those Exhibit 2 lines are moot.', keys: ['stripe', 'mercury', 'bank', 'account', 'money', 'funds', 'closed'] },
+  { q: 'What if I don’t sign?', a: 'Estefanía hands it to counsel in Travis County, Texas and proceeds with judicial dissolution and the remedies reserved in Sections 4 and 9. The company dissolves either way; that route just costs both of you money.', keys: ['refuse', 'don’t sign', 'dont sign', 'ignore', 'no', 'court', 'lawyer', 'counsel'] },
   { q: 'Is this legally binding?', a: 'Yes — Section 19 allows electronic signature, binding under the U.S. ESIGN Act and UETA; it’s governed by Texas law (Section 18, Travis County venue). DocuSign executes it, and a cryptographic fingerprint seals the exact text.', keys: ['binding', 'legal', 'valid', 'enforce', 'law', 'texas'] },
   { q: 'Is the company actually closing?', a: 'Yes. This is a real Dissolution: FlowBond Tech Inc. files final tax returns, obtains a Texas Comptroller Certificate of Account Status, then files a Certificate of Termination with the Texas Secretary of State (Exhibit 3, Phase C). The Company ceases to exist once that’s filed.', keys: ['dissolve', 'dissolution', 'close', 'terminate', 'termination', 'wind up', 'wind-up', 'company'] },
   { q: 'Do I have to transfer before signing?', a: 'No. Section 5 is explicit: the agreement is executed and delivered by both Parties before any transfer, resignation, or Dissolution filing occurs. Your obligations only arise after full execution.', keys: ['before', 'transfer first', 'condition', 'execute', 'order', 'sequencing'] },
@@ -210,45 +267,16 @@ export const AGREEMENT = {
   ],
 };
 
-// Part 2 — the Acknowledgment of Contribution (Document 2), restating Section 2.
-export const ACKNOWLEDGMENT = {
-  title: 'Acknowledgment of Contribution',
-  issuedBy: 'Estefanía Ferrera, on behalf of FlowBond Tech Inc.',
-  recognitionOf: 'Russell Herod',
-  role: 'Early Contributor — DANZ & FlowB',
-  period: 'August 13, 2025 → March 30, 2026',
-  scope: [
-    'Recognized as an early contributor to the initial infrastructure of the DANZ and FlowB workstreams.',
-    'The Company is being dissolved and will cease to exist; no founder title survives it. This acknowledgment is stated without any disparagement.',
-  ],
-  acknowledgment:
-    'Estefanía Ferrera and FlowBond Tech Inc. recognize Russell Herod as an early contributor to the DANZ and FlowB workstreams, and the contribution he made to their initial infrastructure. Russell is free to reference this acknowledgment in his professional materials.',
-  also: [
-    {
-      name: 'Roman',
-      role: 'Original Early Co-founder',
-      text:
-        'The Company recognizes Roman as an original Early Co-founder of FlowBond / DANZ — early work on BLE and movement-tracking for smart-watch integration, and support of the first DANZ event in Argentina, DanzConnect (100+ attendees).',
-    },
-    {
-      name: 'Deven',
-      role: 'Contributor · September 3 – November 3, 2025 *(EDITABLE)*',
-      text: 'The Company also gratefully acknowledges the contribution of Deven to FlowBond.',
-    },
-  ],
-  scopeClarity:
-    'This acknowledgment does not alter the Agreement. It confers no equity, ownership, or continuing claim beyond the terms of the Agreement.',
-};
 
-// "Where we stand today" — the transparent factual standing (per the real agreement).
+// "What this is" — the scope of the instrument, in plain terms. Deliberately
+// free of valuation, project counts, and anything about what is being built next.
 export const STANDING = [
   { k: 'What this is', v: 'Formal Dissolution of FlowBond Tech Inc.', tone: 'fact' as const },
   { k: 'Scope', v: 'FlowBond / DANZ / FlowB only', tone: 'fact' as const },
   { k: 'Excluded', v: 'Harmonik Habitats + cryptocoatl + FlowBond HQ + personal assets', tone: 'fact' as const },
-  { k: 'Order', v: 'Both sign first — transfers, then Dissolution filings (Section 5)', tone: 'good' as const },
-  { k: 'Transfers', v: 'Only the Company-only list in Exhibit 2 (Phase B)', tone: 'pending' as const },
-  { k: 'Dissolution filings', v: 'Tax clearance → Certificate of Termination (Exhibit 3, Phase C)', tone: 'pending' as const },
-  { k: 'Mutual release', v: 'Effective at Closing', tone: 'pending' as const },
+  { k: 'Asked of Russell', v: 'A signature — no money, no work, no ongoing obligation', tone: 'good' as const },
+  { k: 'Order', v: 'Both sign first — nothing moves before that (Section 5)', tone: 'good' as const },
+  { k: 'Mutual release', v: 'Runs both ways, effective at Closing (Section 7)', tone: 'good' as const },
   { k: 'Governing law', v: 'Texas · Travis County', tone: 'fact' as const },
   { k: 'Execution', v: 'DocuSign + cryptographic seal + witnesses', tone: 'good' as const },
 ];
