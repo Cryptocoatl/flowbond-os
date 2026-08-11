@@ -159,8 +159,11 @@ td b{color:var(--d-ink);font-weight:600}
   font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;color:var(--d-teal)}
 .dials li b{display:block;margin-bottom:.3rem;font-size:1.05rem}
 .dials li span{color:var(--d-ink-2)}
-.dials .opts{display:block;margin-top:.5rem;font-family:"Space Mono",monospace;
-  font-size:var(--t-meta);color:var(--d-ink-3);line-height:1.6}
+/* Each setting of a dial, with what it actually costs whoever picks it. */
+.dials .opt{display:block;margin-top:.7rem;padding-left:.95rem;font-size:var(--t-sm);
+  border-left:2px solid var(--d-rule-2);line-height:1.6}
+.dials .opt b{display:inline;font-size:inherit;margin:0}
+.dials .opt em{font-style:italic;color:var(--d-ink-3)}
 
 .q{background:#14101B;color:#F4EFE8;border-radius:12px;padding:1.7rem 1.8rem;margin:1.8rem 0}
 .q b.t{display:block;font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
@@ -258,10 +261,15 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
   <div class="stat"><b>94</b><span>builds in the stack</span></div>
   <div class="stat"><b>38</b><span>live on public domains</span></div>
   <div class="stat"><b>1</b><span>identity layer under all of it</span></div>
-  <div class="stat"><b>0</b><span>outside investors</span></div>
+  <div class="stat"><b>100%</b><span>self-funded, self-owned</span></div>
 </div>
 
 <p>FlowBond is not a codebase. It is an operating system with one identity layer, one payments spine, one media engine and one security posture, and roughly ninety products standing on top of it. Every name below is a real, deployed thing. The domains are public — you can open any of them right now, in another tab, while you read this.</p>
+
+<div class="good">
+  <b class="t">And it is entirely mine</b>
+  <p>No co-founder. No partners. No outside capital, no accelerator, no bridge, no convertible sitting in a drawer. Every line of it was <strong>self-funded and self-built</strong>, and the IP is owned outright with nothing pledged, licensed away or encumbered. There is no cap table to consult and nobody whose permission I need — which is exactly why I can put DANZ on the table in a single conversation, and exactly why I am careful about the rest of it. It is not a portfolio I am managing for investors. It is the thing I have built with four years of my life.</p>
+</div>
 
 <div class="invgroup l0">
   <span class="n">Layer 0 · the spine everything else stands on</span>
@@ -359,9 +367,43 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 <section>
 <h2>3 · So here is the honest position</h2>
 
-<p class="lede">DANZ is yours if you want it. FlowBond is not for sale, at any price that has been discussed so far.</p>
+<p class="lede">Dance is yours if you want it. FlowBond is not for sale, at any price that has been discussed so far.</p>
 
-<p>I will give up dance completely. Not walled off, not held beside 1MWD under a right of first refusal — <strong>DANZ folds in and stops being mine.</strong> The floors, the XP economy, the HeartSync work, the move-to-earn design, the brand, the domain, the trademark application. All of it.</p>
+<h3>First, what DANZ actually is — and is not</h3>
+
+<p>You wrote that DANZ <q>has not been built or funded, it's an idea.</q> You were half right, and I would rather correct the half than let you sign something on a wrong picture in either direction.</p>
+
+<div class="two">
+  <div class="col a">
+    <span class="tag">What is real</span>
+    <h5>A built, live app</h5>
+    <ul>
+      <li><b>danz.now</b> is deployed and running</li>
+      <li>Floors with QR check-in and a live leaderboard</li>
+      <li>An append-only XP ledger with anti-fraud that recomputes every claim server-side</li>
+      <li>HeartSync reading <b>real heart rate</b> over Bluetooth — no partner API, no wearable deal needed</li>
+      <li>An organiser console for running a floor</li>
+      <li>The name, the brand identity, the domain</li>
+    </ul>
+  </div>
+  <div class="col b">
+    <span class="tag">What does not exist</span>
+    <h5>No company, no trademark</h5>
+    <ul>
+      <li><b>There is no incorporated entity.</b> DANZ is not a company and never was</li>
+      <li><b>There is no registered trademark.</b> I never filed one</li>
+      <li>No investors, no cap table, no board</li>
+      <li>No revenue, no users beyond testing</li>
+      <li>No funding raised, ever</li>
+    </ul>
+  </div>
+</div>
+
+<p>So DANZ is <strong>a name, a working app, a concept and a movement</strong> — not a business with paperwork. That means there is no share transfer to execute and no trademark to assign, and I am not going to dress it up as more than it is in order to make my side of the trade look heavier.</p>
+
+<p><strong>But it also means what I am giving up is bigger than the asset, not smaller.</strong> I am not handing you a company. I am handing you <em class="big">the pursuit</em> — the thing I would have spent the next several years building, the reason danz.now exists at all, and my agreement never to build dance again outside what we build together. The code and the domain come with it. The part that costs me is the part with no paperwork.</p>
+
+<p>Not walled off, not held beside 1MWD under a right of first refusal. <strong>Dance folds in and stops being mine.</strong></p>
 
 <p>I am doing that for one reason, and it is worth saying plainly rather than dressing it as a concession: <strong>I want to build the wearable with you.</strong> Not near you, not licensed to you — with you. Verified movement, real biometrics, a reward that means something because it cannot be faked. You have been describing that vision on stages for five years and I have been building the parts of it that have to exist before it can be true. That is the actual reason I am at this table, and it is why giving up DANZ costs me less than you might think.</p>
 
@@ -389,7 +431,7 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
       <li>Dance move-to-earn, dance rewards, dance-verified motion</li>
       <li><b>Wearables and biometrics whose purpose is dance</b></li>
       <li>Dance creator networks and dance brand partnerships</li>
-      <li><b>DANZ entire</b> — brand, domain, code, trademark</li>
+      <li><b>DANZ entire</b> — the name, the domain, the built app, and the pursuit</li>
     </ul>
   </div>
   <div class="fbox out">
@@ -425,16 +467,30 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 
 <p>On the call you asked for a percentage of FlowBond. I want to answer that clearly rather than let it drift, because a vague answer here is how partnerships rot.</p>
 
-<p><strong>No percentage of FlowBond moves as part of the dance deal.</strong> Not as consideration, not as a swap for the 1MWD grant, not as a founder's gesture. Dance is what is being traded, and dance is a great deal for you: you receive an entire company, its brand, its build and its founder's full attention, and you pay for it in equity in something you control.</p>
+<p><strong>No percentage of FlowBond moves as part of the dance deal.</strong> Not as consideration, not as a swap for the 1MWD grant, not as a founder's gesture. Dance is what is being traded, and dance is a great deal for you: you receive the whole of dance — the name, the built app, the design, and its founder's full and exclusive attention, and you pay for it in equity in something you control.</p>
 
-<p>If you want to own part of FlowBond, there is one door and it is open:</p>
+<p>But that is not the same as saying the door is shut. It is saying the door has a price, and the price is not dance. <strong>There are four ways in, and only one of them is you writing a cheque.</strong></p>
+
+<ol class="commit">
+  <li><b>You invest, at a valuation neither of us sets.</b>
+    <span>An independent valuer prices it — the stack, the live products, the client contracts, the identity layer. You come in at that number on the same terms as any other investor. Into FlowBond as a whole, or into a single product as its own line if there is one you particularly believe in. No founder discount, no swap against dance, no dilution disguised as goodwill.</span></li>
+
+  <li><b>You raise it, and you earn equity on what you bring.</b>
+    <span>This is the one I think actually fits you. Not dance money — money into the <em>wider technology play</em>, the ninety-four builds and the layer under them. You have described a network of ten thousand investors, a two-billion-dollar-fund founder, FII, family offices, Swiss partners. If you bring capital into FlowBond, you earn equity in FlowBond, at an agreed rate per dollar actually closed and received. Your network is a real asset and it should be paid for as one, in the company it builds — not treated as a favour that gets folded into a dance grant. <span class="fill">FOR COUNSEL — must be structured as fundraising equity, not a percentage commission; see the Section 15(a) note in section 6</span></span></li>
+
+  <li><b>You advise, and the advisory vests on milestones.</b>
+    <span>A defined advisory role on the technology company — movement strategy, creator networks, brand, capital introductions — with equity that vests against milestones rather than against the calendar. Time-based vesting starting now would complete before the milestones that would justify it, which is good for neither of us. This can run alongside anything else in this list.</span></li>
+
+  <li><b>Your investors take a position directly.</b>
+    <span>Investors you introduce may take equity in FlowBond themselves, at the independent valuation, and you participate through whatever carry, advisory or arrangement you hold with them. That part is between you and them and FlowBond does not price it, gate it or take a view on it. It is the cleanest route of the four and the one that needs the least paperwork from me.</span></li>
+</ol>
 
 <div class="good">
-  <b class="t">You invest, at a valuation neither of us sets</b>
-  <p>An independent valuer prices it — the stack, the live products, the client contracts, the identity layer. You come in at that number, on the same terms as any other investor. Into FlowBond as a whole, or into a single product as its own line, if there is one you particularly believe in. No founder discount, no swap against dance, no dilution disguised as goodwill. I would be glad to have you on the cap table on that basis, and I would rather have you there as an investor who chose it than as a partner who was paid in it.</p>
+  <b class="t">All four can run at once</b>
+  <p>They are not alternatives. You could advise, raise, and invest — and the equity from each is calculated on its own basis and stacks. What none of them do is move any part of FlowBond as consideration for the dance deal, because that is the one thing that would make both agreements impossible to unwind if we ever needed to.</p>
 </div>
 
-<p>This is also the answer to the reverse question. I am not asking you for a percentage of 1 Billion Hearts, and I am not asking for a share of We Speak Dance. The same rule runs in both directions: <strong>what is being traded is dance, and only dance.</strong></p>
+<p>This is also the answer to the reverse question. I am not asking you for a percentage of 1 Billion Hearts, and I am not asking for a share of We Speak Dance. The same rule runs in both directions: <strong>what is being traded is dance, and only dance. Everything else is bought, earned or raised.</strong></p>
 </section>
 
 <section>
@@ -443,17 +499,17 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 <p class="lede">One deal, not a menu. Six terms, and I would sign this today.</p>
 
 <ol class="commit">
-  <li><b>DANZ is contributed to 1MWD as founder capital.</b>
-    <span>The entire company — brand, domain, codebase, the floors and XP economy, the HeartSync work, the move-to-earn design, the trademark application. Contributed, not sold. No cash changes hands and I take no payable for it. This is the largest single thing either of us has put on the table and I am putting it down first.</span></li>
+  <li><b>Dance is contributed to 1MWD as founder capital.</b>
+    <span>DANZ is not a company, so there is no entity to transfer and no trademark to assign. What transfers is everything that does exist: the name, the domain, the deployed codebase, the floors and XP ledger, the HeartSync work, the move-to-earn design — and, the part that actually costs me, my agreement never to build dance outside 1MWD. Contributed, not sold. No cash changes hands and I take no payable for it.</span></li>
 
   <li><b>Co-founder of 1MWD, from day one.</b>
-    <span>As you offered, but at signature rather than at the twelve-month anniversary — because a person who contributes an entire company on day one is a co-founder on day one. Head of Operations and Head of Product alongside it.</span></li>
+    <span>As you offered, but at signature rather than at the twelve-month anniversary — because a person who gives up their entire field on day one is a co-founder on day one. Head of Operations and Head of Product alongside it.</span></li>
 
   <li><b>Fifteen percent, fully diluted, in the entity where dance value lands.</b>
     <span>Your ceiling, accepted. With an <b>anti-migration covenant</b>: dance assets, dance revenue, dance IP and dance contracts do not move to an affiliate I hold nothing in without the grant following them or being made whole. See section 7 — this is the one term that is load-bearing. <span class="fill">FOR COUNSEL</span></span></li>
 
   <li><b>We build the wearable together, and that is written down.</b>
-    <span>Not as an aspiration in a recital — as a defined workstream with both our names on it, a budget, and a decision structure. This is the reason I am giving up my company. If it is not in the document, the document does not describe the deal we actually discussed.</span></li>
+    <span>Not as an aspiration in a recital — as a defined workstream with both our names on it, a budget, and a decision structure. This is the reason I am giving up dance. If it is not in the document, the document does not describe the deal we actually discussed.</span></li>
 
   <li><b>Salary of five thousand a month, rising to seven on the raise.</b>
     <span>Exactly as you proposed on the call. The gap between five thousand and a market rate for the role accrues as a deferred balance, payable from the raise or convertible at the next financing price at my election — because an unpaid runway of unknown length is a loan from me to the company and should be recorded as one.</span></li>
@@ -466,26 +522,38 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 
 <p>These are the parts I have no fixed position on. Turn any of them and I will still sign.</p>
 
-<ol class="dials">
-  <li><b>How DANZ lands on the cap table</b>
-    <span>Contributed at zero and folded into the fifteen percent, or credited at an agreed value and priced separately. I have assumed the first, which is the version that is worse for me.</span>
-    <span class="opts">contributed at $0 · credited at agreed value · independently valued</span></li>
+<p>These are the parts I have no fixed position on. Each one is a real choice with real consequences on both sides, so I have written out what each setting actually means rather than leaving you to guess. <strong>Turn any of them and I will still sign.</strong></p>
 
-  <li><b>Where the wearable lives</b>
-    <span>Inside 1MWD, inside 1 Billion Hearts, or in its own entity that both of us own and 1MWD licenses. I have a preference for the third and I am not going to pretend otherwise, but I will build it wherever it gets built properly.</span>
-    <span class="opts">inside 1MWD · inside 1BH · its own co-owned entity</span></li>
+<ol class="dials">
+  <li><b>How dance lands on the cap table</b>
+    <span>Whether what I contribute is recognised as having a value, or simply disappears into the fifteen percent.</span>
+    <span class="opt"><b>Contributed at zero.</b> Everything I bring folds into the fifteen percent and no separate value is recorded anywhere. Simplest to paper, cheapest for the company, nothing to argue about with a future investor. It also means that if this ends early, I contributed a working app and four years of a field and there is no record that I contributed anything at all. <em>This is what section 6 assumes — the setting worst for me.</em></span>
+    <span class="opt"><b>Credited at a value we agree.</b> We put a number on it now, between us, and it sits on the cap table as contributed capital. No valuer, no cost, no delay. Honest about the fact that something of value moved, without either of us pretending it is precise.</span>
+    <span class="opt"><b>Independently valued.</b> A third party prices the app, the domain, the design and the exclusivity. Slowest and it costs money — but it is the only version that survives a diligence question from an investor who asks what the founders actually put in.</span></li>
+
+  <li><b>Where the wearable is built, and who owns it</b>
+    <span>This is the term I care most about, so read my bias in it. It is also the one where your Swiss partners and your five years of keynotes make you the one with alternatives.</span>
+    <span class="opt"><b>Inside 1MWD.</b> Simplest. Everything sits in one company, one cap table, one story for investors. It also means the wearable is governed by whoever governs 1MWD, and my interest in it is capped at the same fifteen percent as everything else — including if the wearable turns out to be the most valuable thing either of us ever makes.</span>
+    <span class="opt"><b>Inside 1 Billion Hearts.</b> Puts it under the umbrella where you say the vision has always lived, next to the token strategy and the family-office relationships. Clean for your narrative. Unworkable for me as currently drafted, because I hold nothing there — this setting only functions if it comes with a grant at the parent.</span>
+    <span class="opt"><b>Its own entity, co-owned, licensing to 1MWD.</b> The wearable and move-to-earn sit in a company we both own, on terms we both set, and 1MWD licenses from it on most-favoured terms. It quarantines every token, hardware and regulatory question away from the brand-safe company that wants to sign Apple, Spotify or Sony — which is a real benefit to you, not just to me. <em>My preference, stated openly.</em></span></li>
 
   <li><b>The mix of equity and cash</b>
-    <span>More equity and less salary, or less equity and a real wage. Tell me which is easier for the company and I will take that one.</span>
-    <span class="opts">equity-heavy · balanced · cash-heavy</span></li>
+    <span>How I get paid, and therefore how much runway the company burns before the raise.</span>
+    <span class="opt"><b>Equity-heavy.</b> Little or no salary; a larger grant. Costs 1MWD almost nothing in cash and keeps every dollar you raise pointed at building. It concentrates my entire outcome in a minority position I do not control — which I will accept, but only with section 7 answered.</span>
+    <span class="opt"><b>Balanced.</b> The five-to-seven thousand you proposed on the call, with the gap to a market rate accruing as a deferred balance. What section 6 assumes.</span>
+    <span class="opt"><b>Cash-heavy.</b> A real wage from signature and a smaller grant. More expensive per month, and cheaper in the long run if this works — you are buying back equity at today's price with tomorrow's payroll. Worth considering precisely because it looks worse on the monthly and better on the exit.</span></li>
 
-  <li><b>Vesting commencement</b>
-    <span>Signature, or the date I actually started working on this. The second is more accurate and I would rather it be right than favourable.</span>
-    <span class="opts">at signature · at actual start · milestone-based</span></li>
+  <li><b>When vesting starts</b>
+    <span>A small clause that decides whether the months already spent count.</span>
+    <span class="opt"><b>At signature.</b> Conventional and clean. It also quietly writes off the work already done — the room you are reading this in, the documents, the analysis, the build review.</span>
+    <span class="opt"><b>At actual start.</b> The date I genuinely began, which is earlier and which I would rather have documented accurately than favourably. If you think that date is later than I do, tell me and I will take yours.</span>
+    <span class="opt"><b>Milestone-based.</b> Vesting against launch, user numbers, or the raise rather than against the calendar. Better aligned to what actually matters and harder to draft. I am open to it and it needs counsel on both sides.</span></li>
 
-  <li><b>What you license from FlowBond, and at what rate</b>
-    <span>1MWD needs the spine. Whether that is a founding-partner rate, a fee deferred until the raise, or fees converted to equity at the next round is entirely open.</span>
-    <span class="opts">founding rate · deferred to raise · converted to equity</span></li>
+  <li><b>What 1MWD licenses from FlowBond, and on what terms</b>
+    <span>1MWD needs the spine in section 2 — identity, media, payments, hosting. The only question is how it pays for it, and every setting here is deferred until you have money.</span>
+    <span class="opt"><b>Founding-partner rate.</b> Roughly half commercial pricing, invoiced but accruing, with nothing payable until three hundred thousand is raised. Predictable and easy to model for an investor.</span>
+    <span class="opt"><b>Fully deferred to the raise.</b> No fee accrues or is invoiced until the raise closes, then it begins. Maximum runway for 1MWD, maximum exposure for me — I carry the infrastructure cost of your company on my own balance sheet until you close.</span>
+    <span class="opt"><b>Converted to equity.</b> Accrued fees convert at the next financing price instead of being paid in cash. Costs 1MWD nothing at all in cash and increases my position — which is either the most aligned option on this page or the one your investors will look at hardest, depending on the number.</span></li>
 </ol>
 
 <div class="note">
@@ -501,22 +569,58 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 </section>
 
 <section>
-<h2>7 · The one question that blocks everything</h2>
+<h2>7 · Which company owns what</h2>
+
+<p class="lede">This is the section that decides whether everything else is real. Not because I distrust you — because there are five entities in this conversation, three of them are yours, one does not exist yet, and my entire position sits in the one that does not exist yet.</p>
+
+<h3>The five entities, as I understand them today</h3>
+
+<div class="tablewrap"><table>
+  <thead><tr><th>Entity</th><th>What it holds</th><th>Owned by</th><th>My position</th></tr></thead>
+  <tbody>
+    <tr><td><b>1 Billion Hearts</b></td><td>The umbrella. The movement, the philosophy, the heart-colour concept. For profit, structure being assembled</td><td>Vandana</td><td><b>None.</b> I hold nothing and claim nothing</td></tr>
+    <tr><td><b>1 Billion Hearts non-profit</b></td><td>Campaign donations only</td><td>Vandana</td><td><b>None.</b> Correctly so</td></tr>
+    <tr><td><b>We Speak Dance</b></td><td>Your brand, your personal IP, the podcast, the summit, the NFTs. Dissolved as a company; a former co-founder invested $1M against the brand</td><td>Vandana <span class="fill">(see note)</span></td><td><b>None.</b> Outside the deal entirely</td></tr>
+    <tr><td><b>1 Million Women Dance</b></td><td>The dance business. Where everything I contribute is supposed to land</td><td><b>Does not exist yet</b></td><td><b>15% ceiling</b> — the whole of my position</td></tr>
+    <tr><td><b>FlowBond Tech</b></td><td>The 94 builds in section 2, the identity layer, the client contracts</td><td>Steph, 100%, self-funded</td><td><b>100%.</b> Not part of this deal — see section 5</td></tr>
+  </tbody>
+</table></div>
+
+<p>Read that table as a whole and the problem is visible without anyone having to be accused of anything. <strong>Three of the five are yours outright. The fifth is mine outright. And the only one I am being given a piece of is the one that has not been incorporated.</strong></p>
 
 <div class="q">
   <b class="t">Unanswered since 9 August</b>
   <p><strong>Fifteen percent — of which entity?</strong></p>
   <p>You confirmed fifteen is a ceiling. You have not said what it is a ceiling <em>of</em>. And in the same set of comments you proposed that everything dance-related lives under 1 Billion Hearts — a company in which Document 3 states, uncorrected by you, that I hold no interest and claim none.</p>
-  <p>Put those two together and this is the result: <strong>I contribute an entire company, and hold a capped minority of a subsidiary while the value accrues to a parent I own nothing of.</strong></p>
+  <p>Put those two together and this is the result: <strong>I give up the whole of dance, and hold a capped minority of a company that does not exist yet, while the value accrues to a parent I own nothing of.</strong></p>
   <p>I don't think that is what you mean. I think it is what the current draft says, and I would rather ask you than assume the worst of you.</p>
 </div>
 
-<p>One written sentence naming the entity, plus agreement in principle to the anti-migration covenant. Not a signature, not a lawyer, not a meeting. Everything else in this document is negotiable and I will move on most of it. This one decides whether any of the rest means anything.</p>
+<h3>The three answers I need in writing</h3>
+
+<ol class="commit">
+  <li><b>Which entity issues my fifteen percent, and when is it incorporated?</b>
+    <span>If it is 1 Million Women Dance, then 1MWD has to actually exist — incorporated, with a cap table, in a named jurisdiction, on a date we agree. A grant in a company nobody has formed is a promise, not a position. If it is 1 Billion Hearts, say so and the whole document gets simpler, because then the umbrella is the thing and we are talking about the parent.</span></li>
+
+  <li><b>What stops dance value from migrating to where I hold nothing?</b>
+    <span>The <b>anti-migration covenant</b>. Dance assets, dance revenue, dance IP, dance contracts and dance brand do not move from 1MWD to 1 Billion Hearts, to We Speak Dance, or to any other affiliate, without my grant either following them or being made whole in the entity that receives them. Without this clause, fifteen percent of 1MWD can be reduced to fifteen percent of an empty subsidiary by ordinary internal restructuring that nobody would even describe as hostile. <span class="fill">FOR COUNSEL</span></span></li>
+
+  <li><b>What happens to what I contribute if this ends?</b>
+    <span>If we separate in the first twelve months, does dance stay with 1MWD, or does the name and the app come back to me? I am not asking for a hostile answer — I am asking for <em>an</em> answer, agreed now while we like each other, rather than discovered later while we do not. My proposal: vested equity is retained in all circumstances except termination for cause, and the contributed dance assets stay where they were contributed. I lose them either way. I would just rather know.</span></li>
+</ol>
+
+<div class="good">
+  <b class="t">What I am not asking for</b>
+  <p>No interest in 1 Billion Hearts. No share of We Speak Dance. No claim on your brand, your podcast, your summit, your NFTs, your network or your fifteen years. Those are yours and I have never suggested otherwise. I am asking for clarity about one company — the one where the thing I am giving up is supposed to live.</p>
+</div>
+
+<p>One written sentence on each of the three. Not a signature, not a lawyer, not a meeting. Everything else in this document is negotiable and I will move on most of it. <strong>These decide whether any of the rest means anything.</strong></p>
 
 <div class="note">
   <b class="t">A diligence question that is nobody's fault</b>
-  <p>You describe We Speak Dance as a company that has already dissolved, and separately say a former co-founder invested one million dollars to use that brand for the app and the content. Where the We Speak Dance IP legally sits today, after dissolution, is a question nobody has asked yet — and it matters for the same reason my Texas dissolution matters to you. I raise it because your counsel will, and it is better raised early and by me. <span class="fill">FOR COUNSEL</span></p>
+  <p>You describe We Speak Dance as a company that has already dissolved, and separately say a former co-founder invested one million dollars to use that brand for the app and the content. Where the We Speak Dance IP legally sits today, after dissolution, and what that investor is entitled to, is a question nobody has asked yet — and it matters for exactly the same reason my Texas dissolution matters to you. I raise it because your counsel will, and it is better raised early and by me. <span class="fill">FOR COUNSEL</span></p>
 </div>
+
 </section>
 
 <section>
@@ -554,6 +658,16 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
   <p>Term 4 exists because it is the thing I want. It commits you to building something with me in a field where you have your own Swiss partners ready to build it without me. That is a real constraint on you and you should price it.</p>
 </div>
 
+<div class="tilt">
+  <b class="t">Seven · The four routes into FlowBond are drafted to keep control with me</b>
+  <p>Section 5 reads as generous — four doors, all real, and I mean all of them. But notice what every one of them has in common: they issue you a minority position in a company I control absolutely, on a valuation I have agreed to have set independently but which I could decline to act on. There is no route in section 5 that gives you a board seat, a veto, or a say in what FlowBond builds. That is deliberate and you should see it plainly rather than read four options as four concessions.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Eight · The entity table in section 7 is arranged to make my point</b>
+  <p>It is factually accurate as far as I know it, and I have asked you to correct anything wrong in it. It is also laid out so that "three yours, one mine, and my stake is in the one that doesn't exist" lands as the reader's own conclusion rather than as my accusation. That is a rhetorical choice and I would rather name it than have your lawyer name it for me.</p>
+</div>
+
 <p><strong>Take this to your own lawyer and send me the invoice.</strong> I would rather pay for you to be well advised than win a clause because you were not.</p>
 </section>
 
@@ -563,10 +677,14 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 <div class="tablewrap"><table>
   <thead><tr><th>Open item</th><th>Owner</th><th>State</th></tr></thead>
   <tbody>
-    <tr><td><b>Fifteen percent of which entity</b>, plus the anti-migration covenant</td><td>Vandana</td><td><b>Blocking</b></td></tr>
+    <tr><td><b>Fifteen percent of which entity</b> — the three answers in section 7</td><td>Vandana</td><td><b>Blocking</b></td></tr>
+    <tr><td><b>The anti-migration covenant</b>, agreed in principle</td><td>Vandana</td><td><b>Blocking</b></td></tr>
+    <tr><td>Whether 1MWD is incorporated, where, and by when</td><td>Vandana</td><td><b>Blocking</b></td></tr>
     <tr><td>Accept, amend or reject the fence as drawn in section 4</td><td>Both</td><td>Blocking</td></tr>
     <tr><td>The five dials in section 6</td><td>Both</td><td>Open</td></tr>
     <tr><td>Where the wearable is built, and who owns that entity</td><td>Both</td><td>Open</td></tr>
+    <tr><td>Which of the four routes in section 5 you want, if any</td><td>Vandana</td><td>Open</td></tr>
+    <tr><td>What happens to contributed dance assets if we separate early</td><td>Both</td><td>Open</td></tr>
     <tr><td>The buyout price for the platform layer, fixed now</td><td>Both</td><td>Open</td></tr>
     <tr><td>Legal form and tax status of 1 Billion Hearts, on paper</td><td>Vandana</td><td>Open</td></tr>
     <tr><td>Whether 1MWD spins out as its own entity, and where</td><td>Vandana</td><td>Open</td></tr>
@@ -583,7 +701,7 @@ footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
 </section>
 
 <section>
-<h2>10 · Why I am giving up my company</h2>
+<h2>10 · Why I am giving up dance</h2>
 
 <p>Because you are right that it is one thing or the other, and a partnership where I am quietly building the same future next door is not a partnership — it is a conflict with a friendlier name. If we are doing this, I would rather do it completely.</p>
 
