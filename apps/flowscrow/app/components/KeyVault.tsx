@@ -643,20 +643,26 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>
 
-      <section style={{ marginBottom: 28 }}>
-        <div className="v-eyebrow">The note</div>
-        <h2 className="v-h2">From Estefanía</h2>
-        <div className="v-card" style={{ marginTop: 12 }}>
-          {MESSAGE.paragraphs.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>)}
-          {MESSAGE.signoff && <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>}
-        </div>
-      </section>
+      {/* The note and the protection digest carry the non-public terms of the
+          closing (Section 11), so they stay between the two signers. Witnesses
+          still see the full ledger, the standing, and the agreement itself —
+          the transparency guarantee is unchanged. */}
+      {isSigner && (
+        <section style={{ marginBottom: 28 }}>
+          <div className="v-eyebrow">The note</div>
+          <h2 className="v-h2">From Estefanía</h2>
+          <div className="v-card" style={{ marginTop: 12 }}>
+            {MESSAGE.paragraphs.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>)}
+            {MESSAGE.signoff && <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>}
+          </div>
+        </section>
+      )}
 
       {isRussell && <RussellGuide sigs={sigs} />}
 
       <LedgerPanel />
 
-      <ProtectionPanel />
+      {isSigner && <ProtectionPanel />}
 
       <StandingPanel />
 
