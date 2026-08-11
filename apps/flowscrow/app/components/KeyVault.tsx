@@ -311,6 +311,68 @@ function ProtectionPanel() {
   );
 }
 
+/* ── Estefanía's private exhibit. Gated on person_key === 'steph' at the call
+   site: Russell and the witnesses never receive this markup at all. ── */
+type EvidenceData = {
+  title: string; lead: string; note: string; vaultPath: string;
+  clips: { file: string; sha256: string; label: string; captured: string; shows: string }[];
+  domains: { d: string; v: string; tone: string }[];
+};
+
+function EvidencePanel({ code }: { code: string }) {
+  const [EVIDENCE, setEvidence] = useState<EvidenceData | null>(null);
+  useEffect(() => {
+    fetch(apiUrl('/api/evidence'), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j?.evidence) setEvidence(j.evidence); })
+      .catch(() => {});
+  }, [code]);
+  if (!EVIDENCE) return null;
+  const tone = (t: string) => (t === 'good' ? '#8FA98F' : t === 'stop' ? '#ff9db4' : 'var(--v-gold)');
+  return (
+    <section style={{ marginBottom: 28 }}>
+      <div className="v-eyebrow" style={{ color: '#ff9db4' }}>Private to you · not visible to Russell or the witnesses</div>
+      <h2 className="v-h2">{EVIDENCE.title}</h2>
+      <p className="v-lead" style={{ margin: '4px 0 14px' }}>{EVIDENCE.lead}</p>
+
+      <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))' }}>
+        {EVIDENCE.clips.map((c) => (
+          <div className="v-card" key={c.file} style={{ borderColor: 'rgba(255,157,180,.35)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+              <b className="gold" style={{ fontSize: 15 }}>{c.label}</b>
+              <span style={{ fontSize: 12.5, color: 'var(--v-dim)' }}>captured {c.captured}</span>
+            </div>
+            <p className="v-lead" style={{ margin: '8px 0 10px', fontSize: 13.5 }}>{c.shows}</p>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '9px 11px', borderRadius: 9 }}>
+              {c.file}
+              <div style={{ marginTop: 5, color: 'var(--v-dim)' }}>sha256 · {c.sha256}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: 12.5, color: 'var(--v-dim)', margin: '10px 0 0' }}>
+        The captures themselves are held offline at <b style={{ color: 'var(--v-ink)' }}>{EVIDENCE.vaultPath}</b> and are
+        deliberately not published — anything under this app’s public folder is served before the Worker runs and could
+        not be gated. The SHA-256 above is what makes the record tamper-evident: re-hash the file and it either matches
+        this date or it does not.
+      </p>
+
+      <div className="v-card" style={{ marginTop: 16, display: 'grid', gap: 0 }}>
+        <div className="v-eyebrow" style={{ color: 'var(--v-violet)', marginBottom: 4 }}>Domain record · verified 2026-08-11</div>
+        {EVIDENCE.domains.map((d, i) => (
+          <div key={d.d} style={{ display: 'flex', justifyContent: 'space-between', gap: 14, padding: '10px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', alignItems: 'start', flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, color: 'var(--v-ink)' }}>{d.d}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: tone(d.tone), textAlign: 'right', maxWidth: 460 }}>{d.v}</span>
+          </div>
+        ))}
+        <p className="v-lead" style={{ margin: '12px 0 0', fontSize: 13, borderTop: '1px solid rgba(179,136,255,.12)', paddingTop: 12 }}>{EVIDENCE.note}</p>
+      </div>
+    </section>
+  );
+}
+
 /* ── transparent "where we stand today" panel ── */
 function StandingPanel() {
   const tone = (t: string) => (t === 'good' ? '#8FA98F' : t === 'pending' ? 'var(--v-gold)' : 'var(--v-violet)');
@@ -591,6 +653,7 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
   const who = r.display_name;
   const canAct = isSigner && authorized; // may sign + download
   const isRussell = r.person_key === 'russell';
+  const isSteph = r.person_key === 'steph';
   const bothSigned =
     !!sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement') &&
     !!sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
@@ -663,6 +726,8 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
       <LedgerPanel />
 
       {isSigner && <ProtectionPanel />}
+
+      {isSteph && <EvidencePanel code={code} />}
 
       <StandingPanel />
 
