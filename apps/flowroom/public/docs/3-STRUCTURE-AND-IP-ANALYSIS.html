@@ -9,53 +9,53 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F7F5F2; --card:#FFFFFF; --ink:#1D1A16; --ink-2:#55504A; --ink-3:#8A837A;
-  --rule:#E4DFD8; --rule-2:#D0C9BF;
-  --rose:#C0345C; --green:#2F8F5F; --indigo:#3E4A94; --teal:#237F92; --violet:#7C3F9C;
-  --flag:#A8202F; --flagbg:#FBEFEF;
+  --d-paper:#F7F5F2; --d-card:#FFFFFF; --d-ink:#1D1A16; --d-ink-2:#55504A; --d-ink-3:#8A837A;
+  --d-rule:#E4DFD8; --d-rule-2:#D0C9BF;
+  --d-rose:#C0345C; --d-green:#2F8F5F; --d-indigo:#3E4A94; --d-teal:#237F92; --d-violet:#7C3F9C;
+  --d-flag:#A8202F; --d-flagbg:#FBEFEF;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
   font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
 
 header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
 .kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
-  text-transform:uppercase;color:var(--ink-3);margin:0 0 .9rem}
+  text-transform:uppercase;color:var(--d-ink-3);margin:0 0 .9rem}
 h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.2rem);
   line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
-.intro{color:var(--ink-2);max-width:50ch;margin:0 0 1.4rem}
+.intro{color:var(--d-ink-2);max-width:50ch;margin:0 0 1.4rem}
 .docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:1rem;
+  text-transform:uppercase;color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:1rem;
   display:flex;flex-wrap:wrap;gap:.4rem 2rem}
 
 h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.4rem,3.2vw,1.85rem);
   line-height:1.15;letter-spacing:-.012em;margin:2.8rem 0 .9rem;
-  padding-top:1.4rem;border-top:1px solid var(--rule)}
+  padding-top:1.4rem;border-top:1px solid var(--d-rule)}
 h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.1rem;margin:1.8rem 0 .5rem}
 h4{font-family:"Space Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.15em;
-  text-transform:uppercase;color:var(--ink-3);margin:1.6rem 0 .5rem}
+  text-transform:uppercase;color:var(--d-ink-3);margin:1.6rem 0 .5rem}
 p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.4rem}
-.lede{font-size:1.05rem;color:var(--ink-2)}
+.lede{font-size:1.05rem;color:var(--d-ink-2)}
 q{font-family:"Fraunces",serif;font-style:italic}
 
 /* entity map */
 .ents{margin:1.3rem 0}
 .ent{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.9rem;
-  background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;
   padding:.85rem 1rem;margin-bottom:.5rem}
 .ent.sub{margin-left:1.5rem}
 .ent .d{width:9px;height:9px;border-radius:50%;margin-top:.5rem}
 .ent b{display:block;font-family:"Fraunces",serif;font-size:1rem;font-weight:600}
-.ent p{margin:.1rem 0 0;font-size:.88rem;color:var(--ink-2)}
+.ent p{margin:.1rem 0 0;font-size:.88rem;color:var(--d-ink-2)}
 .ent .tag{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);display:block;margin-top:.25rem}
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-top:.25rem}
 
 /* stack */
-.stack{border:1px solid var(--rule-2);border-radius:10px;overflow:hidden;margin:1.4rem 0;background:var(--card)}
+.stack{border:1px solid var(--d-rule-2);border-radius:10px;overflow:hidden;margin:1.4rem 0;background:var(--d-card)}
 .lay{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1rem;padding:1.05rem 1.1rem;
-  border-bottom:1px solid var(--rule)}
+  border-bottom:1px solid var(--d-rule)}
 .lay:last-child{border-bottom:0}
 .lay .b{width:5px;border-radius:3px}
 .lay h5{margin:0 0 .25rem;font-family:"Fraunces",serif;font-size:1.02rem;font-weight:600;
@@ -63,46 +63,46 @@ q{font-family:"Fraunces",serif;font-style:italic}
 .own{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.1em;
   text-transform:uppercase;padding:.14rem .45rem;border-radius:3px}
 .o1{background:#FAE8EE;color:#8E1F3E} .o2{background:#E7EFF9;color:#26386F}
-.lay p{margin:0;font-size:.89rem;color:var(--ink-2)}
+.lay p{margin:0;font-size:.89rem;color:var(--d-ink-2)}
 
-.test{border:1px dashed var(--rule-2);border-radius:10px;background:var(--card);
+.test{border:1px dashed var(--d-rule-2);border-radius:10px;background:var(--d-card);
   padding:1.2rem;text-align:center;margin:1.3rem 0}
 .test .t{font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.5rem}
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.5rem}
 .test q{font-size:1.15rem;display:block;line-height:1.35}
 .test .sp{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1.8rem;margin-top:.8rem;
-  font-family:"Space Mono",monospace;font-size:.7rem;color:var(--ink-2)}
+  font-family:"Space Mono",monospace;font-size:.7rem;color:var(--d-ink-2)}
 
 .flag,.note{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
-.flag{background:var(--flagbg);border-left:4px solid var(--flag);color:#5E1620}
-.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);color:var(--ink-2)}
+.flag{background:var(--d-flagbg);border-left:4px solid var(--d-flag);color:#5E1620}
+.note{background:var(--d-card);border:1px solid var(--d-rule);border-left:4px solid var(--d-teal);color:var(--d-ink-2)}
 .flag b.t,.note b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
   letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
-.flag b.t{color:var(--flag)} .note b.t{color:var(--teal)}
+.flag b.t{color:var(--d-flag)} .note b.t{color:var(--d-teal)}
 .flag p:last-child,.note p:last-child{margin:0}
 
-.tablewrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:10px;margin:1.3rem 0;background:var(--card)}
+.tablewrap{overflow-x:auto;border:1px solid var(--d-rule-2);border-radius:10px;margin:1.3rem 0;background:var(--d-card)}
 table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
 th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
-  padding:.7rem .9rem;border-bottom:1px solid var(--rule-2);vertical-align:bottom}
-td{padding:.7rem .9rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+  letter-spacing:.12em;text-transform:uppercase;color:var(--d-ink-3);
+  padding:.7rem .9rem;border-bottom:1px solid var(--d-rule-2);vertical-align:bottom}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--d-rule);vertical-align:top;color:var(--d-ink-2)}
 tr:last-child td{border-bottom:0}
-td b{color:var(--ink);font-weight:600}
+td b{color:var(--d-ink);font-weight:600}
 
 .hats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.2rem 0}
-.hat{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1rem}
+.hat{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1rem}
 .hat b{display:block;font-family:"Fraunces",serif;font-size:1rem;margin-bottom:.15rem}
-.hat p{margin:0;font-size:.86rem;color:var(--ink-2)}
+.hat p{margin:0;font-size:.86rem;color:var(--d-ink-2)}
 
 .sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
-.sig{border-top:1px solid var(--ink);padding-top:.55rem}
+.sig{border-top:1px solid var(--d-ink);padding-top:.55rem}
 .sig b{display:block;font-size:.95rem}
-.sig span{font-size:.82rem;color:var(--ink-3)}
+.sig span{font-size:.82rem;color:var(--d-ink-3)}
 
-footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
+footer{border-top:1px solid var(--d-rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
   font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
+  text-transform:uppercase;color:var(--d-ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
 
 @media(max-width:640px){ .hats,.sigs{grid-template-columns:1fr} .ent.sub{margin-left:.7rem} }
 @media print{ body{background:#fff} .stack,.flag,.note,.tablewrap,.test{break-inside:avoid} }
@@ -127,19 +127,19 @@ footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6re
 <p>Your voice note settled the biggest open question in the agreement draft: <strong>1MWD becomes its own company, sitting under 1 Billion Hearts as the umbrella.</strong> That's the right shape, and it's what makes the equity real rather than notional.</p>
 
 <div class="ents">
-  <div class="ent"><span class="d" style="background:var(--violet)"></span>
+  <div class="ent"><span class="d" style="background:var(--d-violet)"></span>
     <div><b>1 Billion Hearts</b><p>The umbrella. Holds the movement, the philosophy, the heart-colour concept. Separate IP. Steph holds no interest and claims none.</p>
     <span class="tag">Parent · legal form to confirm</span></div></div>
-  <div class="ent sub"><span class="d" style="background:var(--rose)"></span>
+  <div class="ent sub"><span class="d" style="background:var(--d-rose)"></span>
     <div><b>1 Million Women Dance, Inc.</b><p>New company. The platform, the community, the campaign, the data. Steph's equity lives here. Investors who want the women's business come in here.</p>
     <span class="tag">The deal · to be formed</span></div></div>
   <div class="ent sub"><span class="d" style="background:#DE8C24"></span>
     <div><b>We Speak Dance</b><p>Vandana's IP, stays outside, unchanged. Season 2 is the launch engine — its audience is pointed at 1MWD.</p>
     <span class="tag">Separate · unchanged</span></div></div>
-  <div class="ent"><span class="d" style="background:var(--indigo)"></span>
+  <div class="ent"><span class="d" style="background:var(--d-indigo)"></span>
     <div><b>FlowBond Tech</b><p>Steph's company. Infrastructure vendor to 1MWD under a licence. Not a shareholder, not a partner — a supplier, on paper, at a founding-partner rate.</p>
     <span class="tag">Vendor · Steph is CEO</span></div></div>
-  <div class="ent sub"><span class="d" style="background:var(--teal)"></span>
+  <div class="ent sub"><span class="d" style="background:var(--d-teal)"></span>
     <div><b>danz.now (DANZ)</b><p>A separate dance product in the FlowBond family. Disclosed deliberately — see section 4.</p>
     <span class="tag">Disclosed · field-of-use split required</span></div></div>
 </div>
@@ -161,13 +161,13 @@ footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6re
 <h2>3 · Three layers</h2>
 
 <div class="stack">
-  <div class="lay"><span class="b" style="background:var(--rose)"></span>
+  <div class="lay"><span class="b" style="background:var(--d-rose)"></span>
     <div><h5>Application layer <span class="own o1">1MWD owns outright</span></h5>
       <p>The HEART points engine and its economy. The Dance-Her-Dance relay mechanic. The dream and cause data model. The heart-colour system. The campaign engine. Every screen, all front-end code, all UX, all brand and copy, the 1MWD database schema, and the admin tooling. Assigned permanently. Never licensed to anyone else, DANZ included.</p></div></div>
-  <div class="lay"><span class="b" style="background:var(--green)"></span>
+  <div class="lay"><span class="b" style="background:var(--d-green)"></span>
     <div><h5>Data layer <span class="own o1">1MWD owns absolutely</span></h5>
       <p>Every woman, every profile, every dance, every relay, every engagement event, and everything derived from any of it. FlowBond processes on instruction and holds no rights of its own — including no right to use it in aggregate or anonymised form. Exportable at any time; returned within thirty days of any exit, for any reason, including non-payment.</p></div></div>
-  <div class="lay"><span class="b" style="background:var(--indigo)"></span>
+  <div class="lay"><span class="b" style="background:var(--d-indigo)"></span>
     <div><h5>Platform layer <span class="own o2">FlowBond owns · 1MWD licenses</span></h5>
       <p>Generic, multi-tenant infrastructure that exists independently of this project: identity and authentication, hosting and content delivery, the transcoding pipeline, the database engine, the AI agent framework, analytics plumbing, email and funnel infrastructure. Pre-existing or independently developed. Licensed, not assigned.</p></div></div>
 </div>

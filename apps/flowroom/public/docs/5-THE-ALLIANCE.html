@@ -9,21 +9,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ------------------------------------------------------------------
-   Type system. Five sizes, one floor, and no grey that fails contrast.
+   Every token here is prefixed `--d-`. THAT PREFIX IS LOAD-BEARING.
 
-   The previous version of this sheet carried eighteen type sizes down
-   to 9.3px and set its labels in #8A837A, which is 3.4:1 against this
-   paper — below the 4.5:1 floor for body text. Nothing here goes below
-   .86rem (15.5px) and every ink colour clears 6:1.
+   room.css is linked AFTER this block and its `:root` defines the dark
+   room's palette under the same plain names — `--ink: #f6f1f7`, near
+   white. Same specificity, later sheet wins, so a document declaring
+   `--ink: #16130E` had it silently replaced with near-white. Headings
+   inherit `body { color: var(--ink) }` and set no colour of their own,
+   which is why they rendered white on white paper while the callouts,
+   which name their colours literally, looked fine. Documents 03 and 04
+   shipped that way on 8 August and nobody could see their headings.
+
+   Do not "tidy" these back to bare names.
+
+   Type system: five sizes, one floor, no grey that fails contrast. The
+   sheet this was cloned from carried eighteen sizes down to 9.3px and
+   set labels in #8A837A — 3.4:1 against this paper, under the 4.5:1
+   floor. Nothing here is below .86rem (15.5px); every ink clears 6:1.
    ------------------------------------------------------------------ */
 :root{
-  --paper:#F7F5F2; --card:#FFFFFF;
-  --ink:#16130E;    /* body            ~16:1 */
-  --ink-2:#403B34;  /* secondary        9.4:1 */
-  --ink-3:#5D564D;  /* labels, meta     6.6:1 */
-  --rule:#E0DAD1; --rule-2:#C7BFB3;
-  --rose:#A8244B; --green:#1F7A4C; --indigo:#2F3C86; --teal:#146273; --violet:#6A2E8C; --amber:#8F5709;
-  --flag:#93121F; --flagbg:#FBEDED;
+  --d-paper:#F7F5F2; --d-card:#FFFFFF;
+  --d-ink:#16130E;    /* body            ~16:1 */
+  --d-ink-2:#403B34;  /* secondary        9.4:1 */
+  --d-ink-3:#5D564D;  /* labels, meta     6.6:1 */
+  --d-rule:#E0DAD1; --d-rule-2:#C7BFB3;
+  --d-rose:#A8244B; --d-green:#1F7A4C; --d-indigo:#2F3C86; --d-teal:#146273; --d-violet:#6A2E8C; --d-amber:#8F5709;
+  --d-flag:#93121F; --d-flagbg:#FBEDED;
 
   --t-meta:.86rem;  /* the floor — nothing is smaller than this */
   --t-sm:.95rem;
@@ -33,7 +44,7 @@
 html{font-size:18px}
 @media(max-width:640px){ html{font-size:17px} }
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
   font-family:"Instrument Sans",system-ui,sans-serif;font-size:var(--t-base);line-height:1.72;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 /* ~76 characters a line. The old 52rem ran to 95 and the eye lost its place. */
@@ -41,23 +52,23 @@ body{margin:0;background:var(--paper);color:var(--ink);
 
 header{padding:clamp(2.2rem,5vw,3.6rem) 0 1.8rem}
 .kicker{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ink-3);margin:0 0 1rem;line-height:1.5}
+  text-transform:uppercase;color:var(--d-ink-3);margin:0 0 1rem;line-height:1.5}
 h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2.2rem,5.6vw,3rem);
   line-height:1.08;letter-spacing:-.02em;margin:0 0 1rem;max-width:18ch}
-.intro{color:var(--ink-2);margin:0 0 1.6rem}
+.intro{color:var(--d-ink-2);margin:0 0 1.6rem}
 .docmeta{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.08em;
-  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:1.1rem;
+  text-transform:uppercase;color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:1.1rem;
   display:flex;flex-wrap:wrap;gap:.5rem 2rem;line-height:1.55}
 
 h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.55rem,3.6vw,2rem);
   line-height:1.2;letter-spacing:-.012em;margin:3rem 0 1.1rem;
-  padding-top:1.5rem;border-top:1px solid var(--rule)}
+  padding-top:1.5rem;border-top:1px solid var(--d-rule)}
 h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.28rem;line-height:1.3;margin:2rem 0 .6rem}
 h4{font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);margin:1.7rem 0 .6rem}
+  text-transform:uppercase;color:var(--d-ink-3);margin:1.7rem 0 .6rem}
 p{margin:0 0 1.05rem} ul{margin:0 0 1.15rem;padding-left:1.25rem} li{margin-bottom:.55rem}
-.lede{font-size:var(--t-lede);line-height:1.62;color:var(--ink-2)}
-strong,b{font-weight:600;color:var(--ink)}
+.lede{font-size:var(--t-lede);line-height:1.62;color:var(--d-ink-2)}
+strong,b{font-weight:600;color:var(--d-ink)}
 q{font-family:"Fraunces",serif;font-style:italic}
 em.big{font-family:"Fraunces",serif;font-style:italic}
 
@@ -72,68 +83,68 @@ em.big{font-family:"Fraunces",serif;font-style:italic}
 }
 
 .two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.6rem 0}
-.col{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
+.col{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
 .col::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
-.col.a::after{background:var(--green)} .col.b::after{background:var(--flag)}
+.col.a::after{background:var(--d-green)} .col.b::after{background:var(--d-flag)}
 .col h5{margin:.2rem 0 .1rem;font-family:"Fraunces",serif;font-size:1.2rem;font-weight:600}
 .col .tag{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);display:block}
+  text-transform:uppercase;color:var(--d-ink-3);display:block}
 .col ul{margin:.8rem 0 0;padding-left:1.15rem;font-size:var(--t-sm)}
-.col li{margin-bottom:.45rem;color:var(--ink-2)}
+.col li{margin-bottom:.45rem;color:var(--d-ink-2)}
 
 .flag,.note,.good,.tilt{border-radius:0 9px 9px 0;padding:1.15rem 1.3rem;margin:1.6rem 0;
   font-size:var(--t-base);line-height:1.65}
-.flag{background:var(--flagbg);border-left:4px solid var(--flag);color:#5E1620}
-.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);color:var(--ink-2)}
-.good{background:#EFF6F1;border-left:4px solid var(--green);color:#204634}
-.tilt{background:#FBF4E8;border-left:4px solid var(--amber);color:#5C3F12}
+.flag{background:var(--d-flagbg);border-left:4px solid var(--d-flag);color:#5E1620}
+.note{background:var(--d-card);border:1px solid var(--d-rule);border-left:4px solid var(--d-teal);color:var(--d-ink-2)}
+.good{background:#EFF6F1;border-left:4px solid var(--d-green);color:#204634}
+.tilt{background:#FBF4E8;border-left:4px solid var(--d-amber);color:#5C3F12}
 .flag b.t,.note b.t,.good b.t,.tilt b.t{display:block;font-family:"Space Mono",monospace;font-size:var(--t-meta);
   letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
-.flag b.t{color:var(--flag)} .note b.t{color:var(--teal)} .good b.t{color:var(--green)} .tilt b.t{color:var(--amber)}
+.flag b.t{color:var(--d-flag)} .note b.t{color:var(--d-teal)} .good b.t{color:var(--d-green)} .tilt b.t{color:var(--d-amber)}
 .flag p:last-child,.note p:last-child,.good p:last-child,.tilt p:last-child{margin:0}
 
-.tablewrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:10px;margin:1.6rem 0;background:var(--card)}
+.tablewrap{overflow-x:auto;border:1px solid var(--d-rule-2);border-radius:10px;margin:1.6rem 0;background:var(--d-card)}
 table{border-collapse:collapse;width:100%;font-size:var(--t-sm);min-width:26rem}
 th{text-align:left;font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;
-  letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
-  padding:.85rem 1rem;border-bottom:1px solid var(--rule-2);vertical-align:bottom;line-height:1.4}
-td{padding:.85rem 1rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2);line-height:1.55}
+  letter-spacing:.08em;text-transform:uppercase;color:var(--d-ink-3);
+  padding:.85rem 1rem;border-bottom:1px solid var(--d-rule-2);vertical-align:bottom;line-height:1.4}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--d-rule);vertical-align:top;color:var(--d-ink-2);line-height:1.55}
 tr:last-child td{border-bottom:0}
-td b{color:var(--ink);font-weight:600}
-.fill{color:var(--ink-3);font-family:"Space Mono",monospace;font-size:var(--t-meta)}
+td b{color:var(--d-ink);font-weight:600}
+.fill{color:var(--d-ink-3);font-family:"Space Mono",monospace;font-size:var(--t-meta)}
 
 .commit{counter-reset:c;margin:1.6rem 0;padding:0;list-style:none}
-.commit li{counter-increment:c;background:var(--card);border:1px solid var(--rule);
+.commit li{counter-increment:c;background:var(--d-card);border:1px solid var(--d-rule);
   border-radius:10px;padding:1.1rem 1.2rem 1.1rem 3.3rem;margin-bottom:.7rem;position:relative;
   font-size:var(--t-base);line-height:1.65}
 .commit li::before{content:counter(c);position:absolute;left:1.15rem;top:1.15rem;
-  font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;color:var(--violet)}
+  font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;color:var(--d-violet)}
 .commit li b{display:block;margin-bottom:.3rem;font-size:1.05rem}
-.commit li span{color:var(--ink-2)}
+.commit li span{color:var(--d-ink-2)}
 
 /* The Field — what is inside the fence and what is not */
 .field{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.3rem 0}
-.fbox{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
+.fbox{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
 .fbox::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
-.fbox.in::after{background:var(--rose)} .fbox.out::after{background:var(--indigo)}
+.fbox.in::after{background:var(--d-rose)} .fbox.out::after{background:var(--d-indigo)}
 .fbox h5{margin:.2rem 0 .6rem;font-family:"Fraunces",serif;font-size:1.2rem;font-weight:600}
 .fbox .tag{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.35rem;line-height:1.45}
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.35rem;line-height:1.45}
 .fbox ul{margin:0;padding-left:1.15rem;font-size:var(--t-sm)}
-.fbox li{margin-bottom:.45rem;color:var(--ink-2);line-height:1.55}
+.fbox li{margin-bottom:.45rem;color:var(--d-ink-2);line-height:1.55}
 
 /* The three packages */
 .meso{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:1.6rem 0}
-.pk{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:1.2rem;position:relative}
-.pk.pick{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.pk{background:var(--d-card);border:1px solid var(--d-rule);border-radius:12px;padding:1.2rem;position:relative}
+.pk.pick{border-color:var(--d-green);box-shadow:0 0 0 1px var(--d-green)}
 .pk .let{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
-  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.25rem}
-.pk.pick .let{color:var(--green)}
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.25rem}
+.pk.pick .let{color:var(--d-green)}
 .pk b.nm{display:block;font-family:"Fraunces",serif;font-size:1.2rem;margin-bottom:.5rem}
-.pk p{font-size:var(--t-sm);color:var(--ink-2);margin:0 0 .7rem;line-height:1.55}
+.pk p{font-size:var(--t-sm);color:var(--d-ink-2);margin:0 0 .7rem;line-height:1.55}
 .pk .px{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.03em;
-  color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.65rem;display:block;line-height:1.5}
-.pk .mine{position:absolute;top:-.7rem;right:.8rem;background:var(--green);color:#fff;
+  color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:.65rem;display:block;line-height:1.5}
+.pk .mine{position:absolute;top:-.7rem;right:.8rem;background:var(--d-green);color:#fff;
   font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.06em;
   padding:.15rem .6rem;border-radius:20px}
 
@@ -146,12 +157,12 @@ td b{color:var(--ink);font-weight:600}
 .q em{font-family:"Fraunces",serif;font-style:italic;color:#fff}
 
 .sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem;margin:2.4rem 0 0}
-.sig{border-top:1px solid var(--ink);padding-top:.65rem}
-.sig b{display:block;font-size:var(--t-base)} .sig span{font-size:var(--t-meta);color:var(--ink-3)}
+.sig{border-top:1px solid var(--d-ink);padding-top:.65rem}
+.sig b{display:block;font-size:var(--t-base)} .sig span{font-size:var(--t-meta);color:var(--d-ink-3)}
 
-footer{border-top:1px solid var(--rule);margin-top:3rem;padding:1.5rem 0 3rem;
+footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
   font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.08em;
-  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.5rem 1.8rem;line-height:1.55}
+  text-transform:uppercase;color:var(--d-ink-3);display:flex;flex-wrap:wrap;gap:.5rem 1.8rem;line-height:1.55}
 
 /* Three packages side by side stop being readable long before phone width —
    at 820px each card is down to about twenty characters a line. */
