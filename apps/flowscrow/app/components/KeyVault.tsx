@@ -237,7 +237,26 @@ export function KeyVault() {
   return (
     <div className="vault-root">
       <InfinityField />
+      <SwitchIdentity who={access.r.display_name} />
       <Reveal code={access.code} r={access.r} />
+    </div>
+  );
+}
+
+/* ── Whoever opened last owns the browser: the code is remembered in
+   localStorage so an FBID round-trip can come back to it. That is right for a
+   signer and wrong for a shared laptop, so there has to be a visible way out —
+   otherwise opening the recipient's view once locks you out of your own. ── */
+function SwitchIdentity({ who }: { who: string }) {
+  function reset() {
+    try { localStorage.removeItem(SS_KEY); } catch { /* private mode */ }
+    // Land on the bare path: no ?k, no ?as, so nothing re-opens automatically.
+    window.location.replace(window.location.pathname);
+  }
+  return (
+    <div className="v-switch v-noprint">
+      <span className="v-switch__who">Viewing as <b>{who}</b></span>
+      <button className="v-switch__btn" onClick={reset}>Not you? Enter a different code</button>
     </div>
   );
 }

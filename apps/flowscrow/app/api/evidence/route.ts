@@ -9,7 +9,10 @@ import { EVIDENCE } from '@/lib/server/evidence';
 // caller presents the vault code that resolves to her.
 export async function POST(req: NextRequest) {
   const { code } = await req.json().catch(() => ({}));
-  if (typeof code !== 'string' || !/^\d{6}$/.test(code)) {
+  // Codes are not a fixed six digits — Estefanía's is eight. Keep this range in
+  // step with MIN_LEN/MAX_LEN in the vault component, or a valid code is turned
+  // away here with a 400 while the keypad happily accepts it.
+  if (typeof code !== 'string' || !/^\d{4,12}$/.test(code)) {
     return NextResponse.json({ error: 'code required' }, { status: 400 });
   }
 
