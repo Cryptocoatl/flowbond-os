@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keccak256, toHex } from 'viem';
-import { MESSAGE, ACKNOWLEDGMENT, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES, FINALIZE_STEPS, GUIDE_FAQ } from '@/lib/documents';
-import { REALITY_STATS, VALUE_BANDS, RECORD_ROWS, RAILS, STACK } from '@/lib/audit';
+import {
+  MESSAGE, AGREEMENT, STANDING, WITNESSES, PERSONAL, PARTIES, FINALIZE_STEPS, GUIDE_FAQ,
+  URGENCY, LEDGER, PROTECTION, COMMITMENT,
+} from '@/lib/documents';
 import {
   vaultResolve, vaultAuthorized, vaultSign, vaultWitness, vaultSignatures, vaultWitnesses, sessionEmail,
   vaultComment, vaultComments, vaultTasks, vaultEvents, vaultAttest,
@@ -132,12 +134,28 @@ export function KeyVault() {
   const [turning, setTurning] = useState(false);
   const [access, setAccess] = useState<{ code: string; r: Resolved } | null>(null);
 
-  // Resume after an FBID login round-trip. localStorage (not sessionStorage) so the
-  // code survives the magic-link opening in a new tab — you land back signed-in.
+  // Two ways in, and neither one can lock you out. `?k=<code>` opens the vault on a
+  // single click straight from the email — the link IS the key, so it is never sent
+  // to a group. The keypad stays as the fallback for anyone who has only the code.
+  // localStorage (not sessionStorage) so the code survives an FBID magic link
+  // opening in a new tab — you land back signed-in.
   useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(SS_KEY) : null;
-    if (!saved) return;
-    vaultResolve(saved).then((r) => { if (r) setAccess({ code: saved, r }); }).catch(() => {});
+    if (typeof window === 'undefined') return;
+    const fromUrl = new URLSearchParams(window.location.search).get('k')?.replace(/\D/g, '') ?? '';
+    const saved = localStorage.getItem(SS_KEY);
+    const code = fromUrl.length === CODE_LEN ? fromUrl : saved;
+    if (!code) return;
+    vaultResolve(code)
+      .then((r) => {
+        if (!r) return;
+        localStorage.setItem(SS_KEY, code);
+        if (r.kind === 'witness') vaultWitness(code).catch(() => {});
+        // Drop the code from the address bar so it does not linger in history,
+        // screenshots, or a shoulder-surfed URL once the vault is open.
+        if (fromUrl) window.history.replaceState({}, '', window.location.pathname);
+        setAccess({ code, r });
+      })
+      .catch(() => {});
   }, []);
 
   async function complete(code: string) {
@@ -206,6 +224,90 @@ export function KeyVault() {
       <InfinityField />
       <Reveal code={access.code} r={access.r} />
     </div>
+  );
+}
+
+/* ── the deadline. First thing on the page, above everything else. ── */
+function UrgencyBanner({ signed }: { signed: boolean }) {
+  if (signed) {
+    return (
+      <div className="v-card" style={{ marginBottom: 22, borderColor: 'rgba(143,169,143,.6)', background: 'rgba(30,52,38,.55)', textAlign: 'center' }}>
+        <div className="v-eyebrow" style={{ color: '#8FA98F' }}>Complete</div>
+        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, margin: '6px 0 6px', color: 'var(--v-ink)' }}>Both parties have signed.</h2>
+        <p className="v-lead" style={{ margin: 0, fontSize: 14 }}>
+          Nothing further is asked of you. Estefanía completes the filings from here.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="v-card" style={{ marginBottom: 22, borderColor: 'rgba(245,215,122,.75)', background: 'linear-gradient(180deg, rgba(60,30,20,.6), rgba(40,22,72,.55))' }}>
+      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>{URGENCY.eyebrow}</div>
+      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px,5vw,30px)', margin: '6px 0 10px', color: 'var(--v-ink)', lineHeight: 1.2 }}>
+        {URGENCY.headline}
+      </h2>
+      <p className="v-lead" style={{ margin: '0 0 10px', fontSize: 14.5 }}>{URGENCY.sub}</p>
+      <p style={{ margin: 0, fontSize: 13, color: 'var(--v-gold)', borderTop: '1px solid rgba(245,215,122,.25)', paddingTop: 10 }}>
+        {URGENCY.after}
+      </p>
+    </div>
+  );
+}
+
+/* ── the transparent ledger: exactly where this stands and who it waits on ── */
+function LedgerPanel() {
+  const tone = (t: string) => (t === 'good' ? '#8FA98F' : t === 'stop' ? '#ff9db4' : t === 'pending' ? 'var(--v-gold)' : 'var(--v-violet)');
+  return (
+    <section style={{ marginBottom: 28 }}>
+      <div className="v-eyebrow">The record</div>
+      <h2 className="v-h2">Where this stands, in full</h2>
+      <p className="v-lead" style={{ margin: '4px 0 12px' }}>
+        Nothing hidden and nothing rounded. Every line below is drawn from this vault’s own audit trail —
+        the same record the witnesses can see.
+      </p>
+      <div className="v-card" style={{ display: 'grid', gap: 0 }}>
+        {LEDGER.map((s, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 14, padding: '11px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14, color: 'var(--v-ink)' }}>{s.k}</span>
+            <span style={{ fontSize: 13.5, fontWeight: 700, color: tone(s.tone), textAlign: 'right' }}>{s.v}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ── what the signature costs him, and what it protects him from ── */
+function ProtectionPanel() {
+  return (
+    <section style={{ marginBottom: 28 }}>
+      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Both directions</div>
+      <h2 className="v-h2">{PROTECTION.title}</h2>
+      <p className="v-lead" style={{ margin: '4px 0 12px' }}>{PROTECTION.lead}</p>
+      <div className="v-card" style={{ display: 'grid', gap: 0 }}>
+        {PROTECTION.items.map((p, i) => (
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: '86px 1fr', gap: 14, padding: '12px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', alignItems: 'start' }}>
+            <span className="pill" style={{ color: 'var(--v-gold)', whiteSpace: 'nowrap' }}>{p.s}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--v-ink)' }}>{p.t}</div>
+              <p className="v-lead" style={{ margin: '3px 0 0', fontSize: 13.5 }}>{p.d}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="v-card" style={{ marginTop: 14, borderColor: 'rgba(179,136,255,.4)' }}>
+        <div className="v-eyebrow" style={{ color: 'var(--v-violet)' }}>And what you are agreeing to</div>
+        <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>
+          {COMMITMENT.map((c, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '86px 1fr', gap: 14, alignItems: 'start' }}>
+              <span className="pill" style={{ whiteSpace: 'nowrap' }}>{c.s}</span>
+              <span style={{ fontSize: 14, color: 'var(--v-ink)', lineHeight: 1.5 }}>{c.t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -388,17 +490,17 @@ function PhaseTracker({ code, isWitness, who }: { code: string; isWitness: boole
 }
 
 /* ── Russell's step-by-step finalize guide + ClaudIA chat ── */
-function RussellGuide({ sigs, authorized }: { sigs: Signature[]; authorized: boolean }) {
+function RussellGuide({ sigs }: { sigs: Signature[] }) {
+  const signed = !!sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
   const done = (key: string) => {
-    if (key === 'fbid') return authorized;
-    if (key === 'sign-agreement') return !!sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
-    if (key === 'sign-ack') return !!sigs.find((s) => s.party_role === 'russell' && s.document === 'acknowledgment');
+    if (key === 'sign-agreement') return signed;
+    if (key === 'done') return signed;
     return false;
   };
   return (
     <section style={{ marginBottom: 28 }}>
-      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Your guide · finalize every step</div>
-      <h2 className="v-h2">Russell — here’s exactly how to close, step by step</h2>
+      <div className="v-eyebrow" style={{ color: 'var(--v-gold)' }}>Your part · three steps</div>
+      <h2 className="v-h2">Russell — this is everything you have to do</h2>
       <div className="v-card" style={{ display: 'grid', gap: 0, marginTop: 12 }}>
         {FINALIZE_STEPS.map((s, i) => {
           const d = done(s.key);
@@ -488,6 +590,10 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
   const role = r.party_role;
   const who = r.display_name;
   const canAct = isSigner && authorized; // may sign + download
+  const isRussell = r.person_key === 'russell';
+  const bothSigned =
+    !!sigs.find((s) => s.party_role === 'steph' && s.document === 'agreement') &&
+    !!sigs.find((s) => s.party_role === 'russell' && s.document === 'agreement');
 
   useEffect(() => {
     vaultSignatures().then(setSigs).catch(() => {});
@@ -525,97 +631,46 @@ function Reveal({ code, r }: { code: string; r: Resolved }) {
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+      {isRussell && <UrgencyBanner signed={bothSigned} />}
+
+      <div style={{ textAlign: 'center', marginBottom: 34 }}>
         <div className="v-eyebrow">Sealed on the record</div>
-        <h1 className="v-h1">The agreement, <span className="v-grad">sealed on the record.</span></h1>
+        <h1 className="v-h1">One signature, <span className="v-grad">and this is closed.</span></h1>
         <p className="v-lead" style={{ maxWidth: 660, margin: '6px auto 0' }}>
           Welcome, <b style={{ color: 'var(--v-ink)' }}>{who}</b>. This vault holds the Mutual Dissolution, Wind-Up and
-          Release Agreement — validated by cryptography and witnessed on the record.
+          Release Agreement — unchanged since July 9, validated by cryptography and witnessed on the record.
         </p>
         {canAct && email && <p style={{ fontSize: 12.5, color: 'var(--v-gold)', marginTop: 8 }}>✓ FBID verified as {email}</p>}
       </div>
 
-      <div className="v-card v-noprint" style={{ marginBottom: 18, textAlign: 'center', fontSize: 13, color: 'var(--v-dim)' }}>
-        📄 This is the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement (July 9, 2026)</b>.
-        If you opened this earlier, refresh the page to load the latest before you review or sign.
-      </div>
-
-      {r.person_key === 'russell' && <RussellGuide sigs={sigs} authorized={authorized} />}
-
-      <StandingPanel />
-
       <section style={{ marginBottom: 28 }}>
-        <div className="v-eyebrow">1 · The note</div>
-        <h2 className="v-h2">A note before you read the agreement</h2>
+        <div className="v-eyebrow">The note</div>
+        <h2 className="v-h2">From Estefanía</h2>
         <div className="v-card" style={{ marginTop: 12 }}>
           {MESSAGE.paragraphs.map((p, i) => <p key={i} className="v-lead" style={{ margin: '0 0 14px' }}>{richText(p)}</p>)}
           {MESSAGE.signoff && <p className="v-lead" style={{ whiteSpace: 'pre-line', margin: 0, color: 'var(--v-ink)' }}>{MESSAGE.signoff}</p>}
         </div>
       </section>
 
-      <section style={{ marginBottom: 28 }}>
-        <div className="v-eyebrow">2 · The record</div>
-        <h2 className="v-h2">Proposed credit vs. what the record shows</h2>
-        <div className="v-card" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-          {RECORD_ROWS.map((r2, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 14, alignItems: 'start', paddingBottom: 10, borderBottom: i < RECORD_ROWS.length - 1 ? '1px solid rgba(179,136,255,.14)' : 'none' }}>
-              <div style={{ color: 'var(--v-magenta)', fontWeight: 600, fontSize: 14 }}>{r2.implies}</div>
-              <div className="v-lead" style={{ fontSize: 14 }}>{r2.shows}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {isRussell && <RussellGuide sigs={sigs} />}
 
-      <section style={{ marginBottom: 28 }}>
-        <div className="v-eyebrow">3 · The reality</div>
-        <h2 className="v-h2">What FlowBond actually is, in numbers</h2>
-        <p className="v-lead" style={{ margin: '4px 0 14px' }}>From the live org audit (GitHub org API, 2026-06-24). The same figures any investor sees.</p>
-        <div className="stat-grid">
-          {REALITY_STATS.map((s, i) => (<div className="stat" key={i}><div className="n">{s.value}</div><div className="l">{s.label}</div><div className="s">{s.sub}</div></div>))}
-        </div>
-        <div className="v-card" style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-          {VALUE_BANDS.map((b, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'baseline', flexWrap: 'wrap' }}>
-              <div><div style={{ fontWeight: 700, fontSize: 14 }}>{b.label}</div><div className="s" style={{ color: 'var(--v-dim)', fontSize: 12.5 }}>{b.note}</div></div>
-              <div className="v-grad" style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, whiteSpace: 'nowrap' }}>{b.value}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <LedgerPanel />
 
-      <section style={{ marginBottom: 28 }}>
-        <div className="v-eyebrow">4 · The technology</div>
-        <h2 className="v-h2">The full stack underneath it</h2>
-        <div className="v-card" style={{ display: 'grid', gap: 14, marginTop: 12 }}>
-          {STACK.map((g) => (
-            <div key={g.layer}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-violet)', letterSpacing: '.06em', textTransform: 'uppercase' }}>{g.layer}</div>
-              <div className="tech-row">{g.items.map((t) => <span className="chip" key={t}>{t}</span>)}</div>
-            </div>
-          ))}
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--v-gold)', letterSpacing: '.06em', textTransform: 'uppercase' }}>Monetizable rails (the moat)</div>
-            <div className="tech-row">{RAILS.map((r2) => <span className="chip" key={r2.name} title={r2.what} style={{ borderColor: 'rgba(245,215,122,.35)' }}>{r2.name} · {r2.ready}</span>)}</div>
-          </div>
-        </div>
-      </section>
+      <ProtectionPanel />
+
+      <StandingPanel />
 
       <section id="sign">
-        <div className="v-eyebrow">5 · The documents</div>
+        <div className="v-eyebrow">The document</div>
         <h2 className="v-h2">{canAct ? 'Read, download & sign' : isSigner ? 'Read — verify with FBID to sign' : 'Read & verify'}</h2>
         <p className="v-lead" style={{ margin: '4px 0 16px' }}>
-          Two documents sit in escrow: the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement</b> and
-          the separate <b style={{ color: 'var(--v-ink)' }}>Acknowledgment of Contribution</b>. Only Estefanía and
-          Russell sign — with FBID — and the named witnesses verify.
+          One document: the <b style={{ color: 'var(--v-ink)' }}>Mutual Dissolution, Wind-Up and Release Agreement</b>,
+          including Exhibits 1–3. Only Estefanía and Russell sign; the named witnesses verify.
         </p>
 
         {isSigner && !authorized && <FbidGate name={who} />}
 
-        <div className="v-eyebrow" style={{ marginBottom: 8 }}>Document 1 — Mutual Dissolution, Wind-Up and Release Agreement</div>
         <AgreementPaper role={role} code={code} canAct={canAct} sigs={sigs} wits={wits} onSigned={refresh} />
-
-        <div className="v-eyebrow" style={{ margin: '28px 0 8px' }}>Document 2 — Acknowledgment of Contribution (Exhibit 5)</div>
-        <Acknowledgment role={role} code={code} canAct={canAct} sigs={sigs} onSigned={refresh} />
       </section>
 
       <PhaseTracker code={code} isWitness={!isSigner} who={who} />
@@ -762,52 +817,7 @@ function AgreementPaper({ role, code, canAct, sigs, wits, onSigned }: { role: Va
       </div>
 
       {canAct && role
-        ? <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Mutual-Dissolution-Agreement.txt" showDocuSign />
-        : <LockedNote signer={!!role} />}
-    </>
-  );
-}
-
-/* ── the signable Acknowledgment paper ── */
-function Acknowledgment({ role, code, canAct, sigs, onSigned }: { role: VaultRole | null; code: string; canAct: boolean; sigs: Signature[]; onSigned: () => void }) {
-  const a = ACKNOWLEDGMENT;
-  const buildText = () =>
-    [
-      a.title, '', `Issued by: ${a.issuedBy}`, `In recognition of: ${a.recognitionOf}`, `Role: ${a.role}`,
-      `Period: ${a.period.replace(/\*/g, '')}`, '', 'Scope of contribution:',
-      ...a.scope.map((s) => ' - ' + s.replace(/\*/g, '')), '',
-      'Acknowledgment. ' + a.acknowledgment, '',
-      ...a.also.map((x) => `Also recognized — ${x.name} (${x.role.replace(/\*/g, '')}): ${x.text.replace(/\*/g, '')}`),
-      '', 'Scope & clarity. ' + a.scopeClarity, '',
-      'Acknowledged and agreed:', '', 'Estefanía Ferrera — ______________________   Date: __________', '',
-      'Russell Herod — ______________________   Date: __________',
-      ...sigs.filter((s) => s.document === 'acknowledgment').map((s) => `\n[signed in vault, FBID-verified] ${s.signer_name} (${s.party_role}) · ${new Date(s.signed_at).toLocaleString()}`),
-    ].join('\n');
-
-  return (
-    <>
-      <div className="doc-paper" style={{ marginTop: 12 }}>
-        <h3>{a.title}</h3>
-        <div className="meta">Issued by <b>{a.issuedBy}</b> · In recognition of <b>{a.recognitionOf}</b></div>
-        <p style={{ margin: '14px 0 4px' }}><b>Role:</b> <span className="gold">{a.role}</span></p>
-        <p style={{ margin: '0 0 4px' }}><b>Period:</b> {richText(a.period)}</p>
-        <p style={{ margin: '8px 0 4px' }}><b>Scope of contribution</b></p>
-        <ul style={{ margin: '0 0 10px', paddingLeft: 20 }}>{a.scope.map((s, i) => <li key={i} style={{ margin: '4px 0' }}>{richText(s)}</li>)}</ul>
-        <p><b>Acknowledgment.</b> {a.acknowledgment}</p>
-        {a.also.map((x, i) => (
-          <div key={i} style={{ borderLeft: '3px solid #8a5cff', paddingLeft: 14, margin: '14px 0' }}>
-            <p style={{ margin: '0 0 2px', fontWeight: 700 }}>Also recognized — {x.name} <span style={{ fontWeight: 400, color: '#6b5b8c' }}>({richText(x.role)})</span></p>
-            <p style={{ margin: 0, fontSize: 14 }}>{richText(x.text)}</p>
-          </div>
-        ))}
-        <p style={{ fontSize: 13.5, color: '#4a3a6c' }}><b>Scope &amp; clarity.</b> {a.scopeClarity}</p>
-        <div className="sig-line">
-          <span><b>Estefanía Ferrera</b> {sigs.find((s) => s.party_role === 'steph' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>
-          <span><b>Russell Herod</b> {sigs.find((s) => s.party_role === 'russell' && s.document === 'acknowledgment') ? '✓ signed' : '— ____________'}</span>
-        </div>
-      </div>
-      {canAct && role
-        ? <SignControls role={role} code={code} document="acknowledgment" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Acknowledgment-of-Contribution.txt" />
+        ? <SignControls role={role} code={code} document="agreement" sigs={sigs} onSigned={onSigned} buildText={buildText} filename="Mutual-Dissolution-Agreement.txt" showDocuSign={role === 'steph'} />
         : <LockedNote signer={!!role} />}
     </>
   );
