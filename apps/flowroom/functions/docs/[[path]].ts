@@ -70,6 +70,7 @@ const DOC_OF_FILE: Record<string, string> = {
   '2-roadmap-1mwd': '2',
   '3-structure-and-ip-analysis': '3',
   '4-danz-1mwd-boundary-and-cross-equity': '4',
+  '5-the-alliance': '5',
 };
 
 export const DOC_TITLES: Record<string, string> = {
@@ -77,6 +78,7 @@ export const DOC_TITLES: Record<string, string> = {
   '2': 'Execution Roadmap',
   '3': 'Structure & IP Analysis',
   '4': 'DANZ × 1MWD',
+  '5': 'The Alliance',
 };
 
 const opens = (pass: Pass, doc: string) => !pass.d || pass.d.includes(doc);
@@ -397,7 +399,7 @@ function gatePage(opts: { invited?: boolean; misconfigured?: boolean } = {}) {
     <p class="gate-sub">${
       opts.invited
         ? 'That key did not open. Ask whoever sent it for a fresh link — keys are personal, and an old one stops working once it is replaced.'
-        : 'Four documents, by invitation. Enter your name and the key you were given.'
+        : 'Five documents, by invitation. Enter your name and the key you were given.'
     }</p>
 
     <form id="gate-form" autocomplete="off">

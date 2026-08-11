@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Alliance — Three ways to do this</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F5F2; --card:#FFFFFF; --ink:#1D1A16; --ink-2:#55504A; --ink-3:#8A837A;
+  --rule:#E4DFD8; --rule-2:#D0C9BF;
+  --rose:#C0345C; --green:#2F8F5F; --indigo:#3E4A94; --teal:#237F92; --violet:#7C3F9C; --amber:#C97F1E;
+  --flag:#A8202F; --flagbg:#FBEFEF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
+
+header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
+.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 .9rem}
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.1rem);
+  line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
+.intro{color:var(--ink-2);max-width:50ch;margin:0 0 1.4rem}
+.docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:1rem;
+  display:flex;flex-wrap:wrap;gap:.4rem 2rem}
+
+h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.35rem,3.2vw,1.8rem);
+  line-height:1.15;letter-spacing:-.012em;margin:2.6rem 0 .9rem;
+  padding-top:1.3rem;border-top:1px solid var(--rule)}
+h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.08rem;margin:1.7rem 0 .5rem}
+h4{font-family:"Space Mono",monospace;font-size:.65rem;font-weight:700;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);margin:1.5rem 0 .5rem}
+p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.42rem}
+.lede{font-size:1.05rem;color:var(--ink-2)}
+q{font-family:"Fraunces",serif;font-style:italic}
+em.big{font-family:"Fraunces",serif;font-style:italic}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.3rem 0}
+.col{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem;position:relative;overflow:hidden}
+.col::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+.col.a::after{background:var(--green)} .col.b::after{background:var(--flag)}
+.col h5{margin:.2rem 0 .1rem;font-family:"Fraunces",serif;font-size:1.08rem;font-weight:600}
+.col .tag{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);display:block}
+.col ul{margin:.7rem 0 0;padding-left:1.05rem;font-size:.89rem}
+.col li{margin-bottom:.3rem;color:var(--ink-2)}
+
+.flag,.note,.good,.tilt{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
+.flag{background:var(--flagbg);border-left:4px solid var(--flag);color:#5E1620}
+.note{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--teal);color:var(--ink-2)}
+.good{background:#EFF6F1;border-left:4px solid var(--green);color:#204634}
+.tilt{background:#FBF4E8;border-left:4px solid var(--amber);color:#5C3F12}
+.flag b.t,.note b.t,.good b.t,.tilt b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
+.flag b.t{color:var(--flag)} .note b.t{color:var(--teal)} .good b.t{color:var(--green)} .tilt b.t{color:var(--amber)}
+.flag p:last-child,.note p:last-child,.good p:last-child,.tilt p:last-child{margin:0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--rule-2);border-radius:10px;margin:1.3rem 0;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  padding:.7rem .9rem;border-bottom:1px solid var(--rule-2);vertical-align:bottom}
+td{padding:.7rem .9rem;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink);font-weight:600}
+.fill{color:var(--ink-3);font-family:"Space Mono",monospace;font-size:.78rem}
+
+.commit{counter-reset:c;margin:1.3rem 0;padding:0;list-style:none}
+.commit li{counter-increment:c;background:var(--card);border:1px solid var(--rule);
+  border-radius:10px;padding:.9rem 1rem .9rem 3rem;margin-bottom:.5rem;position:relative;font-size:.93rem}
+.commit li::before{content:counter(c);position:absolute;left:1rem;top:.95rem;
+  font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:var(--violet)}
+.commit li b{display:block;margin-bottom:.1rem}
+.commit li span{color:var(--ink-2)}
+
+/* The Field — what is inside the fence and what is not */
+.field{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.3rem 0}
+.fbox{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.1rem;position:relative;overflow:hidden}
+.fbox::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+.fbox.in::after{background:var(--rose)} .fbox.out::after{background:var(--indigo)}
+.fbox h5{margin:.2rem 0 .5rem;font-family:"Fraunces",serif;font-size:1.08rem;font-weight:600}
+.fbox .tag{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.3rem}
+.fbox ul{margin:0;padding-left:1.05rem;font-size:.89rem}
+.fbox li{margin-bottom:.3rem;color:var(--ink-2)}
+
+/* The three packages */
+.meso{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1.3rem 0}
+.pk{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:1rem;position:relative}
+.pk.pick{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
+.pk .let{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:.2rem}
+.pk.pick .let{color:var(--green)}
+.pk b.nm{display:block;font-family:"Fraunces",serif;font-size:1.05rem;margin-bottom:.4rem}
+.pk p{font-size:.85rem;color:var(--ink-2);margin:0 0 .5rem}
+.pk .px{font-family:"Space Mono",monospace;font-size:.68rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--rule);padding-top:.5rem;display:block}
+.pk .mine{position:absolute;top:-.6rem;right:.8rem;background:var(--green);color:#fff;
+  font-family:"Space Mono",monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:.15rem .5rem;border-radius:20px}
+
+.q{background:#150F1D;color:#F2EDE6;border-radius:12px;padding:1.4rem 1.5rem;margin:1.5rem 0}
+.q b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.14em;
+  text-transform:uppercase;color:#B79BD8;margin-bottom:.5rem}
+.q p{margin:0 0 .7rem;color:#D8D1C8;font-size:.93rem}
+.q p:last-child{margin:0}
+.q strong{color:#fff}
+.q em{font-family:"Fraunces",serif;font-style:italic;color:#fff}
+
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
+.sig{border-top:1px solid var(--ink);padding-top:.55rem}
+.sig b{display:block;font-size:.95rem} .sig span{font-size:.82rem;color:var(--ink-3)}
+
+footer{border-top:1px solid var(--rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
+  font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
+
+@media(max-width:640px){ .two,.sigs,.field,.meso{grid-template-columns:1fr} }
+@media print{ body{background:#fff} .flag,.note,.good,.tilt,.tablewrap,.col,.fbox,.pk,.commit li{break-inside:avoid} }
+</style>
+<link rel="stylesheet" href="/docs/room.css">
+</head>
+<body data-doc="5">
+
+<div class="wrap">
+
+<header>
+  <p class="kicker">Document 05 · In answer to your thirteen comments and the call</p>
+  <h1>The Alliance</h1>
+  <p class="intro lede">You asked a question with six words in it: <q>it's a partnership on dance or not.</q> This document answers it. The answer is yes — and this is what yes costs, in both directions.</p>
+  <div class="docmeta">
+    <span>Vandana and counsel</span>
+    <span>Supersedes Document 4</span>
+    <span>11 August 2026 · Draft for redline</span>
+  </div>
+</header>
+
+<section>
+<h2>Before anything else</h2>
+
+<p class="lede">On our call you said something that was fair, and that I have accepted: <q>she doesn't know the whole history of my whole, and she's not representing me.</q> You were right. Every document in this room until now was drafted from my side of the table, by my tools, with my history in them and not yours.</p>
+
+<p>Two things change from here, and they are not gestures.</p>
+
+<p><strong>You get your own lawyer, and I pay for it.</strong> Not my lawyer, not a shared one — yours, chosen by you, invoiced to me, with no obligation to tell me a word of what they say to you. This is not negotiable from my side and you do not have to accept anything in this document to accept that.</p>
+
+<p><strong>And this document marks its own bias.</strong> There is a section near the end called <em class="big">Where this favours me</em>. It lists, in plain language, the six places where I have drafted in my own interest. I would rather you hear them from me now than find them with counsel in three weeks. Read that section first if you want. It is section 7.</p>
+
+<div class="note">
+  <b class="t">On the record</b>
+  <p>Nothing in this document is legal or tax advice, and I am not qualified to give either. Every item marked <span class="fill">FOR COUNSEL</span> genuinely needs counsel — yours and mine, separately.</p>
+</div>
+</section>
+
+<section>
+<h2>1 · What you said</h2>
+
+<p>So that we are arguing with the same record rather than with each other's memory, here is your position as I understood it — from the thirteen comments you left on 9 August and from the call that followed. If any line of this is wrong, mark it and I will correct it before anything goes to a lawyer.</p>
+
+<ul>
+  <li><strong>1 Billion Hearts is for profit</strong>, with a separate non-profit alongside it purely for campaign donations. Two possible investors and advisors are being assembled. That answer unblocked the largest legal question in this file, and I am grateful for it — a for-profit parent can issue equity, so this deal is legally possible at all.</li>
+  <li><strong>Fifteen percent is a ceiling</strong>, not additive to twenty-five. <q>15% is the cap ownership, there will be other partners and investors in the company to make this a success.</q></li>
+  <li><strong>You accept the three-layer IP split in principle</strong>, and attach one condition: FlowBond <q>will not be able to do anything dance related.</q> A non-compete is, in your words, the only way the collaboration works.</li>
+  <li><strong>You claim priority on move-to-earn and the wearable coin</strong> — in the We Speak Dance roadmap since 2020, $1.7M raised, keynotes at YPO, Nexus, Volcano Summit and Blockchain Society, a deck carrying the vision, partners in Switzerland, and FII in Saudi Arabia. Your position: <q>Features can't be owned before they have been tested.</q></li>
+  <li><strong>You see my stack as a co-founder's contribution</strong>, not a vendor's licence — part of the value I bring, alongside a network and determination, and against a track record you read as junior.</li>
+  <li><strong>Your offer in exchange</strong> is co-founder of 1MWD, product owner and lead, and after a year, growth across the 1 Billion Hearts brands.</li>
+  <li><strong>On the call the fence grew.</strong> From <em>dance</em> in your comments to <q>wellness, breath work, fitness, running, any kind of movement, music, longevity.</q> And: <q>you're working on other companies. That's a red flag. That's not co-founder.</q></li>
+  <li><strong>And you conceded the moon.</strong> <q>That's a concept, that's different — you can still own that 100%.</q> Also: <q>I love the idea of dancing to the moon for 1MWD and dancing around the sun for 1 Billion Hearts.</q></li>
+</ul>
+
+<p>I am not going to argue with your leverage. It is real. Fifteen years, a Netflix show, a two-billion-dollar-fund founder in your network, and a stated willingness to raise without me. I would rather spend this document on the two or three things where I think you are asking for something you do not actually want.</p>
+</section>
+
+<section>
+<h2>2 · The answer is yes</h2>
+
+<p class="lede">It's a partnership on dance.</p>
+
+<p>DANZ folds in. Not walled off, not sitting beside it under a right of first refusal, not preserved as a separate company with a treaty between us. Folded in. The floors, the XP economy, the HeartSync work, the move-to-earn design, the wearable integration, the whole thesis — it comes into 1MWD and it stops being mine.</p>
+
+<p>Document 4 proposed a boundary and a mutual right of first refusal between two companies. You read it and wrote six words: <q>this will not work, it's a partnership on dance or not.</q> You were right and Document 4 is withdrawn. This document replaces it.</p>
+
+<div class="good">
+  <b class="t">Naming the concession</b>
+  <p>I want this counted as what it is rather than buried in a clause. I am giving up my own dance company to do this with you. That is the single largest thing either of us has put on the table so far, and everything I ask for in section 5 is priced against it.</p>
+</div>
+
+<p>There is one condition, and it is not about how much. It is about <em class="big">where the line is drawn</em>.</p>
+</section>
+
+<section>
+<h2>3 · A fence has to have a line</h2>
+
+<p>In your written comments the fence was <strong>dance</strong>. I can live inside that fence. On the call it became <strong>wellness, breath work, fitness, running, any kind of movement, music, and longevity</strong>. I cannot, and I want to show you exactly why rather than simply refusing.</p>
+
+<p>Here is what that wider fence actually contains. These are live projects with other people's names on them, none of which has anything to do with a million women dancing:</p>
+
+<div class="tablewrap"><table>
+  <thead><tr><th>Project</th><th>What it is</th><th>Whose it is</th><th>Caught by</th></tr></thead>
+  <tbody>
+    <tr><td><b>FlowChords</b></td><td>Chord detection for musicians — you play, it names the chord</td><td>Mine, live</td><td>"music"</td></tr>
+    <tr><td><b>Shikibuntu</b></td><td>A philosophy and practice platform</td><td><b>Gala Dichiara's.</b> I build it, she owns it</td><td>"any kind of movement"</td></tr>
+    <tr><td><b>Ekumal</b></td><td>A sanctuary in the Mayan jungle — six stations and a sound walk</td><td>Client work, in preview</td><td>"wellness", "breath work"</td></tr>
+    <tr><td><b>Sani Templo</b></td><td>Balinese dry-bath temples</td><td>Client work</td><td>"wellness"</td></tr>
+  </tbody>
+</table></div>
+
+<p>I cannot sign away Gala's company. It is not mine to sign. And a fence that reaches music and longevity is not a non-compete — it is a career, ended by a clause, in exchange for a minority position in a company that does not exist yet.</p>
+
+<p>So here is the fence I will sign, drawn once, in writing, and never moved afterwards.</p>
+
+<div class="field">
+  <div class="fbox in">
+    <span class="tag">The Field · exclusive to 1MWD</span>
+    <h5>Dance participation</h5>
+    <ul>
+      <li>Dance classes, challenges, relays and chains</li>
+      <li>Dance-based social and community products</li>
+      <li>Dance move-to-earn, dance rewards, dance-verified motion</li>
+      <li>Dance events, floors, summits and live formats</li>
+      <li>Wearable and biometric products <em>whose purpose is dance</em></li>
+      <li>Dance creator networks and dance brand partnerships</li>
+    </ul>
+  </div>
+  <div class="fbox out">
+    <span class="tag">Outside the Field · stays mine</span>
+    <h5>Everything else</h5>
+    <ul>
+      <li>Wellness, breath work, fitness, running, longevity</li>
+      <li>Music and audio products that are not dance participation</li>
+      <li>Named and carved out: <b>FlowChords, Shikibuntu, Ekumal, Sani Templo</b></li>
+      <li>The generic platform spine — identity, hosting, transcoding, AI agents</li>
+      <li>Every FlowBond client outside the Field, present and future</li>
+      <li><b>Dance to the Moon</b>, per your own words on the call</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note">
+  <b class="t">Why this is better for you than the wide fence</b>
+  <p>A non-compete that broad, on a person who is a resident of another country and the CEO of a going concern with existing client contracts, is the kind of clause that a competent lawyer on the other side of a funding round circles in red. It reads as overreach and it invites a fight about enforceability at exactly the moment you least want one. A narrow fence that is obviously reasonable is worth more to you in diligence than a wide one that might not hold.</p>
+</div>
+
+<p>If the wide fence genuinely matters more to you than the price, it is available. See Package C in the next section. It has a price and the price is not small.</p>
+</section>
+
+<section>
+<h2>4 · Three ways to do this</h2>
+
+<p>Rather than send one position and make you guess at the trades behind it, here are three complete structures. <strong>All three are a yes from me.</strong> I would sign any of them today. They are not equally good for you and they are not equally good for me, and that is the point — you should be choosing what to buy, not just haggling over one number.</p>
+
+<div class="meso">
+  <div class="pk pick">
+    <span class="mine">My preference</span>
+    <span class="let">Package A</span>
+    <b class="nm">The Alliance</b>
+    <p>DANZ folds in. Total exclusivity inside the Field as defined in section 3, and nothing outside it.</p>
+    <span class="px">Co-founder day one · 15% where the value lands · $5K→$7K · spine licensed with escrow</span>
+  </div>
+  <div class="pk">
+    <span class="let">Package B</span>
+    <b class="nm">The Vendor</b>
+    <p>No fence at all. FlowBond builds and licenses at founding-partner rate. DANZ stays separate. You keep full autonomy and so do I.</p>
+    <span class="px">10% base · $45K build + $2.5K/mo, deferred to $300K · no exclusivity</span>
+  </div>
+  <div class="pk">
+    <span class="let">Package C</span>
+    <b class="nm">The Wide Fence</b>
+    <p>You get the fence you named on the call — movement, wellness, music, longevity, all of it. Bought, not given.</p>
+    <span class="px">Equity in 1 Billion Hearts, not only 1MWD · cash from day one · buyout of every frozen project</span>
+  </div>
+</div>
+
+<div class="tablewrap"><table>
+  <thead><tr><th></th><th>A · The Alliance</th><th>B · The Vendor</th><th>C · The Wide Fence</th></tr></thead>
+  <tbody>
+    <tr><td><b>What you get</b></td><td>All of dance, permanently, plus DANZ folded in</td><td>A platform and an operator, at half commercial rate</td><td>All movement, wellness, music and longevity</td></tr>
+    <tr><td><b>Exclusivity</b></td><td>Total, inside the Field</td><td>None — §13.2 of the counter-draft survives</td><td>Total, across the wide field</td></tr>
+    <tr><td><b>DANZ</b></td><td>Folds into 1MWD</td><td>Stays separate, mutual right of first refusal</td><td>Folds in</td></tr>
+    <tr><td><b>Equity to me</b></td><td>15% ceiling, in the entity where dance value lands</td><td>10% base, 15% ceiling with fundraising equity</td><td>15% in <b>1 Billion Hearts</b>, the parent</td></tr>
+    <tr><td><b>Title</b></td><td>Co-founder, day one</td><td>Head of Operations &amp; Product</td><td>Co-founder, day one</td></tr>
+    <tr><td><b>Cash</b></td><td>$5,000/mo now, $7,000 after the raise</td><td>None until $300K raised</td><td>$7,000/mo from signature, not from the raise</td></tr>
+    <tr><td><b>The stack</b></td><td>Licensed, with escrow and a buyout at a price fixed now</td><td>Licensed: $45,000 build + $2,500/mo, deferred</td><td>Licensed, plus buyout or licence-back of every frozen project</td></tr>
+    <tr><td><b>Cash before you raise $300K</b></td><td class="fill">$60,000/yr salary</td><td class="fill">Zero</td><td class="fill">$84,000/yr salary + project buyouts</td></tr>
+    <tr><td><b>Honest downside for you</b></td><td>I keep four projects outside dance</td><td>I keep my own dance company</td><td>Expensive, and dilutes the parent</td></tr>
+  </tbody>
+</table></div>
+
+<div class="tilt">
+  <b class="t">Read this table with suspicion</b>
+  <p>I built it, so it flatters A. B is genuinely worse for you than it looks here — it is the cheapest of the three in equity and it costs you nothing in autonomy. If your real constraint is cash before the raise, B is the rational choice and I will not pretend otherwise. What B does not give you is the one thing you have said matters most: that dance lives under one roof.</p>
+</div>
+
+<p>The rest of this document sets out <strong>Package A</strong> in full, because it is the one I would sign. If you want B or C instead, say so and I will write that one up the same way within a day.</p>
+</section>
+
+<section>
+<h2>5 · Package A, in eight clauses</h2>
+
+<p>This is a term sheet, not a contract. It is written so that lawyers draft something we have already agreed to, rather than drafting the argument itself at four hundred dollars an hour.</p>
+
+<ol class="commit">
+  <li><b>The Field is dance participation, and it is defined once.</b>
+    <span>Exactly as set out in section 3 — the inside list and the outside list, both of them, in the signed document. The fence does not move afterwards by interpretation. If we want to widen it later, we widen it in writing and we price it again.</span></li>
+
+  <li><b>Everything inside the Field belongs to 1MWD, and DANZ folds in.</b>
+    <span>The application layer, the data layer, the mechanics, the brand work, the move-to-earn design, the DANZ assets and the DANZ thesis. Assigned, not licensed. I do not build dance outside 1MWD for as long as I am inside it, plus twenty-four months. In return, 1MWD does not build outside the Field using my platform layer — the fence runs both ways or it is not a fence, it is a leash.</span></li>
+
+  <li><b>The generic spine is licensed, not contributed — with escrow and a buyout at a price fixed today.</b>
+    <span>Identity, hosting, transcoding, the database engine, the agent framework. These serve other clients and are not mine to assign without breaching their contracts. So: source escrow released automatically on failure, material breach, change of control, or if I cease to control FlowBond; a buyout at a number we fix <em>now</em>, while neither of us has leverage over the other; category exclusivity for the term plus twenty-four months; and no data lock-in, ever, including in a payment dispute. You are never held hostage. I never lose my company. <span class="fill">FOR COUNSEL</span></span></li>
+
+  <li><b>Dance to the Moon is mine, in writing.</b>
+    <span>You conceded this on the call in your own words. Verbal concessions evaporate, so it goes in the document — and to be clear about what it is and is not: the concept and the name are mine, and if 1MWD wants to dance to the moon with me, I would be delighted. Your line about dancing around the sun for 1 Billion Hearts is yours, unreservedly.</span></li>
+
+  <li><b>The equity lands where the value lands, and cannot be moved afterwards.</b>
+    <span>Fifteen percent, fully diluted, as the ceiling you named. Of the entity that actually holds the dance business. If dance value sits in 1 Million Women Dance, the grant is there. If it sits in 1 Billion Hearts, the grant is there. And either way, an <b>anti-migration covenant</b>: dance assets, dance revenue, dance IP and dance contracts do not move to an affiliate I hold nothing in without my grant following them or being made whole. This is clause five because it is the one that decides whether any of the others mean anything. See section 6. <span class="fill">FOR COUNSEL</span></span></li>
+
+  <li><b>Salary starts now; the difference is deferred, not forgiven.</b>
+    <span>Five thousand a month from signature, rising to seven thousand on the raise, both as you proposed on the call. The gap between five thousand and a market rate for the role accrues as a deferred balance, payable from the raise or convertible at the next financing price at my election. An unpaid runway of unknown length is not a co-founder arrangement; it is a loan from me to the company, and it should be recorded as one.</span></li>
+
+  <li><b>The build is valued once. One hundred thousand dollars — deferred, or contributed. Never both, and never neither.</b>
+    <span>This is where we have quietly been assuming different things: my documents treat the stack as a vendor deliverable at a founding rate, and you treat it as a co-founder's in-kind contribution against the equity. Both are legitimate. Only one can be true. So pick: <b>(a)</b> one hundred thousand accrues as a deferred payable, settled from the raise, and the equity is priced as if I had contributed nothing; or <b>(b)</b> it is contributed capital, credited on the cap table at signature, and no cash is ever owed for it. What cannot happen is that it counts as contribution when we discuss equity and as nothing at all when we discuss cash. <span class="fill">FOR COUNSEL — see the tax note below</span></span></li>
+
+  <li><b>Governance: one advisor each, and the tie-break is structural.</b>
+    <span>Joint decision-making on brand and product, exactly as we discussed. You name an advisor, I name an advisor, and the two of them name a third if they deadlock. Where FlowBond's own commercial relationship with 1MWD is on the agenda — renewal, pricing, termination — I recuse myself entirely and you hold sole authority. Disclosed in advance, approved in writing, minuted.</span></li>
+</ol>
+
+<h3>The sequencing that holds it together</h3>
+
+<p><strong>1MWD closes first, completely. The FlowBond percentage is settled afterwards, on its own paper, on a later date.</strong></p>
+
+<p>You said on the call that you want a percentage of FlowBond. I am open to that conversation and I would rather have it properly than as the last item on a long night. But it has to be separate, for the same reason Document 4 said the DANZ grant to you had to be separate: when two grants move at the same moment, every concession gets traded twice, and afterwards neither of us can tell which one bought which. Close the first thing. Then open the second.</p>
+
+<div class="flag">
+  <b class="t">Two things counsel must look at before either of us signs</b>
+  <p><strong>Securities.</strong> Percentage-based compensation for introducing investors can constitute unregistered broker-dealer activity under Section 15(a) of the Exchange Act, with exposure to both payer and payee and rescission rights running to the investors. So investor-introduction commission is out, replaced by fundraising equity or a flat fee.</p>
+  <p><strong>Cross-border tax.</strong> I am a Mexican tax resident taking an interest in a US entity. The instrument choice cannot be made without cross-border review, and the 83(b) election window is thirty days from grant with no extension available. Getting this wrong is expensive and unfixable.</p>
+</div>
+</section>
+
+<section>
+<h2>6 · The one question that blocks everything</h2>
+
+<div class="q">
+  <b class="t">Unanswered since 9 August</b>
+  <p><strong>Fifteen percent — of which entity?</strong></p>
+  <p>You confirmed that fifteen is a ceiling. You have not said what it is a ceiling <em>of</em>. And in the same set of comments you proposed that everything dance-related lives under 1 Billion Hearts — a company in which Document 3 states, uncorrected by you, that I hold no interest and claim none.</p>
+  <p>Put those two sentences together and this is the result: <strong>I hold a capped minority of a subsidiary while the value I am folding my company into accrues to a parent I own nothing of.</strong></p>
+  <p>I do not think that is what you mean. I think it is what the current draft says, and I would rather ask you than assume the worst of you.</p>
+</div>
+
+<p>What I need is one written sentence naming the entity, and agreement in principle to the anti-migration covenant in clause 5. Not a signature, not a lawyer, not a meeting. One sentence. Everything else in this document is negotiable and I will move on most of it. This one is load-bearing, and nothing should be signed by either of us before it is answered.</p>
+
+<div class="note">
+  <b class="t">A diligence question that is nobody's fault and needs an answer</b>
+  <p>You have described We Speak Dance as a company that has already dissolved, and separately said that a former co-founder invested one million dollars to use that brand for the app and the content. Where the We Speak Dance IP legally sits today, after dissolution, is a question no one in this conversation has asked yet — and it matters for the same reason my Texas dissolution matters to you. I am raising it because your counsel will, and it is better raised early and by me. <span class="fill">FOR COUNSEL</span></p>
+</div>
+</section>
+
+<section>
+<h2>7 · Where this favours me</h2>
+
+<p class="lede">I said I would mark my own bias. Here it is. Six places where this document is drafted in my interest, and what your lawyer will probably say about each.</p>
+
+<div class="tilt">
+  <b class="t">One · I drew the fence</b>
+  <p>The Field in section 3 is my line, chosen by me, and I chose it where my other work survives. A neutral drafter would not necessarily have landed there. The four carve-outs by name are the clearest example: they are my projects, protected by name, in a document I wrote.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Two · One hundred thousand is my number</b>
+  <p>The build valuation in clause 7 is unaudited and self-assessed. Nobody independent has looked at the code and priced it. If you want it valued properly, name an assessor and I will accept theirs over mine — and I will accept it even if it comes in lower.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Three · Fixing the buyout price today favours me</b>
+  <p>I argue in clause 3 that fixing the number now protects you from being held hostage later. That is true. It is also true that it caps what you would otherwise have to pay in a competitive acquisition, and that I benefit from certainty because my downside is bounded. Both things are true at once.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Four · "Where the value lands" is my framing</b>
+  <p>Clause 5 is drafted so the grant follows value wherever it goes. That is protective for me and constraining on you — it limits how you may structure your own group of companies in future. It is the single most restrictive thing I am asking for, and I want it named as such rather than presented as a technicality.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Five · The MESO in section 4 is a persuasion device</b>
+  <p>Three options presented together tend to make the middle one look reasonable. I built the table, I chose what appears in it, and I labelled my preference. You should test B and C on their own merits and not as scenery around A.</p>
+</div>
+
+<div class="tilt">
+  <b class="t">Six · The two-way fence in clause 2 is new, and it is mine</b>
+  <p>You asked for exclusivity from me. I have written it as running in both directions. That is a fair structure, but you did not ask for it and it constrains 1MWD in ways your original proposal did not. Your lawyer should look at it hard.</p>
+</div>
+
+<p>And once more, because it is the point of this section: <strong>take this to your own lawyer and send me the invoice.</strong> I would rather pay for you to be well advised than win a clause because you were not.</p>
+</section>
+
+<section>
+<h2>8 · What is open, and who owns it</h2>
+
+<div class="tablewrap"><table>
+  <thead><tr><th>Open item</th><th>Owner</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td><b>Fifteen percent of which entity</b>, plus the anti-migration covenant</td><td>Vandana</td><td><b>Blocking</b></td></tr>
+    <tr><td>Accept, amend or reject the Field as drawn in section 3</td><td>Both</td><td>Blocking</td></tr>
+    <tr><td>Choose Package A, B or C</td><td>Vandana</td><td>Blocking</td></tr>
+    <tr><td>Clause 7: deferred payable <b>or</b> contributed capital — pick one</td><td>Both</td><td>Open</td></tr>
+    <tr><td>The buyout price for the platform layer, fixed now</td><td>Both</td><td>Open</td></tr>
+    <tr><td>Legal form and tax status of 1 Billion Hearts, on paper</td><td>Vandana</td><td>Open</td></tr>
+    <tr><td>Whether 1MWD spins out as its own entity, and where</td><td>Vandana</td><td>Open</td></tr>
+    <tr><td>Whether Kay accepts the three-layer split</td><td>Vandana</td><td>Open</td></tr>
+    <tr><td>Where the We Speak Dance IP sits after dissolution</td><td>Vandana + counsel</td><td>Open</td></tr>
+    <tr><td>Chelsea's role and equity</td><td>Vandana</td><td>Open</td></tr>
+    <tr><td>Proof of the Texas dissolution, before any technology transfers</td><td>Steph</td><td>Open</td></tr>
+    <tr><td>Delaware entity for the IP, Swiss entity for the crypto side</td><td>Steph</td><td>Open</td></tr>
+    <tr><td>Vesting commencement date reflecting when I actually started</td><td>Both</td><td>Open</td></tr>
+    <tr><td>Consent, age-gating and image rights for video from a million women, across jurisdictions, possibly including minors</td><td>Counsel, both sides</td><td>Open</td></tr>
+    <tr><td>Independent counsel for Vandana, paid by Steph</td><td>Steph</td><td><b>Standing offer</b></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<section>
+<h2>9 · Why I am giving up my company</h2>
+
+<p>Because you are right that it is one thing or the other, and because a partnership where I am quietly building the same future next door is not a partnership — it is a conflict with a nicer name on it. If we are going to do this, I would rather do it completely.</p>
+
+<p>What I am asking for in return is not more. It is only that the thing I am folding into lands somewhere real: a fence with a line in it, so that four other people's projects survive; a percentage attached to the entity where the value actually accrues; a licence rather than a confiscation of the spine that serves clients who are not you; and my company still standing on the other side of the deal.</p>
+
+<p>The line from Document 3 has not changed and it is still the right frame for all of this. The version of this that fails is not the one where the product does not work. It is the one where, in eighteen months, there is a room full of lawyers and two women who used to be excited together.</p>
+
+<p>I would like to still be excited. Tell me which package, and answer the question in section 6.</p>
+
+<div class="sigs">
+  <div class="sig"><b>Vandana Hart</b><span>Founder &amp; CEO, 1 Billion Hearts · 1 Million Women Dance</span></div>
+  <div class="sig"><b>Estefanía Ferrera</b><span>Founder &amp; CEO, FlowBond Tech</span></div>
+</div>
+</section>
+
+<footer>
+  <span>Document 5 of 5 · The Alliance</span>
+  <span>Supersedes Document 4 in full</span>
+  <span>11 August 2026 · Draft for redline</span>
+</footer>
+
+</div>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>

@@ -186,6 +186,7 @@ footer a{color:var(--ink-2)}
         <label class="pick"><input type="checkbox" value="2"> 02 · Roadmap</label>
         <label class="pick on"><input type="checkbox" value="3" checked> 03 · Structure &amp; IP</label>
         <label class="pick"><input type="checkbox" value="4"> 04 · DANZ</label>
+        <label class="pick on"><input type="checkbox" value="5" checked> 05 · The Alliance</label>
       </div>
 
       <label class="fld" style="margin-top:1.1rem">
@@ -194,6 +195,7 @@ footer a{color:var(--ink-2)}
           <option value="">The room, so they choose</option>
           <option value="3-STRUCTURE-AND-IP-ANALYSIS">Straight into 03 · Structure &amp; IP</option>
           <option value="4-DANZ-1MWD-BOUNDARY-AND-CROSS-EQUITY">Straight into 04 · DANZ</option>
+          <option value="5-THE-ALLIANCE">Straight into 05 · The Alliance</option>
         </select>
       </label>
 
@@ -240,7 +242,7 @@ footer a{color:var(--ink-2)}
 (function () {
   const $ = (id) => document.getElementById(id);
   const KEYS = 'flowroom.1mwd.sharedkeys';
-  const DOCNAME = { '1': '01 · One Pager', '2': '02 · Roadmap', '3': '03 · Structure & IP', '4': '04 · DANZ' };
+  const DOCNAME = { '1': '01 · One Pager', '2': '02 · Roadmap', '3': '03 · Structure & IP', '4': '04 · DANZ', '5': '05 · The Alliance' };
 
   /* Checkboxes that look like the rest of the room. */
   $('docs').addEventListener('change', (e) => {
