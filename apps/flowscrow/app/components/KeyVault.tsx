@@ -15,7 +15,11 @@ import {
 import { hubRedirect } from '@flowbond/auth';
 import { apiUrl } from '@/lib/path';
 
-const CODE_LEN = 6;
+// Codes are not all the same length any more, so the keypad cannot auto-submit
+// at a fixed count: typing an 8-digit code would fire a doomed 6-digit attempt
+// on the way past and wipe the entry. Enter explicitly instead.
+const MIN_LEN = 4;
+const MAX_LEN = 12;
 const SS_KEY = 'fs_vault_code';
 
 /* ── animated infinity background (deterministic → no hydration mismatch) ── */
@@ -143,7 +147,7 @@ export function KeyVault() {
     if (typeof window === 'undefined') return;
     const fromUrl = new URLSearchParams(window.location.search).get('k')?.replace(/\D/g, '') ?? '';
     const saved = localStorage.getItem(SS_KEY);
-    const code = fromUrl.length === CODE_LEN ? fromUrl : saved;
+    const code = fromUrl.length >= MIN_LEN ? fromUrl : saved;
     if (!code) return;
     vaultResolve(code)
       .then((r) => {
@@ -171,9 +175,12 @@ export function KeyVault() {
   function press(d: string) {
     if (turning || access) return;
     setErr(false);
-    const next = (pin + d).slice(0, CODE_LEN);
-    setPin(next);
-    if (next.length === CODE_LEN) complete(next);
+    setPin((pin + d).slice(0, MAX_LEN));
+  }
+
+  function submit() {
+    if (turning || access || pin.length < MIN_LEN) return;
+    complete(pin);
   }
 
   if (!access) {
@@ -190,13 +197,13 @@ export function KeyVault() {
               {turning ? <span className="v-grad">Opening…</span> : 'Enter your code'}
             </h1>
             <p className="v-lead" style={{ fontSize: 14, margin: '0 0 18px' }}>
-              {turning ? 'Welcome.' : 'Each person has a private 6-digit code. Enter yours to open the vault.'}
+              {turning ? 'Welcome.' : 'Each person has a private code. Enter yours, then press Open.'}
             </p>
 
             {!turning && (
               <>
                 <div className="pin-dots">
-                  {Array.from({ length: CODE_LEN }).map((_, i) => (
+                  {Array.from({ length: Math.max(pin.length, MIN_LEN) }).map((_, i) => (
                     <span key={i} className={`pin-dot ${err ? 'err' : pin.length > i ? 'on' : ''}`} />
                   ))}
                 </div>
@@ -208,6 +215,14 @@ export function KeyVault() {
                   <button className="key" onClick={() => press('0')}>0</button>
                   <button className="key" onClick={() => setPin(pin.slice(0, -1))} aria-label="delete">⌫</button>
                 </div>
+                <button
+                  className="vbtn vbtn-gold"
+                  style={{ marginTop: 16, width: '100%', maxWidth: 264, opacity: pin.length < MIN_LEN ? .45 : 1 }}
+                  disabled={pin.length < MIN_LEN}
+                  onClick={submit}
+                >
+                  Open the vault
+                </button>
                 <p style={{ fontSize: 12, color: 'var(--v-dim)', marginTop: 14 }}>
                   Signers (Estefanía, Russell) verify with FBID to sign &amp; download. Witnesses view only.
                 </p>
