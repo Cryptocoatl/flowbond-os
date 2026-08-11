@@ -351,6 +351,9 @@ type EvidenceData = {
   title: string; lead: string; note: string; vaultPath: string;
   clips: { file: string; sha256: string; label: string; captured: string; shows: string }[];
   domains: { d: string; v: string; tone: string }[];
+  envelopes?: { date: string; name: string; from: string; status: string; tone: string; note: string }[];
+  envelopesNote?: string;
+  envelopesCapture?: { file: string; sha256: string; captured: string };
 };
 
 function EvidencePanel({ code }: { code: string }) {
@@ -392,6 +395,37 @@ function EvidencePanel({ code }: { code: string }) {
         not be gated. The SHA-256 above is what makes the record tamper-evident: re-hash the file and it either matches
         this date or it does not.
       </p>
+
+      {EVIDENCE.envelopes && EVIDENCE.envelopes.length > 0 && (
+        <div className="v-card" style={{ marginTop: 16, borderColor: 'rgba(255,157,180,.35)' }}>
+          <div className="v-eyebrow" style={{ color: '#ff9db4', marginBottom: 4 }}>
+            Execution history · DocuSign{EVIDENCE.envelopesCapture ? ` · captured ${EVIDENCE.envelopesCapture.captured}` : ''}
+          </div>
+          <div style={{ display: 'grid', gap: 0, marginTop: 6 }}>
+            {EVIDENCE.envelopes.map((e, i) => (
+              <div key={e.date + e.name} style={{ display: 'grid', gridTemplateColumns: '96px 1fr', gap: 14, padding: '11px 0', borderTop: i ? '1px solid rgba(179,136,255,.12)' : 'none', alignItems: 'start' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--v-dim)', whiteSpace: 'nowrap' }}>{e.date}</span>
+                <div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 14, color: 'var(--v-ink)', fontWeight: 600 }}>{e.name}</span>
+                    <span className="pill" style={{ color: tone(e.tone), borderColor: 'currentColor' }}>{e.status}</span>
+                  </div>
+                  <p className="v-lead" style={{ margin: '3px 0 0', fontSize: 13 }}>{e.note}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {EVIDENCE.envelopesNote && (
+            <p className="v-lead" style={{ margin: '12px 0 0', fontSize: 13, borderTop: '1px solid rgba(179,136,255,.12)', paddingTop: 12 }}>{EVIDENCE.envelopesNote}</p>
+          )}
+          {EVIDENCE.envelopesCapture && (
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--v-violet)', wordBreak: 'break-all', background: 'rgba(0,0,0,.25)', padding: '9px 11px', borderRadius: 9, marginTop: 10 }}>
+              {EVIDENCE.envelopesCapture.file}
+              <div style={{ marginTop: 5, color: 'var(--v-dim)' }}>sha256 · {EVIDENCE.envelopesCapture.sha256}</div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="v-card" style={{ marginTop: 16, display: 'grid', gap: 0 }}>
         <div className="v-eyebrow" style={{ color: 'var(--v-violet)', marginBottom: 4 }}>Domain record · verified 2026-08-11</div>

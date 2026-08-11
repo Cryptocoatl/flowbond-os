@@ -39,6 +39,56 @@ export const EVIDENCE = {
     },
   ],
   vaultPath: '~/.claudia/handoff/evidence/',
+
+  // The DocuSign envelope history, captured 2026-08-11 16:09. This is the single
+  // most useful document in the file: it shows the dissolution was not sprung on
+  // anyone. It was formally DECLINED once and left unsigned once before the
+  // envelope that is outstanding now.
+  //
+  // Dates are read m/d/y. Under d/m/y the June and April rows would both land in
+  // October — the future — so m/d/y is the only reading consistent with a capture
+  // taken on 2026-08-11.
+  envelopesCapture: {
+    file: 'ORIGINAL-docusign-history-2026-08-11.PNG',
+    sha256: '0d138afc75510e662fbcd54902ace1fc94ab1573a6dd60293b4706310ecf42bd',
+    captured: 'August 11, 2026 · 16:09',
+  },
+  envelopes: [
+    {
+      date: '2026-04-10',
+      name: 'Founders Separation.pdf',
+      from: 'Estefanía Ferrera',
+      status: 'Declined',
+      tone: 'stop' as const,
+      note: 'Formally declined. Not ignored — refused, on DocuSign’s own record.',
+    },
+    {
+      date: '2026-06-10',
+      name: 'FlowBond_Separation_Agreement',
+      from: 'Estefanía Ferrera',
+      status: 'Waiting for others',
+      tone: 'stop' as const,
+      note: 'Sent and never signed. Still outstanding two months later.',
+    },
+    {
+      date: '2026-07-09',
+      name: 'Mutual Dissolution, Wind-Up and Release',
+      from: 'Estefanía Ferrera',
+      status: 'Signed by Estefanía in the vault',
+      tone: 'good' as const,
+      note: 'FBID-verified and sealed. Her side has been complete since this date.',
+    },
+    {
+      date: '2026-08-11',
+      name: 'Mutual-Dissolution-Agreement-FlowBond-Tech',
+      from: 'Estefanía Ferrera',
+      status: 'Waiting for others',
+      tone: 'pending' as const,
+      note: 'Sent 16:08. The current envelope, due end of day Wednesday, August 12.',
+    },
+  ],
+  envelopesNote:
+    'Three separate instruments over four months: declined in April, unsigned since June, outstanding now. Alongside a vault opened by every witness and never once by him, this is a documented pattern of non-execution rather than a disagreement over terms — which is exactly what counsel needs if Wednesday passes. Note also the Mutual NDA from the incoming partner, completed 2026-08-06: that side is moving while this one is not.',
   // Verified against the live registry and response headers on 2026-08-11.
   domains: [
     { d: 'danz.now', v: 'Recovered. Serves “DANZ — Move Humanity” from Estefanía’s Cloudflare Worker.', tone: 'good' as const },
