@@ -9,34 +9,36 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --d-paper:#F7F5F2; --d-card:#FFFFFF; --d-ink:#1D1A16; --d-ink-2:#55504A; --d-ink-3:#8A837A;
-  --d-rule:#E4DFD8; --d-rule-2:#D0C9BF;
-  --d-rose:#C0345C; --d-green:#2F8F5F; --d-indigo:#3E4A94; --d-teal:#237F92; --d-violet:#7C3F9C; --d-amber:#C97F1E;
-  --d-flag:#A8202F; --d-flagbg:#FBEFEF;
+  --d-paper:#F7F5F2; --d-card:#FFFFFF; --d-ink:#16130E; --d-ink-2:#403B34; --d-ink-3:#5D564D;
+  --d-rule:#E0DAD1; --d-rule-2:#C7BFB3;
+  --d-rose:#A8244B; --d-green:#1F7A4C; --d-indigo:#2F3C86; --d-teal:#146273; --d-violet:#6A2E8C; --d-amber:#8F5709;
+  --d-flag:#93121F; --d-flagbg:#FBEDED;
 }
+html{font-size:18px}
+@media(max-width:640px){ html{font-size:17px} }
 *{box-sizing:border-box}
 body{margin:0;background:var(--d-paper);color:var(--d-ink);
-  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:1rem;line-height:1.72;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
+.wrap{max-width:39rem;margin:0 auto;padding:clamp(1.2rem,4vw,2.6rem)}
 
 header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
-.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
+.kicker{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.2em;
   text-transform:uppercase;color:var(--d-ink-3);margin:0 0 .9rem}
-h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.1rem);
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2.2rem,5.6vw,3rem);
   line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
 .intro{color:var(--d-ink-2);max-width:50ch;margin:0 0 1.4rem}
-.docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+.docmeta{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:1rem;
   display:flex;flex-wrap:wrap;gap:.4rem 2rem}
 
-h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.35rem,3.2vw,1.8rem);
+h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.55rem,3.6vw,2rem);
   line-height:1.15;letter-spacing:-.012em;margin:2.6rem 0 .9rem;
   padding-top:1.3rem;border-top:1px solid var(--d-rule)}
-h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.08rem;margin:1.7rem 0 .5rem}
-h4{font-family:"Space Mono",monospace;font-size:.65rem;font-weight:700;letter-spacing:.15em;
+h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.28rem;line-height:1.3;margin:1.7rem 0 .5rem}
+h4{font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:var(--d-ink-3);margin:1.5rem 0 .5rem}
-p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.42rem}
+p{margin:0 0 1.05rem} ul{margin:0 0 1.15rem;padding-left:1.25rem} li{margin-bottom:.55rem}
 .lede{font-size:1.05rem;color:var(--d-ink-2)}
 q{font-family:"Fraunces",serif;font-style:italic}
 
@@ -45,55 +47,66 @@ q{font-family:"Fraunces",serif;font-style:italic}
 .col::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
 .col.a::after{background:var(--d-rose)} .col.b::after{background:var(--d-teal)}
 .col h5{margin:.2rem 0 .1rem;font-family:"Fraunces",serif;font-size:1.08rem;font-weight:600}
-.col .tag{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.12em;
+.col .tag{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.12em;
   text-transform:uppercase;color:var(--d-ink-3);display:block}
-.col ul{margin:.7rem 0 0;padding-left:1.05rem;font-size:.89rem}
+.col ul{margin:.7rem 0 0;padding-left:1.05rem;font-size:.95rem}
 .col li{margin-bottom:.3rem;color:var(--d-ink-2)}
 
-.flag,.note,.good{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
+.flag,.note,.good{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:1rem;line-height:1.65}
 .flag{background:var(--d-flagbg);border-left:4px solid var(--d-flag);color:#5E1620}
 .note{background:var(--d-card);border:1px solid var(--d-rule);border-left:4px solid var(--d-teal);color:var(--d-ink-2)}
 .good{background:#EFF6F1;border-left:4px solid var(--d-green);color:#204634}
-.flag b.t,.note b.t,.good b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
+.flag b.t,.note b.t,.good b.t{display:block;font-family:"Space Mono",monospace;font-size:.86rem;
   letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
 .flag b.t{color:var(--d-flag)} .note b.t{color:var(--d-teal)} .good b.t{color:var(--d-green)}
 .flag p:last-child,.note p:last-child,.good p:last-child{margin:0}
 
 .tablewrap{overflow-x:auto;border:1px solid var(--d-rule-2);border-radius:10px;margin:1.3rem 0;background:var(--d-card)}
-table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
-th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
+table{border-collapse:collapse;width:100%;font-size:.95rem;min-width:26rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;
   letter-spacing:.12em;text-transform:uppercase;color:var(--d-ink-3);
   padding:.7rem .9rem;border-bottom:1px solid var(--d-rule-2);vertical-align:bottom}
 td{padding:.7rem .9rem;border-bottom:1px solid var(--d-rule);vertical-align:top;color:var(--d-ink-2)}
 tr:last-child td{border-bottom:0}
 td b{color:var(--d-ink);font-weight:600}
-.fill{color:var(--d-ink-3);font-family:"Space Mono",monospace;font-size:.78rem}
+.fill{color:var(--d-ink-3);font-family:"Space Mono",monospace;font-size:.86rem}
 
 .commit{counter-reset:c;margin:1.3rem 0;padding:0;list-style:none}
 .commit li{counter-increment:c;background:var(--d-card);border:1px solid var(--d-rule);
-  border-radius:10px;padding:.9rem 1rem .9rem 3rem;margin-bottom:.5rem;position:relative;font-size:.93rem}
+  border-radius:10px;padding:.9rem 1rem .9rem 3rem;margin-bottom:.5rem;position:relative;font-size:1rem}
 .commit li::before{content:counter(c);position:absolute;left:1rem;top:.95rem;
-  font-family:"Space Mono",monospace;font-size:.72rem;font-weight:700;color:var(--d-violet)}
+  font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;color:var(--d-violet)}
 .commit li b{display:block;margin-bottom:.1rem}
 .commit li span{color:var(--d-ink-2)}
 
 .timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1.3rem 0}
 .tl{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:.9rem}
-.tl .yr{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.13em;
+.tl .yr{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.13em;
   text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.25rem}
-.tl b{display:block;font-family:"Fraunces",serif;font-size:.98rem;margin-bottom:.15rem}
-.tl p{margin:0;font-size:.84rem;color:var(--d-ink-2)}
+.tl b{display:block;font-family:"Fraunces",serif;font-size:1rem;margin-bottom:.15rem}
+.tl p{margin:0;font-size:.86rem;color:var(--d-ink-2)}
 
 .sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
 .sig{border-top:1px solid var(--d-ink);padding-top:.55rem}
-.sig b{display:block;font-size:.95rem} .sig span{font-size:.82rem;color:var(--d-ink-3)}
+.sig b{display:block;font-size:1rem} .sig span{font-size:.86rem;color:var(--d-ink-3)}
 
 footer{border-top:1px solid var(--d-rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
-  font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.13em;
   text-transform:uppercase;color:var(--d-ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
 
 @media(max-width:640px){ .two,.sigs,.timeline{grid-template-columns:1fr} }
 @media print{ body{background:#fff} .flag,.note,.good,.tablewrap,.col,.commit li{break-inside:avoid} }
+
+/* Narrow screens: the room has to open properly on a phone, not merely load.
+   Nothing is sized from the viewport, so no scrollbar can shift the layout;
+   wide tables scroll inside their own box and everything else wraps. */
+@media(max-width:520px){
+  html{font-size:16px}
+  table{min-width:22rem}
+  .flag,.note,.good{padding:1.05rem 1.1rem}
+}
+td,th,li,p,h1,h2,h3{overflow-wrap:break-word}
+.tablewrap{-webkit-overflow-scrolling:touch}
 </style>
 <link rel="stylesheet" href="/docs/room.css">
 </head>

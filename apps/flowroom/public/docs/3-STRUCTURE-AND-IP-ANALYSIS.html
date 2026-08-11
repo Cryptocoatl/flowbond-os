@@ -9,24 +9,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --d-paper:#F7F5F2; --d-card:#FFFFFF; --d-ink:#1D1A16; --d-ink-2:#55504A; --d-ink-3:#8A837A;
-  --d-rule:#E4DFD8; --d-rule-2:#D0C9BF;
-  --d-rose:#C0345C; --d-green:#2F8F5F; --d-indigo:#3E4A94; --d-teal:#237F92; --d-violet:#7C3F9C;
-  --d-flag:#A8202F; --d-flagbg:#FBEFEF;
+  --d-paper:#F7F5F2; --d-card:#FFFFFF; --d-ink:#16130E; --d-ink-2:#403B34; --d-ink-3:#5D564D;
+  --d-rule:#E0DAD1; --d-rule-2:#C7BFB3;
+  --d-rose:#A8244B; --d-green:#1F7A4C; --d-indigo:#2F3C86; --d-teal:#146273; --d-violet:#6A2E8C;
+  --d-flag:#93121F; --d-flagbg:#FBEDED;
 }
+html{font-size:18px}
+@media(max-width:640px){ html{font-size:17px} }
 *{box-sizing:border-box}
 body{margin:0;background:var(--d-paper);color:var(--d-ink);
-  font-family:"Instrument Sans",system-ui,sans-serif;font-size:16px;line-height:1.62;
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:1rem;line-height:1.72;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:52rem;margin:0 auto;padding:clamp(1.1rem,3.5vw,2.4rem)}
+.wrap{max-width:39rem;margin:0 auto;padding:clamp(1.2rem,4vw,2.6rem)}
 
 header{padding:clamp(2rem,5vw,3.4rem) 0 1.6rem}
-.kicker{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.2em;
+.kicker{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.2em;
   text-transform:uppercase;color:var(--d-ink-3);margin:0 0 .9rem}
 h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2rem,5.2vw,3.2rem);
   line-height:1.04;letter-spacing:-.02em;margin:0 0 .8rem;max-width:20ch}
 .intro{color:var(--d-ink-2);max-width:50ch;margin:0 0 1.4rem}
-.docmeta{font-family:"Space Mono",monospace;font-size:.66rem;letter-spacing:.1em;
+.docmeta{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:1rem;
   display:flex;flex-wrap:wrap;gap:.4rem 2rem}
 
@@ -34,7 +36,7 @@ h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.4rem,3.2vw,1.8
   line-height:1.15;letter-spacing:-.012em;margin:2.8rem 0 .9rem;
   padding-top:1.4rem;border-top:1px solid var(--d-rule)}
 h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.1rem;margin:1.8rem 0 .5rem}
-h4{font-family:"Space Mono",monospace;font-size:.66rem;font-weight:700;letter-spacing:.15em;
+h4{font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;letter-spacing:.15em;
   text-transform:uppercase;color:var(--d-ink-3);margin:1.6rem 0 .5rem}
 p{margin:0 0 .9rem} ul{margin:0 0 1rem;padding-left:1.15rem} li{margin-bottom:.4rem}
 .lede{font-size:1.05rem;color:var(--d-ink-2)}
@@ -48,8 +50,8 @@ q{font-family:"Fraunces",serif;font-style:italic}
 .ent.sub{margin-left:1.5rem}
 .ent .d{width:9px;height:9px;border-radius:50%;margin-top:.5rem}
 .ent b{display:block;font-family:"Fraunces",serif;font-size:1rem;font-weight:600}
-.ent p{margin:.1rem 0 0;font-size:.88rem;color:var(--d-ink-2)}
-.ent .tag{font-family:"Space Mono",monospace;font-size:.62rem;letter-spacing:.1em;
+.ent p{margin:.1rem 0 0;font-size:.95rem;color:var(--d-ink-2)}
+.ent .tag{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.1em;
   text-transform:uppercase;color:var(--d-ink-3);display:block;margin-top:.25rem}
 
 /* stack */
@@ -60,30 +62,30 @@ q{font-family:"Fraunces",serif;font-style:italic}
 .lay .b{width:5px;border-radius:3px}
 .lay h5{margin:0 0 .25rem;font-family:"Fraunces",serif;font-size:1.02rem;font-weight:600;
   display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline}
-.own{font-family:"Space Mono",monospace;font-size:.61rem;letter-spacing:.1em;
+.own{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.1em;
   text-transform:uppercase;padding:.14rem .45rem;border-radius:3px}
 .o1{background:#FAE8EE;color:#8E1F3E} .o2{background:#E7EFF9;color:#26386F}
-.lay p{margin:0;font-size:.89rem;color:var(--d-ink-2)}
+.lay p{margin:0;font-size:.95rem;color:var(--d-ink-2)}
 
 .test{border:1px dashed var(--d-rule-2);border-radius:10px;background:var(--d-card);
   padding:1.2rem;text-align:center;margin:1.3rem 0}
-.test .t{font-family:"Space Mono",monospace;font-size:.63rem;letter-spacing:.14em;
+.test .t{font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.14em;
   text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.5rem}
 .test q{font-size:1.15rem;display:block;line-height:1.35}
 .test .sp{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem 1.8rem;margin-top:.8rem;
-  font-family:"Space Mono",monospace;font-size:.7rem;color:var(--d-ink-2)}
+  font-family:"Space Mono",monospace;font-size:.86rem;color:var(--d-ink-2)}
 
-.flag,.note{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:.92rem;line-height:1.55}
+.flag,.note{border-radius:0 9px 9px 0;padding:.95rem 1.1rem;margin:1.3rem 0;font-size:1rem;line-height:1.65}
 .flag{background:var(--d-flagbg);border-left:4px solid var(--d-flag);color:#5E1620}
 .note{background:var(--d-card);border:1px solid var(--d-rule);border-left:4px solid var(--d-teal);color:var(--d-ink-2)}
-.flag b.t,.note b.t{display:block;font-family:"Space Mono",monospace;font-size:.63rem;
+.flag b.t,.note b.t{display:block;font-family:"Space Mono",monospace;font-size:.86rem;
   letter-spacing:.14em;text-transform:uppercase;margin-bottom:.35rem}
 .flag b.t{color:var(--d-flag)} .note b.t{color:var(--d-teal)}
 .flag p:last-child,.note p:last-child{margin:0}
 
 .tablewrap{overflow-x:auto;border:1px solid var(--d-rule-2);border-radius:10px;margin:1.3rem 0;background:var(--d-card)}
-table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:32rem}
-th{text-align:left;font-family:"Space Mono",monospace;font-size:.62rem;font-weight:700;
+table{border-collapse:collapse;width:100%;font-size:.95rem;min-width:26rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:.86rem;font-weight:700;
   letter-spacing:.12em;text-transform:uppercase;color:var(--d-ink-3);
   padding:.7rem .9rem;border-bottom:1px solid var(--d-rule-2);vertical-align:bottom}
 td{padding:.7rem .9rem;border-bottom:1px solid var(--d-rule);vertical-align:top;color:var(--d-ink-2)}
@@ -93,19 +95,30 @@ td b{color:var(--d-ink);font-weight:600}
 .hats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.2rem 0}
 .hat{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1rem}
 .hat b{display:block;font-family:"Fraunces",serif;font-size:1rem;margin-bottom:.15rem}
-.hat p{margin:0;font-size:.86rem;color:var(--d-ink-2)}
+.hat p{margin:0;font-size:.95rem;color:var(--d-ink-2)}
 
 .sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;margin:2rem 0 0}
 .sig{border-top:1px solid var(--d-ink);padding-top:.55rem}
-.sig b{display:block;font-size:.95rem}
-.sig span{font-size:.82rem;color:var(--d-ink-3)}
+.sig b{display:block;font-size:1rem}
+.sig span{font-size:.86rem;color:var(--d-ink-3)}
 
 footer{border-top:1px solid var(--d-rule);margin-top:2.6rem;padding:1.3rem 0 2.6rem;
-  font-family:"Space Mono",monospace;font-size:.64rem;letter-spacing:.13em;
+  font-family:"Space Mono",monospace;font-size:.86rem;letter-spacing:.13em;
   text-transform:uppercase;color:var(--d-ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1.8rem}
 
 @media(max-width:640px){ .hats,.sigs{grid-template-columns:1fr} .ent.sub{margin-left:.7rem} }
 @media print{ body{background:#fff} .stack,.flag,.note,.tablewrap,.test{break-inside:avoid} }
+
+/* Narrow screens: the room has to open properly on a phone, not merely load.
+   Nothing is sized from the viewport, so no scrollbar can shift the layout;
+   wide tables scroll inside their own box and everything else wraps. */
+@media(max-width:520px){
+  html{font-size:16px}
+  table{min-width:22rem}
+  .flag,.note,.good{padding:1.05rem 1.1rem}
+}
+td,th,li,p,h1,h2,h3{overflow-wrap:break-word}
+.tablewrap{-webkit-overflow-scrolling:touch}
 </style>
 <link rel="stylesheet" href="/docs/room.css">
 </head>
