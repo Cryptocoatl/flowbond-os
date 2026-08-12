@@ -1,9 +1,14 @@
 /**
  * The document room gate — /docs/*
  *
- * The scroll proposal at `/1mwdproposal` is a warm room you walk into. This is
- * the other half: four written documents, two of which carry equity terms, and
- * they do not get to sit on a public URL because the path is hard to guess.
+ * Gala's private room: written documents about her own movement and about
+ * money, which do not get to sit on a public URL because the path is hard to
+ * guess.
+ *
+ * ⚠️ Copied from another client's room. Purging her ceremony was not enough —
+ * the gate's own words are the first thing a reader sees, and for a day they
+ * still named the other client to this one. Whatever you copy next, read the
+ * gate out loud before you send the link.
  *
  * So every byte under /docs passes through here first. A request arrives with a
  * cookie or it does not; without one it gets the gate and nothing else — not the
@@ -68,10 +73,12 @@ export interface Pass {
 const DOC_OF_FILE: Record<string, string> = {
   '1-acuerdo-shikibuntu': '1',
   '1-acuerdo-shikibuntu-en': '1',   // la misma llave abre las dos lenguas
+  '2-motor-misiones': '2',
 };
 
 export const DOC_TITLES: Record<string, string> = {
   '1': 'El acuerdo entre Gala y Steph',
+  '2': 'El motor: misiones, premios y quién los paga',
 };
 
 const opens = (pass: Pass, doc: string) => !pass.d || pass.d.includes(doc);
@@ -358,7 +365,7 @@ async function mintKey(request: Request, env: Env): Promise<Response> {
 /* ------------------------------------------------------------------ */
 
 const SHELL = (title: string, inner: string) => `<!doctype html>
-<html lang="en"><head>
+<html lang="es"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
@@ -375,40 +382,40 @@ ${inner}
 function gatePage(opts: { invited?: boolean; misconfigured?: boolean } = {}) {
   if (opts.misconfigured) {
     return SHELL(
-      'Private',
-      `<main class="gate"><div class="gate-card"><p class="kicker">Private</p>
-       <h1>The room is not open yet.</h1>
-       <p class="gate-sub">Its key store has not been configured. Nobody can get in, including by accident — which is the correct failure.</p>
+      'Privado',
+      `<main class="gate"><div class="gate-card"><p class="kicker">Privado</p>
+       <h1>El cuarto todavía no abre.</h1>
+       <p class="gate-sub">Le falta configurar su bóveda de llaves. Nadie puede entrar, ni siquiera por accidente — que es la forma correcta de fallar.</p>
        </div></main>`,
     );
   }
 
   return SHELL(
-    'Private',
+    'Privado',
     `<main class="gate">
   <div class="gate-card" data-reveal>
-    <p class="kicker">1 Million Women Dance</p>
-    <h1>Private<br><em>document room</em></h1>
+    <p class="kicker">Shikibuntu</p>
+    <h1>Cuarto privado<br><em>de documentos</em></h1>
     <p class="gate-sub">${
       opts.invited
-        ? 'That key did not open. Ask whoever sent it for a fresh link — keys are personal, and an old one stops working once it is replaced.'
-        : 'Five documents, by invitation. Enter your name and the key you were given.'
+        ? 'Esa llave no abrió. Pídele a quien te la mandó un enlace nuevo — las llaves son personales, y la vieja deja de servir en cuanto se reemplaza.'
+        : 'Por invitación. Escribe tu nombre y la llave que te dieron.'
     }</p>
 
     <form id="gate-form" autocomplete="off">
       <label class="fld">
-        <span>Your name</span>
+        <span>Tu nombre</span>
         <input id="g-name" name="name" required maxlength="80" autocomplete="name" placeholder="">
       </label>
       <label class="fld">
-        <span>Key</span>
+        <span>Llave</span>
         <input id="g-key" name="key" inputmode="numeric" maxlength="12" placeholder="••••">
       </label>
-      <button type="submit" class="gate-go">Open the room</button>
+      <button type="submit" class="gate-go">Abrir el cuarto</button>
       <p class="gate-err" id="gate-err" role="alert" hidden></p>
     </form>
 
-    <p class="gate-foot">If you were sent a personal link, open that link instead — it carries its own key and will not ask you for one.</p>
+    <p class="gate-foot">Si te mandaron un enlace personal, abre ese enlace: lleva su propia llave y no te va a pedir nada.</p>
   </div>
 </main>
 <script src="/docs/gate.js" defer></script>`,
@@ -417,15 +424,17 @@ function gatePage(opts: { invited?: boolean; misconfigured?: boolean } = {}) {
 
 function closedPage(what: string) {
   return SHELL(
-    'Not on your key',
+    'No está en tu llave',
     `<main class="gate">
   <div class="gate-card" data-reveal>
-    <p class="kicker">Private</p>
-    <h1>Not on <em>your key</em></h1>
-    <p class="gate-sub">You are signed in, but ${
-      what === 'share' ? 'the sharing desk belongs to the room owner' : `“${what}” is not one of the documents your key opens`
-    }. That is a setting, not a wall — whoever invited you can widen it in a moment.</p>
-    <p class="gate-foot"><a href="/docs/">← Back to the documents you can open</a></p>
+    <p class="kicker">Privado</p>
+    <h1>No está en <em>tu llave</em></h1>
+    <p class="gate-sub">Ya entraste, pero ${
+      what === 'share'
+        ? 'la mesa de invitaciones es de la dueña del cuarto'
+        : `«${what}» no es uno de los documentos que abre tu llave`
+    }. Eso es un ajuste, no un muro — quien te invitó lo puede ampliar en un momento.</p>
+    <p class="gate-foot"><a href="/docs/">← Volver a los documentos que sí abres</a></p>
   </div>
 </main>`,
     );

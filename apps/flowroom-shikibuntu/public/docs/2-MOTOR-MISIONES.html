@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Shikibuntu — El motor: misiones, premios y quién los paga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Skranji:wght@400;700&family=Karla:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Cada token va prefijado `--d-`. ESE PREFIJO CARGA PESO.
+   room.css se enlaza DESPUÉS y su `:root` define el cuarto oscuro con
+   los mismos nombres pelados (`--ink` casi blanco). Misma
+   especificidad, gana la hoja posterior ⇒ títulos blancos sobre papel
+   blanco. Ya se publicó un documento así una vez y se leyó completo
+   con los títulos invisibles. No "limpiar" esto a nombres pelados.
+
+   La paleta es la de Shikibuntu, oscurecida donde hace falta: el olivo
+   y el naranja de marca son preciosos y NO llegan a 6:1 sobre la crema.
+   Viven en filetes, numerales y acentos; el texto usa tinta y bosque.
+   ------------------------------------------------------------------ */
+:root{
+  --d-paper:#F5F0E8;
+  --d-paper-2:#FBF8F2;
+  --d-card:#FFFDF9;
+  --d-ink:#23201A;      /* cuerpo        ~14:1 */
+  --d-ink-2:#4A4238;    /* secundario     8.5:1 */
+  --d-ink-3:#5F5749;    /* etiquetas      6.3:1 */
+  --d-forest:#2C3E2D;   /* títulos       10.5:1 */
+  --d-olive:#4E5807;
+  --d-orange:#9A4B03;
+  --d-plum:#6E3F5C;
+  --d-gold:#FBBC01;     /* sólo ornamento, nunca texto */
+  --d-rule:#E4DDCE;
+  --d-rule-2:#CFC6B2;
+  --d-shadow:0 1px 2px rgba(35,32,26,.04), 0 8px 24px rgba(35,32,26,.05);
+}
+*{box-sizing:border-box}
+html{font-size:18px;scroll-behavior:smooth}
+@media(max-width:680px){ html{font-size:17px} }
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
+  font-family:"Karla",system-ui,-apple-system,sans-serif;
+  font-size:1.06rem;line-height:1.78;font-weight:400;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* Medida cómoda para español, que corre más largo que el inglés. */
+.col{max-width:34rem;margin:0 auto;padding:0 clamp(1.15rem,5vw,1.6rem)}
+
+/* ── barra de lectura + cabecera ───────────────────────────────── */
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:60;
+  background:linear-gradient(90deg,var(--d-olive),var(--d-gold),var(--d-orange));
+  transition:width .12s linear}
+.top{position:sticky;top:0;z-index:50;background:rgba(245,240,232,.92);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--d-rule)}
+.top-in{max-width:52rem;margin:0 auto;padding:.62rem clamp(1.15rem,5vw,1.6rem);
+  display:flex;align-items:center;gap:1rem}
+.top .marca{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--d-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lang-sw{margin-left:auto;display:flex;border:1px solid var(--d-rule-2);border-radius:999px;
+  overflow:hidden;flex:none;background:var(--d-card)}
+.lang-sw a,.lang-sw span{font-family:"Space Mono",monospace;font-size:.76rem;letter-spacing:.09em;
+  padding:.3rem .72rem;text-decoration:none;color:var(--d-ink-3);line-height:1.6}
+.lang-sw .on{background:var(--d-forest);color:#F5F0E8}
+.lang-sw a:hover{background:var(--d-paper-2);color:var(--d-forest)}
+
+/* ── portada ───────────────────────────────────────────────────── */
+.hero{padding:clamp(3.4rem,11vw,7rem) 0 clamp(2rem,5vw,3.2rem);position:relative;overflow:hidden}
+.hero .col{position:relative;z-index:1}
+.kicker{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--d-olive);margin:0 0 1.5rem}
+h1{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:clamp(1.95rem,6.2vw,2.85rem);line-height:1.16;letter-spacing:-.015em;margin:0}
+.hero .bajada{font-size:1.16rem;color:var(--d-ink-2);margin:1.5rem 0 0;max-width:30rem;font-weight:300}
+.espiral{position:absolute;right:-6rem;top:-3rem;width:26rem;height:26rem;opacity:.14;pointer-events:none}
+@media(max-width:680px){ .espiral{right:-11rem;top:-2rem;width:20rem;height:20rem;opacity:.1} }
+
+/* ── carta de apertura ─────────────────────────────────────────── */
+.carta{background:var(--d-card);border:1px solid var(--d-rule);border-radius:2px;
+  padding:clamp(1.6rem,4vw,2.3rem);margin:2.4rem auto 0;box-shadow:var(--d-shadow);
+  border-top:3px solid var(--d-olive)}
+.carta p{font-size:1.1rem;color:var(--d-ink-2);font-weight:300;line-height:1.8}
+.carta p:first-of-type{margin-top:0}
+.carta p:last-child{margin-bottom:0}
+.carta strong{font-weight:600;color:var(--d-forest)}
+
+/* ── secciones ─────────────────────────────────────────────────── */
+section{padding:clamp(2.6rem,6vw,4rem) 0 0}
+.tit{display:flex;align-items:baseline;gap:.85rem;margin:0 0 1.3rem}
+.num{font-family:"Space Mono",monospace;font-size:.86rem;color:var(--d-olive);
+  letter-spacing:.1em;flex:none;padding-top:.35rem}
+h2{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:clamp(1.32rem,3.6vw,1.62rem);line-height:1.22;margin:0;letter-spacing:-.008em}
+h3{font-family:"Karla",sans-serif;font-weight:600;font-size:1rem;color:var(--d-ink);
+  margin:2rem 0 .1rem;letter-spacing:.005em}
+p{margin:1rem 0}
+a{color:var(--d-plum)}
+strong{font-weight:600;color:var(--d-forest)}
+em{font-style:italic;color:var(--d-ink-2)}
+
+ul,ol{margin:1rem 0;padding-left:0;list-style:none}
+li{margin:.72rem 0;padding-left:1.5rem;position:relative}
+ul li::before{content:"";position:absolute;left:.22rem;top:.78rem;width:.38rem;height:.38rem;
+  border-radius:50%;background:var(--d-olive)}
+ol{counter-reset:paso}
+ol li{counter-increment:paso}
+ol li::before{content:counter(paso);position:absolute;left:0;top:.02rem;
+  font-family:"Space Mono",monospace;font-size:.82rem;color:var(--d-orange)}
+
+/* ── piezas destacadas ─────────────────────────────────────────── */
+.cita{margin:2rem 0;padding:0 0 0 1.3rem;border-left:3px solid var(--d-gold);
+  font-family:"Skranji",Georgia,serif;font-size:1.24rem;line-height:1.48;color:var(--d-forest)}
+.cita p{margin:0}
+.marco{background:var(--d-paper-2);border:1px solid var(--d-rule);border-radius:2px;
+  padding:1.15rem 1.3rem;margin:1.6rem 0}
+.marco p:first-child{margin-top:0} .marco p:last-child{margin-bottom:0}
+.rotulo{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.55rem}
+.marco.aviso{background:#FCF3E9;border-color:#EBD5BC}
+.marco.aviso .rotulo{color:var(--d-orange)}
+
+/* El pacto: es el corazón del documento, y se lee como tal. */
+.pacto{background:var(--d-forest);color:#EEF2E6;margin:clamp(2.6rem,6vw,4rem) 0 0;
+  padding:clamp(2.4rem,6vw,3.4rem) 0}
+.pacto .tit{margin-bottom:1.5rem}
+.pacto h2{color:#F7F3E8}
+.pacto .num{color:#A9BC6A}
+.pacto p{color:#DDE4D2}
+.pacto strong{color:#FFF;font-weight:600}
+.pacto li::before{background:var(--d-gold)}
+.pacto .cita{border-left-color:var(--d-gold);color:#F7F3E8}
+
+/* ── tabla de costos ───────────────────────────────────────────── */
+.tabla{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--d-rule);border-radius:2px;background:var(--d-card)}
+table{border-collapse:collapse;width:100%;min-width:22rem;font-size:.95rem}
+th,td{text-align:left;padding:.72rem .9rem;border-bottom:1px solid var(--d-rule);
+  vertical-align:top;overflow-wrap:anywhere}
+tr:last-child td{border-bottom:0}
+th{font-family:"Space Mono",monospace;font-size:.78rem;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--d-ink-3);font-weight:400;background:var(--d-paper-2)}
+td:first-child{color:var(--d-forest);font-weight:500}
+
+/* ── firma ─────────────────────────────────────────────────────── */
+.firma{background:var(--d-card);border:1px solid var(--d-rule-2);border-radius:2px;
+  padding:clamp(1.6rem,4vw,2.2rem);margin:2.6rem 0 0;box-shadow:var(--d-shadow)}
+.rubricas{display:grid;gap:2.2rem;margin-top:1.8rem}
+@media(min-width:34rem){ .rubricas{grid-template-columns:1fr 1fr;gap:2.4rem} }
+.linea{border-bottom:1px solid var(--d-ink-3);height:2.9rem}
+.quien{font-family:"Space Mono",monospace;font-size:.82rem;color:var(--d-ink-3);
+  margin:.5rem 0 0;line-height:1.7}
+.quien b{color:var(--d-forest);font-weight:400;font-family:"Karla",sans-serif;
+  font-size:.98rem;display:block}
+
+.cierre{font-family:"Skranji",Georgia,serif;font-size:1.3rem;line-height:1.5;
+  color:var(--d-forest);text-align:center;margin:clamp(2.8rem,7vw,4.2rem) auto 0;max-width:26rem}
+footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule);
+  font-family:"Space Mono",monospace;font-size:.8rem;color:var(--d-ink-3);line-height:1.8}
+
+/* ── impreso: esto se firma en papel ───────────────────────────── */
+@media print{
+  #prog,.top,.espiral{display:none}
+  body{background:#fff;font-size:10.5pt;line-height:1.55}
+  .col{max-width:100%;padding:0}
+  .pacto{background:none;color:var(--d-ink);border-top:2px solid var(--d-forest);
+    border-bottom:2px solid var(--d-forest);padding:1.2rem 0}
+  .pacto h2,.pacto p,.pacto strong{color:var(--d-ink)}
+  section{padding-top:1.4rem;break-inside:avoid}
+  h2{break-after:avoid} .firma{break-inside:avoid}
+  .carta,.marco,.firma,.tabla{box-shadow:none}
+}
+</style>
+
+<style>
+/* ── las dos magias, lado a lado ──────────────────────────────── */
+.duo{display:grid;gap:1.1rem;margin:1.8rem 0}
+@media(min-width:40rem){ .duo{grid-template-columns:1fr 1fr;gap:1.3rem} }
+.magia{background:var(--d-card);border:1px solid var(--d-rule);border-radius:2px;
+  padding:1.25rem 1.35rem;box-shadow:var(--d-shadow);border-top:3px solid var(--d-olive)}
+.magia:last-child{border-top-color:var(--d-orange)}
+.magia h4{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:1.14rem;margin:0 0 .1rem;line-height:1.25}
+.magia .rol{font-family:"Space Mono",monospace;font-size:.76rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.7rem}
+.magia ul{margin:.6rem 0 0}
+.magia li{margin:.45rem 0;font-size:.98rem}
+.magia p{font-size:.98rem}
+.magia p:last-child{margin-bottom:0}
+
+/* ── el número lo pone ella ───────────────────────────────────── */
+.reparto{background:var(--d-paper-2);border:2px solid var(--d-olive);border-radius:2px;
+  padding:clamp(1.4rem,4vw,1.9rem);margin:1.8rem 0;text-align:center}
+.reparto .cifra{font-family:"Skranji",Georgia,serif;font-size:clamp(2.6rem,10vw,4rem);
+  color:var(--d-olive);line-height:1;margin:.2rem 0 .5rem;display:block}
+.reparto p{margin:.4rem 0;color:var(--d-ink-2)}
+.reparto p:last-child{margin-bottom:0}
+.reparto strong{color:var(--d-forest)}
+</style>
+<style>
+/* ── la escalera de premios ───────────────────────────────────── */
+.escalon{display:flex;gap:1rem;align-items:flex-start;background:var(--d-card);
+  border:1px solid var(--d-rule);border-left:3px solid var(--d-olive);border-radius:0 2px 2px 0;
+  padding:1rem 1.2rem;margin:.9rem 0;box-shadow:var(--d-shadow)}
+.escalon:nth-child(even){border-left-color:var(--d-orange)}
+.pts{font-family:"Space Mono",monospace;font-size:.92rem;color:var(--d-orange);
+  flex:none;width:4.6rem;line-height:1.5;padding-top:.15rem}
+.escalon h4{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:1.06rem;margin:0 0 .25rem;line-height:1.3}
+.escalon p{margin:.2rem 0;font-size:.97rem;color:var(--d-ink-2)}
+.escalon .de{font-family:"Space Mono",monospace;font-size:.78rem;letter-spacing:.06em;
+  color:var(--d-ink-3);display:block;margin-top:.5rem}
+.duda{color:var(--d-orange);font-family:"Space Mono",monospace;font-size:.78rem;
+  letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head><body data-doc="2">
+
+<div id="prog"></div>
+
+<div class="top">
+  <div class="top-in">
+    <span class="marca">Shikibuntu · Documento 02</span>
+    <span class="lang-sw"><a href="1-ACUERDO-SHIKIBUNTU" title="Volver al acuerdo">← 01</a></span>
+  </div>
+</div>
+
+<div class="hero">
+  <svg class="espiral" viewBox="0 0 200 200" aria-hidden="true">
+    <path d="M100 100 m0 0 a6 6 0 1 1 6 6 a16 16 0 1 1 -16 16 a30 30 0 1 1 30 -30 a46 46 0 1 1 -46 46 a64 64 0 1 1 64 -64 a84 84 0 1 1 -84 84"
+      fill="none" stroke="#4E5807" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+  <div class="col">
+    <p class="kicker">Documento 02 · Menú, no compromiso</p>
+    <h1>Cómo se mueve tu gente, qué se gana, y quién lo paga.</h1>
+    <p class="bajada">Las misiones, los premios que sí podemos dar, lo que cuestan de verdad, y de dónde puede salir ese dinero sin que salga de nuestra bolsa.</p>
+  </div>
+</div>
+
+<div class="col">
+  <div class="carta">
+    <p>Gala:</p>
+    <p>El documento 01 dice <strong>de quién es</strong> Shikibuntu. Este dice <strong>cómo se mueve</strong>: qué hace tu gente, qué se lleva por hacerlo, y quién paga la cuenta.</p>
+    <p>Está lleno de números y de nombres de otros proyectos. Léelo con desconfianza sana: <strong>aquí no hay nada firmado ni comprometido.</strong> Es un menú. Marca lo que te lata, tacha lo que no, y lo que tachas desaparece.</p>
+    <p>Y donde no sé algo, lo digo. En la sección 06 hay tres proyectos de los que sólo tengo el nombre porque me los dijo Steph de pasada. Los dejé escritos <em>en blanco</em> para que tú y ella los llenen — no me los voy a inventar.</p>
+  </div>
+</div>
+
+<section class="col">
+  <div class="tit"><span class="num">01</span><h2>Cómo entra tu gente hoy, y qué le falta</h2></div>
+  <p>Antes de hablar de premios hay que decir la verdad de dónde estamos, porque es más chiquita de lo que parece.</p>
+
+  <h3>Lo que ya existe y funciona</h3>
+  <ul>
+    <li>Tu sitio en dos idiomas, y el panel donde publicas sin pedirle permiso a nadie.</li>
+    <li>El tablero de misiones — pero <strong>mira hacia adentro</strong>: hoy son tus pendientes y los míos, no los de tu gente.</li>
+    <li>Las llaves de acceso para tu tripulación: seis roles y permisos uno por uno. Eso es para tu equipo, no para el público.</li>
+  </ul>
+
+  <div class="marco aviso">
+    <span class="rotulo">Y lo que no existe todavía</span>
+    <p><strong>Hoy una persona de la calle no se puede registrar en Shikibuntu.</strong> El sitio está en privado y su puerta es cosmética. No hay dónde dejar un correo, no hay dónde apuntarse a una misión, y no hay dónde subir la prueba de que la hiciste. Lo escribo así de claro porque todo lo demás de este documento se apoya en esta pieza, y esta pieza está por construirse.</p>
+  </div>
+
+  <h3>Las cuatro piezas que hay que construir</h3>
+  <ol>
+    <li><strong>Registro de verdad.</strong> Alguien deja su correo, le llega un código de ocho dígitos, entra. Sin contraseñas que olvidar. <span class="duda">Falta encender el correo saliente — es una llave que hay que contratar, unos dólares al mes.</span></li>
+    <li><strong>Que tus misiones salgan solas.</strong> Publicas una misión en el panel y aparece en el sitio <strong>en ese momento</strong>, sin que nadie despliegue nada. La tubería ya funciona así para el contenido del sitio; hay que extenderla a las misiones.</li>
+    <li><strong>Que alguien se apunte y suba su prueba:</strong> una foto, un texto, un enlace. Queda guardada con su nombre y su fecha.</li>
+    <li><strong>Que tú apruebes.</strong> La prueba llega a tu panel y tú — o quien tú digas — la aprueba o la rechaza. Los puntos se dan al aprobar.</li>
+  </ol>
+
+  <div class="marco">
+    <span class="rotulo">Por qué la aprobación tiene que ser humana</span>
+    <p>Unos puntos que se dan solos se vuelven trampa en una semana: alguien sube una foto de internet y cobra. Si el punto lo da una persona que mira, el punto vale. Es más trabajo y vale la pena — y se puede repartir entre tu tripulación para que no caiga todo en ti.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">02</span><h2>Los puntos</h2></div>
+  <p>Una misión cumplida y aprobada da puntos. El número lo pones tú al crear la misión, según lo que cueste hacerla de verdad.</p>
+  <div class="tabla">
+    <table>
+      <tr><th>Tipo de misión</th><th>Ejemplo</th><th>Puntos</th></tr>
+      <tr><td>Gesto</td><td>Compartir algo, invitar a alguien, contestar una pregunta</td><td>10</td></tr>
+      <tr><td>Acción</td><td>Limpiar un tramo, sembrar, registrar una especie, dar un taller</td><td>25 – 50</td></tr>
+      <tr><td>Compromiso</td><td>Sostener algo durante semanas, coordinar a otras personas</td><td>100</td></tr>
+      <tr><td>Hazaña</td><td>Lo que sólo alguien muy metido va a hacer</td><td>250 +</td></tr>
+    </table>
+  </div>
+  <p>Tres reglas para que los puntos signifiquen algo: <strong>no se compran, no se transfieren y no son dinero.</strong> Sólo se ganan haciendo. En el momento en que se puedan comprar, dejan de contar una historia y empiezan a contar una cuenta.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">03</span><h2>La escalera de premios</h2></div>
+  <p>La idea es dar cosas que <strong>a nosotras nos cuestan poco y a la persona le importan mucho</strong>, porque ya las sabemos hacer. Todo lo que sigue existe hoy en el ecosistema; no hay que inventar nada, hay que conectarlo.</p>
+
+  <div class="escalon">
+    <span class="pts">100 pts</span>
+    <span>
+      <h4>Tu insignia viva</h4>
+      <p>Una insignia digital que <strong>no se puede vender ni transferir</strong>: es tuya porque la hiciste. Y tu nombre entra al círculo de Shikibuntu.</p>
+      <span class="de">Sale de: MUSE · cuesta: centavos</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">250 pts</span>
+    <span>
+      <h4>Tu perfil en la red</h4>
+      <p>Una página propia, con tu nombre, lo que haces y tus misiones cumplidas. Tuya, aunque un día te vayas.</p>
+      <span class="de">Sale de: FlowMe · cuesta: nada</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">500 pts</span>
+    <span>
+      <h4>Tu retrato en movimiento</h4>
+      <p>Ocho segundos de video hechos para ti: tu trabajo, tu lugar, tu gente. Para que lo compartas donde quieras.</p>
+      <span class="de">Sale de: BrandMark Estudio · cuesta: ~2–3 USD</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">1 000 pts</span>
+    <span>
+      <h4>Tu voz</h4>
+      <p>Una pieza de audio corta — tu historia narrada, o una canción hecha para lo que estás protegiendo.</p>
+      <span class="de">Sale de: FlowStudio Audio · cuesta: ~1–2 USD</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">2 500 pts</span>
+    <span>
+      <h4>Tu marca</h4>
+      <p>Si tienes un colectivo, un vivero, una cooperativa: su logo, sus colores y sus tipografías, hechos en serio.</p>
+      <span class="de">Sale de: BrandMark · cuesta: ~3–6 USD</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">5 000 pts</span>
+    <span>
+      <h4>Tu sitio</h4>
+      <p>Un micrositio propio con tu historia y tu trabajo, en tu idioma, listo para enseñárselo a quien sea.</p>
+      <span class="de">Sale de: las plantillas de FlowBond · cuesta: casi nada en créditos</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">10 000 pts</span>
+    <span>
+      <h4>Tu libro, en papel</h4>
+      <p>Un ejemplar impreso de verdad, con tu nombre en la portada. Lo imprime una imprenta real y llega a tu casa.</p>
+      <span class="de">Sale de: el motor de libros · cuesta: ~15–25 USD + envío, a costo y sin comisión</span>
+    </span>
+  </div>
+
+  <div class="escalon">
+    <span class="pts">El tope</span>
+    <span>
+      <h4>La puerta al mundo real</h4>
+      <p>Una experiencia con un proyecto aliado: un santuario, un templo, una travesía, un lugar. Lo pone el aliado, no nosotras.</p>
+      <span class="de">Sale de: los proyectos hermanos (sección 06) · cuesta: lo que ponga el aliado</span>
+    </span>
+  </div>
+
+  <div class="marco">
+    <span class="rotulo">Cómo leer estos números</span>
+    <p>Los costos son <strong>estimaciones para dimensionar</strong>, no precios: sirven para saber si un premio es de centavos o de decenas de dólares. Y la escalera entera es tuya para rehacerla — los premios, los puntos y el orden. Si te parece que premiar compra a la gente en vez de invitarla, se quita y ya. Prefiero mil veces que me lo digas a que se te quede atorado.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">04</span><h2>Lo que cuesta de verdad, con números</h2></div>
+  <p>Un escenario concreto para que no hablemos en el aire. Imagina Shikibuntu con <strong>500 personas registradas y 100 activas al mes</strong> — que ya sería precioso:</p>
+  <div class="tabla">
+    <table>
+      <tr><th>Al mes</th><th>Cuántos</th><th>Costo en créditos</th></tr>
+      <tr><td>Insignias y perfiles</td><td>60</td><td>~0</td></tr>
+      <tr><td>Retratos en video</td><td>25</td><td>~65 USD</td></tr>
+      <tr><td>Piezas de voz</td><td>10</td><td>~15 USD</td></tr>
+      <tr><td>Marcas de colectivos</td><td>4</td><td>~20 USD</td></tr>
+      <tr><td>Un sitio y un libro</td><td>2</td><td>~25 USD</td></tr>
+      <tr><td>La inteligencia del panel</td><td>—</td><td>~30 USD</td></tr>
+      <tr><td><strong>Total</strong></td><td></td><td><strong>~155 USD al mes</strong></td></tr>
+    </table>
+  </div>
+  <p>Es decir: <strong>alrededor de 2 000 USD cubrirían un año entero</strong> de una comunidad viva y activa, con margen. Es una cifra que se consigue — y es exactamente por eso que no tiene por qué salir de tu bolsillo ni del mío.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">05</span><h2>De dónde sale ese dinero</h2></div>
+  <p>La idea es un <strong>fondo de créditos de Shikibuntu</strong>: dinero etiquetado que sólo se puede gastar en generar cosas para tu gente, con una cuenta abierta de qué entró y en qué se fue. No es tu sueldo, no es mi pago, no es el gasto del movimiento. Es la gasolina de los premios y nada más.</p>
+
+  <h3>Tres maneras de llenarlo</h3>
+  <ul>
+    <li><strong>Marcas y empresas aliadas.</strong> Una empresa que quiere estar del lado correcto financia un trimestre de misiones. No compra un banner: compra que 200 personas hagan algo real.</li>
+    <li><strong>Personas que apadrinan.</strong> Alguien que te sigue y tiene con qué, apadrina 20 misiones. Es chiquito, es constante, y es el más limpio de todos.</li>
+    <li><strong>Fondos y convocatorias</strong> de conservación y medio ambiente. Son lentos y piden papeleo, pero pagan años enteros. Ahí es donde ClaudIA te puede ahorrar semanas de trabajo.</li>
+  </ul>
+
+  <h3>Los niveles, para tener algo que ofrecer</h3>
+  <div class="tabla">
+    <table>
+      <tr><th>Nivel</th><th>Aporta</th><th>Alcanza para</th></tr>
+      <tr><td>Semilla</td><td>250 USD</td><td>~50 premios digitales</td></tr>
+      <tr><td>Bosque</td><td>1 000 USD</td><td>Un trimestre completo</td></tr>
+      <tr><td>Océano</td><td>4 000 USD</td><td>Un año entero, con margen</td></tr>
+    </table>
+  </div>
+  <p>Los nombres son un punto de partida — cámbialos, son tuyos. Lo que recibe quien aporta: su nombre donde <strong>tú</strong> decidas ponerlo, y un reporte con números reales de qué se hizo con su dinero.</p>
+
+  <div class="marco aviso">
+    <span class="rotulo">Y lo que no recibe, nunca</span>
+    <p>Voz sobre el contenido. Aprobación de nada. Exclusividad. Los datos de tu gente. Derecho a aparecer junto a tu cara si tú no quieres. <strong>Si un patrocinio llega con condiciones sobre lo que Shikibuntu dice, no es patrocinio y no lo tomamos</strong> — aunque el cheque esté bonito.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">06</span><h2>Los proyectos hermanos</h2></div>
+  <p>Steph está construyendo otras cosas sobre la misma infraestructura. <strong>Ninguna tiene nada tuyo</strong> y ninguna se cruza con Shikibuntu por default — para eso está el recuadro de la sección 03 del documento 01: nada existe hasta que las dos lo acuerden por escrito, proyecto por proyecto.</p>
+  <p>Dicho eso, cada uno podría aportar de dos formas: <strong>poniendo créditos</strong> al fondo, o <strong>poniendo premios en especie</strong> que a ellos no les cuestan.</p>
+
+  <div class="tabla">
+    <table>
+      <tr><th>Proyecto</th><th>Qué es</th><th>Qué podría dar</th></tr>
+      <tr><td>ReciproCiudad</td><td>Red de reciprocidad en Ciudad de México</td><td>Misiones urbanas y gente que ya está organizada</td></tr>
+      <tr><td>Sargazo</td><td>Bioeconomía del sargazo en el Caribe</td><td>Misiones de playa reales y un caso científico</td></tr>
+      <tr><td>Moon Temple</td><td>Templo y comunidad en Tulum</td><td>Experiencias presenciales como premio tope</td></tr>
+      <tr><td>Ekumal</td><td>Santuario en la selva maya</td><td>Estancias y trabajo de campo</td></tr>
+      <tr><td>Códice Vivo</td><td>Capa cultural maya viva</td><td>Contenido y guías para misiones culturales</td></tr>
+      <tr><td>Planetary Party</td><td><span class="duda">Sólo tengo el nombre</span></td><td>Por escribir con ustedes</td></tr>
+      <tr><td>Tulum Impact</td><td><span class="duda">Sólo tengo el nombre</span></td><td>Por escribir con ustedes</td></tr>
+      <tr><td>Tracking</td><td><span class="duda">Sólo tengo el nombre</span></td><td>Por escribir con ustedes</td></tr>
+    </table>
+  </div>
+  <p>Los tres últimos los dejo en blanco a propósito. Steph me los mencionó de pasada y prefiero un hueco honesto a un párrafo inventado que después te haga quedar mal con alguien.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">07</span><h2>Las reglas que no se mueven</h2></div>
+  <ul>
+    <li><strong>Ningún patrocinador compra voz.</strong> Ni un aliado, ni una marca, ni un fondo.</li>
+    <li><strong>Nada se cruza sin acuerdo escrito.</strong> Ningún proyecto hermano toca Shikibuntu hasta que las dos lo firmen, proyecto por proyecto.</li>
+    <li><strong>Los datos de tu gente no salen de Shikibuntu.</strong> Ni a un aliado, ni a un patrocinador, ni a mí para otra cosa. Nunca.</li>
+    <li><strong>Si no hay fondo, hacemos menos.</strong> Nunca deuda, nunca un costo silencioso, nunca dinero de nuestra bolsa que después pese.</li>
+    <li><strong>Todo esto es opcional.</strong> Si mañana decides que los premios no van con Shikibuntu, se apagan y no pasa nada. Nada de esto es una promesa que te ate.</li>
+  </ul>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">08</span><h2>Lo que necesito de ti para empezar</h2></div>
+  <p>Cinco decisiones. Ninguna urgente, y ninguna definitiva:</p>
+  <ol>
+    <li>¿La escalera de premios <strong>sí o no</strong>? Y si sí, ¿cuáles te laten y cuáles te chocan?</li>
+    <li>¿Quién aprueba las pruebas — tú sola, o repartido con tu tripulación?</li>
+    <li>¿Qué son <strong>Planetary Party</strong>, <strong>Tulum Impact</strong> y <strong>Tracking</strong>, y quieres que aparezcan aquí?</li>
+    <li>¿Salimos a buscar el fondo ya, o prefieres que primero haya gente y misiones andando?</li>
+    <li>¿Los niveles se llaman Semilla, Bosque y Océano, o tienes nombres mejores? (Seguro sí.)</li>
+  </ol>
+  <p>No me contestes por correo: <strong>marca el párrafo y coméntalo aquí mismo</strong>, donde te nazca la duda. Yo lo veo.</p>
+</section>
+
+<div class="col">
+  <p class="cierre">Nada de esto existe para que Shikibuntu crezca rápido.<br>Existe para que la gente que ya te quiere tenga algo que hacer el lunes.</p>
+
+  <footer>
+    Documento 02 · Borrador para comentar · Nada de lo que dice está comprometido<br>
+    Por ahora sólo en español. Si lo quieres en inglés para enseñárselo a alguien, dímelo y te lo hago.
+  </footer>
+</div>
+
+<script>
+/* Barra de lectura. Nada más: el documento no necesita más máquina que esta. */
+(function(){
+  var b = document.getElementById('prog');
+  function pinta(){
+    var h = document.documentElement.scrollHeight - innerHeight;
+    b.style.width = (h > 0 ? (scrollY / h) * 100 : 0) + '%';
+  }
+  addEventListener('scroll', pinta, { passive: true });
+  addEventListener('resize', pinta);
+  pinta();
+})();
+</script>
+<link rel="stylesheet" href="/docs/room.css">
+<script src="/docs/room.js" type="module"></script>
+</body>
+</html>
