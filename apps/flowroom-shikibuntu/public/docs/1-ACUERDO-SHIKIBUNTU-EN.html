@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shikibuntu — The agreement between Gala and Steph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Skranji:wght@400;700&family=Karla:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Cada token va prefijado `--d-`. ESE PREFIJO CARGA PESO.
+   room.css se enlaza DESPUÉS y su `:root` define el cuarto oscuro con
+   los mismos nombres pelados (`--ink` casi blanco). Misma
+   especificidad, gana la hoja posterior ⇒ títulos blancos sobre papel
+   blanco. Ya se publicó un documento así una vez y se leyó completo
+   con los títulos invisibles. No "limpiar" esto a nombres pelados.
+
+   La paleta es la de Shikibuntu, oscurecida donde hace falta: el olivo
+   y el naranja de marca son preciosos y NO llegan a 6:1 sobre la crema.
+   Viven en filetes, numerales y acentos; el texto usa tinta y bosque.
+   ------------------------------------------------------------------ */
+:root{
+  --d-paper:#F5F0E8;
+  --d-paper-2:#FBF8F2;
+  --d-card:#FFFDF9;
+  --d-ink:#23201A;      /* cuerpo        ~14:1 */
+  --d-ink-2:#4A4238;    /* secundario     8.5:1 */
+  --d-ink-3:#5F5749;    /* etiquetas      6.3:1 */
+  --d-forest:#2C3E2D;   /* títulos       10.5:1 */
+  --d-olive:#4E5807;
+  --d-orange:#9A4B03;
+  --d-plum:#6E3F5C;
+  --d-gold:#FBBC01;     /* sólo ornamento, nunca texto */
+  --d-rule:#E4DDCE;
+  --d-rule-2:#CFC6B2;
+  --d-shadow:0 1px 2px rgba(35,32,26,.04), 0 8px 24px rgba(35,32,26,.05);
+}
+*{box-sizing:border-box}
+html{font-size:18px;scroll-behavior:smooth}
+@media(max-width:680px){ html{font-size:17px} }
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
+  font-family:"Karla",system-ui,-apple-system,sans-serif;
+  font-size:1.06rem;line-height:1.78;font-weight:400;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* Medida cómoda para español, que corre más largo que el inglés. */
+.col{max-width:34rem;margin:0 auto;padding:0 clamp(1.15rem,5vw,1.6rem)}
+
+/* ── barra de lectura + cabecera ───────────────────────────────── */
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:60;
+  background:linear-gradient(90deg,var(--d-olive),var(--d-gold),var(--d-orange));
+  transition:width .12s linear}
+.top{position:sticky;top:0;z-index:50;background:rgba(245,240,232,.92);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--d-rule)}
+.top-in{max-width:52rem;margin:0 auto;padding:.62rem clamp(1.15rem,5vw,1.6rem);
+  display:flex;align-items:center;gap:1rem}
+.top .marca{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--d-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lang-sw{margin-left:auto;display:flex;border:1px solid var(--d-rule-2);border-radius:999px;
+  overflow:hidden;flex:none;background:var(--d-card)}
+.lang-sw a,.lang-sw span{font-family:"Space Mono",monospace;font-size:.76rem;letter-spacing:.09em;
+  padding:.3rem .72rem;text-decoration:none;color:var(--d-ink-3);line-height:1.6}
+.lang-sw .on{background:var(--d-forest);color:#F5F0E8}
+.lang-sw a:hover{background:var(--d-paper-2);color:var(--d-forest)}
+
+/* ── portada ───────────────────────────────────────────────────── */
+.hero{padding:clamp(3.4rem,11vw,7rem) 0 clamp(2rem,5vw,3.2rem);position:relative;overflow:hidden}
+.hero .col{position:relative;z-index:1}
+.kicker{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--d-olive);margin:0 0 1.5rem}
+h1{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:clamp(1.95rem,6.2vw,2.85rem);line-height:1.16;letter-spacing:-.015em;margin:0}
+.hero .bajada{font-size:1.16rem;color:var(--d-ink-2);margin:1.5rem 0 0;max-width:30rem;font-weight:300}
+.espiral{position:absolute;right:-6rem;top:-3rem;width:26rem;height:26rem;opacity:.14;pointer-events:none}
+@media(max-width:680px){ .espiral{right:-11rem;top:-2rem;width:20rem;height:20rem;opacity:.1} }
+
+/* ── carta de apertura ─────────────────────────────────────────── */
+.carta{background:var(--d-card);border:1px solid var(--d-rule);border-radius:2px;
+  padding:clamp(1.6rem,4vw,2.3rem);margin:2.4rem auto 0;box-shadow:var(--d-shadow);
+  border-top:3px solid var(--d-olive)}
+.carta p{font-size:1.1rem;color:var(--d-ink-2);font-weight:300;line-height:1.8}
+.carta p:first-of-type{margin-top:0}
+.carta p:last-child{margin-bottom:0}
+.carta strong{font-weight:600;color:var(--d-forest)}
+
+/* ── secciones ─────────────────────────────────────────────────── */
+section{padding:clamp(2.6rem,6vw,4rem) 0 0}
+.tit{display:flex;align-items:baseline;gap:.85rem;margin:0 0 1.3rem}
+.num{font-family:"Space Mono",monospace;font-size:.86rem;color:var(--d-olive);
+  letter-spacing:.1em;flex:none;padding-top:.35rem}
+h2{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:clamp(1.32rem,3.6vw,1.62rem);line-height:1.22;margin:0;letter-spacing:-.008em}
+h3{font-family:"Karla",sans-serif;font-weight:600;font-size:1rem;color:var(--d-ink);
+  margin:2rem 0 .1rem;letter-spacing:.005em}
+p{margin:1rem 0}
+a{color:var(--d-plum)}
+strong{font-weight:600;color:var(--d-forest)}
+em{font-style:italic;color:var(--d-ink-2)}
+
+ul,ol{margin:1rem 0;padding-left:0;list-style:none}
+li{margin:.72rem 0;padding-left:1.5rem;position:relative}
+ul li::before{content:"";position:absolute;left:.22rem;top:.78rem;width:.38rem;height:.38rem;
+  border-radius:50%;background:var(--d-olive)}
+ol{counter-reset:paso}
+ol li{counter-increment:paso}
+ol li::before{content:counter(paso);position:absolute;left:0;top:.02rem;
+  font-family:"Space Mono",monospace;font-size:.82rem;color:var(--d-orange)}
+
+/* ── piezas destacadas ─────────────────────────────────────────── */
+.cita{margin:2rem 0;padding:0 0 0 1.3rem;border-left:3px solid var(--d-gold);
+  font-family:"Skranji",Georgia,serif;font-size:1.24rem;line-height:1.48;color:var(--d-forest)}
+.cita p{margin:0}
+.marco{background:var(--d-paper-2);border:1px solid var(--d-rule);border-radius:2px;
+  padding:1.15rem 1.3rem;margin:1.6rem 0}
+.marco p:first-child{margin-top:0} .marco p:last-child{margin-bottom:0}
+.rotulo{font-family:"Space Mono",monospace;font-size:.8rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.55rem}
+.marco.aviso{background:#FCF3E9;border-color:#EBD5BC}
+.marco.aviso .rotulo{color:var(--d-orange)}
+
+/* El pacto: es el corazón del documento, y se lee como tal. */
+.pacto{background:var(--d-forest);color:#EEF2E6;margin:clamp(2.6rem,6vw,4rem) 0 0;
+  padding:clamp(2.4rem,6vw,3.4rem) 0}
+.pacto .tit{margin-bottom:1.5rem}
+.pacto h2{color:#F7F3E8}
+.pacto .num{color:#A9BC6A}
+.pacto p{color:#DDE4D2}
+.pacto strong{color:#FFF;font-weight:600}
+.pacto li::before{background:var(--d-gold)}
+.pacto .cita{border-left-color:var(--d-gold);color:#F7F3E8}
+
+/* ── tabla de costos ───────────────────────────────────────────── */
+.tabla{overflow-x:auto;margin:1.6rem 0;border:1px solid var(--d-rule);border-radius:2px;background:var(--d-card)}
+table{border-collapse:collapse;width:100%;min-width:22rem;font-size:.95rem}
+th,td{text-align:left;padding:.72rem .9rem;border-bottom:1px solid var(--d-rule);
+  vertical-align:top;overflow-wrap:anywhere}
+tr:last-child td{border-bottom:0}
+th{font-family:"Space Mono",monospace;font-size:.78rem;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--d-ink-3);font-weight:400;background:var(--d-paper-2)}
+td:first-child{color:var(--d-forest);font-weight:500}
+
+/* ── firma ─────────────────────────────────────────────────────── */
+.firma{background:var(--d-card);border:1px solid var(--d-rule-2);border-radius:2px;
+  padding:clamp(1.6rem,4vw,2.2rem);margin:2.6rem 0 0;box-shadow:var(--d-shadow)}
+.rubricas{display:grid;gap:2.2rem;margin-top:1.8rem}
+@media(min-width:34rem){ .rubricas{grid-template-columns:1fr 1fr;gap:2.4rem} }
+.linea{border-bottom:1px solid var(--d-ink-3);height:2.9rem}
+.quien{font-family:"Space Mono",monospace;font-size:.82rem;color:var(--d-ink-3);
+  margin:.5rem 0 0;line-height:1.7}
+.quien b{color:var(--d-forest);font-weight:400;font-family:"Karla",sans-serif;
+  font-size:.98rem;display:block}
+
+.cierre{font-family:"Skranji",Georgia,serif;font-size:1.3rem;line-height:1.5;
+  color:var(--d-forest);text-align:center;margin:clamp(2.8rem,7vw,4.2rem) auto 0;max-width:26rem}
+footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule);
+  font-family:"Space Mono",monospace;font-size:.8rem;color:var(--d-ink-3);line-height:1.8}
+
+/* ── impreso: esto se firma en papel ───────────────────────────── */
+@media print{
+  #prog,.top,.espiral{display:none}
+  body{background:#fff;font-size:10.5pt;line-height:1.55}
+  .col{max-width:100%;padding:0}
+  .pacto{background:none;color:var(--d-ink);border-top:2px solid var(--d-forest);
+    border-bottom:2px solid var(--d-forest);padding:1.2rem 0}
+  .pacto h2,.pacto p,.pacto strong{color:var(--d-ink)}
+  section{padding-top:1.4rem;break-inside:avoid}
+  h2{break-after:avoid} .firma{break-inside:avoid}
+  .carta,.marco,.firma,.tabla{box-shadow:none}
+}
+</style>
+</head><body data-doc="1">
+
+<div id="prog"></div>
+
+<div class="top">
+  <div class="top-in">
+    <span class="marca">Shikibuntu · Gala &amp; Steph</span>
+    <span class="lang-sw">
+      <a href="1-ACUERDO-SHIKIBUNTU" title="Leer en español">ES</a><span class="on">EN</span>
+    </span>
+  </div>
+</div>
+
+<div class="hero">
+  <svg class="espiral" viewBox="0 0 200 200" aria-hidden="true">
+    <path d="M100 100 m0 0 a6 6 0 1 1 6 6 a16 16 0 1 1 -16 16 a30 30 0 1 1 30 -30 a46 46 0 1 1 -46 46 a64 64 0 1 1 64 -64 a84 84 0 1 1 -84 84"
+      fill="none" stroke="#4E5807" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>
+  <div class="col">
+    <p class="kicker">An agreement between friends · Draft for signature</p>
+    <h1>I'm building this for you because I love you. Here it is in writing, so there's never any doubt.</h1>
+    <p class="bajada">No cost. All yours. And whatever happens between us, Shikibuntu is untouched.</p>
+  </div>
+</div>
+
+<div class="col">
+  <div class="carta">
+    <p>Gala,</p>
+    <p>This document doesn't exist because I distrust you. It exists precisely because I don't, and I want that to still be true ten years from now.</p>
+    <p>Most friendships that break over a project don't break from bad faith. They break because nobody wrote down the obvious while things were good, and later each person remembered it differently. I'd rather write it now, while we're good.</p>
+    <p><strong>Everything that follows has a single intention: that Shikibuntu is yours, entirely, and that our friendship never depends on it.</strong> If any sentence in this document ever seems to say otherwise, this one wins.</p>
+  </div>
+</div>
+
+<section class="col">
+  <div class="tit"><span class="num">01</span><h2>Who Shikibuntu belongs to</h2></div>
+  <p><strong>Shikibuntu is yours. 100%, from today and permanently.</strong> There is no partnership, no percentages, no stake of mine of any kind.</p>
+  <p>Yours means actually yours, not "yours as long as we get along":</p>
+  <ul>
+    <li>The name, the logo, the palette, the Earthkeeper Wheel, and everything that is the brand.</li>
+    <li>All the content: the writing, the translations, the images, the sections, the missions.</li>
+    <li>The data: your people, your wishes, your records, your log. None of it is used for anything else or shared with anyone.</li>
+    <li>Your audience and your relationship with them. There is no mailing list of mine in the middle.</li>
+    <li>The domain, once you move it into your name — and this document says how.</li>
+  </ul>
+  <p>I am not a partner, not a co-founder, not a contracted vendor. I'm your friend who knows how to build things.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">02</span><h2>What I bring, and what it costs</h2></div>
+  <p><strong>It costs zero. Today, and retroactively.</strong> There is no invoice, no debt quietly accruing, no number that shows up later.</p>
+  <p>I do it for two reasons and both are true: because I love you, and because I believe in what you're doing for the Earth. This is my way of being part of that work.</p>
+  <p>What is already built and running: the site in two languages, your command panel, the content engine that lets you publish without asking anyone, the language system, the crew system, image uploads, the research room, the audit log, and versioned backups with one-click rollback.</p>
+
+  <h3>And what I am not giving you</h3>
+  <p>I am not promising infinite development. I'll keep building as long as I can and as long as it brings me joy. If one day I can't, I'll tell you in advance, leave everything running, and help you hand it to someone else.</p>
+  <p>I'm saying this today instead of quietly letting you down later.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">03</span><h2>The technology: what you actually receive</h2></div>
+  <p>There's a distinction here that matters, and I'm writing it because staying quiet about it would be easy and dishonest.</p>
+  <p><strong>What is Shikibuntu's, I assign to you.</strong> All the code built specifically for you — your site, your panel, your templates, your configuration — becomes yours outright. You can use it, change it, take it, hire anyone you like to work on it, or sell it if that ever makes sense. You need no permission from me for any of that.</p>
+  <p><strong>Underneath there is a base platform I built earlier, which other projects of mine also use.</strong> That one I can't assign to you, because it isn't only mine to give: assigning it would entangle you with work that has nothing to do with you. What I do give you is a <strong>perpetual, free, worldwide, irrevocable licence</strong> to use it for Shikibuntu, unconditionally, and I can never withdraw it — not me, and not anyone who buys my work later.</p>
+  <div class="cita"><p>Nobody can switch Shikibuntu off on you. Not me angry, not me broke, not a company that someday buys FlowBond.</p></div>
+  <div class="marco">
+    <span class="rotulo">The test that this is real</span>
+    <p>A promise of ownership is only worth something if there's a path to exercise it. That's why section 5 doesn't talk about intentions: it says exactly how you take everything with you, any day you want, with or without my help.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">04</span><h2>How you get in, and what you can do without asking anyone</h2></div>
+  <p>You hold a captain's key. With it you enter your panel — the Command Deck — and from there Shikibuntu is yours to move, not just to look at.</p>
+  <p>Without writing to me, without waiting for anyone, you can:</p>
+  <ul>
+    <li><strong>Change any text on the site</strong> and publish it. Before publishing, the system checks you haven't left a blank page or a broken link.</li>
+    <li><strong>Add languages.</strong> Type a two-letter code and it translates everything, leaving proper names alone.</li>
+    <li><strong>Add, hide or reorder sections</strong> from nine ready-made types: full freedom of content, zero risk to the design.</li>
+    <li><strong>Upload images</strong> without transparency being flattened or quality degraded.</li>
+    <li><strong>Roll back.</strong> Every publication saves a full snapshot; if you don't like something, one click brings it back.</li>
+    <li><strong>Give access to your people.</strong> Six roles and nine permissions you tick one by one. The key is shown once and belongs to that person, not shared.</li>
+    <li><strong>Read the log:</strong> who did what and when. Including me.</li>
+  </ul>
+  <p>There's a bilingual guide inside the panel. You don't have to remember any of this.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">05</span><h2>Where it lives today, and how it becomes entirely yours</h2></div>
+  <p>I'll say it plainly, without dressing it up: <strong>today Shikibuntu lives in my accounts.</strong> The hosting is in my Cloudflare and the database in a project of mine shared with other things. That was the fast way to start, and it's what has to change for "it's yours" to be literal.</p>
+  <p>The plan, with no deadline and at your pace:</p>
+  <ol>
+    <li><strong>You open your own accounts</strong> for hosting and database. They're free at the size we're at. I'll sit with you the first time.</li>
+    <li><strong>The domain in your name</strong>, registered by you and paid by you, even if it's a few dollars a year. It's the piece that makes it impossible for anyone to lock you out.</li>
+    <li><strong>I move Shikibuntu there</strong> and keep only the access you decide to give me, no more and no less.</li>
+    <li><strong>Your data leaves with you</strong> in a file you can read without me and without my software.</li>
+  </ol>
+  <div class="marco">
+    <span class="rotulo">In the meantime</span>
+    <p>Even if this never happens, you have the right to ask me for a complete copy of everything — code, content and data — whenever you want, without explaining why. I commit to delivering it within <strong>seven days</strong>.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">06</span><h2>If money ever comes in</h2></div>
+  <p><strong>Nothing is owed to me today, and there is no percentage written anywhere.</strong> That's deliberate: I don't want a number hanging between us while there's nothing to share.</p>
+  <p>If Shikibuntu ever receives real money — sales, donations, sponsorship, a grant — we sit down <em>at that moment</em> and sign a separate page with whatever we agree. Not before, and never retroactively.</p>
+  <p>Three things I want clear about that day:</p>
+  <ul>
+    <li>That agreement will be voluntary on both sides. If we don't reach one, nothing happens: I keep not charging and Shikibuntu stays yours all the same.</li>
+    <li>I will never hand you a bill for what's already built. What was given is given.</li>
+    <li>No incoming money gives me a say over your decisions. Shikibuntu is steered by your judgement, with or without revenue.</li>
+  </ul>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">07</span><h2>The hard costs</h2></div>
+  <p>My work is free. Third-party tools aren't always, and I'd rather you know which ones before they show up.</p>
+  <div class="tabla">
+    <table>
+      <tr><th>What</th><th>Today</th><th>As it grows</th></tr>
+      <tr><td>Domain</td><td>A few dollars a year</td><td>In your name, on you</td></tr>
+      <tr><td>Hosting and database</td><td>Free at this size</td><td>Onto your accounts</td></tr>
+      <tr><td>The panel's AI</td><td>I pay it, by usage</td><td>Onto your account</td></tr>
+      <tr><td>System email</td><td>Not switched on yet</td><td>Onto your accounts</td></tr>
+    </table>
+  </div>
+  <p>Today I cover it and I don't bill you. I write it down so you know there will come a point, if Shikibuntu grows, when these services should sit in your name — not so that you pay, but because holding them yourself is part of Shikibuntu being yours.</p>
+</section>
+
+<div class="pacto">
+  <div class="col">
+    <div class="tit"><span class="num">08</span><h2>The clause that matters most to me</h2></div>
+    <p>If I had to delete this whole document and keep one paragraph, it would be this one.</p>
+    <div class="cita"><p>Our friendship and Shikibuntu are two separate things, and neither one can take the other hostage.</p></div>
+    <p>Both directions, and I mean both:</p>
+    <ul>
+      <li>If one day you and I fight, drift apart, or life simply takes us different ways, <strong>Shikibuntu is untouched.</strong> It stays yours, it stays running, and I hand everything over unconditionally. There is nothing here I could ever use to hurt you.</li>
+      <li>If one day Shikibuntu stalls, fails, disappoints you, or you decide to close it, <strong>nothing happens to us.</strong> You don't owe me a successful project in exchange for my love.</li>
+    </ul>
+    <p>Neither of us will use this project as an argument in a personal conversation, or our friendship as an argument in a project decision. If something starts to feel tangled, we say so out loud before it knots.</p>
+  </div>
+</div>
+
+<section class="col">
+  <div class="tit"><span class="num">09</span><h2>If one day we part</h2></div>
+  <p>Let this be written while we're friends, not once we aren't. If either of us wants to end this collaboration, for any reason and without having to explain it:</p>
+  <ol>
+    <li>We say so. A message is enough.</li>
+    <li>Within <strong>seven days</strong> I hand you everything: code, content, data, domains and access.</li>
+    <li>For <strong>thirty days</strong> I stay available so whoever you bring in can understand it. At no cost.</li>
+    <li>I delete my access to your systems and confirm it to you in writing.</li>
+    <li>I keep no copy of your data, your content, or your list of people.</li>
+  </ol>
+  <div class="marco aviso">
+    <span class="rotulo">No conditions</span>
+    <p>None of this is conditional on the parting being friendly. It holds even if we're angry.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">10</span><h2>What this document is not</h2></div>
+  <p>So that nobody — not a lawyer, not a sponsor, not the two of us in five years — reads something here we didn't say:</p>
+  <ul>
+    <li>It is not a partnership or a joint venture.</li>
+    <li>It is not employment. I'm not your employee and you're not my client.</li>
+    <li>It gives me no stake, shares or rights over Shikibuntu.</li>
+    <li>It does not oblige you to use my technology: you can leave with someone else whenever you like.</li>
+    <li>It does not oblige me to build forever, and I've said how it would go if I have to stop.</li>
+    <li>It is not exclusive: I keep working on my other projects, and none of them touches Shikibuntu or your data.</li>
+  </ul>
+  <h3>On the legal side</h3>
+  <p>It's written in plain language on purpose, so the two of us understand it without an interpreter. If at any point you'd like a lawyer to review it or make it enforceable where you live, that's completely fine and I'm not offended in the slightest — on the contrary, I'll pay for it.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">11</span><h2>The only thing I ask</h2></div>
+  <p>Three things, none of them money:</p>
+  <ol>
+    <li><strong>Tell me when something is broken</strong>, even if you feel awkward or think it's trivial. I'd a thousand times rather fix it than find out you'd been putting up with it for months.</li>
+    <li><strong>Let me say I built it</strong>, in my portfolio, without exposing anything of yours you'd rather keep private. If one day you'd prefer I didn't, say so and I'll take it down without argument.</li>
+    <li><strong>Use the panel.</strong> I built it so Shikibuntu moves at your pace and not mine. Every time you publish something without writing to me, this worked.</li>
+  </ol>
+</section>
+
+<div class="col">
+  <p class="cierre">I am because we all are. Because the Earth lives.<br>And because you are my friend before any of this.</p>
+
+  <div class="firma">
+    <span class="rotulo">Signatures</span>
+    <p style="margin:.2rem 0 0;color:var(--d-ink-2)">Signed in two copies, one for each of us.</p>
+    <div class="rubricas">
+      <div>
+        <div class="linea"></div>
+        <p class="quien"><b>Gala Dichiara</b>Shikibuntu<br>Place and date</p>
+      </div>
+      <div>
+        <div class="linea"></div>
+        <p class="quien"><b>Steph Ferrera</b>FlowBond<br>Place and date</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Document 01 · Draft for review<br>
+    This is a courtesy translation. The agreement was written in Spanish, and the Spanish version is the one Gala and Steph read to each other.
+  </footer>
+</div>
+
+<script>
+(function(){
+  var b = document.getElementById('prog');
+  function pinta(){
+    var h = document.documentElement.scrollHeight - innerHeight;
+    b.style.width = (h > 0 ? (scrollY / h) * 100 : 0) + '%';
+  }
+  addEventListener('scroll', pinta, { passive: true });
+  addEventListener('resize', pinta);
+  pinta();
+})();
+</script>
+<link rel="stylesheet" href="/docs/room.css">
+<script src="/docs/room.js" type="module"></script>
+</body>
+</html>

@@ -67,6 +67,7 @@ export interface Pass {
  */
 const DOC_OF_FILE: Record<string, string> = {
   '1-acuerdo-shikibuntu': '1',
+  '1-acuerdo-shikibuntu-en': '1',   // la misma llave abre las dos lenguas
 };
 
 export const DOC_TITLES: Record<string, string> = {
