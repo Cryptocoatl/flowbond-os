@@ -169,8 +169,33 @@ footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule
   .carta,.marco,.firma,.tabla{box-shadow:none}
 }
 </style>
-</head>
-<body data-doc="1">
+
+<style>
+/* ── las dos magias, lado a lado ──────────────────────────────── */
+.duo{display:grid;gap:1.1rem;margin:1.8rem 0}
+@media(min-width:40rem){ .duo{grid-template-columns:1fr 1fr;gap:1.3rem} }
+.magia{background:var(--d-card);border:1px solid var(--d-rule);border-radius:2px;
+  padding:1.25rem 1.35rem;box-shadow:var(--d-shadow);border-top:3px solid var(--d-olive)}
+.magia:last-child{border-top-color:var(--d-orange)}
+.magia h4{font-family:"Skranji",Georgia,serif;font-weight:400;color:var(--d-forest);
+  font-size:1.14rem;margin:0 0 .1rem;line-height:1.25}
+.magia .rol{font-family:"Space Mono",monospace;font-size:.76rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.7rem}
+.magia ul{margin:.6rem 0 0}
+.magia li{margin:.45rem 0;font-size:.98rem}
+.magia p{font-size:.98rem}
+.magia p:last-child{margin-bottom:0}
+
+/* ── el número lo pone ella ───────────────────────────────────── */
+.reparto{background:var(--d-paper-2);border:2px solid var(--d-olive);border-radius:2px;
+  padding:clamp(1.4rem,4vw,1.9rem);margin:1.8rem 0;text-align:center}
+.reparto .cifra{font-family:"Skranji",Georgia,serif;font-size:clamp(2.6rem,10vw,4rem);
+  color:var(--d-olive);line-height:1;margin:.2rem 0 .5rem;display:block}
+.reparto p{margin:.4rem 0;color:var(--d-ink-2)}
+.reparto p:last-child{margin-bottom:0}
+.reparto strong{color:var(--d-forest)}
+</style>
+</head><body data-doc="1">
 
 <div id="prog"></div>
 
@@ -189,81 +214,116 @@ footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule
       fill="none" stroke="#4E5807" stroke-width="1.6" stroke-linecap="round"/>
   </svg>
   <div class="col">
-    <p class="kicker">Acuerdo entre amigas · Borrador para firma</p>
-    <h1>Te construyo esto porque te quiero. Aquí está por escrito para que nunca haya duda.</h1>
-    <p class="bajada">Sin costo. Todo tuyo. Y pase lo que pase entre nosotras, Shikibuntu no se toca.</p>
+    <p class="kicker">Alianza entre amigas · Borrador para firma</p>
+    <h1>Siempre soñamos con cambiar el mundo juntas. Esto es cómo lo vamos a construir.</h1>
+    <p class="bajada">Tú pones la parte humana. Yo pongo la tecnología que la sostiene. Shikibuntu es tuyo, y yo ayudo a que exista.</p>
   </div>
 </div>
 
 <div class="col">
   <div class="carta">
     <p>Gala:</p>
-    <p>Este documento no existe porque desconfíe de ti. Existe justamente porque no desconfío, y quiero que siga siendo así dentro de diez años.</p>
-    <p>La mayoría de las amistades que se rompen por un proyecto no se rompen por mala fe. Se rompen porque nadie escribió lo obvio cuando todo estaba bien, y después cada quien recordó algo distinto. Yo prefiero escribirlo hoy, que estamos bien.</p>
-    <p><strong>Todo lo que sigue tiene una sola intención: que Shikibuntu sea tuyo, entero, y que nuestra amistad no dependa nunca de él.</strong> Si alguna frase de este documento alguna vez parece decir otra cosa, gana esta.</p>
+    <p>Llevamos años soñando esto en voz alta. Este documento no convierte el sueño en un contrato: lo convierte en un plan, para que las dos sepamos exactamente qué está poniendo cada una y qué pasa si el mundo se mueve.</p>
+    <p>Lo escribo ahora, que estamos bien, porque las amistades que se rompen por un proyecto casi nunca se rompen por mala fe. Se rompen porque nadie escribió lo obvio a tiempo, y después cada quien recordó algo distinto.</p>
+    <p><strong>Dos cosas son verdad al mismo tiempo, y ninguna se come a la otra: Shikibuntu es tuyo, entero. Y lo estamos construyendo juntas.</strong> Todo lo que sigue existe para sostener esas dos verdades a la vez.</p>
   </div>
 </div>
 
 <section class="col">
-  <div class="tit"><span class="num">01</span><h2>De quién es Shikibuntu</h2></div>
-  <p><strong>Shikibuntu es tuyo. Al 100%, desde hoy y para siempre.</strong> No hay sociedad, no hay porcentajes, no hay participación mía de ningún tipo.</p>
-  <p>Tuyo quiere decir tuyo de verdad, no «tuyo mientras nos llevemos bien»:</p>
+  <div class="tit"><span class="num">01</span><h2>Lo que estamos construyendo</h2></div>
+  <p>Shikibuntu es tu movimiento: proteger el planeta y toda la vida, y darle a la gente una manera concreta de entrar en ese trabajo. <em>Yo soy porque todas somos. Porque la Tierra vive.</em></p>
+  <p>Lo que estamos construyendo juntas es el cuerpo que ese movimiento necesita para existir en el mundo: un lugar donde la gente llega, entiende, se queda y hace algo. Con la tecnología suficiente para que crezca sin que tú tengas que pedirle permiso a nadie — ni siquiera a mí.</p>
+  <div class="cita"><p>Tenemos toda la fuerza para crear esto. Tú sabes mover gente; yo sé construir el suelo donde se paran.</p></div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">02</span><h2>Lo que trae cada una</h2></div>
+  <p>No estamos repartiendo tareas: estamos poniendo dos magias distintas sobre la misma mesa. Ninguna de las dos sirve sola.</p>
+
+  <div class="duo">
+    <div class="magia">
+      <h4>Gala</h4>
+      <span class="rol">La parte humana</span>
+      <ul>
+        <li>La visión, la voz y el criterio de qué es y qué no es Shikibuntu.</li>
+        <li>La comunidad: quién entra, cómo se le recibe, cómo se le acompaña.</li>
+        <li>El onboarding real de la gente — el momento en que alguien pasa de mirar a participar.</li>
+        <li>Las alianzas, los aliados y las conversaciones que sólo tú puedes tener.</li>
+        <li>El trabajo de conservación que le da verdad a todo lo demás.</li>
+      </ul>
+    </div>
+    <div class="magia">
+      <h4>Steph</h4>
+      <span class="rol">La tecnología que respalda</span>
+      <ul>
+        <li>La plataforma completa y todo lo que haga falta construir después.</li>
+        <li>Que puedas publicar, traducir, abrir secciones y dar accesos tú sola.</li>
+        <li>La infraestructura: alojamiento, datos, seguridad, respaldos y vuelta atrás.</li>
+        <li>Los vehículos para mover dinero cuando haga falta: cobros, donaciones y reparto.</li>
+        <li>Que nada de esto te cueste aprender a ser ingeniera.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>La regla práctica: <strong>si la decisión es sobre qué dice o qué es Shikibuntu, es tuya. Si es sobre cómo se construye, es mía.</strong> Y cuando algo caiga en medio — y va a caer — se habla antes de hacerlo, no después.</p>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">03</span><h2>De quién es Shikibuntu</h2></div>
+  <p>Que estemos construyendo juntas no le quita ni un gramo de propiedad a nadie. Lo escribo sin matices para que no haya forma de leerlo de otra manera:</p>
+  <p><strong>Shikibuntu es tuyo. Al 100%, desde hoy y para siempre.</strong></p>
   <ul>
     <li>El nombre, el logo, la paleta, la Rueda del Earthkeeper y todo lo que es la marca.</li>
     <li>Todo el contenido: los textos, las traducciones, las imágenes, las secciones, las misiones.</li>
     <li>Los datos: tu gente, tus deseos, tus registros, tu bitácora. Nada de eso se usa para otra cosa ni se comparte con nadie.</li>
     <li>Tu público y tu relación con él. No hay lista de correos mía en medio.</li>
-    <li>El dominio, cuando lo pases a tu nombre — y este documento dice cómo.</li>
+    <li>El dominio, cuando lo pases a tu nombre — y la sección 6 dice cómo.</li>
   </ul>
-  <p>Yo no soy socia, ni cofundadora, ni proveedora con contrato. Soy tu amiga que sabe construir cosas.</p>
+  <p>Construir contigo no me hace dueña de nada tuyo. Me hace tu aliada.</p>
 </section>
 
 <section class="col">
-  <div class="tit"><span class="num">02</span><h2>Lo que aporto, y lo que cuesta</h2></div>
-  <p><strong>Cuesta cero. Hoy, y hacia atrás.</strong> No hay factura, no hay deuda acumulándose en silencio, no hay un número que aparezca después.</p>
-  <p>Lo hago por dos razones y las dos son verdad: porque te quiero, y porque creo en lo que estás haciendo por la Tierra. Esto es mi manera de estar en ese trabajo.</p>
-  <p>Lo que ya está construido y funcionando: el sitio en dos idiomas, tu panel de mando, el motor de contenido que te deja publicar sin pedirle permiso a nadie, el sistema de idiomas, el de tripulación, las subidas de imágenes, la sala de investigación, la bitácora y el respaldo con vuelta atrás.</p>
+  <div class="tit"><span class="num">04</span><h2>La tecnología: qué existe y qué recibes</h2></div>
+  <p>Ya está construido y funcionando: el sitio en dos idiomas, tu panel de mando, el motor de contenido que te deja publicar sin pedirle permiso a nadie, el sistema de idiomas, el de tripulación, las subidas de imágenes, la sala de investigación, la bitácora y el respaldo con vuelta atrás.</p>
 
-  <h3>Y lo que no te estoy dando</h3>
-  <p>No te estoy prometiendo desarrollo infinito. Voy a seguir construyendo mientras pueda y mientras me dé alegría. Si algún día no puedo, te aviso con tiempo, te dejo todo funcionando y te ayudo a que otra persona lo tome.</p>
-  <p>Te lo digo hoy en vez de fallarte callada después.</p>
-</section>
-
-<section class="col">
-  <div class="tit"><span class="num">03</span><h2>La tecnología: qué recibes exactamente</h2></div>
-  <p>Aquí hay una distinción que importa, y la escribo porque callarla sería fácil y deshonesto.</p>
-  <p><strong>Lo que es de Shikibuntu, te lo cedo.</strong> Todo el código hecho a la medida para ti — tu sitio, tu panel, tus plantillas, tu configuración — pasa a ser tuyo en propiedad. Puedes usarlo, cambiarlo, llevártelo, contratar a quien quieras para que lo toque, o venderlo si algún día tiene sentido. No necesitas mi permiso para nada de eso.</p>
-  <p><strong>Debajo hay una plataforma base que construí antes y que usan otros proyectos míos.</strong> Esa no te la puedo ceder, porque no es sólo mía para darla: cederla te metería en líos con trabajo que no tiene nada que ver contigo. Lo que sí te doy es una <strong>licencia perpetua, gratuita, mundial e irrevocable</strong> para usarla en Shikibuntu, sin condiciones y sin que yo pueda retirarla nunca — ni yo, ni nadie que compre lo mío después.</p>
-  <div class="cita"><p>Nadie te puede apagar Shikibuntu. Ni yo enojada, ni yo quebrada, ni una empresa que algún día compre FlowBond.</p></div>
-  <div class="marco">
-    <span class="rotulo">La prueba de que esto es real</span>
-    <p>Una promesa de propiedad sólo vale si existe el camino para ejercerla. Por eso la sección 5 no habla de intenciones: dice exactamente cómo te llevas todo el día que quieras, con o sin mi ayuda.</p>
-  </div>
-</section>
-
-<section class="col">
-  <div class="tit"><span class="num">04</span><h2>Cómo entras y qué puedes hacer sin pedirle permiso a nadie</h2></div>
-  <p>Tienes una llave de capitana. Con ella entras a tu panel — el Command Deck — y desde ahí Shikibuntu es tuyo de mover, no sólo de mirar.</p>
-  <p>Sin escribirme, sin esperar a nadie, puedes:</p>
+  <h3>Lo que puedes hacer sin escribirme</h3>
   <ul>
     <li><strong>Cambiar cualquier texto del sitio</strong> y publicarlo. Antes de publicar, el sistema revisa que no dejes una página en blanco ni un enlace roto.</li>
     <li><strong>Añadir idiomas.</strong> Escribes el código de dos letras y traduce todo, sin tocar nombres propios.</li>
     <li><strong>Añadir, esconder o reordenar secciones</strong> de nueve tipos ya diseñados: libertad total de contenido, cero riesgo de romper el diseño.</li>
-    <li><strong>Subir imágenes</strong> sin que se aplane la transparencia ni se degraden.</li>
     <li><strong>Volver atrás.</strong> Cada publicación guarda una foto completa; si algo no te gustó, un clic y regresa.</li>
-    <li><strong>Dar accesos a tu gente.</strong> Seis roles y nueve permisos que marcas uno por uno. La llave se muestra una sola vez y es de esa persona, no compartida.</li>
+    <li><strong>Dar accesos a tu gente</strong>, con seis roles y nueve permisos que marcas uno por uno.</li>
     <li><strong>Ver la bitácora:</strong> quién hizo qué y cuándo. Incluida yo.</li>
   </ul>
-  <p>Hay una guía bilingüe dentro del panel. No tienes que acordarte de nada de esto.</p>
+
+  <h3>De quién es el código</h3>
+  <p><strong>Lo que es de Shikibuntu, es tuyo.</strong> Todo el código hecho a la medida — tu sitio, tu panel, tus plantillas, tu configuración — es tuyo en propiedad. Puedes usarlo, cambiarlo, llevártelo o contratar a quien quieras para que lo toque.</p>
+  <p><strong>Debajo hay una plataforma base que construí antes y que usan otros proyectos míos.</strong> Esa no te la puedo ceder porque no es sólo mía para darla, y cederla te enredaría con trabajo que no tiene que ver contigo. Lo que sí te doy es una <strong>licencia perpetua, gratuita, mundial e irrevocable</strong> para usarla en Shikibuntu, sin condiciones y sin que yo pueda retirarla nunca — ni yo, ni nadie que compre lo mío después.</p>
+  <div class="cita"><p>Nadie te puede apagar Shikibuntu. Ni yo enojada, ni yo quebrada, ni una empresa que algún día compre FlowBond.</p></div>
 </section>
 
 <section class="col">
-  <div class="tit"><span class="num">05</span><h2>Dónde vive hoy, y cómo se vuelve enteramente tuyo</h2></div>
-  <p>Te lo digo tal cual está, sin adornos: <strong>hoy Shikibuntu vive en mis cuentas.</strong> El alojamiento está en mi Cloudflare y la base de datos en un proyecto mío que comparte con otras cosas. Eso fue lo rápido para arrancar, y es lo que hay que cambiar para que «es tuyo» sea literal.</p>
+  <div class="tit"><span class="num">05</span><h2>Los vehículos para mover dinero</h2></div>
+  <p>Cuando Shikibuntu necesite recibir dinero — donaciones, membresías, un evento, una campaña, un patrocinio — no vamos a empezar de cero ni a depender de una plataforma que se quede con un pedazo y con tus datos.</p>
+  <p>Lo que puedo poner, cuando lo necesites y no antes:</p>
+  <ul>
+    <li><strong>Cobros y donaciones</strong> conectados a tu propia cuenta, con el dinero cayendo directo donde tú digas.</li>
+    <li><strong>Reparto automático y transparente</strong>: si algo se divide entre varias personas o causas, se reparte solo y cada quien puede ver cómo. Ya está construido y probado.</li>
+    <li><strong>Recibos y registro</strong> de lo que entra, para que rendir cuentas ante un donante o un patrocinador sea abrir una pantalla, no armar una hoja de cálculo.</li>
+  </ul>
+  <div class="marco">
+    <span class="rotulo">La regla del dinero</span>
+    <p>Todo entra a nombre de Shikibuntu y a cuentas tuyas. Yo construyo la tubería; el dinero no pasa por mis manos.</p>
+  </div>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">06</span><h2>Dónde vive hoy, y cómo se vuelve enteramente tuyo</h2></div>
+  <p>Te lo digo tal cual está: <strong>hoy Shikibuntu vive en mis cuentas.</strong> El alojamiento está en mi Cloudflare y la base de datos en un proyecto mío que comparte con otras cosas. Fue lo rápido para arrancar, y es lo que hay que cambiar para que «es tuyo» sea literal.</p>
   <p>El plan, sin fecha límite y a tu ritmo:</p>
   <ol>
     <li><strong>Tú abres tus cuentas</strong> de alojamiento y base de datos. Son gratuitas en el tamaño que estamos. Yo te acompaño la primera vez.</li>
-    <li><strong>El dominio a tu nombre</strong>, registrado por ti y pagado por ti, aunque sean unos dólares al año. Es la pieza que hace que nadie te pueda dejar fuera.</li>
+    <li><strong>El dominio a tu nombre</strong>, registrado y pagado por ti, aunque sean unos dólares al año. Es la pieza que hace que nadie te pueda dejar fuera.</li>
     <li><strong>Muevo Shikibuntu ahí</strong> y me quedo con el acceso que tú decidas darme, ni más ni menos.</li>
     <li><strong>Tus datos salen contigo</strong> en un archivo que puedes leer sin mí y sin mi software.</li>
   </ol>
@@ -274,48 +334,70 @@ footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule
 </section>
 
 <section class="col">
-  <div class="tit"><span class="num">06</span><h2>Si algún día entra dinero</h2></div>
-  <p><strong>Hoy no se me debe nada, y no hay ningún porcentaje escrito en ningún lado.</strong> Eso es a propósito: no quiero un número colgando entre nosotras mientras no haya nada que repartir.</p>
-  <p>Si algún día Shikibuntu recibe dinero de verdad — ventas, donaciones, patrocinios, un fondo — nos sentamos <em>en ese momento</em> y firmamos una hoja aparte con lo que acordemos. Ni antes, ni retroactivo.</p>
-  <p>Tres cosas que quiero dejar claras sobre ese día:</p>
+  <div class="tit"><span class="num">07</span><h2>El reparto lo pones tú</h2></div>
+  <p>Hoy no me debes nada y no cobro nada. Pero si esto crece y empieza a entrar dinero de verdad, no quiero que sea incómodo hablarlo — así que lo dejo escrito desde ahora, con el número en tus manos.</p>
+
+  <div class="reparto">
+    <span class="rotulo">Mi parte, si algún día hay algo que repartir</span>
+    <span class="cifra">___ %</span>
+    <p><strong>El número lo pones tú</strong>, cuando exista algo que repartir y no antes.</p>
+  </div>
+
+  <p>Para que ese día sea una conversación fácil y no una negociación, esto es lo único que dejamos acordado de antemano:</p>
   <ul>
-    <li>Ese acuerdo será voluntario de las dos. Si no llegamos a uno, no pasa nada: sigo sin cobrar y Shikibuntu sigue siendo tuyo igual.</li>
-    <li>Nunca te voy a pasar una cuenta por lo ya construido. Lo regalado, regalado está.</li>
-    <li>Ningún dinero que entre me da voz sobre tus decisiones. Shikibuntu se dirige desde tu criterio, con o sin ingresos.</li>
+    <li><strong>Cuándo se decide:</strong> la primera vez que Shikibuntu reciba dinero de verdad. Ni antes, ni retroactivo por lo ya construido.</li>
+    <li><strong>Sobre qué:</strong> sobre lo que <em>queda</em> después de cubrir los costos de Shikibuntu — nunca sobre donaciones destinadas a un fin específico, ni sobre dinero que ya tiene dueño.</li>
+    <li><strong>Cómo:</strong> lo escribimos en una hoja aparte y la firmamos las dos. Si lo prefieres, el sistema lo reparte solo y a la vista, sin que nadie tenga que acordarse de nada.</li>
+    <li><strong>Se puede revisar:</strong> una vez al año, cualquiera de las dos puede decir «esto ya no refleja lo que estamos poniendo» y volvemos a hablarlo. Sin drama y sin que nadie tenga que justificarse.</li>
+    <li><strong>Cero es una respuesta válida.</strong> Si un día decides que no corresponde nada, lo entiendo y no cambia nada: sigo construyendo igual y Shikibuntu sigue siendo tuyo igual.</li>
   </ul>
+  <p>Te lo dejo así a propósito. No quiero un número negociado entre nosotras hoy, cuando todavía no hay nada que repartir y lo único que habría es presión. Quiero que salga de ti cuando veas lo que esto llegó a ser.</p>
 </section>
 
 <section class="col">
-  <div class="tit"><span class="num">07</span><h2>Los costos duros</h2></div>
-  <p>Mi trabajo es gratis. Las herramientas de terceros no siempre lo son, y prefiero que sepas cuáles son antes de que aparezcan.</p>
+  <div class="tit"><span class="num">08</span><h2>Hoy no cuesta nada</h2></div>
+  <p>Mi trabajo no se cobra, ni ahora ni hacia atrás. No hay factura, no hay deuda acumulándose en silencio, no hay un número que aparezca después.</p>
+  <p>Las herramientas de terceros no siempre son gratis, y prefiero que sepas cuáles son antes de que aparezcan:</p>
   <div class="tabla">
     <table>
       <tr><th>Qué</th><th>Hoy</th><th>Cuando crezca</th></tr>
       <tr><td>Dominio</td><td>Unos dólares al año</td><td>A tu nombre y a tu cargo</td></tr>
       <tr><td>Alojamiento y base</td><td>Gratis en este tamaño</td><td>A tus cuentas</td></tr>
       <tr><td>Inteligencia artificial del panel</td><td>Lo pago yo, por uso</td><td>A tu cuenta</td></tr>
-      <tr><td>Correos del sistema</td><td>Aún sin encender</td><td>A tus cuentas</td></tr>
+      <tr><td>Cobros y donaciones</td><td>Aún sin encender</td><td>A tus cuentas</td></tr>
     </table>
   </div>
-  <p>Hoy lo cubro yo y no te lo cobro. Lo escribo para que sepas que llegará un punto, si Shikibuntu crece, en que estos servicios deben quedar a tu nombre — no para que pagues, sino porque tenerlos tú es parte de que Shikibuntu sea tuyo.</p>
+  <p>Hoy lo cubro yo y no te lo cobro. Lo escribo porque llegará un punto, si Shikibuntu crece, en que estos servicios deben quedar a tu nombre — no para que pagues, sino porque tenerlos tú es parte de que Shikibuntu sea tuyo.</p>
 </section>
 
 <div class="pacto">
   <div class="col">
-    <div class="tit"><span class="num">08</span><h2>La cláusula que más me importa</h2></div>
+    <div class="tit"><span class="num">09</span><h2>La cláusula que más me importa</h2></div>
     <p>Si tuviera que borrar todo este documento y quedarme con un solo párrafo, sería este.</p>
     <div class="cita"><p>Nuestra amistad y Shikibuntu son dos cosas separadas, y ninguna puede tomar a la otra de rehén.</p></div>
     <p>En los dos sentidos, y digo los dos en serio:</p>
     <ul>
       <li>Si algún día tú y yo nos peleamos, nos distanciamos o simplemente la vida nos lleva por lados distintos, <strong>Shikibuntu no se toca.</strong> Sigue siendo tuyo, sigue funcionando, y yo entrego todo sin condiciones. No hay nada aquí que yo pueda usar para dolerte.</li>
-      <li>Si algún día Shikibuntu se cae, se estanca, te decepciona o decides cerrarlo, <strong>no le pasa nada a lo nuestro.</strong> No me debes un proyecto exitoso a cambio de mi cariño.</li>
+      <li>Si algún día Shikibuntu se cae, se estanca, te decepciona o decides cerrarlo, <strong>no le pasa nada a lo nuestro.</strong> No me debes un proyecto exitoso a cambio de mi cariño, ni yo te debo un éxito a cambio del tuyo.</li>
     </ul>
     <p>Ninguna de las dos va a usar este proyecto como argumento en una conversación personal, ni nuestra amistad como argumento en una decisión del proyecto. Si algo se siente mezclado, lo decimos en voz alta antes de que se enrede.</p>
   </div>
 </div>
 
 <section class="col">
-  <div class="tit"><span class="num">09</span><h2>Si un día nos separamos</h2></div>
+  <div class="tit"><span class="num">10</span><h2>Lo que nos pedimos</h2></div>
+  <p>Una alianza sostiene lo que las dos sostienen. Esto es lo que cada una se compromete a hacer, y es corto a propósito:</p>
+  <ul>
+    <li><strong>Decir cuando algo no funciona</strong>, aunque dé pena o parezca una tontería. Mil veces mejor arreglarlo que enterarse de que llevabas meses aguantándolo.</li>
+    <li><strong>Decir cuando ya no se puede.</strong> Ninguna promete energía infinita. Si a alguna se le acaba — el tiempo, las ganas, la vida — lo dice con tiempo, deja su parte funcionando y ayuda a que alguien más la tome. Eso no es abandonar: es cuidarnos.</li>
+    <li><strong>No decidir por la otra en su cancha.</strong> Yo no decido qué dice Shikibuntu; tú no decides cómo se construye. Lo de en medio se habla.</li>
+    <li><strong>Que uses el panel.</strong> Lo construí para que Shikibuntu se mueva a tu ritmo y no al mío. Cada vez que publicas algo sin escribirme, esto funcionó.</li>
+    <li><strong>Que me dejes decir que lo construí</strong>, en mi portafolio, sin exponer nada tuyo que no quieras. Si algún día prefieres que no, me lo dices y lo quito sin discutir.</li>
+  </ul>
+</section>
+
+<section class="col">
+  <div class="tit"><span class="num">11</span><h2>Si un día cada quien sigue su camino</h2></div>
   <p>Que quede escrito mientras somos amigas, no cuando ya no lo seamos. Si cualquiera de las dos quiere terminar esta colaboración, por la razón que sea y sin tener que explicarla:</p>
   <ol>
     <li>Se avisa. Basta un mensaje.</li>
@@ -326,37 +408,26 @@ footer{margin:3rem 0 0;padding:1.4rem 0 3.5rem;border-top:1px solid var(--d-rule
   </ol>
   <div class="marco aviso">
     <span class="rotulo">Sin condiciones</span>
-    <p>Nada de esto está condicionado a que la separación sea amistosa. Se cumple igual si estamos enojadas.</p>
+    <p>Nada de esto está condicionado a que la separación sea amistosa. Se cumple igual si estamos enojadas. Y si ya habíamos acordado un reparto, lo que se generó hasta ese día se respeta; hacia adelante, no.</p>
   </div>
 </section>
 
 <section class="col">
-  <div class="tit"><span class="num">10</span><h2>Lo que este documento no es</h2></div>
+  <div class="tit"><span class="num">12</span><h2>Lo que este documento no es</h2></div>
   <p>Para que nadie — ni un abogado, ni un patrocinador, ni nosotras dentro de cinco años — lea aquí algo que no dijimos:</p>
   <ul>
-    <li>No es una sociedad ni una empresa conjunta.</li>
+    <li>No es una sociedad mercantil ni una empresa conjunta. Somos dos personas construyendo juntas, no una entidad.</li>
     <li>No es una relación laboral. No soy tu empleada ni tú mi clienta.</li>
-    <li>No me da participación, acciones ni derechos sobre Shikibuntu.</li>
+    <li>No me da participación, acciones ni derechos sobre Shikibuntu. El reparto de la sección 7, si lo hay, es sobre dinero — nunca sobre propiedad.</li>
     <li>No te obliga a usar mi tecnología: puedes irte con otra persona cuando quieras.</li>
-    <li>No me obliga a construir para siempre, y ya dije cómo sería si tengo que parar.</li>
     <li>No es exclusivo: yo sigo trabajando en mis otros proyectos, y ninguno tiene que ver con Shikibuntu ni toca tus datos.</li>
   </ul>
   <h3>Sobre lo legal</h3>
   <p>Está escrito en lenguaje claro a propósito, para que las dos lo entendamos sin intérprete. Si en algún momento quieres que un abogado lo revise o lo vuelva ejecutable donde vives, me parece perfecto y no me ofende en absoluto — al contrario, lo pago yo.</p>
 </section>
 
-<section class="col">
-  <div class="tit"><span class="num">11</span><h2>Lo único que te pido</h2></div>
-  <p>Tres cosas, ninguna es dinero:</p>
-  <ol>
-    <li><strong>Que me digas cuando algo no funcione</strong>, aunque te dé pena o creas que es una tontería. Prefiero mil veces arreglarlo que enterarme de que llevabas meses aguantándolo.</li>
-    <li><strong>Que me dejes decir que lo construí</strong>, en mi portafolio, sin exponer nada tuyo que no quieras. Si algún día prefieres que no, me lo dices y lo quito sin discutir.</li>
-    <li><strong>Que uses el panel.</strong> Lo construí para que Shikibuntu se mueva a tu ritmo y no al mío. Cada vez que publicas algo sin escribirme, esto funcionó.</li>
-  </ol>
-</section>
-
 <div class="col">
-  <p class="cierre">Yo soy porque todas somos. Porque la Tierra vive.<br>Y porque tú eres mi amiga antes que nada de esto.</p>
+  <p class="cierre">Yo soy porque todas somos. Porque la Tierra vive.<br>Y porque contigo siempre fue más fácil imaginarlo todo.</p>
 
   <div class="firma">
     <span class="rotulo">Firmas</span>
