@@ -1,0 +1,837 @@
+/* ==================================================================
+   FlowRoom document room — the layer that sits on top of the documents.
+
+   The documents carry their own typography and colour; nothing here
+   overrides it. This file adds three things:
+
+     1. the gate and the sharing desk, which have no document CSS
+     2. the reading choreography — progress, reveal, parallax
+     3. the annotation layer — marks, threads, the overview drawer
+
+   Every annotation control is drawn only when the runtime adds
+   `.can-mark` / `.can-comment` to <html>. A viewer's page has no
+   controls in the DOM at all, so there is nothing to see, nothing to
+   hover, and nothing to explain away.
+   ================================================================== */
+
+:root {
+  --void: #0b0810;
+  --card: #150f1d;
+  --card-2: #1c1427;
+  --ink: #f6f1f7;
+  --ink-2: #b4a4bf;
+  --ink-3: #786a83;
+  --rule: #271d33;
+  --rule-2: #3a2c49;
+  --rose: #ff4d7e;
+  --amber: #ffae3d;
+  --green: #3fcb86;
+  --teal: #31c2d6;
+  --indigo: #6e7bff;
+  --violet: #b36bff;
+
+  /* The five marks, in the room's own palette rather than the deck's. */
+  --m-agreed: var(--green);
+  --m-question: var(--teal);
+  --m-already_have: var(--indigo);
+  --m-different_timeline: var(--amber);
+  --m-not_this: var(--rose);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==================================================================
+   1 · Reading choreography
+   ================================================================== */
+
+/* The spectrum at the top of every document doubles as the progress
+   bar: the unread part is dimmed, so the colour fills as you read. */
+.readbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--rose),
+    var(--amber) 28%,
+    var(--green) 48%,
+    var(--teal) 68%,
+    var(--violet)
+  );
+  transform-origin: 0 50%;
+  transform: scaleX(var(--read, 0));
+  transition: transform 0.12s linear;
+}
+
+/* Reveal on approach. The runtime sets `.reveal-on` on <html> only when
+   JS is alive and motion is welcome, so a no-JS or reduced-motion
+   reader is never left staring at invisible paragraphs. */
+.reveal-on [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.reveal-on [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s var(--ease),
+    transform 0.7s var(--ease);
+}
+.reveal-on [data-reveal].is-in {
+  transition-delay: var(--d, 0ms);
+}
+
+/* The moon drifts a little slower than the page. */
+.moon,
+.gate-moon {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .readbar {
+    transition: none;
+  }
+  .reveal-on [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ==================================================================
+   2 · The gate
+   ================================================================== */
+
+body.gatebody {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--void);
+  color: var(--ink);
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  display: grid;
+  place-items: center;
+  padding: 1.4rem;
+  overflow: hidden;
+}
+
+.gate-moon {
+  position: fixed;
+  right: -14rem;
+  top: -9rem;
+  width: 44rem;
+  height: 44rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 34% 30%,
+    #2b2038 0%,
+    #1a1324 46%,
+    #0f0a16 70%,
+    transparent 72%
+  );
+  pointer-events: none;
+  opacity: 0.9;
+  animation: breathe 14s var(--ease) infinite;
+}
+.gate-moon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow:
+    inset -30px -18px 80px rgba(179, 107, 255, 0.18),
+    inset 18px 12px 56px rgba(255, 77, 126, 0.08);
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-1.2rem, 1rem, 0) scale(1.03);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate-moon {
+    animation: none;
+  }
+}
+
+.gatebody .gate {
+  position: relative;
+  z-index: 1;
+  width: min(30rem, 100%);
+}
+
+.gate-card {
+  background: linear-gradient(180deg, rgba(28, 20, 39, 0.86), rgba(21, 15, 29, 0.86));
+  border: 1px solid var(--rule);
+  border-radius: 1.1rem;
+  padding: clamp(1.6rem, 5vw, 2.6rem);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+}
+
+.gatebody .kicker {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.63rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 1.1rem;
+}
+
+.gatebody h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-size: clamp(1.9rem, 6vw, 2.7rem);
+  line-height: 1.02;
+  margin: 0 0 0.9rem;
+}
+.gatebody h1 em {
+  font-style: italic;
+  font-weight: 300;
+  background: linear-gradient(90deg, var(--rose), var(--amber) 34%, var(--teal) 66%, var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gate-sub {
+  color: var(--ink-2);
+  margin: 0 0 1.8rem;
+  font-size: 0.95rem;
+}
+
+.fld {
+  display: block;
+  margin: 0 0 0.9rem;
+}
+.fld span {
+  display: block;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 0.4rem;
+}
+.fld input,
+.fld select {
+  width: 100%;
+  background: rgba(11, 8, 16, 0.7);
+  border: 1px solid var(--rule-2);
+  border-radius: 0.6rem;
+  color: var(--ink);
+  font: inherit;
+  padding: 0.72rem 0.85rem;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.fld input:focus,
+.fld select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(179, 107, 255, 0.16);
+}
+
+.gate-go {
+  width: 100%;
+  margin-top: 0.5rem;
+  border: 0;
+  border-radius: 0.6rem;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  color: #140d1c;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--amber), var(--rose) 52%, var(--violet));
+  background-size: 200% 100%;
+  transition:
+    background-position 0.6s var(--ease),
+    transform 0.15s var(--ease);
+}
+.gate-go:hover {
+  background-position: 100% 0;
+}
+.gate-go:active {
+  transform: translateY(1px);
+}
+.gate-go[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.gate-err {
+  margin: 0.9rem 0 0;
+  color: var(--rose);
+  font-size: 0.85rem;
+}
+.gate-foot {
+  margin: 1.6rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+.gate-foot a {
+  color: var(--ink-2);
+}
+
+.shake {
+  animation: shake 0.4s;
+}
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  30%,
+  70% {
+    transform: translateX(4px);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+}
+
+/* ==================================================================
+   3 · The annotation layer
+   ================================================================== */
+
+/* A block is only ever outlined when it can actually be acted on. */
+.can-mark [data-block],
+.can-comment [data-block] {
+  position: relative;
+  border-radius: 0.4rem;
+  transition:
+    background 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+.can-mark [data-block]:hover,
+.can-comment [data-block]:hover,
+[data-block].is-open {
+  background: rgba(179, 107, 255, 0.045);
+  box-shadow:
+    -0.85rem 0 0 rgba(179, 107, 255, 0.045),
+    0.85rem 0 0 rgba(179, 107, 255, 0.045);
+}
+
+/* The rail: five marks and a thread, in the margin on a wide screen and
+   tucked under the block on a narrow one. */
+.rail {
+  position: absolute;
+  top: -0.55rem;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.28rem 0.36rem;
+  background: rgba(21, 15, 29, 0.95);
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transform: translateY(4px) scale(0.96);
+  transform-origin: 100% 50%;
+  pointer-events: none;
+  transition:
+    opacity 0.18s var(--ease),
+    transform 0.18s var(--ease);
+  z-index: 25;
+}
+[data-block]:hover > .rail,
+[data-block]:focus-within > .rail,
+[data-block].is-open > .rail {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.rail button {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: var(--c, var(--ink-3));
+  opacity: 0.42;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    opacity 0.16s,
+    transform 0.16s var(--ease),
+    box-shadow 0.16s;
+}
+.rail button:hover {
+  opacity: 1;
+  transform: scale(1.22);
+}
+.rail button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.rail button[aria-pressed='true'] {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--void), 0 0 0 3.5px var(--c);
+}
+
+.rail .rail-say {
+  width: auto;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--rule-2);
+  color: var(--ink-2);
+  opacity: 1;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  height: auto;
+}
+.rail .rail-say:hover {
+  color: var(--ink);
+  border-color: var(--violet);
+  transform: none;
+}
+.rail .sep {
+  width: 1px;
+  height: 0.95rem;
+  background: var(--rule-2);
+  margin: 0 0.14rem;
+}
+
+/* A block someone has marked keeps a coloured spine, so the shape of the
+   agreement is legible from a scroll-past. */
+[data-block].marked {
+  box-shadow: inset 2px 0 0 var(--mc, transparent);
+  padding-left: 0.7rem;
+  margin-left: -0.7rem;
+}
+
+.stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.5rem 0 0;
+}
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: rgba(11, 8, 16, 0.6);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.16rem 0.5rem;
+  cursor: default;
+  animation: pop 0.32s var(--ease);
+}
+.stamp i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+.stamp.thread {
+  cursor: pointer;
+}
+.stamp.thread:hover {
+  border-color: var(--violet);
+  color: var(--ink);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+
+/* The thread */
+.thread {
+  margin: 0.75rem 0 0.2rem;
+  border-left: 1px solid var(--rule-2);
+  padding: 0.2rem 0 0.2rem 0.9rem;
+  animation: unfold 0.32s var(--ease);
+}
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.msg {
+  margin: 0 0 0.7rem;
+  font-size: 0.9rem;
+}
+.msg b {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 400;
+  display: block;
+  margin: 0 0 0.15rem;
+}
+.msg span {
+  color: var(--ink-2);
+}
+.thread textarea {
+  width: 100%;
+  min-height: 4.4rem;
+  resize: vertical;
+  background: rgba(11, 8, 16, 0.7);
+  border: 1px solid var(--rule-2);
+  border-radius: 0.55rem;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.6rem 0.7rem;
+}
+.thread textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(179, 107, 255, 0.14);
+}
+.thread-go {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.thread-go button {
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #140d1c;
+  background: linear-gradient(90deg, var(--teal), var(--violet));
+  cursor: pointer;
+}
+.thread-go button[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.thread-go .hint {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ==================================================================
+   4 · Who you are, and what the room has heard
+   ================================================================== */
+
+.whoami {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(21, 15, 29, 0.94);
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  padding: 0.34rem 0.42rem 0.34rem 0.9rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.9);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  animation: rise 0.5s var(--ease) both 0.5s;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.whoami .dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 rgba(63, 203, 134, 0.6);
+  animation: pulse 2.6s infinite;
+}
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 7px rgba(63, 203, 134, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(63, 203, 134, 0);
+  }
+}
+.whoami a,
+.whoami button {
+  font: inherit;
+  color: var(--ink-3);
+  background: transparent;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+}
+.whoami a:hover,
+.whoami button:hover {
+  color: var(--ink);
+  border-color: var(--violet);
+}
+
+/* The overview drawer — every mark and question in one place. */
+.tally {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(21, 15, 29, 0.94);
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.9);
+  animation: rise 0.5s var(--ease) both 0.6s;
+}
+.tally:hover {
+  border-color: var(--violet);
+  color: var(--ink);
+}
+.tally i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(26rem, 100%);
+  z-index: 70;
+  background: linear-gradient(180deg, #170f21, #100b18);
+  border-left: 1px solid var(--rule-2);
+  box-shadow: -30px 0 80px -30px rgba(0, 0, 0, 0.95);
+  transform: translateX(101%);
+  transition: transform 0.42s var(--ease);
+  display: flex;
+  flex-direction: column;
+}
+.drawer.open {
+  transform: none;
+}
+.drawer header {
+  padding: 1.3rem 1.3rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.drawer h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--ink);
+}
+.drawer .x {
+  background: transparent;
+  border: 0;
+  color: var(--ink-3);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.drawer .x:hover {
+  color: var(--ink);
+}
+.drawer .body {
+  overflow-y: auto;
+  padding: 0.9rem 1.3rem 2rem;
+}
+.drawer .empty {
+  color: var(--ink-3);
+  font-size: 0.88rem;
+  padding: 1.4rem 0;
+}
+.entry {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 0.85rem 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.entry:hover .entry-q {
+  color: var(--ink);
+}
+.entry-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 0.35rem;
+}
+.entry-top i {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--c);
+}
+.entry-q {
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  transition: color 0.2s;
+}
+.entry-src {
+  color: var(--ink-3);
+  font-size: 0.76rem;
+  margin-top: 0.3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flash {
+  animation: flash 1.6s var(--ease);
+}
+@keyframes flash {
+  0%,
+  100% {
+    background: transparent;
+  }
+  22% {
+    background: rgba(179, 107, 255, 0.16);
+  }
+}
+
+@media (max-width: 40rem) {
+  .rail {
+    top: auto;
+    bottom: -0.6rem;
+    right: 0;
+  }
+  .whoami,
+  .tally {
+    font-size: 0.55rem;
+  }
+  .whoami {
+    left: 0.6rem;
+    bottom: 0.6rem;
+  }
+  .tally {
+    right: 0.6rem;
+    bottom: 0.6rem;
+  }
+}
+
+/* Nothing floats over a printed page. */
+@media print {
+  .rail,
+  .whoami,
+  .tally,
+  .drawer,
+  .readbar {
+    display: none !important;
+  }
+}
+
+/* ==================================================================
+   5 · Hub states
+   ================================================================== */
+
+/* A document that has not been written yet is present and honest about it,
+   rather than a link that 404s. */
+.doc[data-pending] {
+  opacity: 0.58;
+  cursor: default;
+}
+.doc[data-pending]:hover {
+  background: var(--card);
+  border-color: var(--rule);
+  transform: none;
+}
+.gate.pending {
+  border-color: var(--rule-2);
+  color: var(--ink-3);
+}
+
+/* A document this key does not open. Named, never hidden — a data room that
+   pretends a document does not exist teaches people to distrust it. */
+.doc[data-locked] {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: saturate(0.4);
+}
+.doc[data-locked] .gate::after {
+  content: ' · not on your key';
+}
+
+.admin {
+  padding: clamp(1.6rem, 4vw, 2.4rem) 0;
+  border-top: 1px solid var(--rule);
+}
+.admin p {
+  color: var(--ink-2);
+  max-width: 52ch;
+}
+.admin-go {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #140d1c;
+  background: linear-gradient(90deg, var(--amber), var(--rose) 55%, var(--violet));
+  background-size: 200% 100%;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  transition: background-position 0.6s var(--ease);
+}
+.admin-go:hover {
+  background-position: 100% 0;
+}

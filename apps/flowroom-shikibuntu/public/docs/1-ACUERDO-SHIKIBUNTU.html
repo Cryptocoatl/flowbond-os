@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shikibuntu — El acuerdo entre Gala y Steph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Skranji:wght@400;700&family=Karla:ital,wght@0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Cada token va prefijado `--d-`. ESE PREFIJO CARGA PESO.
+
+   room.css se enlaza DESPUÉS de este bloque y su `:root` define el
+   cuarto OSCURO con los mismos nombres pelados (`--ink:#f6f1f7`, casi
+   blanco). Misma especificidad, gana la hoja posterior: un documento
+   que declare `--ink:#2C2821` se lo comen. Los títulos no fijan color
+   propio, heredan `body{color:var(--ink)}` ⇒ salen blancos sobre papel
+   blanco. Ya se publicó un documento así una vez y se leyó completo con
+   los títulos invisibles. No "limpiar" esto a nombres pelados.
+
+   Paleta: la de Shikibuntu, oscurecida donde hace falta para que cada
+   tinta pase 6:1 sobre la crema. El olivo y el naranja de marca son
+   preciosos y NO alcanzan contraste como texto — viven en filetes y
+   acentos; el texto usa bosque, café y tinta.
+   ------------------------------------------------------------------ */
+:root{
+  --d-paper:#F5F0E8;        /* crema Shikibuntu */
+  --d-card:#FFFCF6;
+  --d-ink:#2C2821;          /* tinta       ~13:1 */
+  --d-ink-2:#513331;        /* café         8.6:1 */
+  --d-ink-3:#5A5348;        /* etiquetas    6.4:1 */
+  --d-forest:#2C3E2D;       /* bosque, títulos ~11:1 */
+  --d-olive:#4E5807;        /* olivo oscurecido 7:1 */
+  --d-orange:#9A4B03;       /* naranja oscurecido 6.3:1 */
+  --d-plum:#7A4866;
+  --d-teal:#2C6E79;
+  --d-rule:#E2DBCB; --d-rule-2:#C9C0AC;
+  --d-gold:#FBBC01;         /* sólo filete, nunca texto */
+
+  --t-meta:.86rem;          /* el piso — nada más chico que esto */
+  --t-sm:.95rem;
+  --t-base:1rem;
+  --t-lede:1.14rem;
+}
+html{font-size:18px}
+@media(max-width:640px){ html{font-size:17px} }
+*{box-sizing:border-box}
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
+  font-family:"Karla",system-ui,sans-serif;font-size:var(--t-base);line-height:1.72;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:39rem;margin:0 auto;padding:clamp(1.2rem,4vw,2.6rem)}
+
+h1,h2,h3{font-family:"Skranji",Georgia,serif;color:var(--d-forest);font-weight:400;line-height:1.25}
+h1{font-size:1.9rem;margin:.4rem 0 .6rem;letter-spacing:-.01em}
+h2{font-size:1.28rem;margin:3rem 0 .3rem;padding-top:1.4rem;border-top:1px solid var(--d-rule)}
+h3{font-size:1.02rem;margin:1.6rem 0 .2rem;color:var(--d-ink-2);font-family:"Karla",sans-serif;font-weight:600}
+p{margin:.85rem 0}
+a{color:var(--d-teal)}
+strong{font-weight:600;color:var(--d-forest)}
+em{font-style:italic}
+
+header{padding:clamp(2.2rem,5vw,3.6rem) 0 1.4rem}
+.kicker{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--d-ink-3);margin:0 0 1rem;line-height:1.5}
+.sub{color:var(--d-ink-2);font-size:var(--t-lede);margin:.6rem 0 0}
+.docmeta{font-family:"Space Mono",monospace;font-size:var(--t-meta);color:var(--d-ink-3);
+  margin:1.8rem 0 0;padding-top:1rem;border-top:1px solid var(--d-rule)}
+
+.intro{background:var(--d-card);border-left:3px solid var(--d-olive);border-radius:0 10px 10px 0;
+  padding:1.1rem 1.3rem;margin:1.8rem 0}
+.intro p:first-child{margin-top:0} .intro p:last-child{margin-bottom:0}
+
+.note{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1rem 1.2rem;margin:1.4rem 0}
+.flag{background:#FBF1E6;border-left:3px solid var(--d-orange);border-radius:0 10px 10px 0;
+  padding:1rem 1.2rem;margin:1.4rem 0}
+.good{background:#EFF3E4;border-left:3px solid var(--d-olive);border-radius:0 10px 10px 0;
+  padding:1rem 1.2rem;margin:1.4rem 0}
+.lbl{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.4rem}
+
+ul,ol{margin:.85rem 0;padding-left:1.15rem}
+li{margin:.4rem 0}
+
+/* ── Las dos lenguas, lado a lado ────────────────────────────────────
+   Gala lee el sitio en inglés y Steph escribe en español. Que una firme
+   algo que leyó traducido por encima es exactamente lo que este
+   documento existe para evitar. */
+.bi{margin:1.2rem 0}
+.bi .en{color:var(--d-ink-2)}
+.bi .en h2,.bi .en h3{color:var(--d-ink-2)}
+.lang{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);margin:0 0 .2rem}
+.bi .en{border-top:1px solid var(--d-rule);margin-top:1.2rem;padding-top:.9rem}
+
+/* Ancho extra SÓLO cuando hay sitio, con márgenes negativos fijos.
+   Nada se dimensiona desde el viewport: `100vw` incluye la barra de
+   scroll y cada bloque ancho acababa empujando scroll horizontal. */
+@media(min-width:56rem){
+  .bi{display:grid;grid-template-columns:1fr 1fr;gap:2.2rem;
+      margin-inline:-4.5rem}          /* exactamente (48rem - 39rem)/2 */
+  .bi .en{border-top:0;border-left:1px solid var(--d-rule);
+      margin-top:0;padding-top:0;padding-left:2.2rem}
+  .bi > div > :first-child{margin-top:0}
+}
+
+.sig{background:var(--d-card);border:1px solid var(--d-rule-2);border-radius:12px;
+  padding:1.4rem 1.5rem;margin:2.4rem 0}
+.sigline{border-bottom:1px solid var(--d-ink-3);height:2.4rem;margin:1.4rem 0 .3rem}
+.signame{font-family:"Space Mono",monospace;font-size:var(--t-meta);color:var(--d-ink-3)}
+.close{margin:3rem 0 1rem;padding-top:1.4rem;border-top:2px solid var(--d-olive);
+  font-size:var(--t-lede);color:var(--d-forest);font-family:"Skranji",Georgia,serif;line-height:1.5}
+
+.tablewrap{overflow-x:auto;margin:1.3rem 0}
+table{border-collapse:collapse;width:100%;min-width:24rem;font-size:var(--t-sm)}
+th,td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--d-rule);
+  vertical-align:top;overflow-wrap:anywhere}
+th{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--d-ink-3);font-weight:400}
+@media(max-width:520px){ table{min-width:20rem} }
+p,li,td{overflow-wrap:anywhere}
+</style>
+</head>
+<body data-doc="1">
+<div class="wrap">
+
+<header>
+  <p class="kicker">Shikibuntu · Entre Gala y Steph · Borrador para firma</p>
+  <h1>Te construyo esto porque te quiero.<br>Aquí está por escrito para que nunca haya duda.</h1>
+  <p class="sub">Un acuerdo entre amigas, escrito en claro. Sin costo, sin letra chica, sin nada que se pueda usar en contra de nuestra amistad.</p>
+</header>
+
+<div class="intro">
+  <div class="bi">
+    <div class="es">
+      <p class="lang">Español</p>
+      <p>Este documento no existe porque desconfíe de ti. Existe justamente porque no desconfío, y quiero que siga siendo así dentro de diez años.</p>
+      <p>La mayoría de las amistades que se rompen por un proyecto no se rompen por mala fe. Se rompen porque nadie escribió lo obvio cuando todo estaba bien, y después cada quien recordó algo distinto. Yo prefiero escribirlo hoy, que estamos bien.</p>
+      <p><strong>La intención de todo lo que sigue es una sola: que Shikibuntu sea tuyo, entero, y que nuestra amistad no dependa nunca de él.</strong> Si alguna frase de este documento alguna vez parece decir otra cosa, gana esta.</p>
+    </div>
+    <div class="en">
+      <p class="lang">English</p>
+      <p>This document does not exist because I distrust you. It exists precisely because I don't, and I want that to still be true ten years from now.</p>
+      <p>Most friendships that break over a project don't break from bad faith. They break because nobody wrote down the obvious while things were good, and later each person remembered it differently. I'd rather write it now, while we're good.</p>
+      <p><strong>Everything that follows has a single intention: that Shikibuntu is yours, entirely, and that our friendship never depends on it.</strong> If any sentence here ever seems to say otherwise, this one wins.</p>
+    </div>
+  </div>
+</div>
+
+<h2>1 · De quién es Shikibuntu</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p><strong>Shikibuntu es tuyo. Al 100%, desde hoy y para siempre.</strong> No hay sociedad, no hay porcentajes, no hay participación mía de ningún tipo.</p>
+    <p>Tuyo quiere decir tuyo de verdad, no «tuyo mientras nos llevemos bien»:</p>
+    <ul>
+      <li>El nombre, el logo, la paleta, la Rueda del Earthkeeper y todo lo que es la marca.</li>
+      <li>Todo el contenido: los textos, las traducciones, las imágenes, las secciones, las misiones.</li>
+      <li>Los datos: tu gente, tus deseos, tus registros, tu bitácora. Nada de eso se usa para otra cosa ni se comparte con nadie.</li>
+      <li>Tu público y tu relación con él. No hay lista de correos mía en medio.</li>
+      <li>El dominio, cuando lo pases a tu nombre — y este documento dice cómo.</li>
+    </ul>
+    <p>Yo no soy socia, ni cofundadora, ni proveedora con contrato. Soy tu amiga que sabe construir cosas.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p><strong>Shikibuntu is yours. 100%, from today and permanently.</strong> There is no partnership, no percentages, no stake of mine of any kind.</p>
+    <p>Yours means actually yours, not "yours as long as we get along":</p>
+    <ul>
+      <li>The name, the logo, the palette, the Earthkeeper Wheel, and everything that is the brand.</li>
+      <li>All the content: the writing, the translations, the images, the sections, the missions.</li>
+      <li>The data: your people, your wishes, your records, your log. None of it is used for anything else or shared with anyone.</li>
+      <li>Your audience and your relationship with them. There is no mailing list of mine in the middle.</li>
+      <li>The domain, once you move it into your name — and this document says how.</li>
+    </ul>
+    <p>I am not a partner, not a co-founder, not a contracted vendor. I'm your friend who knows how to build things.</p>
+  </div>
+</div>
+
+<h2>2 · Lo que aporto, y lo que cuesta</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p><strong>Cuesta cero. Hoy, y hacia atrás.</strong> No hay factura, no hay deuda acumulándose en silencio, no hay un número que aparezca después.</p>
+    <p>Lo hago por dos razones y las dos son verdad: porque te quiero, y porque creo en lo que estás haciendo por la Tierra. Esto es mi manera de estar en ese trabajo.</p>
+    <p>Lo que ya está construido y funcionando: el sitio en dos idiomas, tu panel de mando, el motor de contenido que te deja publicar sin pedirle permiso a nadie, el sistema de idiomas, el de tripulación, las subidas de imágenes, la sala de investigación, la bitácora y el respaldo con vuelta atrás.</p>
+    <p class="lang" style="margin-top:1.2rem">Y lo que NO te estoy dando</p>
+    <p>No te estoy prometiendo desarrollo infinito. Voy a seguir construyendo mientras pueda y mientras me dé alegría. Si algún día no puedo, te aviso con tiempo, te dejo todo funcionando y te ayudo a que otra persona lo tome. Prefiero decirte esto hoy que fallarte callada después.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p><strong>It costs zero. Today, and retroactively.</strong> There is no invoice, no debt quietly accruing, no number that shows up later.</p>
+    <p>I do it for two reasons and both are true: because I love you, and because I believe in what you're doing for the Earth. This is my way of being part of that work.</p>
+    <p>What is already built and running: the site in two languages, your command panel, the content engine that lets you publish without asking anyone, the language system, the crew system, image uploads, the research room, the audit log, and versioned backups with one-click rollback.</p>
+    <p class="lang" style="margin-top:1.2rem">And what I am NOT giving you</p>
+    <p>I am not promising infinite development. I'll keep building as long as I can and as long as it brings me joy. If one day I can't, I'll tell you in advance, leave everything running, and help you hand it to someone else. I'd rather say this now than quietly let you down later.</p>
+  </div>
+</div>
+
+<h2>3 · La tecnología: qué recibes exactamente</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Aquí hay una distinción que importa, y la escribo porque callarla sería fácil y deshonesto.</p>
+    <p><strong>Lo que es de Shikibuntu, te lo cedo.</strong> Todo el código hecho a la medida para ti — tu sitio, tu panel, tus plantillas, tu configuración — pasa a ser tuyo en propiedad. Puedes usarlo, cambiarlo, llevártelo, contratar a quien quieras para que lo toque o venderlo si algún día tiene sentido. No necesitas mi permiso para nada de eso.</p>
+    <p><strong>Debajo hay una plataforma base que yo construí antes y que usan otros proyectos míos.</strong> Esa no te la puedo ceder, porque no es sólo mía para darla: cederla te metería en líos con trabajo que no tiene nada que ver contigo. Lo que sí te doy es una <strong>licencia perpetua, gratuita, mundial e irrevocable</strong> para usarla en Shikibuntu, para siempre, sin condiciones y sin que yo pueda retirarla nunca — ni yo, ni nadie que compre lo mío después.</p>
+    <p>En la práctica esto significa: nadie te puede apagar Shikibuntu. Ni yo enojada, ni yo quebrada, ni una empresa que algún día compre FlowBond.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>There's a distinction here that matters, and I'm writing it because staying quiet about it would be easy and dishonest.</p>
+    <p><strong>What is Shikibuntu's, I assign to you.</strong> All the code built specifically for you — your site, your panel, your templates, your configuration — becomes yours outright. You can use it, change it, take it, hire anyone you like to work on it, or sell it if that ever makes sense. You need no permission from me for any of that.</p>
+    <p><strong>Underneath there is a base platform I built earlier, which other projects of mine also use.</strong> That one I can't assign to you, because it isn't only mine to give: assigning it would entangle you with work that has nothing to do with you. What I do give you is a <strong>perpetual, free, worldwide, irrevocable licence</strong> to use it for Shikibuntu, forever, unconditionally, and I can never withdraw it — not me, and not anyone who buys my work later.</p>
+    <p>In practice this means: nobody can switch Shikibuntu off on you. Not me angry, not me broke, not a company that someday buys FlowBond.</p>
+  </div>
+</div>
+
+<div class="good">
+  <span class="lbl">La prueba de que esto es real / The test that this is real</span>
+  <div class="bi">
+    <div class="es"><p>Una promesa de propiedad sólo vale si existe el camino para ejercerla. Por eso la sección 5 no habla de intenciones: habla de cómo, exactamente, te llevas todo el día que quieras — con o sin mi ayuda.</p></div>
+    <div class="en"><p>A promise of ownership is only worth anything if there's a path to exercise it. That's why section 5 doesn't talk about intentions: it spells out exactly how you take everything with you, any day you want — with or without my help.</p></div>
+  </div>
+</div>
+
+<h2>4 · Cómo entras y qué puedes hacer sin pedirle permiso a nadie</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Tienes una llave de capitana. Con ella entras a tu panel — el Command Deck — y desde ahí Shikibuntu es tuyo de mover, no sólo de mirar.</p>
+    <p>Sin escribirme, sin esperar a nadie, puedes:</p>
+    <ul>
+      <li><strong>Cambiar cualquier texto del sitio</strong> y publicarlo. Antes de publicar, el sistema revisa que no dejes una página en blanco ni un enlace roto.</li>
+      <li><strong>Añadir idiomas.</strong> Escribes el código de dos letras y traduce todo, sin tocar nombres propios.</li>
+      <li><strong>Añadir, esconder o reordenar secciones</strong> de nueve tipos ya diseñados. Libertad total de contenido, cero riesgo de romper el diseño.</li>
+      <li><strong>Subir imágenes</strong> sin que se aplane la transparencia ni se degraden.</li>
+      <li><strong>Volver atrás.</strong> Cada publicación guarda una foto completa; si algo no te gustó, un clic y regresa.</li>
+      <li><strong>Dar accesos a tu gente.</strong> Seis roles y nueve permisos que marcas uno por uno. La llave se muestra una sola vez y es de esa persona, no compartida.</li>
+      <li><strong>Ver la bitácora:</strong> quién hizo qué y cuándo. Incluida yo.</li>
+    </ul>
+    <p>Hay una guía bilingüe dentro del panel. No tienes que acordarte de nada.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>You hold a captain's key. With it you enter your panel — the Command Deck — and from there Shikibuntu is yours to move, not just to look at.</p>
+    <p>Without writing to me, without waiting for anyone, you can:</p>
+    <ul>
+      <li><strong>Change any text on the site</strong> and publish it. Before publishing, the system checks you haven't left a blank page or a broken link.</li>
+      <li><strong>Add languages.</strong> Type a two-letter code and it translates everything, leaving proper names alone.</li>
+      <li><strong>Add, hide or reorder sections</strong> from nine ready-made types. Full freedom of content, zero risk to the design.</li>
+      <li><strong>Upload images</strong> without transparency being flattened or quality degraded.</li>
+      <li><strong>Roll back.</strong> Every publication saves a full snapshot; if you don't like something, one click brings it back.</li>
+      <li><strong>Give access to your people.</strong> Six roles and nine permissions you tick one by one. The key is shown once and belongs to that person, not shared.</li>
+      <li><strong>Read the log:</strong> who did what and when. Including me.</li>
+    </ul>
+    <p>There's a bilingual guide inside the panel. You don't have to remember any of this.</p>
+  </div>
+</div>
+
+<h2>5 · Dónde vive hoy, y cómo se vuelve enteramente tuyo</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Te lo digo tal cual está, sin adornos: <strong>hoy Shikibuntu vive en mis cuentas.</strong> El alojamiento está en mi Cloudflare y la base de datos en un proyecto mío que comparte con otras cosas. Eso fue lo rápido para arrancar, y es lo que hay que cambiar para que «es tuyo» sea literal.</p>
+    <p>El plan, sin fecha límite y a tu ritmo:</p>
+    <ol>
+      <li><strong>Tú abres tus cuentas</strong> (alojamiento y base de datos). Son gratuitas en el tamaño que estamos. Yo te acompaño la primera vez.</li>
+      <li><strong>El dominio a tu nombre.</strong> Queda registrado por ti y pagado por ti, aunque sean unos dólares al año. Es la pieza que hace que nadie te pueda dejar fuera.</li>
+      <li><strong>Muevo Shikibuntu ahí</strong> y me quedo con el acceso que tú decidas darme, ni más ni menos.</li>
+      <li><strong>Tus datos salen contigo</strong> en un archivo que puedes leer sin mí y sin mi software.</li>
+    </ol>
+    <p>Mientras eso pasa, y aunque no pasara nunca, tienes derecho a pedirme una copia completa de todo — código, contenido y datos — cuando quieras y sin explicarme por qué. Me comprometo a entregártela en <strong>siete días</strong>.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>I'll say it plainly, without dressing it up: <strong>today Shikibuntu lives in my accounts.</strong> The hosting is in my Cloudflare and the database in a project of mine shared with other things. That was the fast way to start, and it's what has to change for "it's yours" to be literal.</p>
+    <p>The plan, with no deadline and at your pace:</p>
+    <ol>
+      <li><strong>You open your own accounts</strong> (hosting and database). They're free at the size we're at. I'll sit with you the first time.</li>
+      <li><strong>The domain in your name.</strong> Registered by you and paid by you, even if it's a few dollars a year. It's the piece that makes it impossible for anyone to lock you out.</li>
+      <li><strong>I move Shikibuntu there</strong> and keep only the access you decide to give me, no more and no less.</li>
+      <li><strong>Your data leaves with you</strong> in a file you can read without me and without my software.</li>
+    </ol>
+    <p>Until that happens — and even if it never does — you have the right to ask me for a complete copy of everything: code, content and data, whenever you want, without explaining why. I commit to delivering it within <strong>seven days</strong>.</p>
+  </div>
+</div>
+
+<h2>6 · Si algún día entra dinero</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p><strong>Hoy no se me debe nada, y no hay ningún porcentaje escrito en ningún lado.</strong> Eso es a propósito: no quiero un número colgando entre nosotras mientras no haya nada que repartir.</p>
+    <p>Si algún día Shikibuntu recibe dinero de verdad — ventas, donaciones, patrocinios, un fondo — nos sentamos <em>en ese momento</em> y firmamos una hoja aparte con lo que acordemos. Ni antes, ni retroactivo.</p>
+    <p>Tres cosas que quiero dejar claras sobre ese día:</p>
+    <ul>
+      <li>Ese acuerdo será voluntario de las dos. Si no llegamos a uno, no pasa nada: sigo sin cobrar y Shikibuntu sigue siendo tuyo igual.</li>
+      <li>Nunca te voy a pasar una cuenta por lo ya construido. Lo regalado, regalado está.</li>
+      <li>Ningún dinero que entre me da voz sobre tus decisiones. Shikibuntu se dirige desde tu criterio, con o sin ingresos.</li>
+    </ul>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p><strong>Nothing is owed to me today, and there is no percentage written anywhere.</strong> That's deliberate: I don't want a number hanging between us while there's nothing to share.</p>
+    <p>If Shikibuntu ever receives real money — sales, donations, sponsorship, a grant — we sit down <em>at that moment</em> and sign a separate page with whatever we agree. Not before, and never retroactively.</p>
+    <p>Three things I want clear about that day:</p>
+    <ul>
+      <li>That agreement will be voluntary on both sides. If we don't reach one, nothing happens: I keep not charging and Shikibuntu stays yours all the same.</li>
+      <li>I will never hand you a bill for what's already built. What was given is given.</li>
+      <li>No incoming money gives me a say over your decisions. Shikibuntu is steered by your judgement, with or without revenue.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>7 · Los costos duros</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Mi trabajo es gratis. Las herramientas de terceros no siempre lo son, y prefiero que sepas exactamente cuáles son antes de que aparezcan.</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>Qué</th><th>Hoy</th><th>Cuando crezca</th></tr>
+        <tr><td>Dominio</td><td>Unos dólares al año</td><td>A tu nombre y a tu cargo</td></tr>
+        <tr><td>Alojamiento y base</td><td>Gratis en este tamaño</td><td>A tus cuentas</td></tr>
+        <tr><td>Inteligencia artificial del panel</td><td>Lo pago yo, por uso</td><td>Se pasa a tu cuenta</td></tr>
+        <tr><td>Correos del sistema</td><td>Aún sin encender</td><td>A tus cuentas</td></tr>
+      </table>
+    </div>
+    <p>Hoy lo cubro yo y no te lo cobro. Lo escribo para que sepas que llegará un punto, si Shikibuntu crece, en que estos servicios deben quedar a tu nombre — no para que pagues, sino porque tenerlos tú es parte de que Shikibuntu sea tuyo.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>My work is free. Third-party tools aren't always, and I'd rather you know exactly which ones before they show up.</p>
+    <div class="tablewrap">
+      <table>
+        <tr><th>What</th><th>Today</th><th>As it grows</th></tr>
+        <tr><td>Domain</td><td>A few dollars a year</td><td>In your name, on you</td></tr>
+        <tr><td>Hosting and database</td><td>Free at this size</td><td>Onto your accounts</td></tr>
+        <tr><td>The panel's AI</td><td>I pay it, by usage</td><td>Moves to your account</td></tr>
+        <tr><td>System email</td><td>Not switched on yet</td><td>Onto your accounts</td></tr>
+      </table>
+    </div>
+    <p>Today I cover it and I don't bill you. I write it down so you know there will come a point, if Shikibuntu grows, when these services should sit in your name — not so that you pay, but because holding them yourself is part of Shikibuntu being yours.</p>
+  </div>
+</div>
+
+<h2>8 · La cláusula que más me importa</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Si tuviera que borrar todo este documento y quedarme con un solo párrafo, sería este.</p>
+    <p><strong>Nuestra amistad y Shikibuntu son dos cosas separadas, y ninguna puede tomar a la otra de rehén.</strong></p>
+    <p>En los dos sentidos, y digo los dos en serio:</p>
+    <ul>
+      <li>Si algún día tú y yo nos peleamos, nos distanciamos o simplemente la vida nos lleva por lados distintos, <strong>Shikibuntu no se toca.</strong> Sigue siendo tuyo, sigue funcionando, y yo entrego todo sin condiciones. No hay nada aquí que yo pueda usar para dolerte.</li>
+      <li>Si algún día Shikibuntu se cae, se estanca, te decepciona o decides cerrarlo, <strong>no le pasa nada a lo nuestro.</strong> No me debes un proyecto exitoso a cambio de mi cariño.</li>
+    </ul>
+    <p>Ninguna de las dos va a usar este proyecto como argumento en una conversación personal, ni nuestra amistad como argumento en una decisión del proyecto. Si algo se siente mezclado, lo decimos en voz alta antes de que se enrede.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>If I had to delete this whole document and keep one paragraph, it would be this one.</p>
+    <p><strong>Our friendship and Shikibuntu are two separate things, and neither one can take the other hostage.</strong></p>
+    <p>Both directions, and I mean both:</p>
+    <ul>
+      <li>If one day you and I fight, drift apart, or life simply takes us different ways, <strong>Shikibuntu is untouched.</strong> It stays yours, it stays running, and I hand everything over unconditionally. There is nothing here I could ever use to hurt you.</li>
+      <li>If one day Shikibuntu stalls, fails, disappoints you, or you decide to close it, <strong>nothing happens to us.</strong> You don't owe me a successful project in exchange for my love.</li>
+    </ul>
+    <p>Neither of us will use this project as an argument in a personal conversation, or our friendship as an argument in a project decision. If something starts to feel tangled, we say so out loud before it knots.</p>
+  </div>
+</div>
+
+<h2>9 · Si un día nos separamos</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Que quede escrito mientras somos amigas, no cuando ya no lo seamos. Si cualquiera de las dos quiere terminar esta colaboración, por la razón que sea y sin tener que explicarla:</p>
+    <ol>
+      <li>Se avisa. Basta un mensaje.</li>
+      <li>En <strong>siete días</strong> te entrego todo: código, contenido, datos, dominios y accesos.</li>
+      <li>Durante <strong>treinta días</strong> sigo disponible para que quien tomes lo entienda. Sin costo.</li>
+      <li>Borro mis accesos a tus sistemas y te lo confirmo por escrito.</li>
+      <li>No me llevo ni una copia de tus datos, ni tu contenido, ni tu lista de gente.</li>
+    </ol>
+    <p>Nada de esto está condicionado a que la separación sea amistosa. Se cumple igual si estamos enojadas.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>Let this be written while we're friends, not once we aren't. If either of us wants to end this collaboration, for any reason and without having to explain it:</p>
+    <ol>
+      <li>We say so. A message is enough.</li>
+      <li>Within <strong>seven days</strong> I hand you everything: code, content, data, domains and access.</li>
+      <li>For <strong>thirty days</strong> I stay available so whoever you bring in can understand it. At no cost.</li>
+      <li>I delete my access to your systems and confirm it to you in writing.</li>
+      <li>I keep no copy of your data, your content, or your list of people.</li>
+    </ol>
+    <p>None of this is conditional on the parting being friendly. It holds even if we're angry.</p>
+  </div>
+</div>
+
+<h2>10 · Lo que este documento no es</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Para que nadie — ni un abogado, ni un patrocinador, ni nosotras dentro de cinco años — lea aquí algo que no dijimos:</p>
+    <ul>
+      <li>No es una sociedad ni una empresa conjunta.</li>
+      <li>No es una relación laboral. No soy tu empleada ni tú mi clienta.</li>
+      <li>No me da participación, acciones ni derechos sobre Shikibuntu.</li>
+      <li>No te obliga a usar mi tecnología. Puedes irte con otra persona cuando quieras.</li>
+      <li>No me obliga a construir para siempre, y ya dije cómo sería si tengo que parar.</li>
+      <li>No es exclusivo: yo sigo trabajando en mis otros proyectos, y ninguno tiene nada que ver con Shikibuntu ni toca tus datos.</li>
+    </ul>
+    <p class="lang" style="margin-top:1.2rem">Sobre lo legal</p>
+    <p>Está escrito en lenguaje claro a propósito, para que las dos lo entendamos sin intérprete. Si en algún momento quieres que un abogado lo revise o lo vuelva ejecutable en tu país, me parece perfecto y no me ofende en absoluto — al contrario, lo pago yo.</p>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>So that nobody — not a lawyer, not a sponsor, not the two of us in five years — reads something here we didn't say:</p>
+    <ul>
+      <li>It is not a partnership or a joint venture.</li>
+      <li>It is not employment. I'm not your employee and you're not my client.</li>
+      <li>It gives me no stake, shares or rights over Shikibuntu.</li>
+      <li>It does not oblige you to use my technology. You can leave with someone else whenever you like.</li>
+      <li>It does not oblige me to build forever, and I've said how it would go if I have to stop.</li>
+      <li>It is not exclusive: I keep working on my other projects, and none of them has anything to do with Shikibuntu or touches your data.</li>
+    </ul>
+    <p class="lang" style="margin-top:1.2rem">On the legal side</p>
+    <p>It's written in plain language on purpose, so the two of us understand it without an interpreter. If at any point you'd like a lawyer to review it or make it enforceable where you live, that's completely fine and I'm not offended in the slightest — on the contrary, I'll pay for it.</p>
+  </div>
+</div>
+
+<h2>11 · Lo único que te pido</h2>
+<div class="bi">
+  <div class="es">
+    <p class="lang">Español</p>
+    <p>Tres cosas, ninguna es dinero:</p>
+    <ol>
+      <li><strong>Que me digas cuando algo no funcione</strong>, aunque te dé pena o creas que es una tontería. Prefiero mil veces arreglarlo que enterarme de que llevabas meses aguantándolo.</li>
+      <li><strong>Que me dejes decir que lo construí</strong> — en mi portafolio, sin exponer nada tuyo que no quieras. Si algún día prefieres que no, me lo dices y lo quito sin discutir.</li>
+      <li><strong>Que uses el panel.</strong> Lo construí para que Shikibuntu se mueva a tu ritmo y no al mío. Cada vez que publicas algo sin escribirme, esto funcionó.</li>
+    </ol>
+  </div>
+  <div class="en">
+    <p class="lang">English</p>
+    <p>Three things, none of them money:</p>
+    <ol>
+      <li><strong>Tell me when something is broken</strong>, even if you feel awkward or think it's trivial. I'd a thousand times rather fix it than find out you'd been putting up with it for months.</li>
+      <li><strong>Let me say I built it</strong> — in my portfolio, without exposing anything of yours you'd rather keep private. If one day you'd prefer I didn't, say so and I'll take it down without argument.</li>
+      <li><strong>Use the panel.</strong> I built it so Shikibuntu moves at your pace and not mine. Every time you publish something without writing to me, this worked.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="close">
+  <div class="bi">
+    <div class="es"><p>Yo soy porque todas somos. Porque la Tierra vive.<br>Y porque tú eres mi amiga antes que nada de esto.</p></div>
+    <div class="en"><p>I am because we all are. Because the Earth lives.<br>And because you are my friend before any of this.</p></div>
+  </div>
+</div>
+
+<div class="sig">
+  <span class="lbl">Firmas / Signatures</span>
+  <div class="bi">
+    <div class="es">
+      <div class="sigline"></div>
+      <p class="signame">Gala Dichiara · Shikibuntu<br>Fecha / Date</p>
+    </div>
+    <div class="en">
+      <div class="sigline"></div>
+      <p class="signame">Steph Ferrera · FlowBond<br>Fecha / Date</p>
+    </div>
+  </div>
+</div>
+
+<p class="docmeta">
+  Documento 01 · Borrador para revisión · Puedes comentar cualquier párrafo directamente en esta página.<br>
+  Document 01 · Draft for review · You can comment on any paragraph directly on this page.
+</p>
+
+</div>
+<link rel="stylesheet" href="/docs/room.css">
+<script src="/docs/room.js" type="module"></script>
+</body>
+</html>

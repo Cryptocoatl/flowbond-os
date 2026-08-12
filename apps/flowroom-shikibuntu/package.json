@@ -1,0 +1,7 @@
+{
+  "name": "flowroom-shikibuntu",
+  "private": true,
+  "type": "module",
+  "description": "Cuarto privado de documentos para Gala Dichiara (Shikibuntu). Sólo la mitad /docs del FlowRoom: puerta HMAC + documentos anotables. Sin el deck de React.",
+  "dependencies": { "hono": "^4.6.20" }
+}
