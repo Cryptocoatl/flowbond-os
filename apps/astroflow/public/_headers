@@ -1,0 +1,22 @@
+# Security headers for the STATIC assets.
+#
+# Trap this exists for: on Workers, static assets are served by the assets
+# binding and NEVER reach the Worker, so they only obey this file. Routes that
+# the Worker renders (/, /api/*) take their headers from next.config.ts instead.
+# With only one of the two, half the site ships without HSTS.
+#
+# No Content-Security-Policy on purpose: AstralFlow renders React inline styles
+# (the chart wheel, the ACG map, the resonance rings) and a strict style-src
+# would silently kill them in production only.
+#
+# No `Cache-Control: immutable` here either, deliberately. Asking for a missing
+# asset can fall through to the Worker and get an HTML response, and an
+# immutable HTML answer freezes at the edge for a year with no way to purge it.
+# Next already fingerprints and caches /_next/static/* correctly on its own.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()

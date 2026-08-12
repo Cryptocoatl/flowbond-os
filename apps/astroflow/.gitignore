@@ -1,1 +1,5 @@
-.vercel
+.env*.local
+
+# Cloudflare Workers build output (OpenNext) + local wrangler state
+.open-next
+.wrangler

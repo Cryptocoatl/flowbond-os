@@ -1,0 +1,27 @@
+{
+  // AstralFlow — astro.flowbond.life, moved off Vercel (the deployed Anthropic
+  // key was revoked in the 2026-08-11 rotation and FlowMe died with it; the
+  // migration IS the fix, so the new key lives here as a Worker secret and
+  // never as a Vercel env var again).
+  //
+  // NOTE: `routes` is deliberately ABSENT on purpose. The order that worked for
+  // Raíz: deploy without routes → set secrets → verify full parity on
+  // *.workers.dev → only then delete the old DNS record and re-deploy WITH
+  // routes (wrangler creates the record itself). The live domain is not touched
+  // until everything is proven.
+  "name": "astroflow",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "workers_dev": true,
+  "observability": {
+    // The Vercel deploy swallowed the Anthropic 401 into a JSON body and left
+    // NOTHING in the logs — that is why the outage went a day undiagnosed.
+    // Logs on, so the next upstream failure is visible.
+    "enabled": true
+  }
+}
