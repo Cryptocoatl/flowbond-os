@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Table — What each side brings, what it is worth, and what happens if</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Cloned from Document 05's sheet. Every token is prefixed `--d-`.
+   THAT PREFIX IS LOAD-BEARING: room.css is linked AFTER this block and
+   its `:root` defines the dark room under the same plain names
+   (`--ink:#f6f1f7`). Same specificity, later sheet wins — which is how
+   documents 03 and 04 shipped on 8 August with white headings on white
+   paper. Do not "tidy" these back to bare names.
+
+   Type: five sizes, floor of .86rem (15.5px), every ink over 6:1.
+   ------------------------------------------------------------------ */
+:root{
+  --d-paper:#F7F5F2; --d-card:#FFFFFF;
+  --d-ink:#16130E;    /* body            ~16:1 */
+  --d-ink-2:#403B34;  /* secondary        9.4:1 */
+  --d-ink-3:#5D564D;  /* labels, meta     6.6:1 */
+  --d-rule:#E0DAD1; --d-rule-2:#C7BFB3;
+  --d-rose:#A8244B; --d-green:#1F7A4C; --d-indigo:#2F3C86; --d-teal:#146273; --d-violet:#6A2E8C; --d-amber:#8F5709;
+  --d-flag:#93121F; --d-flagbg:#FBEDED;
+
+  --t-meta:.86rem;  /* the floor — nothing is smaller than this */
+  --t-sm:.95rem;
+  --t-base:1rem;
+  --t-lede:1.14rem;
+}
+html{font-size:18px}
+@media(max-width:640px){ html{font-size:17px} }
+*{box-sizing:border-box}
+body{margin:0;background:var(--d-paper);color:var(--d-ink);
+  font-family:"Instrument Sans",system-ui,sans-serif;font-size:var(--t-base);line-height:1.72;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap{max-width:39rem;margin:0 auto;padding:clamp(1.2rem,4vw,2.6rem)}
+
+header{padding:clamp(2.2rem,5vw,3.6rem) 0 1.8rem}
+.kicker{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.12em;
+  text-transform:uppercase;color:var(--d-ink-3);margin:0 0 1rem;line-height:1.5}
+h1{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(2.2rem,5.6vw,3rem);
+  line-height:1.08;letter-spacing:-.02em;margin:0 0 1rem;max-width:18ch}
+.intro{color:var(--d-ink-2);margin:0 0 1.6rem}
+.docmeta{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--d-ink-3);border-top:1px solid var(--d-rule);padding-top:1.1rem;
+  display:flex;flex-wrap:wrap;gap:.5rem 2rem;line-height:1.55}
+
+h2{font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.55rem,3.6vw,2rem);
+  line-height:1.2;letter-spacing:-.012em;margin:3rem 0 1.1rem;
+  padding-top:1.5rem;border-top:1px solid var(--d-rule)}
+h3{font-family:"Fraunces",serif;font-weight:600;font-size:1.28rem;line-height:1.3;margin:2rem 0 .6rem}
+h4{font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);margin:1.7rem 0 .6rem}
+p{margin:0 0 1.05rem} ul{margin:0 0 1.15rem;padding-left:1.25rem} li{margin-bottom:.55rem}
+.lede{font-size:var(--t-lede);line-height:1.62;color:var(--d-ink-2)}
+strong,b{font-weight:600;color:var(--d-ink)}
+q{font-family:"Fraunces",serif;font-style:italic}
+em.big{font-family:"Fraunces",serif;font-style:italic}
+
+/* ---- The provenance system. Every factual claim in this document
+        carries one of these four. Same standard in both directions. ---- */
+.pv{font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;white-space:nowrap;padding:.1rem .42rem;border-radius:4px;
+  border:1px solid currentColor;line-height:1.5;display:inline-block}
+.pv.v{color:var(--d-green)}  /* verified  */
+.pv.s{color:var(--d-indigo)} /* stated    */
+.pv.e{color:var(--d-amber)}  /* estimate  */
+.pv.o{color:var(--d-flag)}   /* open      */
+
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem;margin:1.6rem 0;
+  padding:0;list-style:none}
+.legend li{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;
+  padding:.95rem 1.05rem;margin:0;font-size:var(--t-sm);line-height:1.55;color:var(--d-ink-2)}
+.legend li .pv{margin-bottom:.45rem}
+.legend li span{display:block}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.6rem 0}
+.col{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
+.col::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+.col.a::after{background:var(--d-rose)} .col.b::after{background:var(--d-indigo)}
+.col h5{margin:.2rem 0 .1rem;font-family:"Fraunces",serif;font-size:1.2rem;font-weight:600}
+.col .tag{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;line-height:1.45}
+.col ul{margin:.8rem 0 0;padding-left:1.15rem;font-size:var(--t-sm)}
+.col li{margin-bottom:.55rem;color:var(--d-ink-2);line-height:1.55}
+.col li .pv{margin-right:.3rem}
+
+.flag,.note,.good,.tilt{border-radius:0 9px 9px 0;padding:1.15rem 1.3rem;margin:1.6rem 0;
+  font-size:var(--t-base);line-height:1.65}
+.flag{background:var(--d-flagbg);border-left:4px solid var(--d-flag);color:#5E1620}
+.note{background:var(--d-card);border:1px solid var(--d-rule);border-left:4px solid var(--d-teal);color:var(--d-ink-2)}
+.good{background:#EFF6F1;border-left:4px solid var(--d-green);color:#204634}
+.tilt{background:#FBF4E8;border-left:4px solid var(--d-amber);color:#5C3F12}
+.flag b.t,.note b.t,.good b.t,.tilt b.t{display:block;font-family:"Space Mono",monospace;font-size:var(--t-meta);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
+.flag b.t{color:var(--d-flag)} .note b.t{color:var(--d-teal)} .good b.t{color:var(--d-green)} .tilt b.t{color:var(--d-amber)}
+.flag p:last-child,.note p:last-child,.good p:last-child,.tilt p:last-child{margin:0}
+.flag ul:last-child,.note ul:last-child,.good ul:last-child,.tilt ul:last-child{margin-bottom:0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--d-rule-2);border-radius:10px;margin:1.6rem 0;background:var(--d-card)}
+table{border-collapse:collapse;width:100%;font-size:var(--t-sm);min-width:26rem}
+th{text-align:left;font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--d-ink-3);
+  padding:.85rem 1rem;border-bottom:1px solid var(--d-rule-2);vertical-align:bottom;line-height:1.4}
+td{padding:.85rem 1rem;border-bottom:1px solid var(--d-rule);vertical-align:top;color:var(--d-ink-2);line-height:1.55}
+tr:last-child td{border-bottom:0}
+td b{color:var(--d-ink);font-weight:600}
+.fill{color:var(--d-flag);font-family:"Space Mono",monospace;font-size:var(--t-meta);
+  background:var(--d-flagbg);padding:.1rem .4rem;border-radius:4px;border:1px dashed var(--d-flag)}
+.num{font-family:"Space Mono",monospace;white-space:nowrap}
+
+/* Headline counts */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin:1.6rem 0}
+.stat{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1rem .9rem;text-align:center}
+.stat b{display:block;font-family:"Fraunces",serif;font-size:1.7rem;line-height:1;margin-bottom:.35rem;color:var(--d-violet)}
+.stat span{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--d-ink-3);line-height:1.4;display:block}
+
+/* Numbered lists: commitments, scenarios, questions */
+.commit{counter-reset:c;margin:1.6rem 0;padding:0;list-style:none}
+.commit li{counter-increment:c;background:var(--d-card);border:1px solid var(--d-rule);
+  border-radius:10px;padding:1.1rem 1.2rem 1.1rem 3.3rem;margin-bottom:.7rem;position:relative;
+  font-size:var(--t-base);line-height:1.65}
+.commit li::before{content:counter(c);position:absolute;left:1.15rem;top:1.15rem;
+  font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;color:var(--d-violet)}
+.commit li b.h{display:block;margin-bottom:.3rem;font-size:1.05rem}
+.commit li span{color:var(--d-ink-2)}
+/* A paragraph break inside the <span> that carries a commit's body. A real
+   <p> cannot nest inside a <span>, and an empty <span> would collapse. */
+.commit li span.gap{display:block;height:.75rem}
+.commit.q li::before{color:var(--d-flag)}
+.commit.audit li::before{color:var(--d-teal)}
+
+/* Timeline — two histories on one spine */
+.tl{margin:1.6rem 0;padding:0;list-style:none;position:relative}
+.tl::before{content:"";position:absolute;left:4.6rem;top:.4rem;bottom:.4rem;width:1px;background:var(--d-rule-2)}
+.tl li{position:relative;padding:0 0 1.15rem 6.1rem;margin:0;font-size:var(--t-sm);line-height:1.6;color:var(--d-ink-2)}
+.tl li .yr{position:absolute;left:0;top:0;width:4rem;text-align:right;
+  font-family:"Space Mono",monospace;font-size:var(--t-meta);font-weight:700;color:var(--d-ink-3)}
+.tl li::after{content:"";position:absolute;left:4.32rem;top:.42rem;width:.6rem;height:.6rem;
+  border-radius:50%;background:var(--d-paper);border:2px solid var(--d-rule-2)}
+.tl li.vh::after{border-color:var(--d-rose)} .tl li.sf::after{border-color:var(--d-indigo)}
+.tl li b{color:var(--d-ink)}
+.tl li .who{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.06em;
+  text-transform:uppercase;display:block;line-height:1.5}
+.tl li.vh .who{color:var(--d-rose)} .tl li.sf .who{color:var(--d-indigo)}
+
+/* Field of use — in the fence / out of the fence */
+.field{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.3rem 0}
+.fbox{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;padding:1.25rem;position:relative;overflow:hidden}
+.fbox::after{content:"";position:absolute;inset:0 0 auto 0;height:3px}
+.fbox.in::after{background:var(--d-rose)} .fbox.out::after{background:var(--d-indigo)}
+.fbox h5{margin:.2rem 0 .6rem;font-family:"Fraunces",serif;font-size:1.2rem;font-weight:600}
+.fbox .tag{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.35rem;line-height:1.45}
+.fbox ul{margin:0;padding-left:1.15rem;font-size:var(--t-sm)}
+.fbox li{margin-bottom:.45rem;color:var(--d-ink-2);line-height:1.55}
+
+/* Stage cards — the launch pacing */
+.stage{background:var(--d-card);border:1px solid var(--d-rule);border-radius:10px;
+  padding:1.15rem 1.3rem;margin-bottom:.7rem;position:relative;overflow:hidden}
+.stage::after{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--d-violet)}
+.stage.s1::after{background:var(--d-rose)} .stage.s2::after{background:var(--d-violet)} .stage.s3::after{background:var(--d-teal)}
+.stage .n{font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--d-ink-3);display:block;margin-bottom:.15rem}
+.stage h5{margin:.15rem 0 .5rem;font-family:"Fraunces",serif;font-size:1.2rem;font-weight:600}
+.stage p{font-size:var(--t-sm);color:var(--d-ink-2);margin:0 0 .6rem}
+.stage p:last-child{margin:0}
+.stage .needs{font-size:var(--t-sm);color:var(--d-ink-2);border-left:2px solid var(--d-rule-2);
+  padding-left:.9rem;line-height:1.6}
+.stage .needs b{display:block;font-family:"Space Mono",monospace;font-size:var(--t-meta);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--d-ink-3);margin-bottom:.2rem}
+
+.q{background:#14101B;color:#F4EFE8;border-radius:12px;padding:1.7rem 1.8rem;margin:1.8rem 0}
+.q b.t{display:block;font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.1em;
+  text-transform:uppercase;color:#C9AEE8;margin-bottom:.7rem}
+.q p{margin:0 0 .85rem;color:#E4DED5;font-size:1.05rem;line-height:1.66}
+.q p:last-child{margin:0}
+.q strong{color:#fff}
+.q em{font-family:"Fraunces",serif;font-style:italic;color:#fff}
+.q ul{margin:0;padding-left:1.2rem}
+.q li{color:#E4DED5;margin-bottom:.5rem}
+
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem;margin:2.4rem 0 0}
+.sig{border-top:1px solid var(--d-ink);padding-top:.65rem}
+.sig b{display:block;font-size:var(--t-base)} .sig span{font-size:var(--t-meta);color:var(--d-ink-3)}
+
+footer{border-top:1px solid var(--d-rule);margin-top:3rem;padding:1.5rem 0 3rem;
+  font-family:"Space Mono",monospace;font-size:var(--t-meta);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--d-ink-3);display:flex;flex-wrap:wrap;gap:.5rem 1.8rem;line-height:1.55}
+
+/* Prose wants 76 characters; a five-column comparison does not.
+   THIS RULE MUST STAY LAST — every block above declares `margin:<x> 0`
+   and the shorthand resets margin-left, which would wipe the bleed.
+
+   Symmetric negative margins, NOT `100vw` + translateX. `100vw` counts the
+   vertical scrollbar, so viewport-sized blocks come out wider than the
+   visible space and put a horizontal scrollbar on the page. Nothing here is
+   sized from the viewport: the bleed is a fixed 4.5rem a side, exactly
+   (48rem - 39rem)/2, switched on only above 56rem. */
+@media(min-width:56rem){
+  .tablewrap,.field,.two,.stats,.stage,.legend{
+    margin-left:-4.5rem;
+    margin-right:-4.5rem;
+  }
+}
+
+@media(max-width:860px){ .stats{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:640px){ .two,.sigs,.field,.legend{grid-template-columns:1fr} }
+
+/* Nothing may make the page itself scroll sideways. */
+.tablewrap{-webkit-overflow-scrolling:touch}
+.q,.commit li,.tl li,td,p,.stage{overflow-wrap:anywhere}
+@media(max-width:520px){
+  html{font-size:16px}
+  table{min-width:22rem}
+  .stats{grid-template-columns:1fr 1fr}
+  .q,.flag,.note,.good,.tilt{padding:1.05rem 1.1rem}
+  .commit li{padding:1rem 1rem 1rem 2.9rem}
+  .tl::before{left:0} .tl li{padding-left:1.5rem} .tl li::after{left:-.28rem}
+  .tl li .yr{position:static;width:auto;text-align:left;display:block;margin-bottom:.15rem}
+}
+@media print{ body{background:#fff} .flag,.note,.good,.tilt,.tablewrap,.col,.fbox,.stage,.commit li{break-inside:avoid} }
+</style>
+<link rel="stylesheet" href="/docs/room.css">
+</head>
+<body data-doc="6">
+<div class="wrap">
+
+<header>
+  <p class="kicker">Document 06 · For both product, technical and legal teams</p>
+  <h1>The Table</h1>
+  <p class="lede intro">What each side actually brings, what it is worth, what it would mean for investors, and what happens if. Written to be audited — not to be believed.</p>
+  <div class="docmeta">
+    <span>Vandana, Chelsea, counsel &amp; advisors</span>
+    <span>14 August 2026</span>
+    <span>Companion to Document 05</span>
+  </div>
+</header>
+
+<section>
+
+<h2>Why this document exists</h2>
+
+<p>Vandana wrote: <q>How can we both share more clearly what we are both bringing to the table is the question babe.</q> And then: <q>I've only asked Key and Rich to take a look at what's there but I don't think it's clear enough for them to contribute.</q></p>
+
+<p>She is right, and the reason is structural. Documents 03, 04 and 05 are <b>negotiating documents</b> — one side's position, written to persuade the other. An advisor cannot contribute to a position paper. They can only agree or disagree with it.</p>
+
+<p>This is not that. This document takes both sides' claims and puts them under <b>the same standard of proof</b>, in one place, with the method for checking each one written next to it. Where a number is verified, it says how to verify it. Where a number is only asserted, it says what would evidence it. Where a number is a guess, it shows the arithmetic so an experienced operator can disagree with the arithmetic rather than with the person.</p>
+
+<div class="note">
+  <b class="t">A note on the tone of section 3 and section 6</b>
+  <p>Some of what follows reads like diligence pointed at Vandana. It is — and it is pointed equally at Steph, in the same words, in the next column. This is deliberate and it is protective of both. <b>A contribution that is not documented cannot be defended as an equity claim.</b> Every asset Vandana names here, once evidenced, becomes something her lawyer can put a number on and her cap table can honour. The questions in section 6 are the questions her own investors will ask in month three. Better they are asked here, by us, while they are still cheap to answer.</p>
+</div>
+
+<h3>How to read every claim in this file</h3>
+
+<ul class="legend">
+  <li><span class="pv v">✓ Verified</span><span>Checkable right now by a third party, and the method is stated. If the method does not reproduce the number, the number is wrong and we will correct it.</span></li>
+  <li><span class="pv s">◇ Stated</span><span>Asserted by one side in good faith, not yet evidenced. Named alongside is the specific document or artefact that would move it to Verified.</span></li>
+  <li><span class="pv e">≈ Estimate</span><span>A calculation, with its method and its rate assumptions on the page. Arguable on purpose. Advisors are invited to redo it.</span></li>
+  <li><span class="pv o">? Open</span><span>Nobody has answered this yet, and it blocks structure. These are collected in section 10.</span></li>
+</ul>
+
+
+<h2>1 · The two histories, on one spine</h2>
+
+<p>Vandana asked for <q>more context of the history and current stages of both flow and danz</q>. Here they are side by side, because the asymmetry between them is the actual content of the negotiation and it is better seen than argued.</p>
+
+<ul class="tl">
+  <li class="vh"><span class="yr">2018</span><span class="who">Vandana</span><b>We Speak Dance premieres on Netflix.</b> Created and hosted by Vandana Hart; executive produced and directed by Chris Keener. Released 1 January 2018, ~22-minute episodes, filmed across Indonesia, Vietnam, France, Nigeria and Lebanon. <span class="pv v">✓ Verified</span> — public Netflix title 80194813, IMDb tt7737500.</li>
+  <li class="vh"><span class="yr">2018–20</span><span class="who">Vandana</span><b>We Speak Dance operates as a company for roughly three years,</b> then dissolves. A former co-founder contributes ~$1M for a position in the company and the right to use the We Speak Dance brand for the app and the content. <span class="pv s">◇ Stated</span></li>
+  <li class="vh"><span class="yr">2020</span><span class="who">Vandana</span><b>Move-to-earn and a wearable coin enter the We Speak Dance roadmap.</b> Keynotes on that vision follow at YPO, Nexus, Volcano Summit and Blockchain Society. <span class="pv s">◇ Stated</span> — event programmes and decks would evidence it.</li>
+  <li class="vh"><span class="yr">2020–25</span><span class="who">Vandana</span><b>~$1.7M raised for the prior WSD app.</b> Roadmap included the same features now proposed. <span class="pv s">◇ Stated</span> — <b>no public funding record exists</b>; cap table, SAFEs or subscription agreements would evidence it.</li>
+  <li class="vh"><span class="yr">2025–26</span><span class="who">Vandana</span><b>1 Billion Hearts is formed as the umbrella; 1MWD is chosen as the launch brand.</b> For-profit, with a separate non-profit alongside for campaign donations. Structure being assembled with two prospective investors. Network cited: FII Saudi Arabia, 20+ investors and advisors, a $2B-fund founder, Swiss partners, Rock in Rio leadership. <span class="pv s">◇ Stated</span></li>
+  <li class="sf"><span class="yr">2026-04-02</span><span class="who">Steph</span><b>First commit to flowbond-os,</b> the monorepo that holds the identity layer, the money spine and the shared infrastructure. <span class="pv v">✓ Verified</span> — <span class="num">git log --reverse</span>.</li>
+  <li class="sf"><span class="yr">2026-05-15</span><span class="who">Steph</span><b>First commit to danz-now.</b> The dance app begins as its own codebase. <span class="pv v">✓ Verified</span></li>
+  <li class="sf"><span class="yr">2026-08-06</span><span class="who">Steph</span><b>danz.now recovered and the app deployed to it.</b> Floors, QR check-in, live leaderboard, append-only XP ledger with server-side anti-fraud, HeartSync over real Bluetooth heart-rate hardware, organiser console. <span class="pv v">✓ Verified</span> — open danz.now.</li>
+  <li class="sf"><span class="yr">2026-08-08</span><span class="who">Steph</span><b>This document room built in two days</b> so that Vandana had somewhere private to read and annotate. <span class="pv v">✓ Verified</span> — you are inside it.</li>
+</ul>
+
+<div class="good">
+  <b class="t">What the timeline actually says</b>
+  <p>These are not competing histories. They are <b>non-overlapping assets</b>. Vandana has eight years of public brand, a Netflix credit, relationships with capital, and an audience. Steph has four months of extraordinary build velocity on top of four years of accumulated infrastructure. Neither one substitutes for the other, and that — not who was first to the idea — is the reason a partnership is worth structuring at all.</p>
+  <p>It also says something uncomfortable that both sides should own: <b>Vandana's assets are older and less documented; Steph's are newer and more documented.</b> Age is not the same as evidence. A codebase proves itself by existing; a raise proves itself with paper. Section 6 asks for both.</p>
+</div>
+
+
+<h2>2 · What is on the table, from each side</h2>
+
+<p>Every line tagged. Nothing here is a valuation — that is section 4. This is only the inventory.</p>
+
+<div class="two">
+  <div class="col a">
+    <span class="tag">Brought by Vandana</span>
+    <h5>Brand, content, audience, capital access</h5>
+    <ul>
+      <li><span class="pv v">✓</span><b>We Speak Dance on Netflix</b> — real, public, 2018, five countries. A genuine credential no amount of engineering buys.</li>
+      <li><span class="pv v">✓</span><b>Vandana Hart personally</b> — Alvin Ailey trained, former UN advisor, keynote speaker. Publicly documented.</li>
+      <li><span class="pv s">◇</span><b>100+ hours of footage across two WSD seasons</b>, usable for the platform. Rights position <span class="pv o">? Open</span> — see section 6.</li>
+      <li><span class="pv s">◇</span><b>New season being filmed with Chelsea for 1MWD.</b></li>
+      <li><span class="pv s">◇</span><b>Three new TV IPs in development.</b></li>
+      <li><span class="pv s">◇</span><b>1MWD podcast already filmed</b> — 9 guests, ~3M combined follower reach. Evidenced by the guest list and handles.</li>
+      <li><span class="pv s">◇</span><b>500+ influencer collaborators, ~500M combined network reach.</b> Evidenced by the list and the nature of each commitment.</li>
+      <li><span class="pv s">◇</span><b>Global summit delivered</b> — 250 participants, 15 female leaders and investors speaking.</li>
+      <li><span class="pv s">◇</span><b>WSD dance NFTs</b> from dancers and musicians with ~4M combined followers, never formally released.</li>
+      <li><span class="pv s">◇</span><b>1MWD Instagram at 2,883 followers</b>; WSD accounts alongside it.</li>
+      <li><span class="pv s">◇</span><b>Aligned partners for the wearable and coin, already in the 1BH business plan</b> — Swiss partners willing to build, FII Saudi relationships, 20+ investors and advisors.</li>
+      <li><span class="pv s">◇</span><b>Five years of public keynoting on the wearable-coin vision.</b></li>
+      <li><span class="pv s">◇</span><b>~$1.7M previously raised</b> for the prior app, and demonstrated ability to raise again without this partnership.</li>
+    </ul>
+  </div>
+  <div class="col b">
+    <span class="tag">Brought by Steph</span>
+    <h5>Working infrastructure, already deployed</h5>
+    <ul>
+      <li><span class="pv v">✓</span><b>386,427 lines of code</b> across <b>38 repositories</b>, <b>2,495 code files</b>, <b>786 commits</b>. Method: <span class="num">git ls-files</span> filtered to source extensions, lockfiles and binary assets excluded.</li>
+      <li><span class="pv v">✓</span><b>503 Postgres tables in one live database</b> — 18 dance, 47 money spine, 21 identity, 7 operational spine, 6 media, 404 across the other products.</li>
+      <li><span class="pv v">✓</span><b>31 Cloudflare zones, 28 deployed Workers.</b> Read from the Cloudflare API on 14 August.</li>
+      <li><span class="pv v">✓</span><b>danz.now, live</b> — 8,883 lines, 18 tables, floors with QR check-in, live leaderboard, append-only XP ledger.</li>
+      <li><span class="pv v">✓</span><b>Anti-fraud that has been adversarially tested in production</b> — a client claiming 99,999 XP was recorded as 15, because the server recomputes every claim and ignores what the client proposes.</li>
+      <li><span class="pv v">✓</span><b>HeartSync reading real heart rate</b> over Bluetooth GATT. No partner API, no wearable licensing deal, no OAuth needed to work today.</li>
+      <li><span class="pv v">✓</span><b>One identity layer under every product</b> — a person is one identity across the whole ecosystem, with an 8-digit code login that works cross-device.</li>
+      <li><span class="pv v">✓</span><b>A money spine that already moves real money</b> — non-custodial revenue splits, escrow rails, a credits ledger, cross-app subscriptions.</li>
+      <li><span class="pv v">✓</span><b>A media stack with a three-tier privacy wall</b> — the exact problem a platform collecting video from a million women has on day one.</li>
+      <li><span class="pv v">✓</span><b>100% self-funded and self-owned.</b> No co-founder, no outside capital, no accelerator, no convertible. There is no cap table to produce, which is the whole point — see section 5.</li>
+      <li><span class="pv v">✓</span><b>Two paid clients and two shared co-creations</b> live on the stack today. Revenue detail in section 3.</li>
+      <li><span class="pv v">✓</span><b>This room</b> — gate, per-person capability keys, annotation layer. Built in two days.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tilt">
+  <b class="t">The honest read on this table</b>
+  <p>Steph's column is almost entirely Verified and Vandana's is almost entirely Stated. <b>That is an artefact of what kind of asset each one is, not a judgement about either.</b> Code is self-evidencing: it either compiles and runs at a URL or it does not. Audience, relationships and content rights are evidenced by <em>documents</em> — contracts, lists, follower exports, rights assignments — and nobody has been asked for those yet.</p>
+  <p>So the correct conclusion from this page is not <q>one side is proven and one is not</q>. It is: <b>Vandana's contribution is very likely larger than this page can currently show, and section 6 is how it gets shown.</b> Until it is shown, a lawyer drafting a cap table has nothing to attach a number to — which hurts Vandana, not Steph.</p>
+</div>
+
+
+<h2>3 · What FlowBond actually earns, and what it costs to run</h2>
+
+<p>Vandana's first question: <q>Can you add how much rev flow is already making and the costs to maintain.</q> Direct answer, read from the systems rather than from memory, on 14 August 2026.</p>
+
+<h4>Revenue</h4>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Line</th><th>Amount</th><th>Provenance</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Platform product revenue</b><br>Consumer purchases inside the apps</td>
+      <td><b>$0</b></td>
+      <td><span class="pv v">✓ Verified</span> Every order and payment table in the production database was queried directly. All are empty, or contain only seed and test rows. The 8 rows in the point-of-sale table all belong to one demo business on a single day. Of 4 rows in the studio orders table, 3 are free samples and 1 is an expired <span class="num">curl</span> test.</td>
+    </tr>
+    <tr>
+      <td><b>Paid client work</b><br>Two live paying clients</td>
+      <td><span class="fill">figure to confirm</span></td>
+      <td><span class="pv o">? Open</span> Invoiced directly, outside the platform, so it does not appear in any database or Stripe account ClaudIA can read. Steph supplies the monthly and annual figure before this document goes to counsel. The <b>two live client properties are verified</b> in the hotel-operations schema.</td>
+    </tr>
+    <tr>
+      <td><b>Shared co-creations</b><br>Two partnerships</td>
+      <td>Revenue-share, not cash</td>
+      <td><span class="pv v">✓ Verified</span> structurally: two ecosystem partnerships are built and deployed on revenue-share terms rather than fees. They generate upside, not current income. Partners not named here — the same discretion 1MWD would receive.</td>
+    </tr>
+    <tr>
+      <td><b>Outside capital raised, ever</b></td>
+      <td><b>$0</b></td>
+      <td><span class="pv v">✓ Verified</span> There is no cap table, no investor, no convertible note, no accelerator. Nothing is pledged, licensed away or encumbered.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h4>Cost to maintain</h4>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Line</th><th>Monthly</th><th>Provenance</th></tr></thead>
+  <tbody>
+    <tr><td><b>Supabase</b> — one Pro project, 121 MB, 503 public tables</td><td class="num">$25</td><td><span class="pv v">✓ Verified</span> Plan read from the Supabase management API. 121 MB sits far inside the 8 GB the plan includes, so this does not scale with the current load.</td></tr>
+    <tr><td><b>Cloudflare Workers</b> — 28 deployed workers</td><td class="num">$5</td><td><span class="pv v">✓ Verified</span> Paid Workers plan. Durable Objects, used for real-time co-op, require it.</td></tr>
+    <tr><td><b>Cloudflare zones</b> — 31 domains on DNS, CDN, TLS and edge routing</td><td class="num">$0</td><td><span class="pv v">✓ Verified</span> All 31 zones are on the Free plan. 30 active, 1 pending.</td></tr>
+    <tr><td><b>Domain registrations</b> — ~31 names</td><td class="num">≈ $35–50</td><td><span class="pv e">≈ Estimate</span> Method: 31 names at typical $12–20/year renewal, amortised monthly. Steph's registrar invoice replaces this with the real figure.</td></tr>
+    <tr><td><b>AI and media APIs</b> — generation, voice, translation</td><td>usage-based</td><td><span class="pv e">≈ Estimate</span> Pay-per-use, no floor. Scales with production, not with uptime. Zero when idle.</td></tr>
+    <tr><td><b>Hard floor to keep all 38 repos and 31 domains alive</b></td><td><b class="num">≈ $65–80</b></td><td><span class="pv e">≈ Estimate</span> Sum of the verified lines plus the estimated domain amortisation.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="q">
+  <b class="t">The number that matters, said plainly</b>
+  <p>FlowBond is a <strong>pre-revenue asset with a sub-$100-a-month running cost, funded entirely out of one person's pocket.</strong></p>
+  <p>Presented badly, that is a weakness. Presented honestly, it is the single most valuable fact in this document for Vandana's investors — and here is why: <em>there is nobody whose permission is needed.</em> No investor consent to obtain. No revenue-share obligation to unwind. No prior licence to buy back. No board to convince. No liquidation preference standing in front of 1MWD's equity. The asset can be contributed in one signature by one person, and that is true of almost no comparable technology on the market.</p>
+  <p>It also settles the valuation method, which is the next section. <strong>A pre-revenue asset cannot be valued on a revenue multiple.</strong> It has to be valued on what it would cost to replace — and that, unlike a multiple, is arithmetic that Key, Rich and any technical advisor can check line by line.</p>
+</div>
+
+
+<h2>4 · What the code inside the fence is worth</h2>
+
+<p>Steph asked for this directly: <q>beyond the users or revenue, we need to estimate the value of the code inside the fence.</q> Below is a replacement-cost estimate. It is an <span class="pv e">≈ Estimate</span> from top to bottom, the method is on the page, and <b>the advisors are specifically invited to attack it.</b></p>
+
+<h3>The method</h3>
+
+<p>The question is not <q>what is this code sentimentally worth</q>. It is: <b>if 1MWD hired a competent team tomorrow and built the same functionality from zero, to the same standard, what would that cost in money and in months?</b> That is the only valuation an investor accepts for pre-revenue software, and it is the one an engineer can audit.</p>
+
+<p>Two rate bases, both stated so advisors can pick:</p>
+
+<ul>
+  <li><b>In-house, US:</b> a senior full-stack engineer at market, fully loaded (salary, tax, benefits, equipment) ≈ <b>$15,000–20,000 per engineer-month</b>.</li>
+  <li><b>Agency or contract:</b> <b>$150–250 per hour</b>, which at ~150 productive hours a month is $22,500–37,500 per engineer-month.</li>
+</ul>
+
+<h3>The scope, and what is genuinely inside the fence</h3>
+
+<div class="field">
+  <div class="fbox in">
+    <span class="tag">Dance-specific · assigned to 1MWD</span>
+    <h5>Would not exist if dance had not been imagined</h5>
+    <ul>
+      <li>The dance app as deployed — 8,883 lines, 18 tables <span class="pv v">✓</span></li>
+      <li>Floors, QR check-in, live leaderboard</li>
+      <li>Append-only XP ledger with server-side anti-fraud</li>
+      <li>HeartSync — paired biometric sessions, server-derived score</li>
+      <li>Organiser console for running a floor</li>
+      <li>The name, the brand identity, the domain</li>
+      <li><b>≈ 4–7 engineer-months to replace</b></li>
+    </ul>
+  </div>
+  <div class="fbox out">
+    <span class="tag">Generic spine · licensed, not assigned</span>
+    <h5>Already runs 30+ other live products for other people</h5>
+    <ul>
+      <li>Identity and single sign-on — 21 tables</li>
+      <li>Payments, splits, escrow, ledger — 47 tables</li>
+      <li>Media ingest, storage, three-tier privacy wall</li>
+      <li>Security posture — row-level security, audit, standing review</li>
+      <li>Operational spine, admin, CMS, build governance</li>
+      <li><b>≈ 13–24 engineer-months to replace</b></li>
+    </ul>
+  </div>
+</div>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>What 1MWD would have to build</th><th>Eng-months</th><th>In-house cost</th><th>Agency cost</th></tr></thead>
+  <tbody>
+    <tr><td><b>The dance application</b> — floors, XP, anti-fraud, biometrics, organiser tools</td><td class="num">4–7</td><td class="num">$60k–140k</td><td class="num">$90k–260k</td></tr>
+    <tr><td><b>Identity and auth</b> — one person, one identity, cross-device, cross-product</td><td class="num">3–5</td><td class="num">$45k–100k</td><td class="num">$68k–188k</td></tr>
+    <tr><td><b>Payments, splits and escrow</b> — what a rewards economy needs underneath it</td><td class="num">4–8</td><td class="num">$60k–160k</td><td class="num">$90k–300k</td></tr>
+    <tr><td><b>Media pipeline and privacy wall</b> — video from a million women, tiered by consent</td><td class="num">4–8</td><td class="num">$60k–160k</td><td class="num">$90k–300k</td></tr>
+    <tr><td><b>Security posture</b> — deny-by-default data access, audited</td><td class="num">2–3</td><td class="num">$30k–60k</td><td class="num">$45k–113k</td></tr>
+    <tr><td><b>Total to stand up the same capability from zero</b></td><td class="num"><b>17–31</b></td><td class="num"><b>$255k–620k</b></td><td class="num"><b>$383k–1.16M</b></td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="note">
+  <b class="t">What the table deliberately does not claim</b>
+  <p>It does <b>not</b> claim FlowBond is worth $255k–1.16M. It claims that <em>this specific slice</em> — the dance app plus the infrastructure 1MWD would need underneath it — costs that much to reproduce. The other 377,000 lines across the other 33 products are <b>not on the table</b> and are not counted here.</p>
+  <p>It also does not count the two things that are actually hardest to buy: <b>elapsed time</b> and <b>having already been wrong once</b>. Seventeen to thirty-one engineer-months of work, run by a team that has to hire, align and learn the domain, is realistically <b>12–18 months of calendar time</b>. And the code that exists has already been adversarially tested in production — the XP anti-fraud, the biometric scoring, the access controls. A fresh build ships those bugs for the first time in front of Vandana's audience.</p>
+</div>
+
+<h3>How to audit this yourself</h3>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Claim</th><th>How your technical advisor checks it, in minutes</th></tr></thead>
+  <tbody>
+    <tr><td>386,427 lines exist</td><td>Read-only repository access under NDA. Run the same <span class="num">git ls-files</span> count. If it does not reproduce, the number is wrong.</td></tr>
+    <tr><td>503 tables exist</td><td>Read-only schema dump. Count the tables by prefix.</td></tr>
+    <tr><td>The dance app works</td><td>Open danz.now. Create a floor. Scan the QR. Dance. Watch the leaderboard move.</td></tr>
+    <tr><td>The anti-fraud is real</td><td>Post a fraudulent XP claim against the production endpoint and watch the server discard it. This has been done; do it again.</td></tr>
+    <tr><td>The 4–7 and 13–24 engineer-month figures</td><td>This is the arguable part. Have your own engineer read the code and give their own number. If they say 8 months instead of 20, that is a real finding and the deal should use their number, not ours.</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<h2>5 · What it means for investors that the tech is owned by 1MWD</h2>
+
+<p>Vandana's second question, and the most consequential one in this file: <q>What it would technically mean for investors that any tech we build is owned by the company we decide. For now that's 1MWD.</q></p>
+
+<p>There are three ways to do it. They are not degrees of commitment — they are <b>different legal instruments with different consequences</b>, and the difference shows up in diligence, in an exit, and in what Steph is contractually able to sign.</p>
+
+<ul class="commit">
+  <li>
+    <b class="h">Assignment — 1MWD owns the code outright</b>
+    <span>The copyright transfers. 1MWD's balance sheet carries the asset, no third party can touch it, and the company can be sold without anyone's consent. <b>This is what investors want by default, and for the dance-specific work Steph has already agreed to it.</b>
+    <span class="gap"></span>
+    The problem is only at the spine. The identity, payments and media code proposed for 1MWD is <em>the same code</em> already running 30+ other live products, some for paying clients under existing contracts. Assigning it would either breach those contracts or strand those clients. It is not a reluctance — it is not Steph's to give.</span>
+  </li>
+  <li>
+    <b class="h">Exclusive licence in a field of use — 1MWD owns dance, and holds the spine exclusively <em>for</em> dance</b>
+    <span>Everything dance-specific is <b>assigned</b>. The generic spine is licensed to 1MWD perpetually, irrevocably, royalty-free, and <b>exclusively within dance</b> — meaning FlowBond cannot license that spine to any other dance product, ever, including its own. Investors get exclusivity exactly where it matters, plus the three protections that make a licence bankable: <b>source escrow</b>, <b>step-in rights</b> if Steph or FlowBond fails, and a <b>fixed-price buyout option</b> so 1MWD can convert the licence to ownership at a number agreed today rather than negotiated under pressure later.
+    <span class="gap"></span>
+    <b>This is the structure investors actually accept</b>, and not as a concession — it is how nearly every company built on a founder's pre-existing platform is papered.</span>
+  </li>
+  <li>
+    <b class="h">Protocol layer — FlowBond sits underneath as infrastructure</b>
+    <span>FlowBond is to 1MWD what Stripe is to a shop or AWS is to an app: 1MWD owns its entire application layer, its brand, its content and <b>all of its user data</b>, and calls FlowBond for identity, payments and media. Cheapest and fastest to launch. The cost is a vendor dependency, which investors will price unless it is mitigated by the same escrow, step-in and buyout terms as model 2.</span>
+  </li>
+</ul>
+
+<h3>What each model does, in the four places it shows up</h3>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th></th><th>Assignment</th><th>Field-of-use licence</th><th>Protocol layer</th></tr></thead>
+  <tbody>
+    <tr><td><b>Investor diligence</b></td><td>Cleanest. Asset sits on 1MWD's books.</td><td>Standard and well-understood. Diligence reads the licence, the escrow and the buyout price.</td><td>Diligenced as a key-supplier risk. Survivable, but priced.</td></tr>
+    <tr><td><b>Freedom to sell 1MWD</b></td><td>Total. No consent needed.</td><td>Licence must be assignable on a change of control — <b>a term to write in now, not later.</b></td><td>Acquirer inherits the dependency. Often triggers a renegotiation at the worst moment.</td></tr>
+    <tr><td><b>Steph's existing contracts</b></td><td><b>Breaks them</b> for the shared spine. Impossible to sign honestly.</td><td>Compatible. Exclusivity is scoped to dance, so prior non-dance commitments survive.</td><td>Compatible.</td></tr>
+    <tr><td><b>Cost and speed to launch</b></td><td>Slowest — requires separating shared code into a standalone codebase first.</td><td>Fast. The spine is used as it stands.</td><td>Fastest.</td></tr>
+    <tr><td><b>Who owns 1MWD's user data</b></td><td>1MWD</td><td>1MWD</td><td><b>1MWD</b> — in all three models. This is never in question and should be stated as a term.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="good">
+  <b class="t">The recommendation, and it is a hybrid</b>
+  <p><b>Assignment on everything dance-specific. Field-of-use licence, with escrow and a fixed-price buyout, on the generic spine.</b></p>
+  <p>This gives Vandana's investors a clean, wholly-owned dance asset — which is the thing she has been asking for since the first call, and the thing Steph has already conceded. It gives 1MWD exclusivity in dance so no competitor can ever run on the same rails. It gives the investors a path to full ownership at a price fixed today. And it does not ask Steph to sign away code that other people have already paid for.</p>
+  <p>Every one of those is a <b>FOR COUNSEL</b> item. Nothing in this section is legal advice and neither of us is qualified to give it.</p>
+</div>
+
+<div class="flag">
+  <b class="t">Disclosed now rather than found in diligence</b>
+  <p>Steph has <b>pre-existing signed contracts with third parties to manufacture wearables in Mexico</b>, predating this conversation and unrelated to dance. She also has client work under NDA on the shared spine. These are the specific reasons a category-wide assignment cannot be signed — and the reason this is stated here, unprompted, is that a partner who finds it in month three reads it as concealment, while a partner who reads it in month zero can simply draft around it.</p>
+  <p>The wearable <em>for dance</em> is fenced to 1MWD exclusively and permanently. The word <q>wearables</q> as a whole category is not Steph's to fence.</p>
+</div>
+
+
+<h2>6 · The mutual audit</h2>
+
+<p>Steph's framing: <q>we should be able to audit and see what's already been built with those previews 1.7m and see if we can still use some of that or where does that value lands today — and same in ours.</q></p>
+
+<p>So: two checklists, symmetric, same standard. Each side answers its own.</p>
+
+<h3>Audit A — the prior We Speak Dance build and the $1.7M</h3>
+
+<p>The question is not whether the money was raised. It is <b>where the value it created lives today, and whether 1MWD can legally use it.</b> That is a genuinely valuable question for Vandana, because anything recoverable is contribution she can put on her own side of the cap table.</p>
+
+<ul class="commit audit">
+  <li><b class="h">The build itself</b><span>Repository access, or the compiled app builds. App-store listings, live or delisted. Design files. If a working codebase exists, a technical advisor can say in a day whether any of it is reusable in 2026 or whether the frameworks have aged out.</span></li>
+  <li><b class="h">The user data</b><span>Was a user database accumulated? Where is it now, who is the controller, and what consent basis was collected? An old user list with no lawful basis is a liability, not an asset — better to know before it is migrated.</span></li>
+  <li><b class="h">The content and its chain of title</b><span>The 100+ hours. Who holds the raw footage, and under what agreement? <b>We Speak Dance season one was executive produced and directed by Chris Keener and distributed by Netflix.</b> Before a platform is planned around that footage, the chain of title has to be read — a Netflix licence and a director's rights can both sit on top of material the brand feels like it owns. Same question for the dance NFTs from artists with ~4M combined followers.</span></li>
+  <li><b class="h">What the dissolution did</b><span>Vandana has said the We Speak Dance company <b>dissolved</b>. When a company dissolves, its IP does not automatically follow its founder. So: who holds the We Speak Dance brand, the footage and the roadmap <em>today</em> — Vandana personally, the dissolved entity, or a successor? <span class="pv o">? Open</span></span></li>
+  <li><b class="h">The former co-founder</b><span>Vandana has said a former co-founder contributed ~$1M for a position and the right to use the WSD brand for the app and the content. <b>Does that person retain any interest, licence or claim today?</b> If they do, 1MWD cannot contribute WSD assets without addressing it. <span class="pv o">? Open</span> — and this is materially the largest structural risk in the whole file, on either side.</span></li>
+  <li><b class="h">The raise itself</b><span>Cap table, SAFEs or subscription agreements for the $1.7M. Not to doubt it — to <em>document</em> it. No public funding record exists, so paper is the only way it becomes Verified, and Verified is what a valuation can rest on.</span></li>
+  <li><b class="h">The partner and investor commitments</b><span>For the Swiss partners, the FII relationships, the 20+ investors and advisors, the 500 influencers: which are signed, which are warm, which are aspirational? All three are legitimate. Mixing them in one number is what advisors object to, and separating them is what makes the number persuasive.</span></li>
+</ul>
+
+<div class="note">
+  <b class="t">A small thing, said as a friend</b>
+  <p><b>vandanahart.com is currently serving an expired TLS certificate</b> — verified 14 August 2026. Browsers show a full-page security warning before the site loads. Investors and partners do open that link. It is a ten-minute fix and it is worth doing this week.</p>
+</div>
+
+<h3>Audit B — FlowBond and DANZ</h3>
+
+<ul class="commit audit">
+  <li><b class="h">Read-only repository access under NDA</b><span>For 1MWD's technical advisor, so the line counts, the architecture and the code quality are checked rather than believed. Offered.</span></li>
+  <li><b class="h">The live URLs</b><span>Already public. danz.now and the thirty-eight other named domains open in a browser right now, with no gate.</span></li>
+  <li><b class="h">The database schema</b><span>A read-only dump. Count the tables, read the access policies, verify that data access is deny-by-default rather than asserted to be.</span></li>
+  <li><b class="h">The standing security review</b><span>The automated advisor output, including its open findings. Not the clean version — the actual one.</span></li>
+  <li><b class="h">The list of pre-existing third-party contracts</b><span>The specific agreements that constrain what can be assigned: the Mexican wearable manufacturing contracts, and the client work on the shared spine. Named to counsel under NDA, so the drafting can route around them precisely rather than approximately.</span></li>
+  <li><b class="h">The two paid clients, named</b><span>With each client's permission, so the revenue line in section 3 is verifiable rather than asserted.</span></li>
+  <li><b class="h">The Texas dissolution</b><span>Vandana's stated condition before any technology transfers. Documentary proof, provided.</span></li>
+  <li><b class="h">What DANZ is not</b><span>Restated because it belongs in an audit section: <b>no company, no trademark, no investors, no revenue, no users beyond testing.</b> DANZ is a working app, a name, a domain and a pursuit. It is not a business with paperwork, and it is not being presented as one.</span></li>
+</ul>
+
+
+<h2>7 · Where this sits, and the pacing</h2>
+
+<p>Vandana: <q>For now we are saying 1MWD as the starting place… where community and brand and content is the focus with a simple MVP. Not leading with product until the community is more engaged.</q></p>
+
+<div class="good">
+  <b class="t">This is agreed, and the document should say where the sides agree</b>
+  <p>Steph agrees with the sequencing and with the reasoning. <b>Community and content first. A deliberately small MVP. Product does not lead.</b> Steph has also agreed to the larger point: <b>all dance-focused IP consolidates under 1MWD, and later 1BH, once the structure is cleared and signed.</b> That is not a point in dispute and it should stop being re-litigated in every document.</p>
+</div>
+
+<h3>The one structural blocker</h3>
+
+<div class="flag">
+  <b class="t">1MWD is not incorporated yet</b>
+  <p>Nothing can be assigned to a company that does not exist, and no equity can be issued by one either. The order is not negotiable, only the speed:</p>
+  <ul>
+    <li><b>Incorporate 1MWD.</b> Jurisdiction, class of shares, founder split.</li>
+    <li><b>Answer which entity issues the 15%</b> — 1MWD, 1BH, or something else. Still unanswered across two documents and one call, and it is the single item blocking everything downstream.</li>
+    <li><b>Write the anti-transfer covenant.</b> If dance IP lands in 1MWD and 1MWD is later absorbed into 1BH, Steph's percentage must follow the assets or convert at a stated ratio. Without this clause, contributing to 1MWD and then watching it fold upward is indistinguishable from contributing for nothing.</li>
+    <li><b>Sign.</b></li>
+    <li><b>Then transfer technology.</b> Not before.</li>
+  </ul>
+</div>
+
+<h3>The three-stage launch, and what tech each stage actually needs</h3>
+
+<p>Written for the product advisors, because this is the part where an experienced operator can immediately tell whether the plan is sane. The useful news: <b>stage one needs almost none of the machinery in section 4.</b> The heavy infrastructure is what makes stage three possible without a second raise.</p>
+
+<div class="stage s1">
+  <span class="n">Stage 1 · now</span>
+  <h5>WSD Season 2 as the content engine</h5>
+  <p>Filming with Chelsea. Two seasons of library behind it. The podcast, already shot, with 9 guests. The 500 collaborators activated as distribution rather than as a list.</p>
+  <p class="needs"><b>Tech required</b>A landing page, email and phone capture, a content wall, and a creator sign-up form. Weeks of work, not months. Anything more than this at stage one is a distraction and Vandana is right to resist it.</p>
+</div>
+
+<div class="stage s2">
+  <span class="n">Stage 2 · launch</span>
+  <h5>1MWD as the community and the simple MVP</h5>
+  <p>The community becomes addressable and participatory: profiles, claimable identities, video submission, local groups, one dance challenge with a leaderboard.</p>
+  <p class="needs"><b>Tech required</b>Identity and single sign-on, claimable profiles, media upload with the three-tier privacy wall, and one motion or participation loop. <b>All four exist and are deployed.</b> This is the stage where the stack stops being a claim and starts being a schedule.</p>
+</div>
+
+<div class="stage s3">
+  <span class="n">Stage 3 · longer term</span>
+  <h5>1 Billion Hearts as the umbrella</h5>
+  <p>The whole world dancing. The wearable. The coin. Move-to-earn at scale, campaigns, the non-profit alongside for donations, the TV formats.</p>
+  <p class="needs"><b>Tech required</b>Verified motion at scale, biometrics, an append-only rewards ledger with anti-fraud, non-custodial splits, escrow, treasury. <b>This is precisely what the section 4 spine is</b> — and it is the reason the spine matters even though stage one does not touch it.</p>
+</div>
+
+<h3>The transparency term Vandana asked for</h3>
+
+<div class="note">
+  <b class="t">In her words, converted into a clause</b>
+  <p>Vandana wrote: <q>if we decide to build more tech for a diff brand in this ecosystem that would all be transparent and shared and there will be a point in our agreement about this.</q></p>
+  <p>Drafted as a term, in both directions: <b>either party building technology for another brand inside this ecosystem discloses it to the other in advance, in writing, before work starts</b> — scope, brand, entity, and whether it touches the dance field. Reciprocal, because Vandana holds three brands and a Swiss company that has been described as ready to build in an adjacent field, and the same clause protects Steph from being surprised by that as protects Vandana from being surprised by Steph.</p>
+</div>
+
+
+<h2>8 · Longevity, mental health, fitness, women's health</h2>
+
+<p>Vandana: <q>They are all about dance. But also have longevity plays. Mental health. Fitness. Women's health. And many other ties and partnerships.</q> Agreed — those are real adjacent value and they belong in the plan.</p>
+
+<p>They are also where the boundary fight lives, so here is the mechanism instead of the argument. On the 9 August call the fence grew from <q>dance</q> to <q>wellness, breath work, fitness, running, any kind of movement, music, longevity.</q> Those are two very different fences and the difference is worth several other people's businesses.</p>
+
+<div class="field">
+  <div class="fbox in">
+    <span class="tag">Inside · belongs to 1MWD</span>
+    <h5>Fenced by purpose</h5>
+    <ul>
+      <li>A women's-health feature <b>inside the 1MWD product</b></li>
+      <li>Longevity framing on <b>dance participation</b></li>
+      <li>Mental-health outcomes from <b>dancing together</b></li>
+      <li>Fitness metrics derived from <b>verified dance movement</b></li>
+      <li>The <b>dance wearable</b> — exclusive and permanent</li>
+    </ul>
+  </div>
+  <div class="fbox out">
+    <span class="tag">Outside · not Steph's to give</span>
+    <h5>Already other people's live businesses</h5>
+    <ul>
+      <li>A general fitness or running product with no dance in it</li>
+      <li>Music tooling that predates this conversation</li>
+      <li>Wellness and sanctuary businesses run <b>with existing partners under signed agreements</b></li>
+      <li><q>Wearables</q> as a category — prior manufacturing contracts</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tilt">
+  <b class="t">The test, so no grey case becomes an argument</b>
+  <p><b>Would this exist if dance had never been imagined?</b> If no — it is 1MWD's. If yes — it is outside, and it is outside because it already belongs to somebody else who signed first.</p>
+  <p>A category-wide fence over <q>wellness</q>, <q>movement</q> and <q>music</q> would capture several products that are live today, built with named partners under existing agreements. Steph cannot sign that, for the same reason Vandana cannot contribute WSD footage that a former co-founder may still have a claim on. <b>Neither of us can give away what we have already promised elsewhere</b> — and once said that plainly, it stops being a disagreement and becomes a drafting problem.</p>
+</div>
+
+
+<h2>9 · The what-ifs</h2>
+
+<p>Steph asked for these explicitly: <q>so the 'what if' are also in place and we all agree.</q> A partnership is not the terms that apply while it is going well. It is the terms that apply on the worst day. Every row below is <b>FOR COUNSEL</b>.</p>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>What if…</th><th>The code</th><th>The equity</th><th>The clause that handles it</th></tr></thead>
+  <tbody>
+    <tr><td><b>1MWD is never incorporated</b></td><td>Stays with FlowBond. Nothing transferred.</td><td>None issued.</td><td>A <b>drop-dead date</b>. If 1MWD is not incorporated and the 15% not issued by a stated date, all obligations lapse and both sides walk with what they came with.</td></tr>
+    <tr><td><b>We split in year one, before transfer</b></td><td>Stays with FlowBond.</td><td>Unvested equity returns.</td><td><b>Cliff vesting.</b> No transfer of IP before the cliff, and nothing vests before it either. Symmetrical.</td></tr>
+    <tr><td><b>We split after transfer</b></td><td>Dance IP stays with 1MWD. Spine licence terminates or converts.</td><td>Vested equity is kept.</td><td>The hardest row to draft and the one that most needs both lawyers. Options: a <b>reversion</b> if 1MWD abandons the field, a <b>perpetual licence back</b> to Steph outside dance, or <b>escrow release</b>. Pick one now, in the calm.</td></tr>
+    <tr><td><b>1MWD is absorbed into 1BH</b></td><td>Follows the assets.</td><td><b>Must follow, or convert at a stated ratio.</b></td><td>The <b>anti-transfer covenant</b> in section 7. Without it, upward absorption is a legal way to dilute a contribution to nothing.</td></tr>
+    <tr><td><b>Vandana raises without Steph</b></td><td>No dance IP transfers. She builds with another vendor.</td><td>None.</td><td>Her stated alternative and a legitimate one. It costs the 17–31 engineer-months and the 12–18 calendar months in section 4. That is the entire economic case, stated without drama.</td></tr>
+    <tr><td><b>Steph becomes unavailable</b></td><td><b>Escrow releases; 1MWD steps in.</b></td><td>Vested equity stands per its terms.</td><td><b>Source escrow + step-in rights + documentation covenant.</b> This is the row investors care about most. It must be real — a named agent, a release trigger, and a build that a third party can actually deploy.</td></tr>
+    <tr><td><b>The WSD content turns out to be encumbered</b></td><td>Unaffected.</td><td>Contribution values are <b>restated</b>.</td><td>A <b>contribution schedule</b> attached to the agreement, with reps and warranties on each item. If an asset was represented and does not exist, the schedule adjusts. This protects Steph — and it equally protects Vandana against the same claim.</td></tr>
+    <tr><td><b>A third party builds dance tech for 1BH anyway</b></td><td>Steph's exclusivity is breached.</td><td>Steph's contribution is devalued.</td><td>The exclusivity has to be <b>mutual</b>. If Steph cannot build dance outside the ecosystem, 1BH cannot commission dance tech outside it either — including from the Swiss company. Otherwise it is a non-compete in one direction only.</td></tr>
+    <tr><td><b>The wearable partner conflicts with the Mexico contracts</b></td><td>Dance wearable proceeds; general wearables stay out.</td><td>Unaffected.</td><td>The <b>purpose-not-form fence</b> in section 8, plus the disclosure in section 5.</td></tr>
+    <tr><td><b>Community grows, product does not — or the reverse</b></td><td>Unaffected.</td><td>Consider <b>milestone vesting</b>.</td><td>Tie each side's vesting to what that side actually controls: audience and content milestones on one side, shipped-product milestones on the other. Neither is punished for the other's stage.</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<h2>10 · Still open</h2>
+
+<p>Collected from every document and both calls. These are the items no amount of drafting can route around.</p>
+
+<ul class="commit q">
+  <li><b class="h">Fifteen percent of <em>which</em> entity?</b><span>1MWD, 1BH, or something else. Asked in Document 03, asked again in Document 05, raised on the call, still unanswered. <b>Everything downstream is blocked on this one sentence.</b></span></li>
+  <li><b class="h">What happens to the contribution if 1MWD folds into 1BH?</b><span>The anti-transfer covenant. Section 7.</span></li>
+  <li><b class="h">Who holds the We Speak Dance brand, footage and NFTs today?</b><span>The company dissolved. IP does not automatically follow a founder through a dissolution. Section 6.</span></li>
+  <li><b class="h">Does the former co-founder who contributed ~$1M retain any claim?</b><span>Section 6. Materially the largest structural unknown in the file.</span></li>
+  <li><b class="h">Is the 100+ hours of footage clear of the Netflix licence and the director's rights?</b><span>Section 6. This determines whether a core stated asset can be used on a platform at all.</span></li>
+  <li><b class="h">Is the exclusivity mutual?</b><span>If FlowBond cannot build dance outside the ecosystem, can 1BH commission dance technology outside it? Never answered in any direction.</span></li>
+  <li><b class="h">What is FlowBond's actual services revenue?</b><span>Two paid clients. Steph supplies the figure before this goes to counsel. Section 3.</span></li>
+  <li><b class="h">Which entity issues, and where is each party's counsel?</b><span>Steph pays for Vandana's own lawyer, chosen by Vandana, with no obligation to report a word back. That offer stands from Document 05 and is not conditional on anything in this file.</span></li>
+</ul>
+
+
+<h2>11 · For Key, Rich, and the product advisors</h2>
+
+<p>Vandana wants advisors who have been launching products for twenty years to look at this and help get the foundation right. The most useful thing a document like this can do is tell them <b>exactly where to push</b>, because vague documents get polite responses.</p>
+
+<div class="q">
+  <b class="t">The five questions we most want attacked</b>
+  <ul>
+    <li><b>Redo the section 4 arithmetic.</b> Have an engineer read the code and give their own engineer-month number. If it is 8 instead of 20, the deal should use 8. We would rather be corrected than believed.</li>
+    <li><b>Is the hybrid in section 5 the right instrument?</b> Assignment on dance, field-of-use licence with escrow and fixed-price buyout on the spine. If you have seen this fail, say how it failed.</li>
+    <li><b>Is stage one really that small?</b> Section 7 claims 1MWD's launch needs a landing page, a capture form and a content wall — and nothing more. Community-first operators will know instantly whether that is right or naive.</li>
+    <li><b>Which of the what-ifs in section 9 is drafted wrong?</b> Especially the split-after-transfer row. It is the hardest one and we know it is the weakest.</li>
+    <li><b>What is missing entirely?</b> Twenty years of launches produces a list of things that killed deals which nobody in the room had thought of. That list is the most valuable thing either of us could receive right now.</li>
+  </ul>
+</div>
+
+<div class="note">
+  <b class="t">The one thing this document is trying to be</b>
+  <p>Not persuasive. <b>Auditable.</b> Every number in it either states how to check it, or admits it is a guess and shows the guess's arithmetic, or is marked as unanswered. If an advisor finds a number that does none of those three things, that is a defect in the document and we want to hear about it.</p>
+  <p>Two people who have each spent years building something are trying to combine them without either one signing away what they cannot afford to lose. That is a solvable problem. It is only unsolvable while the two sides are working from different sets of facts.</p>
+</div>
+
+<div class="sigs">
+  <div class="sig"><b>Vandana Hart</b><span>Founder &amp; CEO, 1 Billion Hearts · 1 Million Women Dance</span></div>
+  <div class="sig"><b>Estefanía Ferrera</b><span>Founder &amp; CEO, FlowBond Tech</span></div>
+</div>
+
+</section>
+
+<footer>
+  <span>Document 6 · The Table</span>
+  <span>Companion to Document 05 — supersedes nothing</span>
+  <span>14 August 2026 · For audit and redline</span>
+</footer>
+
+</div>
+<script src="/docs/room.js" defer></script>
+</body>
+</html>

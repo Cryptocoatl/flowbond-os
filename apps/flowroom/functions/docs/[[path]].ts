@@ -71,6 +71,7 @@ const DOC_OF_FILE: Record<string, string> = {
   '3-structure-and-ip-analysis': '3',
   '4-danz-1mwd-boundary-and-cross-equity': '4',
   '5-the-alliance': '5',
+  '6-the-table': '6',
 };
 
 export const DOC_TITLES: Record<string, string> = {
@@ -79,6 +80,7 @@ export const DOC_TITLES: Record<string, string> = {
   '3': 'Structure & IP Analysis',
   '4': 'DANZ × 1MWD',
   '5': 'The Alliance',
+  '6': 'The Table',
 };
 
 const opens = (pass: Pass, doc: string) => !pass.d || pass.d.includes(doc);
