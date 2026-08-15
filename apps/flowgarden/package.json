@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.37.0",
+    "@anthropic-ai/sdk": "^0.117.1",
     "@flowbond/auth": "workspace:*",
     "@flowbond/core": "workspace:*",
     "@flowbond/db": "workspace:*",
