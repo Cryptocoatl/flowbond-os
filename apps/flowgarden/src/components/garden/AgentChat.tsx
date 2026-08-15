@@ -10,7 +10,14 @@ interface Message {
   created?: { events: number; tasks: number; plants: number; updated: number }
 }
 
-export function AgentChat({ gardenId }: { gardenId: string }) {
+// Conversation starters for a first-time user staring at an empty box.
+const SUGGESTIONS = [
+  'What should I do today?',
+  'I planted 6 tomato seedlings',
+  'Something is eating my basil',
+]
+
+export function AgentChat({ gardenId, bare = false }: { gardenId: string; bare?: boolean }) {
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -117,15 +124,19 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
 
   return (
     <div
-      className="rounded-fg p-5 flex flex-col gap-4"
-      style={{
-        backgroundColor: 'var(--fg-surface)',
-        border: '1px solid var(--fg-border-accent)',
-        boxShadow: 'var(--fg-shadow)',
-      }}
+      className={bare ? 'p-4 flex flex-col gap-4' : 'rounded-fg p-5 flex flex-col gap-4'}
+      style={
+        bare
+          ? undefined
+          : {
+              backgroundColor: 'var(--fg-surface)',
+              border: '1px solid var(--fg-border-accent)',
+              boxShadow: 'var(--fg-shadow)',
+            }
+      }
     >
-      {/* Header */}
-      <div className="flex items-center gap-3">
+      {/* Header — the drawer already names FlowMe, so skip it there */}
+      <div className={`items-center gap-3 ${bare ? 'hidden' : 'flex'}`}>
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{
@@ -145,7 +156,12 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
 
       {/* Conversation */}
       {messages.length > 0 && (
-        <div className="space-y-3 max-h-60 md:max-h-96 overflow-y-auto pr-1 overscroll-contain">
+        <div
+          className="space-y-3 max-h-60 md:max-h-96 overflow-y-auto pr-1 overscroll-contain"
+          role="log"
+          aria-live="polite"
+          aria-label="Conversation with FlowMe"
+        >
           {messages.map((msg, i) => (
             <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'agent' && (
@@ -241,6 +257,23 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
         </div>
       )}
 
+      {/* Conversation starters — an empty text box asks the user to invent the
+          product; three taps show them what it's for. */}
+      {messages.length === 0 && (
+        <div className="flex flex-wrap gap-2">
+          {SUGGESTIONS.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setInput(s)}
+              className="chip text-left"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Input row */}
       <div className="flex items-end gap-2">
         <button
@@ -269,6 +302,7 @@ export function AgentChat({ gardenId }: { gardenId: string }) {
           onKeyDown={handleKeyDown}
           disabled={isPending}
           placeholder="I planted 3 tomato seedlings in zone A…"
+          aria-label="Message FlowMe"
           rows={1}
           className="flex-1 resize-none text-sm focus:outline-none transition-colors disabled:opacity-60"
           style={{

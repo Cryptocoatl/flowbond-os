@@ -33,13 +33,17 @@ export default async function GardenLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen flex bg-fg-bg">
+      <a href="#main" className="skip-link">Skip to content</a>
       <div className="hidden md:block fixed top-3 right-4 z-40">
         <FlowMeChip handle={flowMeHandle} className="text-fg-muted hover:text-fg transition" />
       </div>
       <Sidebar gardens={ctx.gardens} activeId={ctx.garden.id} activeName={ctx.garden.name} />
       <div className="flex-1 min-w-0 flex flex-col">
         <MobileNav gardens={ctx.gardens} activeId={ctx.garden.id} activeName={ctx.garden.name} />
-        <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0">
+        {/* The mobile header/tab bar are `calc(Nrem + safe-area-inset)` tall, so
+            a flat pt-14/pb-16 slid content under the notch and behind the tabs
+            on every iPhone. `.garden-main` mirrors the real heights. */}
+        <main id="main" className="flex-1 overflow-auto garden-main">
           {children}
         </main>
       </div>

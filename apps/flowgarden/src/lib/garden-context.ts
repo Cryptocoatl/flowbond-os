@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { createClient } from './supabase/server'
 import { createAdminClient } from './supabase/admin'
@@ -35,7 +36,13 @@ export interface GardenContext {
   gardens: GardenSummary[]
 }
 
-export async function getGardenContext(): Promise<GardenContext | null> {
+/**
+ * Every garden page calls this, and so does the layout that wraps them — which
+ * meant each navigation ran the whole membership/garden/members/profiles chain
+ * twice. `cache()` dedupes it per request, halving the round-trips before a
+ * page can paint.
+ */
+export const getGardenContext = cache(async function getGardenContext(): Promise<GardenContext | null> {
   // Use regular client only to verify identity — auth token from cookies
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -138,4 +145,4 @@ export async function getGardenContext(): Promise<GardenContext | null> {
     members,
     gardens,
   }
-}
+})

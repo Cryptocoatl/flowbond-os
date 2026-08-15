@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { EditModal } from '@/components/garden/EditModal'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { timeAgo, plural } from '@/lib/format'
 
 const eventTypeOptions = [
   { value: 'text_observation', label: '📝 Observation' },
@@ -43,21 +45,24 @@ interface GardenEvent {
 
 interface Zone { id: string; name: string }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days === 1) return 'yesterday'
-  return `${days}d ago`
-}
-
 const emptyForm = {
   event_type: 'text_observation', title: '', structured_summary: '',
   urgency: 'none', zone_id: '', occurred_at: '',
+}
+
+// "Today" / "Yesterday" / "Monday, March 4" — a journal reads as days, not rows.
+function dayLabel(iso: string): string {
+  const d = new Date(iso)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  if (d.toDateString() === today.toDateString()) return 'Today'
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
+  const sameYear = d.getFullYear() === today.getFullYear()
+  return d.toLocaleDateString(undefined, {
+    weekday: 'long', month: 'long', day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
 }
 
 export function JournalClient({ events, zones }: { events: GardenEvent[]; zones: Zone[] }) {
@@ -67,6 +72,30 @@ export function JournalClient({ events, zones }: { events: GardenEvent[]; zones:
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+
+  // Which event types actually appear, so the filter never offers a dead option.
+  const presentTypes = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const e of events) m.set(e.event_type, (m.get(e.event_type) ?? 0) + 1)
+    return m
+  }, [events])
+
+  const visible = useMemo(
+    () => (typeFilter === 'all' ? events : events.filter(e => e.event_type === typeFilter)),
+    [events, typeFilter],
+  )
+
+  const days = useMemo(() => {
+    const groups: { label: string; items: GardenEvent[] }[] = []
+    for (const e of visible) {
+      const label = dayLabel(e.occurred_at)
+      const last = groups[groups.length - 1]
+      if (last && last.label === label) last.items.push(e)
+      else groups.push({ label, items: [e] })
+    }
+    return groups
+  }, [visible])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -82,7 +111,7 @@ export function JournalClient({ events, zones }: { events: GardenEvent[]; zones:
         }),
       })
       if (!res.ok) {
-        const json = await res.json()
+        const json = await res.json().catch(() => ({}))
         setError(json.error ?? 'Something went wrong')
         return
       }
@@ -104,92 +133,140 @@ export function JournalClient({ events, zones }: { events: GardenEvent[]; zones:
     setForm(prev => ({ ...prev, [field]: val }))
 
   return (
-    <div className="p-4 md:p-8 max-w-3xl">
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-stone-900">Garden Journal</h1>
-            <p className="text-sm text-stone-400 mt-1">
-              {events.length} entr{events.length !== 1 ? 'ies' : 'y'}
-            </p>
-          </div>
-          <button onClick={() => setOpen(true)} className="btn-primary shrink-0">
-            + Add entry
-          </button>
-        </div>
-      </div>
+    <div className="page-narrow space-y-6">
+      <PageHeader
+        title="Garden Journal"
+        subtitle={events.length === 0 ? 'The story of this garden, day by day' : plural(events.length, 'entry', 'entries')}
+        action={<button type="button" onClick={() => setOpen(true)} className="btn-primary">+ Add entry</button>}
+      />
 
       {events.length === 0 ? (
-        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
-          <p className="text-2xl mb-3">📖</p>
-          <p className="text-stone-600 font-medium">No journal entries yet</p>
-          <p className="text-stone-400 text-sm mt-1 mb-4">
-            Everything you tell the Garden Intelligence is automatically logged here. You can also add entries manually.
+        <div className="empty-state">
+          <span className="empty-emoji">📖</span>
+          <p className="empty-title">The journal is blank</p>
+          <p className="empty-body">
+            Every thing you tell FlowMe lands here automatically — what you planted, what you noticed,
+            what you harvested. You can also write an entry yourself.
           </p>
-          <button onClick={() => setOpen(true)} className="btn-primary">Add first entry</button>
+          <button type="button" onClick={() => setOpen(true)} className="btn-primary">Write the first entry</button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {events.map(event => {
-            const icon = eventTypeIcons[event.event_type] ?? '📝'
-            const dateStr = new Date(event.occurred_at).toLocaleDateString('en-US', {
-              weekday: 'short', month: 'short', day: 'numeric',
-            })
-            return (
-              <div key={event.id} className="card group">
-                <div className="flex items-start gap-3">
-                  <div className="text-xl shrink-0 mt-0.5">{icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <p className="text-sm font-semibold text-stone-900 leading-tight">{event.title}</p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] text-stone-400">{timeAgo(event.occurred_at)}</span>
-                        <button
-                          onClick={() => setConfirmDelete(event.id)}
-                          className="text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 text-xs leading-none"
-                          title="Delete entry"
-                        >
-                          ×
-                        </button>
+        <>
+          {presentTypes.size > 1 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setTypeFilter('all')}
+                aria-pressed={typeFilter === 'all'}
+                className={`chip ${typeFilter === 'all' ? 'chip-on' : ''}`}
+              >
+                All {events.length}
+              </button>
+              {[...presentTypes.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .map(([type, count]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setTypeFilter(type)}
+                    aria-pressed={typeFilter === type}
+                    className={`chip ${typeFilter === type ? 'chip-on' : ''}`}
+                  >
+                    {eventTypeIcons[type] ?? '📝'} {type.replace(/_/g, ' ')} {count}
+                  </button>
+                ))}
+            </div>
+          )}
+
+          {days.map(day => (
+            <section key={day.label}>
+              <h2 className="section-label">{day.label}</h2>
+
+              {/* Timeline rail */}
+              <div className="relative space-y-3 pl-6">
+                <span
+                  className="absolute left-[11px] top-2 bottom-2 w-px"
+                  style={{ backgroundColor: 'var(--fg-border)' }}
+                  aria-hidden
+                />
+                {day.items.map(event => (
+                  <article key={event.id} className="card relative">
+                    <span
+                      className="absolute -left-6 top-5 w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                      style={{
+                        backgroundColor: 'var(--fg-surface)',
+                        border: '1px solid var(--fg-border-accent)',
+                        transform: 'translateX(-1px)',
+                      }}
+                      aria-hidden
+                    >
+                      {eventTypeIcons[event.event_type] ?? '📝'}
+                    </span>
+
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--fg-text)' }}>
+                          {event.title}
+                        </p>
+                        {event.structured_summary && (
+                          <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--fg-text-secondary)' }}>
+                            {event.structured_summary}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2 text-[11px]" style={{ color: 'var(--fg-text-muted)' }}>
+                          <time dateTime={event.occurred_at}>{timeAgo(event.occurred_at)}</time>
+                          {event.urgency !== 'none' && (
+                            <span className={`urgency-${event.urgency} capitalize`}>{event.urgency}</span>
+                          )}
+                          {event.media_urls && event.media_urls.length > 0 && (
+                            <span>📎 {plural(event.media_urls.length, 'photo')}</span>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Always tappable — this was hover-only, so it did not
+                          exist on a phone, which is where the journal is used. */}
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(event.id)}
+                        className="shrink-0 w-9 h-9 -mr-2 -mt-1 rounded-lg flex items-center justify-center transition-colors"
+                        style={{ color: 'var(--fg-text-dim)' }}
+                        aria-label={`Delete entry: ${event.title}`}
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     </div>
-                    {event.structured_summary && (
-                      <p className="text-xs text-stone-600 leading-relaxed">{event.structured_summary}</p>
-                    )}
-                    {event.media_urls && event.media_urls.length > 0 && (
-                      <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-stone-400">
-                        📎 {event.media_urls.length} photo{event.media_urls.length > 1 ? 's' : ''}
-                      </span>
-                    )}
-                    <p className="text-[10px] text-stone-300 mt-1.5">{dateStr}</p>
-                  </div>
-                </div>
+                  </article>
+                ))}
               </div>
-            )
-          })}
-        </div>
+            </section>
+          ))}
+
+          {visible.length === 0 && (
+            <p className="text-sm text-center py-10" style={{ color: 'var(--fg-text-muted)' }}>
+              Nothing of that kind yet.
+            </p>
+          )}
+        </>
       )}
 
       {/* New entry modal */}
       {open && (
         <EditModal title="Add journal entry" onClose={() => setOpen(false)}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Type</label>
-              <select
-                className="input-field-light"
-                value={form.event_type}
-                onChange={e => f('event_type', e.target.value)}
-              >
-                {eventTypeOptions.map(o => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
+              <label htmlFor="j-type" className="field-label">What kind of entry?</label>
+              <select id="j-type" className="input-field" value={form.event_type} onChange={e => f('event_type', e.target.value)}>
+                {eventTypeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Title *</label>
+              <label htmlFor="j-title" className="field-label">Title *</label>
               <input
-                className="input-field-light"
+                id="j-title"
+                className="input-field"
                 value={form.title}
                 onChange={e => f('title', e.target.value)}
                 placeholder="What happened?"
@@ -198,48 +275,35 @@ export function JournalClient({ events, zones }: { events: GardenEvent[]; zones:
               />
             </div>
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Notes</label>
+              <label htmlFor="j-notes" className="field-label">Notes</label>
               <textarea
+                id="j-notes"
                 className="input-field resize-none"
                 rows={3}
                 value={form.structured_summary}
                 onChange={e => f('structured_summary', e.target.value)}
-                placeholder="Details, observations..."
+                placeholder="Details, observations…"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-stone-500 mb-1">Zone</label>
-                <select
-                  className="input-field-light"
-                  value={form.zone_id}
-                  onChange={e => f('zone_id', e.target.value)}
-                >
+                <label htmlFor="j-zone" className="field-label">Zone</label>
+                <select id="j-zone" className="input-field" value={form.zone_id} onChange={e => f('zone_id', e.target.value)}>
                   <option value="">No zone</option>
-                  {zones.map(z => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
+                  {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-stone-500 mb-1">Urgency</label>
-                <select
-                  className="input-field-light"
-                  value={form.urgency}
-                  onChange={e => f('urgency', e.target.value)}
-                >
-                  {urgencyOptions.map(u => (
-                    <option key={u} value={u}>{u.charAt(0).toUpperCase() + u.slice(1)}</option>
-                  ))}
+                <label htmlFor="j-urgency" className="field-label">Urgency</label>
+                <select id="j-urgency" className="input-field" value={form.urgency} onChange={e => f('urgency', e.target.value)}>
+                  {urgencyOptions.map(u => <option key={u} value={u}>{u.charAt(0).toUpperCase() + u.slice(1)}</option>)}
                 </select>
               </div>
             </div>
-            {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-            )}
+            {error && <p className="alert-error">{error}</p>}
             <div className="flex gap-2 pt-1">
-              <button type="button" onClick={() => setOpen(false)} className="flex-1 btn-secondary">Cancel</button>
-              <button type="submit" disabled={isPending} className="flex-1 btn-primary">
+              <button type="button" onClick={() => setOpen(false)} className="btn-secondary flex-1 justify-center">Cancel</button>
+              <button type="submit" disabled={isPending} className="btn-primary flex-1 justify-center disabled:opacity-60">
                 {isPending ? 'Adding…' : 'Add entry'}
               </button>
             </div>
@@ -249,15 +313,13 @@ export function JournalClient({ events, zones }: { events: GardenEvent[]; zones:
 
       {/* Delete confirm */}
       {confirmDelete && (
-        <EditModal title="Delete entry?" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-stone-600 mb-4">This will permanently delete the journal entry.</p>
+        <EditModal size="sm" title="Delete entry?" onClose={() => setConfirmDelete(null)}>
+          <p className="text-sm mb-4" style={{ color: 'var(--fg-text-secondary)' }}>
+            This removes the entry from your garden&rsquo;s history. It can&rsquo;t be undone.
+          </p>
           <div className="flex gap-2">
-            <button onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary">Cancel</button>
-            <button
-              onClick={() => handleDelete(confirmDelete)}
-              disabled={isPending}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
-            >
+            <button type="button" onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1 justify-center">Cancel</button>
+            <button type="button" onClick={() => handleDelete(confirmDelete)} disabled={isPending} className="btn-danger flex-1 disabled:opacity-60">
               {isPending ? 'Deleting…' : 'Delete'}
             </button>
           </div>

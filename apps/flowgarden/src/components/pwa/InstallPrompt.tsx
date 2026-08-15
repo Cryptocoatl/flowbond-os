@@ -122,6 +122,13 @@ export function InstallPrompt() {
     }
   }
 
+  // The chat FAB floats in the same corner. Tell it to stand down while the
+  // install banner owns the bottom of the screen.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('fg-bottom-banner', { detail: visible }))
+    return () => { window.dispatchEvent(new CustomEvent('fg-bottom-banner', { detail: false })) }
+  }, [visible])
+
   if (!visible) return null
 
   return (
@@ -172,7 +179,7 @@ export function InstallPrompt() {
 
       {/* Bottom install banner (sits above mobile nav) */}
       {!iosSheet && (
-        <div className="fixed inset-x-0 bottom-16 md:bottom-0 z-[55] px-4 pb-3 md:p-6 pointer-events-none">
+        <div className="fixed inset-x-0 above-tabbar z-[56] px-4 pb-3 md:px-6 pointer-events-none">
           <div
             className="card-accent mx-auto max-w-md flex items-center gap-3 pointer-events-auto"
             style={{ animation: 'fg-fade-up 0.3s ease both', boxShadow: 'var(--fg-shadow-lg)' }}

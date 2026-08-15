@@ -13,15 +13,20 @@
   --fg-border:          rgba(15, 46, 31, 0.09);
   --fg-border-accent:   rgba(184, 148, 58, 0.28);
 
-  /* Text */
+  /* Text. Muted/dim were 0.52/0.30 alpha — 3.2:1 and 2.1:1 against the cream
+     background, below WCAG AA for body text, and they carry real content
+     (timestamps, counts, hints). Raised until every tier clears 4.5:1. */
   --fg-text:            #18271C;
   --fg-text-secondary:  #3D5C44;
-  --fg-text-muted:      rgba(24, 39, 28, 0.52);
-  --fg-text-dim:        rgba(24, 39, 28, 0.30);
+  --fg-text-muted:      rgba(24, 39, 28, 0.72);
+  --fg-text-dim:        rgba(24, 39, 28, 0.66);
 
-  /* Accent — gold (darker for light-bg contrast) */
-  --fg-gold:            #9B7A28;
-  --fg-gold-bg:         rgba(155, 122, 40, 0.07);
+  /* Accent — gold. #9B7A28 measured 3.46:1 on the cream page background. */
+  --fg-gold:            #765A1B;
+  --fg-gold-bg:         rgba(155, 122, 40, 0.09);
+  /* Ink for text sitting ON a gold fill — flips with the theme, because the
+     gold itself flips from dark (light mode) to light (dark mode). */
+  --fg-gold-ink:        #FFFFFF;
 
   /* Green */
   --fg-green:           #1A5C35;
@@ -40,10 +45,26 @@
   --fg-shadow:   0 1px 3px rgba(15, 46, 31, 0.06), 0 4px 14px rgba(15, 46, 31, 0.04);
   --fg-shadow-lg:0 4px 20px rgba(15, 46, 31, 0.10), 0 1px 4px rgba(15, 46, 31, 0.06);
 
+  /* Status — one set of tokens so every surface reads the same in both themes.
+     Pages used to hand-pick red-100/amber-100/emerald-50, which only worked in
+     light mode; these carry their own dark values below. */
+  --fg-danger:      #b42318;
+  --fg-danger-bg:   rgba(180, 35, 24, 0.09);
+  --fg-danger-line: rgba(180, 35, 24, 0.22);
+  --fg-warn:        #96430a;
+  --fg-warn-bg:     rgba(180, 83, 9, 0.11);
+  --fg-warn-line:   rgba(180, 83, 9, 0.26);
+  --fg-success:     #12692f;
+  --fg-success-bg:  rgba(21, 128, 61, 0.09);
+  --fg-success-line:rgba(21, 128, 61, 0.20);
+
   /* Shape */
   --fg-radius:    12px;
   --fg-radius-sm: 8px;
   --fg-radius-lg: 18px;
+
+  /* Focus */
+  --fg-focus: var(--fg-gold);
 }
 
 .dark {
@@ -55,12 +76,14 @@
   --fg-border-accent:   rgba(201, 169, 97, 0.18);
 
   --fg-text:            #EFE8D8;
-  --fg-text-secondary:  #8FA98F;
-  --fg-text-muted:      rgba(239, 232, 216, 0.48);
-  --fg-text-dim:        rgba(239, 232, 216, 0.24);
+  --fg-text-secondary:  #A8C0A8;
+  --fg-text-muted:      rgba(239, 232, 216, 0.62);
+  --fg-text-dim:        rgba(239, 232, 216, 0.50);
 
   --fg-gold:            #C9A961;
-  --fg-gold-bg:         rgba(201, 169, 97, 0.09);
+  --fg-gold-bg:         rgba(201, 169, 97, 0.11);
+  /* Dark ink on the light gold fill — white on #C9A961 measured 2.25:1. */
+  --fg-gold-ink:        #17120A;
 
   --fg-green:           #2A7A4C;
   --fg-green-hover:     #369E60;
@@ -75,6 +98,16 @@
 
   --fg-shadow:   0 1px 3px rgba(0,0,0,0.35), 0 4px 14px rgba(0,0,0,0.22);
   --fg-shadow-lg:0 4px 20px rgba(0,0,0,0.44), 0 1px 4px rgba(0,0,0,0.30);
+
+  --fg-danger:      #f9a19a;
+  --fg-danger-bg:   rgba(220, 106, 91, 0.14);
+  --fg-danger-line: rgba(220, 106, 91, 0.30);
+  --fg-warn:        #e6b569;
+  --fg-warn-bg:     rgba(230, 181, 105, 0.13);
+  --fg-warn-line:   rgba(230, 181, 105, 0.28);
+  --fg-success:     #6ec48d;
+  --fg-success-bg:  rgba(110, 196, 141, 0.12);
+  --fg-success-line:rgba(110, 196, 141, 0.26);
 }
 
 /* ─── Base ───────────────────────────────────────────────────── */
@@ -93,6 +126,36 @@
   }
 
   * { @apply box-border; }
+
+  /* Keyboard focus. The app previously shipped no focus styling at all, so
+     tabbing through it was invisible. :focus-visible keeps mouse clicks clean. */
+  :focus-visible {
+    outline: 2px solid var(--fg-focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* On the dark sidebar/nav the gold ring is the readable one either way. */
+  .fg-on-dark :focus-visible { outline-color: #C9A961; }
+
+  /* Touch: kill the grey tap flash, keep taps from double-firing as zoom. */
+  a, button, [role='button'], input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS zooms the page when a field with <16px text is focused. */
+  @supports (-webkit-touch-callout: none) {
+    input, select, textarea { font-size: max(16px, 1em); }
+  }
+}
+
+/* Respect the OS "reduce motion" setting across every animation we ship. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ─── Component Classes ──────────────────────────────────────── */
@@ -127,9 +190,12 @@
     @apply inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full;
   }
 
+  /* Uses --fg-success, not --fg-green: the raw green is a mid-tone that only
+     reads on a light surface (3.3:1 in dark mode). --fg-success flips. */
   .badge-green {
-    background-color: var(--fg-green-muted);
-    color: var(--fg-green);
+    background-color: var(--fg-success-bg);
+    color: var(--fg-success);
+    border: 1px solid var(--fg-success-line);
     @apply inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full;
   }
 
@@ -148,8 +214,10 @@
   .btn-gold {
     @apply btn;
     background-color: var(--fg-gold);
-    color: #FFFFFF;
+    color: var(--fg-gold-ink);
+    font-weight: 600;
   }
+  .btn-gold:hover { filter: brightness(1.08); }
 
   .btn-ghost {
     @apply btn;
@@ -220,11 +288,128 @@
   }
 
   /* Urgency badges (adaptive) */
-  .urgency-urgent { @apply badge bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300; }
-  .urgency-high   { @apply badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300; }
-  .urgency-medium { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-secondary); }
-  .urgency-low    { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-muted); }
-  .urgency-none   { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-dim); }
+  .urgency-urgent { @apply badge; background-color: var(--fg-danger-bg); color: var(--fg-danger); border: 1px solid var(--fg-danger-line); }
+  .urgency-high   { @apply badge; background-color: var(--fg-warn-bg);   color: var(--fg-warn);   border: 1px solid var(--fg-warn-line); }
+  .urgency-medium { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-secondary); border: 1px solid var(--fg-border); }
+  .urgency-low    { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-muted);     border: 1px solid var(--fg-border); }
+  .urgency-none   { @apply badge; background-color: var(--fg-panel); color: var(--fg-text-dim);       border: 1px solid var(--fg-border); }
+
+  /* ── Page shell ──
+     Every page hand-rolled its own container: max-w-3xl/5xl/6xl and p-4/p-5.
+     One class so the app reads as one app. */
+  .page        { @apply p-5 md:p-8 mx-auto w-full; max-width: 72rem; }
+  .page-narrow { @apply p-5 md:p-8 mx-auto w-full; max-width: 48rem; }
+  .page-title  { @apply font-display text-2xl md:text-3xl font-bold; color: var(--fg-text); }
+  .page-sub    { @apply text-sm mt-1; color: var(--fg-text-muted); }
+
+  /* Section heading above a list */
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-widest mb-3;
+    color: var(--fg-text-muted);
+  }
+
+  /* Filter / category chip — was duplicated as inline styles in 3 files */
+  .chip {
+    @apply text-xs font-medium px-3 py-2 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+    background-color: var(--fg-panel);
+    color: var(--fg-text-secondary);
+    border: 1px solid var(--fg-border);
+    min-height: 36px;
+  }
+  .chip:hover:not(:disabled) { border-color: var(--fg-border-accent); }
+  .chip-on {
+    background-color: var(--fg-green);
+    border-color: var(--fg-green);
+    color: #fff;
+  }
+
+  /* Field label — pages used text-stone-500, invisible on dark */
+  .field-label {
+    @apply block text-xs mb-1.5 font-medium;
+    color: var(--fg-text-secondary);
+  }
+
+  /* Inline alerts */
+  .alert-error {
+    @apply text-xs rounded-lg px-3 py-2;
+    background-color: var(--fg-danger-bg);
+    border: 1px solid var(--fg-danger-line);
+    color: var(--fg-danger);
+  }
+
+  /* Destructive button */
+  .btn-danger {
+    @apply btn justify-center;
+    background-color: var(--fg-danger-bg);
+    border: 1px solid var(--fg-danger-line);
+    color: var(--fg-danger);
+    font-weight: 600;
+  }
+  .btn-danger:hover { background-color: var(--fg-danger); color: #fff; }
+
+  /* Empty state — the same shape appeared 6 times with 6 different colours */
+  .empty-state {
+    @apply text-center py-14 px-6 rounded-2xl;
+    background-color: var(--fg-panel);
+    border: 1px dashed var(--fg-border-accent);
+  }
+  .empty-emoji { @apply text-4xl mb-3 block; }
+  .empty-title { @apply font-semibold; color: var(--fg-text); }
+  .empty-body  { @apply text-sm mt-1 mb-5 max-w-xs mx-auto leading-relaxed; color: var(--fg-text-muted); }
+
+  /* Hero band shared by dashboard + plants */
+  .hero-band {
+    @apply rounded-2xl p-5 md:p-6 flex items-center gap-5 relative overflow-hidden;
+    background: linear-gradient(135deg, var(--fg-green-muted) 0%, var(--fg-gold-bg) 100%);
+    border: 1px solid var(--fg-border-accent);
+  }
+  .hero-eyebrow {
+    @apply text-[10px] uppercase tracking-widest font-semibold;
+    color: var(--fg-gold);
+  }
+
+  /* Main scroll area under the mobile chrome. The header and tab bar are
+     `calc(Nrem + env(safe-area-inset-*))` tall, so flat padding left content
+     under the notch and behind the tabs. */
+  .garden-main {
+    padding-top: calc(3.5rem + env(safe-area-inset-top));
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 768px) {
+    .garden-main { padding-top: 0; padding-bottom: 0; }
+  }
+
+  /* Anything floating above the mobile tab bar (chat FAB, install banner)
+     must clear its true height, or it sits on top of the tabs on notched
+     phones. One variable so they can never drift apart again. */
+  .above-tabbar { bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
+  @media (min-width: 768px) {
+    .above-tabbar { bottom: 1.5rem; }
+  }
+
+  /* Skip link — first tab stop, invisible until focused */
+  .skip-link {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    transform: translateY(-150%);
+    transition: transform 0.15s ease;
+    background-color: var(--fg-surface);
+    color: var(--fg-text);
+    border: 1px solid var(--fg-border-accent);
+    box-shadow: var(--fg-shadow-lg);
+    @apply px-4 py-2 rounded-lg text-sm font-semibold;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
+  /* Loading skeletons */
+  .skeleton {
+    background: linear-gradient(90deg, var(--fg-panel) 25%, var(--fg-border) 37%, var(--fg-panel) 63%);
+    background-size: 400% 100%;
+    animation: fg-shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--fg-radius-sm);
+  }
 }
 
 /* ─── Utilities ──────────────────────────────────────────────── */
@@ -287,6 +472,11 @@
 @keyframes fg-text-reveal {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fg-shimmer {
+  from { background-position: 100% 50%; }
+  to   { background-position: 0 50%; }
 }
 
 @keyframes fg-scroll-bounce {

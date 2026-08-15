@@ -6,6 +6,7 @@ import { OpenChatCard } from '@/components/garden/OpenChatCard'
 import { InviteButton } from '@/components/garden/InviteButton'
 import { Greeting } from '@/components/garden/Greeting'
 import { HealthRing } from '@/components/garden/HealthRing'
+import { timeAgo, longDate, plural } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -101,27 +102,17 @@ export default async function DashboardPage() {
             ? 'A few plants could use some love today'
             : 'Some plants need attention — check your missions'
 
-  const urgencyBadge: Record<string, string> = {
-    urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-    high:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    medium: 'bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400',
-    low:    'bg-stone-50 text-stone-400 dark:bg-stone-900 dark:text-stone-500',
-    none:   'bg-stone-50 text-stone-300 dark:bg-stone-900 dark:text-stone-600',
-  }
-
   return (
-    <div className="p-5 md:p-8 max-w-6xl space-y-8">
+    <div className="page space-y-8">
 
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Greeting name={myName} />
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-fg mt-0.5">
-            {ctx.garden.name}
-          </h1>
-          <p className="text-sm text-fg-muted mt-1">
+          <h1 className="page-title mt-0.5">{ctx.garden.name}</h1>
+          <p className="page-sub">
             {ctx.garden.location_label ? `${ctx.garden.location_label} · ` : ''}
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {longDate()}
           </p>
         </div>
         <InviteButton
@@ -133,26 +124,16 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Garden pulse hero ── */}
-      <div
-        data-tour="pulse"
-        className="rounded-2xl p-5 md:p-6 flex items-center gap-5 relative overflow-hidden"
-        style={{
-          background:
-            'linear-gradient(135deg, var(--fg-green-muted) 0%, var(--fg-gold-bg) 100%)',
-          border: '1px solid var(--fg-border-accent)',
-        }}
-      >
+      <div data-tour="pulse" className="hero-band">
         <HealthRing healthy={healthyPlantQty} total={totalPlantQty} />
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-fg-gold">
-            Garden pulse
-          </p>
+          <p className="hero-eyebrow">Garden pulse</p>
           <p className="text-base md:text-lg font-semibold text-fg mt-1 leading-snug">
             {pulseLine}
           </p>
           <div className="flex items-center gap-2 mt-2 text-xs text-fg-muted flex-wrap">
             <span className="badge-gold">⚡ {totalXp} XP</span>
-            <span>{totalPlantQty} plants · {zones.length} zones</span>
+            <span>{plural(totalPlantQty, 'plant')} · {plural(zones.length, 'zone')}</span>
           </div>
         </div>
       </div>
@@ -185,12 +166,12 @@ export default async function DashboardPage() {
             subColor: 'text-fg-muted',
           },
           {
-            href: null,
+            href: '/settings',
             label: 'Gardeners',
             icon: '🧑‍🌾',
             value: ctx.members.length,
-            sub: 'of 5 max',
-            subColor: 'text-fg-dim',
+            sub: ctx.members.length === 1 ? 'Invite someone →' : 'Manage →',
+            subColor: 'text-fg-muted',
           },
         ].map(s =>
           s.href ? (
@@ -261,7 +242,7 @@ export default async function DashboardPage() {
                       <p className="text-sm font-medium text-fg truncate">{t.title}</p>
                       {zone && <p className="text-xs text-fg-muted">{zone.name}</p>}
                     </div>
-                    <span className={`badge ${urgencyBadge[t.urgency] ?? urgencyBadge.medium}`}>
+                    <span className={`urgency-${t.urgency ?? 'medium'} capitalize`}>
                       {t.urgency}
                     </span>
                   </div>
@@ -290,7 +271,6 @@ export default async function DashboardPage() {
                   soil_moisture: '💧', temperature: '🌡', humidity: '🌫',
                   water_level: '🪣', light: '☀', ph: '⚗', ec: '⚡', water_flow: '🌊',
                 }
-                const ago = Math.round((Date.now() - new Date(r.recorded_at).getTime()) / 3600000)
                 return (
                   <div key={r.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                     <span className="text-base w-5 text-center shrink-0">{icons[r.sensor_type] ?? '📊'}</span>
@@ -303,7 +283,9 @@ export default async function DashboardPage() {
                       </p>
                       {zone && <p className="text-xs text-fg-muted">{zone.name}</p>}
                     </div>
-                    <p className="text-xs text-fg-dim shrink-0">{ago}h ago</p>
+                    <time dateTime={r.recorded_at} className="text-xs text-fg-dim shrink-0">
+                      {timeAgo(r.recorded_at)}
+                    </time>
                   </div>
                 )
               })}

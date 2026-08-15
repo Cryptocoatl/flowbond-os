@@ -2,7 +2,18 @@
 
 import { useEffect, useState, type MouseEvent } from 'react'
 
-export function ThemeToggle({ className = '' }: { className?: string }) {
+export function ThemeToggle({
+  className = '',
+  /** `sidebar` = always-dark chrome, `surface` = normal page/panel background.
+      It used to hardcode the sidebar colour, so on the light mobile "More"
+      sheet the icon was cream-on-cream and effectively invisible. */
+  tone = 'sidebar',
+  showLabel = false,
+}: {
+  className?: string
+  tone?: 'sidebar' | 'surface'
+  showLabel?: boolean
+}) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -13,7 +24,12 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
     const next = !isDark
     setIsDark(next)
     document.documentElement.classList.toggle('dark', next)
-    try { localStorage.setItem('fg-theme', next ? 'dark' : 'light') } catch {}
+    try { localStorage.setItem('fg-theme', next ? 'dark' : 'light') } catch { /* private mode */ }
+    // Keep the browser/PWA status bar in step with the choice.
+    document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+      m.setAttribute('content', next ? '#0A1A0C' : '#F2EDE3')
+      m.removeAttribute('media')
+    })
   }
 
   return (
@@ -22,9 +38,10 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={toggle}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       title={isDark ? 'Light mode' : 'Dark mode'}
-      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${className}`}
-      style={{ color: 'var(--fg-sidebar-text)' }}
-      onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.backgroundColor = 'rgba(239,232,216,0.07)')}
+      className={`min-w-[2.25rem] h-9 px-2 rounded-lg inline-flex items-center justify-center gap-2 text-xs font-medium transition-all ${className}`}
+      style={{ color: tone === 'sidebar' ? 'var(--fg-sidebar-text)' : 'var(--fg-text-secondary)' }}
+      onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.backgroundColor =
+        tone === 'sidebar' ? 'rgba(239,232,216,0.07)' : 'var(--fg-border)')}
       onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => (e.currentTarget.style.backgroundColor = 'transparent')}
     >
       {isDark ? (
@@ -36,6 +53,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
           <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
         </svg>
       )}
+      {showLabel && <span>{isDark ? 'Light mode' : 'Dark mode'}</span>}
     </button>
   )
 }

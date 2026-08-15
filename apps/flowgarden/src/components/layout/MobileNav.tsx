@@ -70,7 +70,12 @@ export function MobileNav({
     if (!menuOpen) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      document.removeEventListener('keydown', onKey)
+    }
   }, [menuOpen])
 
   async function handleSignOut() {
@@ -84,7 +89,7 @@ export function MobileNav({
     <>
       {/* Top header — mobile only, safe-area aware */}
       <header
-        className="fixed top-0 inset-x-0 z-40 flex items-center gap-2 px-3 md:hidden"
+        className="fixed top-0 inset-x-0 z-40 flex items-center gap-2 px-3 md:hidden fg-on-dark"
         style={{
           backgroundColor: 'var(--fg-sidebar-bg)',
           borderBottom: '1px solid var(--fg-sidebar-border)',
@@ -102,7 +107,8 @@ export function MobileNav({
 
       {/* Bottom tab bar — mobile only, safe-area aware */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 flex md:hidden"
+        aria-label="Primary"
+        className="fixed bottom-0 inset-x-0 z-40 flex md:hidden fg-on-dark"
         style={{
           backgroundColor: 'var(--fg-sidebar-bg)',
           borderTop: '1px solid var(--fg-sidebar-border)',
@@ -116,6 +122,7 @@ export function MobileNav({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-colors"
               style={{ color: isActive ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)' }}
             >
@@ -128,6 +135,8 @@ export function MobileNav({
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
+          aria-expanded={menuOpen}
+          aria-haspopup="dialog"
           className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-colors"
           style={{ color: moreActive || menuOpen ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)' }}
         >
@@ -146,6 +155,9 @@ export function MobileNav({
         >
           <div
             onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="More destinations"
             className="w-full rounded-t-3xl overflow-hidden"
             style={{
               backgroundColor: 'var(--fg-surface)',
@@ -167,6 +179,7 @@ export function MobileNav({
                   <Link
                     key={l.href}
                     href={l.href}
+                    aria-current={isActive ? 'page' : undefined}
                     className="flex items-center gap-3 px-2 py-3.5 text-sm font-medium"
                     style={{ color: isActive ? 'var(--fg-gold)' : 'var(--fg-text)' }}
                   >
@@ -189,8 +202,8 @@ export function MobileNav({
               >
                 <Icon d={ICONS.tour} /> Take a tour
               </button>
-              <div className="flex items-center justify-center px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--fg-panel)' }}>
-                <ThemeToggle />
+              <div className="flex items-center justify-center px-2 rounded-xl" style={{ backgroundColor: 'var(--fg-panel)' }}>
+                <ThemeToggle tone="surface" />
               </div>
             </div>
 

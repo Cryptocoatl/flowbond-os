@@ -107,7 +107,8 @@ export function Sidebar({
 
   return (
     <aside
-      className="hidden md:flex w-60 flex-col shrink-0"
+      aria-label="Primary"
+      className="hidden md:flex w-60 flex-col shrink-0 fg-on-dark sticky top-0 h-screen"
       style={{ backgroundColor: 'var(--fg-sidebar-bg)', borderRight: '1px solid var(--fg-sidebar-border)' }}
     >
       {/* Logo lockup */}
@@ -153,6 +154,7 @@ export function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               data-tour={`nav-${item.href.split('/').pop() || 'dashboard'}`}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
               style={{

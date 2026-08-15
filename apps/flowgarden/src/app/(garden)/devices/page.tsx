@@ -1,29 +1,21 @@
 import { redirect } from 'next/navigation'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { Sparkline } from '@/components/garden/Sparkline'
+import { timeAgo, plural } from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
-const sensorIcons: Record<string, string> = {
-  soil_moisture: '💧',
-  temperature:   '🌡',
-  humidity:      '🌫',
-  water_level:   '🪣',
-  light:         '☀',
-  ph:            '⚗',
-  ec:            '⚡',
-  water_flow:    '🌊',
-}
-
-const sensorLabels: Record<string, string> = {
-  soil_moisture: 'Soil Moisture',
-  temperature:   'Temperature',
-  humidity:      'Humidity',
-  water_level:   'Water Level',
-  light:         'Light',
-  ph:            'pH',
-  ec:            'EC',
-  water_flow:    'Water Flow',
+const sensorMeta: Record<string, { icon: string; label: string; ok?: [number, number] }> = {
+  soil_moisture: { icon: '💧', label: 'Soil moisture', ok: [30, 70] },
+  temperature:   { icon: '🌡', label: 'Temperature',   ok: [10, 32] },
+  humidity:      { icon: '🌫', label: 'Humidity',      ok: [40, 80] },
+  water_level:   { icon: '🪣', label: 'Water level',   ok: [20, 100] },
+  light:         { icon: '☀', label: 'Light' },
+  ph:            { icon: '⚗', label: 'pH',            ok: [6, 7.5] },
+  ec:            { icon: '⚡', label: 'EC' },
+  water_flow:    { icon: '🌊', label: 'Water flow' },
 }
 
 interface SensorReading {
@@ -36,22 +28,8 @@ interface SensorReading {
   recorded_at: string
 }
 
-interface Zone {
-  id: string
-  name: string
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days === 1) return 'yesterday'
-  return `${days}d ago`
-}
+// A reading is only "stale" once it's older than a day — sensors report hourly.
+const STALE_MS = 24 * 60 * 60 * 1000
 
 export default async function DevicesPage() {
   const ctx = await getGardenContext()
@@ -66,107 +44,169 @@ export default async function DevicesPage() {
       .select('id, sensor_type, sensor_id, value, unit, zone_id, recorded_at')
       .eq('garden_id', ctx.garden.id)
       .order('recorded_at', { ascending: false })
-      .limit(50),
-    admin
-      .from('flowgarden_zones')
-      .select('id, name')
-      .eq('garden_id', ctx.garden.id),
+      .limit(200),
+    admin.from('flowgarden_zones').select('id, name').eq('garden_id', ctx.garden.id),
   ])
 
   const readings: SensorReading[] = readingsRes.data ?? []
-  const zones: Zone[] = zonesRes.data ?? []
-  const zoneMap = new Map(zones.map(z => [z.id, z.name]))
+  const zoneMap = new Map((zonesRes.data ?? []).map(z => [z.id, z.name]))
 
-  // Latest reading per sensor type
+  // Latest per sensor type, plus the recent series behind it for a sparkline.
   const latest = new Map<string, SensorReading>()
-  readings.forEach(r => {
+  const series = new Map<string, number[]>()
+  for (const r of readings) {
     if (!latest.has(r.sensor_type)) latest.set(r.sensor_type, r)
-  })
+    const s = series.get(r.sensor_type) ?? []
+    if (s.length < 24) { s.push(r.value); series.set(r.sensor_type, s) }
+  }
+
+  const newest = readings[0]
+  const isLive = !!newest && Date.now() - new Date(newest.recorded_at).getTime() < STALE_MS
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl">
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl font-bold text-stone-900">Devices & Sensors</h1>
-        <p className="text-sm text-stone-400 mt-1">
-          {readings.length > 0 ? `${latest.size} sensor type${latest.size !== 1 ? 's' : ''} · ${readings.length} readings` : 'No data yet'}
-        </p>
-      </div>
+    <div className="page space-y-6">
+      <PageHeader
+        title="Devices & Sensors"
+        subtitle={
+          readings.length === 0
+            ? 'Live numbers from the soil, once hardware is talking'
+            : <>{plural(latest.size, 'sensor type')} · {plural(readings.length, 'reading')}</>
+        }
+      />
 
-      {/* Hardware connection status */}
-      <div className="card mb-6 border-stone-200 bg-stone-50/50">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-2 h-2 rounded-full bg-stone-300" />
-          <p className="text-sm font-semibold text-stone-600">No hardware connected</p>
-        </div>
-        <p className="text-xs text-stone-400 leading-relaxed mb-4">
-          Connect a Raspberry Pi or compatible sensor hub to start receiving live readings.
-          Manual readings can be logged through the Garden Intelligence.
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {['Raspberry Pi', 'Soil sensors', 'Camera', 'Weather station'].map(item => (
-            <div key={item} className="border border-dashed border-stone-200 rounded-lg px-3 py-2.5 text-center">
-              <p className="text-xs text-stone-400">{item}</p>
+      {/* Hardware status */}
+      <div
+        className="card flex items-start gap-3"
+        style={isLive ? { borderColor: 'var(--fg-success-line)' } : undefined}
+      >
+        <span
+          className="w-2.5 h-2.5 rounded-full shrink-0 mt-1.5"
+          style={{ backgroundColor: isLive ? 'var(--fg-success)' : 'var(--fg-text-dim)' }}
+          aria-hidden
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold" style={{ color: 'var(--fg-text)' }}>
+            {isLive ? 'Receiving data' : 'No hardware connected'}
+          </p>
+          <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--fg-text-muted)' }}>
+            {isLive
+              ? <>Last reading {timeAgo(newest.recorded_at)}. Readings flow in automatically and show up on the dashboard.</>
+              : <>Connect a Raspberry Pi or compatible sensor hub to start receiving live readings. Until then, tell FlowMe a number (&ldquo;soil is at 40%&rdquo;) and it gets logged here.</>}
+          </p>
+          {!isLive && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+              {['Raspberry Pi', 'Soil sensors', 'Camera', 'Weather station'].map(item => (
+                <div
+                  key={item}
+                  className="rounded-lg px-3 py-2.5 text-center text-xs"
+                  style={{ border: '1px dashed var(--fg-border)', color: 'var(--fg-text-dim)' }}
+                >
+                  {item}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Sensor readings */}
       {readings.length === 0 ? (
-        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
-          <p className="text-2xl mb-3">📡</p>
-          <p className="text-stone-600 font-medium">No sensor data yet</p>
-          <p className="text-stone-400 text-sm mt-1">
-            Connect hardware or log manual readings through the Garden Intelligence.
+        <div className="empty-state">
+          <span className="empty-emoji">📡</span>
+          <p className="empty-title">No sensor data yet</p>
+          <p className="empty-body">
+            Once a sensor hub is connected, soil moisture, temperature and the rest land here
+            automatically — and FlowGarden starts raising missions when a number drifts.
           </p>
         </div>
       ) : (
         <>
-          {/* Latest per sensor type */}
-          <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">Latest readings</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            {[...latest.values()].map(r => {
-              const icon = sensorIcons[r.sensor_type] ?? '📊'
-              const label = sensorLabels[r.sensor_type] ?? r.sensor_type.replace(/_/g, ' ')
-              const zone = r.zone_id ? zoneMap.get(r.zone_id) : null
-              return (
-                <div key={r.sensor_type} className="card p-4">
-                  <div className="text-xl mb-2">{icon}</div>
-                  <p className="text-2xl font-bold text-stone-900 tabular-nums">
-                    {r.value}{r.unit ?? ''}
-                  </p>
-                  <p className="text-xs text-stone-500 mt-0.5">{label}</p>
-                  {zone && <p className="text-[10px] text-stone-400 mt-0.5">{zone}</p>}
-                  <p className="text-[10px] text-stone-300 mt-1">{timeAgo(r.recorded_at)}</p>
-                </div>
-              )
-            })}
-          </div>
+          <section>
+            <h2 className="section-label">Right now</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[...latest.values()].map(r => {
+                const meta = sensorMeta[r.sensor_type] ?? { icon: '📊', label: r.sensor_type.replace(/_/g, ' ') }
+                const zone = r.zone_id ? zoneMap.get(r.zone_id) : null
+                const points = (series.get(r.sensor_type) ?? []).slice().reverse()
+                const outOfRange = meta.ok && (r.value < meta.ok[0] || r.value > meta.ok[1])
+                const prev = points.length > 1 ? points[points.length - 2] : null
+                const delta = prev != null ? r.value - prev : null
 
-          {/* Recent history */}
-          <h2 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">
-            Recent history
-          </h2>
-          <div className="space-y-2">
-            {readings.slice(0, 20).map(r => {
-              const icon = sensorIcons[r.sensor_type] ?? '📊'
-              const label = sensorLabels[r.sensor_type] ?? r.sensor_type.replace(/_/g, ' ')
-              const zone = r.zone_id ? zoneMap.get(r.zone_id) : null
-              return (
-                <div key={r.id} className="flex items-center gap-3 py-2.5 px-4 bg-white border border-stone-100 rounded-xl">
-                  <span className="text-base">{icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-stone-800 tabular-nums">
-                      {r.value}{r.unit ?? ''}
-                    </span>
-                    <span className="text-xs text-stone-400 ml-1.5">{label}</span>
-                    {zone && <span className="text-xs text-stone-300 ml-1.5">· {zone}</span>}
+                return (
+                  <div
+                    key={r.sensor_type}
+                    className="card"
+                    style={outOfRange ? { borderColor: 'var(--fg-warn-line)' } : undefined}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xl leading-none" aria-hidden>{meta.icon}</span>
+                      {delta != null && Math.abs(delta) > 0.01 && (
+                        <span
+                          className="text-[10px] font-semibold tabular-nums"
+                          style={{ color: 'var(--fg-text-muted)' }}
+                          title="Change since the previous reading"
+                        >
+                          {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-2xl font-bold tabular-nums mt-2 font-display" style={{ color: 'var(--fg-text)' }}>
+                      {r.value}<span className="text-base font-normal">{r.unit ?? ''}</span>
+                    </p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--fg-text-secondary)' }}>{meta.label}</p>
+
+                    {points.length > 2 && (
+                      <div className="mt-2">
+                        <Sparkline
+                          values={points}
+                          color={outOfRange ? 'var(--fg-warn)' : 'var(--fg-green)'}
+                        />
+                      </div>
+                    )}
+
+                    <p className="text-[10px] mt-1.5" style={{ color: 'var(--fg-text-dim)' }}>
+                      {zone ? `${zone} · ` : ''}{timeAgo(r.recorded_at)}
+                    </p>
+
+                    {outOfRange && meta.ok && (
+                      <p className="text-[10px] mt-1.5 font-medium" style={{ color: 'var(--fg-warn)' }}>
+                        Outside {meta.ok[0]}–{meta.ok[1]}{r.unit ?? ''}
+                      </p>
+                    )}
                   </div>
-                  <span className="text-xs text-stone-300 shrink-0">{timeAgo(r.recorded_at)}</span>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="section-label">Recent history</h2>
+            <div className="card divide-y p-0" style={{ borderColor: 'var(--fg-border)' }}>
+              {readings.slice(0, 25).map(r => {
+                const meta = sensorMeta[r.sensor_type] ?? { icon: '📊', label: r.sensor_type.replace(/_/g, ' ') }
+                const zone = r.zone_id ? zoneMap.get(r.zone_id) : null
+                return (
+                  <div key={r.id} className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-base shrink-0" aria-hidden>{meta.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--fg-text)' }}>
+                        {r.value}{r.unit ?? ''}
+                      </span>
+                      <span className="text-xs ml-1.5" style={{ color: 'var(--fg-text-muted)' }}>{meta.label}</span>
+                      {zone && <span className="text-xs ml-1.5" style={{ color: 'var(--fg-text-dim)' }}>· {zone}</span>}
+                    </div>
+                    <time
+                      dateTime={r.recorded_at}
+                      className="text-xs shrink-0 tabular-nums"
+                      style={{ color: 'var(--fg-text-dim)' }}
+                    >
+                      {timeAgo(r.recorded_at)}
+                    </time>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
         </>
       )}
     </div>

@@ -2,12 +2,22 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { EditModal } from '@/components/garden/EditModal'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { shortDate, plural } from '@/lib/format'
 
 const zoneTypeOptions = [
   'raised_bed', 'grounded_bed', 'container', 'greenhouse',
   'nursery', 'lawn', 'compost', 'herb_garden', 'orchard', 'other',
 ]
+
+const zoneTypeEmoji: Record<string, string> = {
+  raised_bed: '🛏', grounded_bed: '🌾', container: '🪴', greenhouse: '🏠',
+  nursery: '🌱', lawn: '🟩', compost: '🍂', herb_garden: '🌿',
+  orchard: '🌳', other: '📍',
+}
+
 const sunOptions = ['full_sun', 'partial_shade', 'full_shade']
 const sunLabels: Record<string, string> = {
   full_sun: '☀ Full sun',
@@ -25,24 +35,31 @@ interface Zone {
   created_at: string | null
 }
 
+interface Props {
+  zones: Zone[]
+  /** How many plants live in each zone — turns the map into a real overview. */
+  plantCounts?: Record<string, number>
+}
+
 const emptyForm = {
   name: '', description: '', zone_type: '', sun_exposure: '', soil_notes: '',
 }
 
-export function ZonesClient({ zones }: { zones: Zone[] }) {
+function titleCase(s: string) {
+  return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+export function ZonesClient({ zones, plantCounts = {} }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [modal, setModal] = useState<'add' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Zone | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Zone | null>(null)
 
   function openAdd() {
-    setForm(emptyForm)
-    setEditing(null)
-    setError(null)
-    setModal('add')
+    setForm(emptyForm); setEditing(null); setError(null); setModal('add')
   }
 
   function openEdit(zone: Zone) {
@@ -53,30 +70,24 @@ export function ZonesClient({ zones }: { zones: Zone[] }) {
       sun_exposure: zone.sun_exposure ?? '',
       soil_notes: zone.soil_notes ?? '',
     })
-    setEditing(zone)
-    setError(null)
-    setModal('edit')
+    setEditing(zone); setError(null); setModal('edit')
   }
 
-  function closeModal() {
-    setModal(null)
-    setEditing(null)
-    setError(null)
-  }
+  function closeModal() { setModal(null); setEditing(null); setError(null) }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!form.name.trim()) { setError('Give the zone a name.'); return }
     startTransition(async () => {
       const url = editing ? `/api/flowgarden/zones/${editing.id}` : '/api/flowgarden/zones'
-      const method = editing ? 'PATCH' : 'POST'
       const res = await fetch(url, {
-        method,
+        method: editing ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, name: form.name.trim() }),
       })
       if (!res.ok) {
-        const json = await res.json()
+        const json = await res.json().catch(() => ({}))
         setError(json.error ?? 'Something went wrong')
         return
       }
@@ -96,173 +107,208 @@ export function ZonesClient({ zones }: { zones: Zone[] }) {
   const f = (field: keyof typeof form, val: string) =>
     setForm(prev => ({ ...prev, [field]: val }))
 
-  return (
-    <div className="p-4 md:p-8 max-w-5xl">
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-stone-900">Garden Map</h1>
-            <p className="text-sm text-stone-400 mt-1">{zones.length} zone{zones.length !== 1 ? 's' : ''}</p>
-          </div>
-          <button onClick={openAdd} className="btn-primary shrink-0">
-            + Add zone
-          </button>
-        </div>
-      </div>
+  const totalPlants = Object.values(plantCounts).reduce((a, b) => a + b, 0)
 
-      <div className="card mb-6 bg-gradient-to-br from-emerald-50 to-stone-50 border-dashed border-stone-300">
-        <div className="text-center py-6">
-          <p className="text-stone-500 text-sm font-medium">Visual garden layout</p>
-          <p className="text-stone-400 text-xs mt-1">Interactive map coming soon · Hardware sensors will overlay here</p>
-          {zones.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {zones.map(z => (
-                <div key={z.id} className="bg-white border border-emerald-200 rounded-lg px-3 py-2 shadow-sm">
-                  <p className="text-xs font-semibold text-emerald-800">{z.name}</p>
-                  {z.zone_type && (
-                    <p className="text-[10px] text-emerald-500 capitalize">{z.zone_type.replace(/_/g, ' ')}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+  return (
+    <div className="page space-y-6">
+      <PageHeader
+        title="Garden Map"
+        subtitle={
+          zones.length === 0
+            ? 'The beds, pots and patches that make up this garden'
+            : <>{plural(zones.length, 'zone')}{totalPlants > 0 ? ` · ${plural(totalPlants, 'plant')} placed` : ''}</>
+        }
+        action={<button type="button" onClick={openAdd} className="btn-primary">+ Add zone</button>}
+      />
 
       {zones.length === 0 ? (
-        <div className="card border-dashed border-stone-200 bg-stone-50/50 text-center py-16">
-          <p className="text-2xl mb-3">🗺</p>
-          <p className="text-stone-600 font-medium">No zones yet</p>
-          <p className="text-stone-400 text-sm mt-1 mb-4 max-w-xs mx-auto">
-            Add zones for your garden areas — raised beds, pots, greenhouse — or let the Garden Intelligence create them.
+        <div className="empty-state">
+          <span className="empty-emoji">🗺</span>
+          <p className="empty-title">No zones yet</p>
+          <p className="empty-body">
+            Zones are the places in your garden — the front raised bed, the greenhouse, the herb
+            corner. Plants and sensors hang off them, so it&rsquo;s worth mapping them first.
           </p>
-          <button onClick={openAdd} className="btn-primary">Add first zone</button>
+          <button type="button" onClick={openAdd} className="btn-primary">Add first zone</button>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-4">
-          {zones.map(zone => (
-            <div key={zone.id} className="card hover:shadow-md transition-shadow group">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-semibold text-stone-900">{zone.name}</h3>
-                {zone.zone_type && (
-                  <span className="badge bg-emerald-50 text-emerald-700 shrink-0 capitalize">
-                    {zone.zone_type.replace(/_/g, ' ')}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {zones.map(zone => {
+            const count = plantCounts[zone.id] ?? 0
+            return (
+              <div key={zone.id} className="card flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <span
+                    className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-xl"
+                    style={{ background: 'linear-gradient(135deg, var(--fg-green-muted), var(--fg-gold-bg))' }}
+                    aria-hidden
+                  >
+                    {zoneTypeEmoji[zone.zone_type ?? 'other'] ?? '📍'}
                   </span>
-                )}
-              </div>
-              {zone.description && (
-                <p className="text-sm text-stone-600 mb-3 leading-relaxed">{zone.description}</p>
-              )}
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5 mb-3">
-                {zone.sun_exposure && (
-                  <div>
-                    <p className="text-[10px] text-stone-400 uppercase tracking-wide">Sun</p>
-                    <p className="text-xs font-medium text-stone-700">{sunLabels[zone.sun_exposure] ?? zone.sun_exposure}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold leading-tight truncate" style={{ color: 'var(--fg-text)' }}>
+                      {zone.name}
+                    </h3>
+                    {zone.zone_type && (
+                      <p className="text-xs mt-0.5 capitalize" style={{ color: 'var(--fg-text-muted)' }}>
+                        {zone.zone_type.replace(/_/g, ' ')}
+                      </p>
+                    )}
                   </div>
-                )}
-                {zone.soil_notes && (
-                  <div>
-                    <p className="text-[10px] text-stone-400 uppercase tracking-wide">Soil</p>
-                    <p className="text-xs font-medium text-stone-700">{zone.soil_notes}</p>
-                  </div>
-                )}
-                {zone.created_at && (
-                  <div>
-                    <p className="text-[10px] text-stone-400 uppercase tracking-wide">Added</p>
-                    <p className="text-xs font-medium text-stone-600">
-                      {new Date(zone.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  {count > 0 && (
+                    <Link
+                      href="/plants"
+                      className="badge-green shrink-0 hover:underline"
+                      title={`${plural(count, 'plant')} in this zone`}
+                    >
+                      🌿 {count}
+                    </Link>
+                  )}
+                </div>
 
-              <div className="flex gap-2 pt-2 border-t border-stone-50 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => openEdit(zone)}
-                  className="text-xs text-stone-500 hover:text-emerald-700 transition-colors"
-                >
-                  Edit
-                </button>
-                <span className="text-stone-200">·</span>
-                <button
-                  onClick={() => setConfirmDelete(zone.id)}
-                  className="text-xs text-stone-400 hover:text-red-600 transition-colors"
-                >
-                  Delete
-                </button>
+                {zone.description && (
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--fg-text-secondary)' }}>
+                    {zone.description}
+                  </p>
+                )}
+
+                <dl className="flex flex-wrap gap-x-5 gap-y-2">
+                  {zone.sun_exposure && (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--fg-text-dim)' }}>Sun</dt>
+                      <dd className="text-xs font-medium" style={{ color: 'var(--fg-text-secondary)' }}>
+                        {sunLabels[zone.sun_exposure] ?? zone.sun_exposure}
+                      </dd>
+                    </div>
+                  )}
+                  {zone.soil_notes && (
+                    <div className="min-w-0">
+                      <dt className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--fg-text-dim)' }}>Soil</dt>
+                      <dd className="text-xs font-medium truncate" style={{ color: 'var(--fg-text-secondary)' }}>
+                        {zone.soil_notes}
+                      </dd>
+                    </div>
+                  )}
+                  {zone.created_at && (
+                    <div>
+                      <dt className="text-[10px] uppercase tracking-widest" style={{ color: 'var(--fg-text-dim)' }}>Added</dt>
+                      <dd className="text-xs font-medium" style={{ color: 'var(--fg-text-secondary)' }}>
+                        {shortDate(zone.created_at)}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+
+                {/* Always visible — these were opacity-0 until hover, i.e. absent on touch */}
+                <div className="flex gap-4 mt-auto pt-2" style={{ borderTop: '1px solid var(--fg-border)' }}>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(zone)}
+                    className="text-xs font-medium hover:underline py-1"
+                    style={{ color: 'var(--fg-gold)' }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(zone)}
+                    className="text-xs font-medium py-1 transition-colors"
+                    style={{ color: 'var(--fg-text-muted)' }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       {modal && (
         <EditModal title={modal === 'add' ? 'Add zone' : 'Edit zone'} onClose={closeModal}>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Name *</label>
+              <label htmlFor="z-name" className="field-label">Name *</label>
               <input
-                className="input-field-light"
+                id="z-name"
+                className="input-field"
                 value={form.name}
                 onChange={e => f('name', e.target.value)}
-                placeholder="e.g. Front raised bed"
+                placeholder="Front raised bed"
                 required
                 autoFocus
               />
             </div>
+
+            {/* Type as a visual picker — a 10-item <select> gave no sense of what a zone is */}
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Description</label>
+              <span className="field-label">Type</span>
+              <div className="grid grid-cols-3 gap-2">
+                {zoneTypeOptions.map(t => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => f('zone_type', form.zone_type === t ? '' : t)}
+                    aria-pressed={form.zone_type === t}
+                    className="rounded-xl px-2 py-2.5 text-center transition-colors"
+                    style={{
+                      backgroundColor: form.zone_type === t ? 'var(--fg-gold-bg)' : 'var(--fg-panel)',
+                      border: `1px solid ${form.zone_type === t ? 'var(--fg-border-accent)' : 'var(--fg-border)'}`,
+                      color: form.zone_type === t ? 'var(--fg-gold)' : 'var(--fg-text-secondary)',
+                    }}
+                  >
+                    <span className="block text-base leading-none mb-1" aria-hidden>{zoneTypeEmoji[t]}</span>
+                    <span className="block text-[10px] leading-tight">{titleCase(t)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <span className="field-label">Sun exposure</span>
+              <div className="flex flex-wrap gap-2">
+                {sunOptions.map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => f('sun_exposure', form.sun_exposure === s ? '' : s)}
+                    aria-pressed={form.sun_exposure === s}
+                    className={`chip ${form.sun_exposure === s ? 'chip-on' : ''}`}
+                  >
+                    {sunLabels[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="z-desc" className="field-label">Description</label>
               <textarea
+                id="z-desc"
                 className="input-field resize-none"
                 rows={2}
                 value={form.description}
                 onChange={e => f('description', e.target.value)}
-                placeholder="What's here, purpose, notes..."
+                placeholder="What's here, what it's for…"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-stone-500 mb-1">Type</label>
-                <select
-                  className="input-field-light"
-                  value={form.zone_type}
-                  onChange={e => f('zone_type', e.target.value)}
-                >
-                  <option value="">Select type</option>
-                  {zoneTypeOptions.map(t => (
-                    <option key={t} value={t}>{t.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-stone-500 mb-1">Sun exposure</label>
-                <select
-                  className="input-field-light"
-                  value={form.sun_exposure}
-                  onChange={e => f('sun_exposure', e.target.value)}
-                >
-                  <option value="">Unknown</option>
-                  {sunOptions.map(s => (
-                    <option key={s} value={s}>{sunLabels[s]}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+
             <div>
-              <label className="block text-xs text-stone-500 mb-1">Soil notes</label>
+              <label htmlFor="z-soil" className="field-label">Soil notes</label>
               <input
-                className="input-field-light"
+                id="z-soil"
+                className="input-field"
                 value={form.soil_notes}
                 onChange={e => f('soil_notes', e.target.value)}
-                placeholder="e.g. Sandy loam, amended with compost"
+                placeholder="Sandy loam, amended with compost"
               />
             </div>
-            {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-            )}
+
+            {error && <p className="alert-error">{error}</p>}
+
             <div className="flex gap-2 pt-1">
-              <button type="button" onClick={closeModal} className="flex-1 btn-secondary">Cancel</button>
-              <button type="submit" disabled={isPending} className="flex-1 btn-primary">
+              <button type="button" onClick={closeModal} className="btn-secondary flex-1 justify-center">Cancel</button>
+              <button type="submit" disabled={isPending} className="btn-primary flex-1 justify-center disabled:opacity-60">
                 {isPending ? 'Saving…' : modal === 'add' ? 'Add zone' : 'Save changes'}
               </button>
             </div>
@@ -271,16 +317,17 @@ export function ZonesClient({ zones }: { zones: Zone[] }) {
       )}
 
       {confirmDelete && (
-        <EditModal title="Delete zone?" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-stone-600 mb-4">This will permanently delete the zone. This can&apos;t be undone.</p>
+        <EditModal size="sm" title={`Delete “${confirmDelete.name}”?`} onClose={() => setConfirmDelete(null)}>
+          <p className="text-sm mb-4" style={{ color: 'var(--fg-text-secondary)' }}>
+            {(plantCounts[confirmDelete.id] ?? 0) > 0
+              ? `${plural(plantCounts[confirmDelete.id], 'plant')} sits in this zone — they'll stay, but lose their place on the map.`
+              : 'This permanently deletes the zone.'}
+            {' '}This can&rsquo;t be undone.
+          </p>
           <div className="flex gap-2">
-            <button onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary">Cancel</button>
-            <button
-              onClick={() => handleDelete(confirmDelete)}
-              disabled={isPending}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
-            >
-              {isPending ? 'Deleting…' : 'Delete'}
+            <button type="button" onClick={() => setConfirmDelete(null)} className="btn-secondary flex-1 justify-center">Cancel</button>
+            <button type="button" onClick={() => handleDelete(confirmDelete.id)} disabled={isPending} className="btn-danger flex-1 disabled:opacity-60">
+              {isPending ? 'Deleting…' : 'Delete zone'}
             </button>
           </div>
         </EditModal>

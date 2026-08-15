@@ -4,10 +4,18 @@ import { useEffect, useLayoutEffect, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 
 const DONE_KEY = 'fg-tour-done'
+const PENDING_KEY = 'fg-tour-pending'
 const START_EVENT = 'fg-start-tour'
 
 // Fire this from anywhere ("Take a tour" button) to (re)launch the tour.
+// Most steps anchor to dashboard elements, so from any other page we go home
+// first — otherwise the tour silently drops to two steps and looks broken.
 export function startTour() {
+  if (window.location.pathname !== '/') {
+    try { sessionStorage.setItem(PENDING_KEY, '1') } catch { /* ignore */ }
+    window.location.assign('/')
+    return
+  }
   window.dispatchEvent(new Event(START_EVENT))
 }
 
@@ -102,12 +110,23 @@ export function TourGuide() {
   }, [begin])
 
   // Auto-run once for first-time users, on the dashboard (anchors live there).
+  // Also picks up a tour requested from another page, which sent us here first.
   useEffect(() => {
     if (pathname !== '/') return
-    let done = false
-    try { done = localStorage.getItem(DONE_KEY) === '1' } catch { /* ignore */ }
-    if (done) return
-    const t = setTimeout(() => begin(), 1200)
+
+    let pending = false
+    try {
+      pending = sessionStorage.getItem(PENDING_KEY) === '1'
+      if (pending) sessionStorage.removeItem(PENDING_KEY)
+    } catch { /* ignore */ }
+
+    if (!pending) {
+      let done = false
+      try { done = localStorage.getItem(DONE_KEY) === '1' } catch { /* ignore */ }
+      if (done) return
+    }
+
+    const t = setTimeout(() => begin(), pending ? 400 : 1200)
     return () => clearTimeout(t)
   }, [pathname, begin])
 
