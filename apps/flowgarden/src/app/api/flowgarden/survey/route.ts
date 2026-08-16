@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { loadPhotoBlocks } from '@/lib/photos'
-import { SURVEY_SCHEMA } from '@/lib/survey'
+import { loadPhotoBlocks, loadPhotoBytes } from '@/lib/photos'
+import { SURVEY_SCHEMA, type SurveyResult } from '@/lib/survey'
+import { getGardenClimate, climateBrief } from '@/lib/climate'
+import { identifyPlant } from '@/lib/plantnet'
 
 export const dynamic = 'force-dynamic'
 // A 20-photo survey is a long single call. Workers cuts a request at ~125 s at
@@ -34,6 +36,14 @@ Missions — this is the part that matters most:
 - Order by what will fail first without attention. Urgency is about consequence and timing, not enthusiasm.
 - \`due_in_days\` reflects the plant's clock, not a default. Watering a wilting seedling is today; a dormant-season prune is months out.
 - xp_reward: 5 for routine, 10 for real effort, 15+ for something that takes an afternoon.
+
+Weather:
+- If a climate outlook is given, schedule against it. Do not propose watering that incoming rain will do for you; say so in the reason instead. Do not propose sowing when the soil at 6 cm is too cold for that seed. Flag frost risk for tender plants and heat stress ahead of the hot days.
+- The water balance (ET0 minus rainfall) is the honest measure of whether the garden is drying out. Use it rather than guessing from air temperature.
+
+Close-ups:
+- For each plant, set closeup_photo_index to a photo where THAT plant fills most of the frame, and \`organ\` to what is clearly visible in it (leaf / flower / fruit / bark). Set both to null if no such photo exists — a wide bed shot is not a close-up.
+- These are sent to a botanical identification service for the plants you are unsure about, so an honest null is more useful than a hopeful index.
 
 Be honest about what you cannot see. If a bed is half out of frame or a plant is too far away to identify, say so in needs_better_photo rather than guessing.`
 
@@ -78,7 +88,8 @@ export async function POST(request: Request) {
   // What's already recorded, so the survey extends the garden instead of
   // proposing duplicates of everything already there.
   const [gardenRes, zonesRes, plantsRes] = await Promise.all([
-    admin.from('flowgarden_gardens').select('name, location_label, climate_zone').eq('id', gardenId).single(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin as any).from('flowgarden_gardens').select('name, location_label, climate_zone, latitude, longitude').eq('id', gardenId).single(),
     admin.from('flowgarden_zones').select('name, zone_type').eq('garden_id', gardenId),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (admin as any).from('flowgarden_plant_groups').select('name, species, status, health_status').eq('garden_id', gardenId).limit(60),
@@ -98,6 +109,12 @@ export async function POST(request: Request) {
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
+  // Real weather for this garden's coordinates, when the owner has set a
+  // location. Missions are only as good as their timing, and timing is weather.
+  const climate = garden?.latitude != null && garden?.longitude != null
+    ? await getGardenClimate(Number(garden.latitude), Number(garden.longitude))
+    : null
+
   const context = [
     `Garden: ${garden?.name ?? 'Unnamed'}`,
     garden?.location_label ? `Location: ${garden.location_label}` : null,
@@ -106,6 +123,7 @@ export async function POST(request: Request) {
     `Zones already recorded: ${existingZones}`,
     `Plants already recorded: ${existingPlants}`,
     body?.note ? `The gardener adds: ${body.note}` : null,
+    climate ? `\n--- Weather outlook for this garden ---\n${climateBrief(climate)}` : null,
     '',
     `${blocks.length} photo${blocks.length === 1 ? '' : 's'} follow, in order. Refer to them by their 0-based index in photo_indexes.`,
   ].filter(Boolean).join('\n')
@@ -134,8 +152,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No survey came back. Try again.' }, { status: 502 })
     }
 
-    const survey = JSON.parse(text.text)
-    return NextResponse.json({ survey, photos: loaded, usage: res.usage })
+    const survey = JSON.parse(text.text) as SurveyResult
+
+    // ── Second opinion on the uncertain ones ────────────────────────────
+    // Pl@ntNet is the species specialist, but its free tier is 500 lookups a
+    // DAY for the whole app — so it runs only where Claude said it was unsure
+    // AND there is a genuine close-up to send. Confident identifications and
+    // wide shots are left alone.
+    const uncertain = survey.plants
+      .filter(p => p.confidence < 0.75 && p.closeup_photo_index !== null)
+      .slice(0, 4) // cap the spend per survey
+
+    if (uncertain.length > 0 && process.env.PLANTNET_API_KEY) {
+      await Promise.all(uncertain.map(async plant => {
+        const idx = plant.closeup_photo_index
+        if (idx === null || idx < 0 || idx >= loaded.length) return
+        const bytes = await loadPhotoBytes(loaded[idx])
+        if (!bytes) return
+        const organ = plant.organ && plant.organ !== 'auto' ? plant.organ : 'auto'
+        const result = await identifyPlant([bytes], [organ])
+        if (!result || result.candidates.length === 0) return
+        // Attached, not applied: the gardener picks. An automatic overwrite
+        // would just be a second confident guess replacing the first.
+        plant.candidates = result.candidates.map(c => ({
+          score: c.score,
+          scientificName: c.scientificName,
+          commonNames: c.commonNames,
+          family: c.family,
+        }))
+        if (result.remaining !== null && result.remaining < 50) {
+          console.warn('[plantnet] daily quota low:', result.remaining)
+        }
+      }))
+    }
+
+    return NextResponse.json({
+      survey,
+      photos: loaded,
+      climate: climate ? {
+        rainTotalMm: climate.rainTotalMm,
+        et0TotalMm: climate.et0TotalMm,
+        waterDeficitMm: climate.waterDeficitMm,
+        coldestNightC: climate.coldestNightC,
+        hottestDayC: climate.hottestDayC,
+        soilTemp6cm: climate.soilTemp6cm,
+        days: climate.days,
+      } : null,
+      usage: res.usage,
+    })
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) {
       console.error('[survey] ANTHROPIC_API_KEY rejected (401) — invalid or revoked')

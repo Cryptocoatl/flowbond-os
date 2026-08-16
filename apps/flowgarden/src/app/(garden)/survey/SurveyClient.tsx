@@ -4,7 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { GardenMapSketch } from '@/components/garden/GardenMapSketch'
-import type { SurveyResult, SurveyZone, SurveyPlant, SurveyMission } from '@/lib/survey'
+import type { SurveyResult, SurveyZone } from '@/lib/survey'
+
+interface ClimateSummary {
+  rainTotalMm: number
+  et0TotalMm: number
+  waterDeficitMm: number
+  coldestNightC: number
+  hottestDayC: number
+  soilTemp6cm: number | null
+  days: { date: string; tMax: number; tMin: number; rainMm: number }[]
+}
 
 interface Shot { id: string; file: File; preview: string; path?: string; error?: string }
 interface ExistingZone { id: string; name: string }
@@ -39,6 +49,9 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
   const [keepMission, setKeepMission] = useState<Record<string, boolean>>({})
   const [zoneMap, setZoneMap] = useState<Record<string, string>>({}) // survey key → existing zone id
   const [layout, setLayout] = useState<Record<string, { x: number; y: number }>>({})
+  const [climate, setClimate] = useState<ClimateSummary | null>(null)
+  // survey plant key → the species the gardener picked from Pl@ntNet's list
+  const [speciesPick, setSpeciesPick] = useState<Record<string, string>>({})
 
   // Object URLs are only released on unmount — releasing per-render would blank
   // the thumbnails mid-review.
@@ -105,6 +118,7 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
       const result = json.survey as SurveyResult
       setSurvey(result)
       setPhotoPaths(json.photos ?? paths)
+      setClimate(json.climate ?? null)
       setKeepZone(Object.fromEntries(result.zones.map(z => [z.key, true])))
       // Low-confidence identifications start unticked — the gardener opts in
       // rather than having to catch a confident mistake.
@@ -135,7 +149,9 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
           zones: survey.zones
             .filter(z => keepZone[z.key])
             .map(z => ({ ...z, ...(layout[z.key] ?? {}), existing_id: zoneMap[z.key] ?? null })),
-          plants: survey.plants.filter(p => keepPlant[p.key] && (!p.zone_key || keepZone[p.zone_key] || zoneMap[p.zone_key])),
+          plants: survey.plants
+            .filter(p => keepPlant[p.key] && (!p.zone_key || keepZone[p.zone_key] || zoneMap[p.zone_key]))
+            .map(p => (speciesPick[p.key] ? { ...p, species: speciesPick[p.key] } : p)),
           missions: survey.missions.filter(m => keepMission[m.key]),
         }),
       })
@@ -308,6 +324,41 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
         </div>
       </div>
 
+      {climate && (
+        <section>
+          <h2 className="section-label">The week these missions are timed against</h2>
+          <div className="card">
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {climate.days.map(d => (
+                <div key={d.date} className="shrink-0 text-center rounded-lg px-2.5 py-2"
+                  style={{ backgroundColor: 'var(--fg-panel)', border: '1px solid var(--fg-border)', minWidth: 62 }}>
+                  <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--fg-text-dim)' }}>
+                    {new Date(d.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short' })}
+                  </p>
+                  <p className="text-sm font-bold tabular-nums mt-0.5" style={{ color: 'var(--fg-text)' }}>
+                    {Math.round(d.tMax)}°
+                  </p>
+                  <p className="text-[10px] tabular-nums" style={{ color: 'var(--fg-text-muted)' }}>
+                    {Math.round(d.tMin)}°
+                  </p>
+                  {d.rainMm > 0 && (
+                    <p className="text-[10px] tabular-nums mt-0.5" style={{ color: 'var(--fg-gold)' }}>
+                      💧{d.rainMm.toFixed(1)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--fg-text-secondary)' }}>
+              {climate.waterDeficitMm > 0
+                ? `The garden is set to lose ${climate.waterDeficitMm} mm more water than it receives this week (${climate.et0TotalMm} mm evaporating, ${climate.rainTotalMm} mm of rain).`
+                : `Rain covers the week — ${climate.rainTotalMm} mm falling against ${climate.et0TotalMm} mm evaporating, so watering can wait.`}
+              {climate.soilTemp6cm !== null && ` Soil is ${climate.soilTemp6cm}°C at 6 cm, which is what decides whether seed will germinate.`}
+            </p>
+          </div>
+        </section>
+      )}
+
       {survey.zones.length > 0 && (
         <section>
           <h2 className="section-label">The map — drag to match your garden</h2>
@@ -372,7 +423,41 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
                     `photo${p.photo_indexes.length === 1 ? '' : 's'} ${p.photo_indexes.map(i => i + 1).join(', ')}`,
                   ]}
                   body={p.notes}
-                />
+                >
+                  {p.candidates && p.candidates.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-[11px] font-semibold mb-1.5" style={{ color: 'var(--fg-gold)' }}>
+                        Pl@ntNet&rsquo;s best matches — pick the right one:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.candidates.slice(0, 4).map(c => {
+                          const on = speciesPick[p.key] === c.scientificName
+                          return (
+                            <button
+                              key={c.scientificName}
+                              type="button"
+                              onClick={() => setSpeciesPick(m => ({
+                                ...m,
+                                [p.key]: on ? '' : c.scientificName,
+                              }))}
+                              aria-pressed={on}
+                              className={`chip ${on ? 'chip-on' : ''}`}
+                              title={c.commonNames.join(', ')}
+                            >
+                              <span className="italic">{c.scientificName}</span>
+                              <span className="opacity-70 ml-1">{Math.round(c.score * 100)}%</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {speciesPick[p.key] && (
+                        <p className="text-[11px] mt-1.5" style={{ color: 'var(--fg-text-muted)' }}>
+                          Saving as <span className="italic">{speciesPick[p.key]}</span>.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </ReviewRow>
               )
             })}
           </div>

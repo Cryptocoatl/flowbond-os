@@ -34,6 +34,13 @@ export interface SurveyPlant {
   photo_indexes: number[]
   /** 0–1. Below ~0.6 the UI asks the gardener to confirm the identification. */
   confidence: number
+  /** The photo where this plant fills the frame, if any. Only close-ups are
+   *  worth sending to Pl@ntNet — a wide bed shot returns confident nonsense. */
+  closeup_photo_index: number | null
+  /** What is visible in that close-up; Pl@ntNet identifies far better when told. */
+  organ: 'leaf' | 'flower' | 'fruit' | 'bark' | 'auto' | null
+  /** Filled in server-side after a Pl@ntNet lookup — never produced by the model. */
+  candidates?: { score: number; scientificName: string; commonNames: string[]; family: string }[]
 }
 
 export interface SurveyMission {
@@ -95,7 +102,7 @@ export const SURVEY_SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['key', 'zone_key', 'name', 'species', 'variety', 'quantity', 'status', 'health_status', 'notes', 'photo_indexes', 'confidence'],
+        required: ['key', 'zone_key', 'name', 'species', 'variety', 'quantity', 'status', 'health_status', 'notes', 'photo_indexes', 'confidence', 'closeup_photo_index', 'organ'],
         properties: {
           key: { type: 'string' },
           zone_key: { type: ['string', 'null'] },
@@ -111,6 +118,8 @@ export const SURVEY_SCHEMA = {
           notes: { type: ['string', 'null'] },
           photo_indexes: { type: 'array', items: { type: 'integer' } },
           confidence: { type: 'number' },
+          closeup_photo_index: { type: ['integer', 'null'] },
+          organ: { type: ['string', 'null'], enum: ['leaf', 'flower', 'fruit', 'bark', 'auto', null] },
         },
       },
     },

@@ -65,3 +65,27 @@ export async function loadPhotoBlocks(paths: string[]): Promise<{ blocks: PhotoB
   const ok = results.filter((r): r is { path: string; block: PhotoBlock } => r.block !== null)
   return { blocks: ok.map(r => r.block), loaded: ok.map(r => r.path) }
 }
+
+/**
+ * Load a stored photo as raw bytes — what Pl@ntNet's multipart upload needs,
+ * as opposed to the base64 blocks Claude takes. Returns null on any failure.
+ */
+export async function loadPhotoBytes(
+  path: string,
+): Promise<{ data: Uint8Array; contentType: string } | null> {
+  try {
+    const admin = createAdminClient()
+    const { data: signed } = await admin.storage
+      .from('flowgarden-photos')
+      .createSignedUrl(path, 3600)
+    if (!signed?.signedUrl) return null
+    const res = await fetch(signed.signedUrl)
+    if (!res.ok) return null
+    return {
+      data: new Uint8Array(await res.arrayBuffer()),
+      contentType: res.headers.get('content-type') ?? 'image/jpeg',
+    }
+  } catch {
+    return null
+  }
+}
