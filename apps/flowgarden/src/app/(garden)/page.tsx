@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { OpenChatCard } from '@/components/garden/OpenChatCard'
+import { SurveyCard } from '@/components/garden/SurveyCard'
 import { InviteButton } from '@/components/garden/InviteButton'
 import { Greeting } from '@/components/garden/Greeting'
 import { HealthRing } from '@/components/garden/HealthRing'
@@ -137,6 +138,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Survey: the fastest path from empty garden to full one ── */}
+      {totalPlantQty === 0 && <SurveyCard empty />}
 
       {/* ── Stats row ── */}
       <div data-tour="stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -330,6 +334,7 @@ export default async function DashboardPage() {
 
       {/* ── Garden Intelligence ── */}
       <OpenChatCard />
+      {totalPlantQty > 0 && <SurveyCard empty={false} />}
     </div>
   )
 }
