@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? 'mtt-admin-secret-change-in-production-2026'
-)
+// Fail closed: an empty key causes jwtVerify to throw, redirecting to /login.
+// Never fall back to a hardcoded string — missing AUTH_SECRET must be loud.
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET ?? '')
 
 const PUBLIC = ['/login', '/api/auth/login', '/api/public']
 
