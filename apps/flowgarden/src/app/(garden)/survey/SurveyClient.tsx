@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { GardenMapSketch } from '@/components/garden/GardenMapSketch'
@@ -32,7 +32,8 @@ function sentence(v?: string | null): string | undefined {
 
 export function SurveyClient({ gardenId, existingZones }: { gardenId: string; existingZones: ExistingZone[] }) {
   const router = useRouter()
-  const fileRef = useRef<HTMLInputElement>(null)
+  const libraryRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const [stage, setStage] = useState<Stage>('capture')
   const [shots, setShots] = useState<Shot[]>([])
@@ -53,28 +54,37 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
   // survey plant key → the species the gardener picked from Pl@ntNet's list
   const [speciesPick, setSpeciesPick] = useState<Record<string, string>>({})
 
-  // Object URLs are only released on unmount — releasing per-render would blank
-  // the thumbnails mid-review.
-  useEffect(() => () => { shots.forEach(s => URL.revokeObjectURL(s.preview)) }, [shots])
+  // Every object URL ever created, so they can be released on unmount and ONLY
+  // on unmount. Depending this effect on `shots` revokes the existing previews
+  // every time a photo is added, which blanks the thumbnails you already had.
+  const urlsRef = useRef<string[]>([])
+  useEffect(() => () => { urlsRef.current.forEach(u => URL.revokeObjectURL(u)) }, [])
 
-  const addFiles = useCallback((list: FileList | null) => {
+  // NOT a deferred updater over `list`. A FileList is LIVE: the onChange
+  // handler clears the input's value (so re-picking the same file still fires
+  // change), which empties the FileList before a queued setState updater would
+  // read it — which is how photos silently failed to append. Materialise first,
+  // then update state.
+  function addFiles(list: FileList | null) {
     if (!list?.length) return
-    setError(null)
-    setShots(prev => {
-      const room = MAX_PHOTOS - prev.length
-      if (room <= 0) {
-        setError(`That's the ${MAX_PHOTOS}-photo limit for one survey. Run a second one for the rest.`)
-        return prev
-      }
-      const next = [...list].slice(0, room).map(file => ({
-        id: crypto.randomUUID(),
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-      if (list.length > room) setError(`Added ${room} — that's the ${MAX_PHOTOS}-photo limit for one survey.`)
-      return [...prev, ...next]
+    const incoming = Array.from(list)
+
+    const room = MAX_PHOTOS - shots.length
+    if (room <= 0) {
+      setError(`That's the ${MAX_PHOTOS}-photo limit for one survey. Run a second one for the rest.`)
+      return
+    }
+    setError(incoming.length > room
+      ? `Added ${room} — that's the ${MAX_PHOTOS}-photo limit for one survey.`
+      : null)
+
+    const next = incoming.slice(0, room).map(file => {
+      const preview = URL.createObjectURL(file)
+      urlsRef.current.push(preview)
+      return { id: crypto.randomUUID(), file, preview }
     })
-  }, [])
+    setShots(prev => [...prev, ...next])
+  }
 
   function removeShot(id: string) {
     setShots(prev => {
@@ -233,28 +243,43 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
           </ol>
         </div>
 
+        {/* Two inputs on purpose. `capture` and `multiple` do not coexist: with
+            `capture` set the browser opens the camera and hands back exactly one
+            file, which is why batch selection was impossible. So the library
+            picker gets `multiple`, and the camera gets its own button. */}
         <input
-          ref={fileRef}
+          ref={libraryRef}
           type="file"
           accept="image/*"
           multiple
+          className="sr-only"
+          onChange={e => { addFiles(e.target.files); e.target.value = '' }}
+        />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
           capture="environment"
           className="sr-only"
           onChange={e => { addFiles(e.target.files); e.target.value = '' }}
         />
 
         {shots.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            className="empty-state w-full block transition-colors hover:border-solid"
-          >
+          <div className="empty-state">
             <span className="empty-emoji">📷</span>
             <span className="empty-title block">Add photos</span>
-            <span className="empty-body block">Take them now, or pick a set from your camera roll. Up to {MAX_PHOTOS}.</span>
-            <span className="btn-primary">Choose photos</span>
-          </button>
+            <span className="empty-body block">
+              Pick a whole set from your camera roll, or shoot them one at a time. Up to {MAX_PHOTOS}.
+            </span>
+            <div className="flex gap-2 justify-center flex-wrap">
+              <button type="button" onClick={() => libraryRef.current?.click()} disabled={busy} className="btn-primary">
+                Choose photos
+              </button>
+              <button type="button" onClick={() => cameraRef.current?.click()} disabled={busy} className="btn-secondary">
+                Take a photo
+              </button>
+            </div>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -284,7 +309,7 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
               {shots.length < MAX_PHOTOS && !busy && (
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={() => libraryRef.current?.click()}
                   className="rounded-xl flex flex-col items-center justify-center gap-1 text-xs"
                   style={{ aspectRatio: '1', border: '1px dashed var(--fg-border-accent)', color: 'var(--fg-text-muted)' }}
                 >
@@ -293,6 +318,20 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
                 </button>
               )}
             </div>
+
+            {shots.length < MAX_PHOTOS && !busy && (
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" onClick={() => libraryRef.current?.click()} className="btn-secondary text-xs">
+                  ＋ Choose more photos
+                </button>
+                <button type="button" onClick={() => cameraRef.current?.click()} className="btn-secondary text-xs">
+                  📷 Take a photo
+                </button>
+                <span className="text-xs self-center" style={{ color: 'var(--fg-text-dim)' }}>
+                  {shots.length} of {MAX_PHOTOS}
+                </span>
+              </div>
+            )}
 
             <div>
               <label htmlFor="survey-note" className="field-label">
