@@ -58,6 +58,10 @@ export async function POST(request: Request) {
       zone_type: z.zone_type ?? null,
       sun_exposure: z.sun_exposure ?? null,
       soil_notes: z.soil_notes ?? null,
+      // The position the gardener dragged this zone to — the whole point of
+      // letting them correct the sketch.
+      map_x: typeof z.x === 'number' ? Math.max(0, Math.min(100, Math.round(z.x))) : null,
+      map_y: typeof z.y === 'number' ? Math.max(0, Math.min(100, Math.round(z.y))) : null,
     }).select('id').single()
     if (error) { failures.push(`zone "${z.name}": ${error.message}`); continue }
     if (data?.id) { zoneIds.set(z.key, data.id); created.zones++ }

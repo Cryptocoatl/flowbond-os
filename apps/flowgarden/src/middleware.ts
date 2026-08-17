@@ -32,6 +32,9 @@ export async function middleware(request: NextRequest) {
     // Marketing landing (the app's clean-URL move relocated it here from /);
     // must be reachable logged-out — it's where unauthenticated visitors land.
     pathname === '/welcome' ||
+    // Published garden pages are public on purpose — that's the whole point of
+    // publishing one. The route itself only returns gardens with is_public.
+    pathname.startsWith('/g/') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api') ||
     pathname.startsWith('/debug') ||
