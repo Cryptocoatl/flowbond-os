@@ -6,17 +6,20 @@
 --     the user applies migrations). Idempotent + guarded; safe to re-run.
 --
 --  Covers backlog items:
---    FG-022  flowbond_role_rank mutable search_path  → pin search_path
---    FG-023  banoseco_donations / banoseco_deposits  → explicit deny policies
---    FG-020  always-true anon INSERT policies         → guidance + template
+--    FG-022  22 functions with mutable search_path → pin all to ''
+--    FG-023  banoseco_donations / banoseco_deposits → explicit deny policies
+--    FG-020  always-true anon INSERT policies        → guidance + template
 --
 --  Excluded (human-gated, see BACKLOG.md): all key rotations, JWT roll,
---  leaked-password toggle (FG-021, dashboard), locking anon admin RPCs (FG-005).
+--  locking anon admin RPCs (FG-005), security_definer_view review (FG-055).
+--  FG-020 resolved in advisors (0 always-true INSERT policies as of 2026-08-17).
+--  FG-021 resolved (leaked-password protection now enabled).
 -- ════════════════════════════════════════════════════════════════════════
 
--- ── FG-022 · pin search_path on flowbond_role_rank ────────────────────────
--- Mutable search_path on a function is a privilege-escalation vector. Pin it
--- to empty for every overload, regardless of signature.
+-- ── FG-022 · pin search_path on all flagged functions ─────────────────────
+-- Mutable search_path is a privilege-escalation vector. As of 2026-08-17,
+-- 22 functions are flagged (up from 1). Pin all to '' idempotently.
+-- Schemas: public, grantflow, lvb.
 do $$
 declare r record;
 begin
@@ -24,7 +27,32 @@ begin
     select p.oid::regprocedure as sig
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.proname = 'flowbond_role_rank'
+    where (n.nspname = 'public' and p.proname in (
+      'flowbond_role_rank',
+      'vpa__is_service',
+      'ff_uid',
+      'ff_is_admin',
+      'ff_ledger_no_mutate',
+      '_tevo_jwt_email',
+      'tulum_holders_sealed',
+      'tulum_snapshot_freeze_guard',
+      'tulum_wallets_permanent',
+      '_lvb_jwt_email',
+      'mtt_no_delete_commission',
+      'mtt_touch',
+      'mtt_new_code',
+      'spine__titulo',
+      'claudia_owns',
+      'claudia_scope_ok',
+      'portal888__append_only',
+      'bmk_events_immutable'
+    ))
+    or (n.nspname = 'grantflow' and p.proname in (
+      'audit_results_append_only',
+      'audit_gate',
+      'enforce_review_state'
+    ))
+    or (n.nspname = 'lvb' and p.proname = 'team_inbox')
   loop
     execute format('alter function %s set search_path = ''''', r.sig);
   end loop;
