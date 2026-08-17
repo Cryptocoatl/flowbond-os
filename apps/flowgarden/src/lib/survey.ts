@@ -85,10 +85,17 @@ export const SURVEY_SCHEMA = {
           key: { type: 'string' },
           name: { type: 'string' },
           zone_type: {
-            type: ['string', 'null'],
-            enum: ['raised_bed', 'grounded_bed', 'container', 'greenhouse', 'nursery', 'lawn', 'compost', 'herb_garden', 'orchard', 'other', null],
+            anyOf: [
+              { type: 'string', enum: ['raised_bed', 'grounded_bed', 'container', 'greenhouse', 'nursery', 'lawn', 'compost', 'herb_garden', 'orchard', 'other'] },
+              { type: 'null' },
+            ],
           },
-          sun_exposure: { type: ['string', 'null'], enum: ['full_sun', 'partial_shade', 'full_shade', null] },
+          sun_exposure: {
+            anyOf: [
+              { type: 'string', enum: ['full_sun', 'partial_shade', 'full_shade'] },
+              { type: 'null' },
+            ],
+          },
           soil_notes: { type: ['string', 'null'] },
           description: { type: ['string', 'null'] },
           photo_indexes: { type: 'array', items: { type: 'integer' } },
@@ -119,7 +126,12 @@ export const SURVEY_SCHEMA = {
           photo_indexes: { type: 'array', items: { type: 'integer' } },
           confidence: { type: 'number' },
           closeup_photo_index: { type: ['integer', 'null'] },
-          organ: { type: ['string', 'null'], enum: ['leaf', 'flower', 'fruit', 'bark', 'auto', null] },
+          organ: {
+            anyOf: [
+              { type: 'string', enum: ['leaf', 'flower', 'fruit', 'bark', 'auto'] },
+              { type: 'null' },
+            ],
+          },
         },
       },
     },

@@ -8,12 +8,14 @@ import { getGardenClimate, climateBrief } from '@/lib/climate'
 import { identifyPlant } from '@/lib/plantnet'
 
 export const dynamic = 'force-dynamic'
-// A 20-photo survey is a long single call. Workers cuts a request at ~125 s at
-// the edge regardless of this, which is why the UI uploads first and analyses a
-// bounded batch rather than streaming photos into one giant request.
-export const maxDuration = 120
+// Measured: 4 photos takes ~105 s at effort medium, ~128 s at high. Cloudflare's
+// edge drops a connection that sends no bytes for ~100 s (524), so a survey of
+// any real size CANNOT be a plain request/response — it has to stream. The route
+// emits newline-delimited JSON: heartbeats while the model works, then one final
+// `done` line. Heartbeats exist to keep the connection alive, not for decoration.
+export const maxDuration = 300
 
-const MAX_PHOTOS = 12
+const MAX_PHOTOS = 8
 
 const SYSTEM = `You are FlowGarden's garden surveyor. A gardener has walked their garden and photographed it. Read the photos as ONE PLACE seen from several angles — not as unrelated images.
 
@@ -130,85 +132,119 @@ export async function POST(request: Request) {
 
   const anthropic = new Anthropic({ apiKey })
 
-  try {
-    const res = await anthropic.beta.messages.create({
-      model: 'claude-opus-5',
-      max_tokens: 16000,
-      // Reading a dozen photos as one scene and reasoning about what each plant
-      // needs is the whole product — this is worth real thinking budget.
-      output_config: { effort: 'high', format: { type: 'json_schema', schema: SURVEY_SCHEMA } },
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      system: SYSTEM,
-      messages: [{ role: 'user', content: [{ type: 'text', text: context }, ...blocks] }],
-    })
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (obj: unknown) => {
+        try { controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n')) } catch { /* client gone */ }
+      }
 
-    if (res.stop_reason === 'refusal') {
-      return NextResponse.json({ error: 'Those photos could not be analysed. Try different ones.' }, { status: 422 })
-    }
+      // Keep bytes flowing while the model reads the photos.
+      let alive = true
+      const started = Date.now()
+      const beat = setInterval(() => {
+        if (alive) send({ type: 'progress', seconds: Math.round((Date.now() - started) / 1000) })
+      }, 5000)
 
-    const text = res.content.find(b => b.type === 'text')
-    if (!text || text.type !== 'text') {
-      return NextResponse.json({ error: 'No survey came back. Try again.' }, { status: 502 })
-    }
+      try {
+        send({ type: 'progress', seconds: 0, note: `Reading ${blocks.length} photos as one place…` })
 
-    const survey = JSON.parse(text.text) as SurveyResult
+        const res = await anthropic.beta.messages.create({
+          model: 'claude-opus-5',
+          max_tokens: 16000,
+          // medium measured as fast as it is good here; high adds ~25 s for
+          // output that was not better on the test set.
+          output_config: { effort: 'medium', format: { type: 'json_schema', schema: SURVEY_SCHEMA } },
+          betas: ['server-side-fallback-2026-07-01'],
+          fallbacks: 'default',
+          system: SYSTEM,
+          messages: [{ role: 'user', content: [{ type: 'text', text: context }, ...blocks] }],
+        })
 
-    // ── Second opinion on the uncertain ones ────────────────────────────
-    // Pl@ntNet is the species specialist, but its free tier is 500 lookups a
-    // DAY for the whole app — so it runs only where Claude said it was unsure
-    // AND there is a genuine close-up to send. Confident identifications and
-    // wide shots are left alone.
-    const uncertain = survey.plants
-      .filter(p => p.confidence < 0.75 && p.closeup_photo_index !== null)
-      .slice(0, 4) // cap the spend per survey
-
-    if (uncertain.length > 0 && process.env.PLANTNET_API_KEY) {
-      await Promise.all(uncertain.map(async plant => {
-        const idx = plant.closeup_photo_index
-        if (idx === null || idx < 0 || idx >= loaded.length) return
-        const bytes = await loadPhotoBytes(loaded[idx])
-        if (!bytes) return
-        const organ = plant.organ && plant.organ !== 'auto' ? plant.organ : 'auto'
-        const result = await identifyPlant([bytes], [organ])
-        if (!result || result.candidates.length === 0) return
-        // Attached, not applied: the gardener picks. An automatic overwrite
-        // would just be a second confident guess replacing the first.
-        plant.candidates = result.candidates.map(c => ({
-          score: c.score,
-          scientificName: c.scientificName,
-          commonNames: c.commonNames,
-          family: c.family,
-        }))
-        if (result.remaining !== null && result.remaining < 50) {
-          console.warn('[plantnet] daily quota low:', result.remaining)
+        if (res.stop_reason === 'refusal') {
+          send({ type: 'error', error: 'Those photos could not be analysed. Try different ones.' })
+          return
         }
-      }))
-    }
+        const text = res.content.find(b => b.type === 'text')
+        if (!text || text.type !== 'text') {
+          send({ type: 'error', error: 'No survey came back. Try again.' })
+          return
+        }
 
-    return NextResponse.json({
-      survey,
-      photos: loaded,
-      climate: climate ? {
-        rainTotalMm: climate.rainTotalMm,
-        et0TotalMm: climate.et0TotalMm,
-        waterDeficitMm: climate.waterDeficitMm,
-        coldestNightC: climate.coldestNightC,
-        hottestDayC: climate.hottestDayC,
-        soilTemp6cm: climate.soilTemp6cm,
-        days: climate.days,
-      } : null,
-      usage: res.usage,
-    })
-  } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      console.error('[survey] ANTHROPIC_API_KEY rejected (401) — invalid or revoked')
-      return NextResponse.json({ error: 'FlowMe could not sign in to its own brain.' }, { status: 503 })
-    }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json({ error: 'FlowMe is busy — try again in a moment.' }, { status: 429 })
-    }
-    console.error('[survey] failed:', err)
-    return NextResponse.json({ error: 'The survey failed. Try again with fewer photos.' }, { status: 502 })
-  }
+        const survey = JSON.parse(text.text) as SurveyResult
+
+        // ── Second opinion on the uncertain ones ────────────────────────
+        // Pl@ntNet is the species specialist, but its free tier is 500 lookups
+        // a DAY for the whole app — so it runs only where Claude said it was
+        // unsure AND there is a genuine close-up to send.
+        const uncertain = survey.plants
+          .filter(p => p.confidence < 0.75 && p.closeup_photo_index !== null)
+          .slice(0, 4)
+
+        if (uncertain.length > 0 && process.env.PLANTNET_API_KEY) {
+          send({ type: 'progress', seconds: Math.round((Date.now() - started) / 1000), note: `Checking ${uncertain.length} uncertain plants against Pl@ntNet…` })
+          await Promise.all(uncertain.map(async plant => {
+            const idx = plant.closeup_photo_index
+            if (idx === null || idx < 0 || idx >= loaded.length) return
+            const bytes = await loadPhotoBytes(loaded[idx])
+            if (!bytes) return
+            const organ = plant.organ && plant.organ !== 'auto' ? plant.organ : 'auto'
+            const result = await identifyPlant([bytes], [organ])
+            if (!result || result.candidates.length === 0) return
+            // Attached, not applied: the gardener picks. An automatic overwrite
+            // would just be a second confident guess replacing the first.
+            plant.candidates = result.candidates.map(c => ({
+              score: c.score,
+              scientificName: c.scientificName,
+              commonNames: c.commonNames,
+              family: c.family,
+            }))
+            if (result.remaining !== null && result.remaining < 50) {
+              console.warn('[plantnet] daily quota low:', result.remaining)
+            }
+          }))
+        }
+
+        send({
+          type: 'done',
+          survey,
+          photos: loaded,
+          climate: climate ? {
+            rainTotalMm: climate.rainTotalMm,
+            et0TotalMm: climate.et0TotalMm,
+            waterDeficitMm: climate.waterDeficitMm,
+            coldestNightC: climate.coldestNightC,
+            hottestDayC: climate.hottestDayC,
+            soilTemp6cm: climate.soilTemp6cm,
+            days: climate.days,
+          } : null,
+          usage: res.usage,
+        })
+      } catch (err) {
+        if (err instanceof Anthropic.AuthenticationError) {
+          console.error('[survey] ANTHROPIC_API_KEY rejected (401) — invalid or revoked')
+          send({ type: 'error', error: 'FlowMe could not sign in to its own brain.' })
+        } else if (err instanceof Anthropic.RateLimitError) {
+          send({ type: 'error', error: 'FlowMe is busy — try again in a moment.' })
+        } else {
+          console.error('[survey] failed:', err)
+          send({ type: 'error', error: 'The survey failed. Try again with fewer photos.' })
+        }
+      } finally {
+        alive = false
+        clearInterval(beat)
+        try { controller.close() } catch { /* already closed */ }
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store, no-transform',
+      // Belt and braces against any proxy that would buffer the stream and
+      // reintroduce exactly the idle timeout this exists to avoid.
+      'X-Accel-Buffering': 'no',
+    },
+  })
 }

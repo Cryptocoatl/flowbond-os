@@ -21,7 +21,7 @@ interface ExistingZone { id: string; name: string }
 
 type Stage = 'capture' | 'analysing' | 'review' | 'saving'
 
-const MAX_PHOTOS = 12
+const MAX_PHOTOS = 8
 
 /** "full_sun" → "Full sun". Enum values only — never applied to species names. */
 function sentence(v?: string | null): string | undefined {
@@ -106,16 +106,50 @@ export function SurveyClient({ gardenId, existingZones }: { gardenId: string; ex
       }
       if (paths.length === 0) throw new Error('No photos made it up. Check your connection and try again.')
 
-      setProgress('Reading your garden… this takes a minute for a full walk.')
+      setProgress('Reading your garden…')
       const res = await fetch('/api/flowgarden/survey', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gardenId, paths, note: note.trim() || undefined }),
       })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(json.error ?? 'The survey failed')
+      if (!res.ok || !res.body) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error ?? 'The survey failed')
+      }
 
-      const result = json.survey as SurveyResult
+      // Newline-delimited JSON. The heartbeats are what keep the connection
+      // alive through a two-minute vision call — reading them is not optional.
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let done: { survey: SurveyResult; photos: string[]; climate: ClimateSummary | null } | null = null
+
+      while (true) {
+        const { value, done: finished } = await reader.read()
+        if (finished) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.trim()) continue
+          let evt: { type: string; seconds?: number; note?: string; error?: string; survey?: SurveyResult; photos?: string[]; climate?: ClimateSummary | null }
+          try { evt = JSON.parse(line) } catch { continue }
+          if (evt.type === 'progress') {
+            const s = evt.seconds ?? 0
+            setProgress(evt.note
+              ? `${evt.note} (${s}s)`
+              : `Reading your garden… ${s}s. A full walk takes a couple of minutes.`)
+          } else if (evt.type === 'error') {
+            throw new Error(evt.error ?? 'The survey failed')
+          } else if (evt.type === 'done' && evt.survey) {
+            done = { survey: evt.survey, photos: evt.photos ?? paths, climate: evt.climate ?? null }
+          }
+        }
+      }
+      if (!done) throw new Error('The survey ended without a result. Try again.')
+
+      const json = { survey: done.survey, photos: done.photos, climate: done.climate }
+      const result = json.survey
       setSurvey(result)
       setPhotoPaths(json.photos ?? paths)
       setClimate(json.climate ?? null)
