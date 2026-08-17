@@ -7,7 +7,7 @@ credentials are referenced by `service · location · first-6 · length`.
 **Status:** `open` · `in-progress` · `blocked (steph)` (human-gated) · `done`
 **Owner:** `claudia-auto` (may PR a fix) · `steph-manual` (dashboard/destructive)
 
-Seeded from the round on **2026-06-24**.
+Seeded from the round on **2026-06-24**. Last updated **2026-08-17**.
 
 ---
 
@@ -24,7 +24,7 @@ Seeded from the round on **2026-06-24**.
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-005 | Anon-reachable `SECURITY DEFINER` admin RPCs gated only by a string param: `admin_bookings(p_key)`, `admin_event_summary(p_key)`, `admin_event_timeline(p_key,p_code)`, `mt_agregar_codigo(p_secreto)`, `mt_listar(p_secreto)` on canonical project | claudia-auto + steph-manual | open | Verify the gating secret is strong (not a `Pass4u`-class value); rotate it; add rate-limit; or move behind an authenticated role instead of a param. ClaudIA: pull fn bodies + draft fix. |
+| FG-005 | Anon-reachable `SECURITY DEFINER` admin RPCs gated only by a string param — **SCOPE EXPANDED 2026-08-17**: original 5 + 13 new. Full set: `admin_bookings(p_key)`, `admin_event_summary(p_key)`, `admin_event_timeline(p_key,p_code)`, `mt_agregar_codigo(p_secreto)`, `mt_listar(p_secreto)` + NEW: `fs_add(p_secreto)`, `fs_list(p_secreto)`, `fs_set(p_secreto)`, `mt__is_admin(p_secreto)`, `mt_admin_cotizaciones(p_secreto)`, `mt_admin_cotizaciones_largo(p_secreto)`, `mt_admin_designs(p_secreto)`, `mt_admin_inspiracion(p_secreto)`, `mt_admin_ok(p_secreto)`, `mt_admin_requests(p_secreto)`, `mt_admin_set_cotizacion(p_secreto)`, `mt_admin_set_inspiracion(p_secreto)`, `mt_admin_set_request(p_secreto)`, `flowchords_publish(…,p_key,…)`, `tulumcoin_set_contract(p_key,…)`, **`claudia_vault_mark(p_key)`** (⚠️ ClaudIA ZK vault) | claudia-auto + steph-manual | open | Verify the gating secret is strong (not a `Pass4u`-class value); rotate it; add rate-limit; or move behind an authenticated role. **Priority**: `claudia_vault_mark` first. ClaudIA: pull fn bodies + draft fix. |
 | FG-006 | `ADMIN_PASSWORD="Pass4u"` (flowcdmx) — guessable | steph-manual | blocked (steph) | Replace with 32-byte random. |
 | FG-007 | `ADMIN_SESSION_SECRET` `flowcdmx-2026…36` — predictable | steph-manual | blocked (steph) | Regenerate random. |
 | FG-008 | DB password `FlowBond-11:11` in services/api `DATABASE_URL` | steph-manual | blocked (steph) | Roll DB password (Supabase → Settings → Database). |
@@ -46,38 +46,43 @@ Seeded from the round on **2026-06-24**.
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-020 | 7 `rls_policy_always_true` INSERT policies (anon/auth) on lead-capture tables: `marketing.waitlist`, `public.waitlist`, `flownation_waitlist`, `investor_events`, `moon_temple_respuestas`, `phoenix_claims`, `xelva_project_applications` | claudia-auto | open | RLS can't rate-limit → app/edge turnstile + column CHECK constraints. Schemas not in-repo; template + verify-columns query shipped in `supabase/migrations/006_floguard_hardening.sql`. Fill columns then apply. |
-| FG-021 | `auth_leaked_password_protection` disabled (canonical) | steph-manual | blocked (steph) | Toggle on (Auth → HaveIBeenPwned). |
-| FG-022 | `public.flowbond_role_rank` mutable search_path | claudia-auto | in-progress | Pinned via guarded DO block in `migration 006` (all overloads). DRY-RUN — apply. |
+| ~~FG-020~~ | ~~7 `rls_policy_always_true` INSERT policies on lead-capture tables~~ | claudia-auto | **done** | Advisor now returns 0 matches as of 2026-08-17. Policies tightened (CHECK constraints applied or policies removed). |
+| ~~FG-021~~ | ~~`auth_leaked_password_protection` disabled (canonical)~~ | steph-manual | **done** | Advisor now returns 0 matches as of 2026-08-17. Steph toggled on HaveIBeenPwned protection. |
+| FG-022 | 22 functions with mutable `search_path` (up from 1 in FG-022 initial). Schemas: `public` (18 fns), `grantflow` (3 fns), `lvb` (1 fn). | claudia-auto | in-progress | Expanded to pin all 22 via updated DO block in `migration 006`. DRY-RUN — apply. |
 | FG-023 | `banoseco_donations` / `banoseco_deposits` RLS-on, no policy | claudia-auto | in-progress | Explicit `restrictive … using(false)` deny policies in `migration 006`. Safe (RPCs are definer-owned). DRY-RUN — apply. |
 | FG-024 | `flowedit` migration 005 ships bcrypt hashes for shared `Pass4u` password | steph-manual | blocked (steph) | Reset both admin passwords; stop seeding hashes in migrations. |
+| FG-055 | **NEW** 16 `SECURITY DEFINER` views (ERROR level): 11 `app_vpa_*_public`, `v_ff_funding_progress`, `mtt_admin_dashboard`, `mtt_commission_summary`, `mtt_partner_payouts`, `mtt_public_routes`, `brandmark_lead_pool`. These enforce the view-creator's RLS instead of the caller's. | steph-manual | open | Review each view: if intentionally public-catalog (app_vpa_*_public likely is), add a comment and confirm underlying table RLS prevents PII leak. Convert to `SECURITY INVOKER` where not intentional. Cannot auto-fix — per-view review required. Supabase docs: https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view |
+| FG-056 | **NEW** Extensions `pg_net` and `postgis` installed in `public` schema (WARN). Should be in `extensions` schema. | steph-manual | open | Move via Supabase dashboard (Extensions page) or: `CREATE EXTENSION pg_net SCHEMA extensions; DROP EXTENSION pg_net;` (requires superuser). Low urgency — public-schema extensions are a noise vector for search_path attacks. |
 
 ## 🧱 Security headers (zero coverage — all apps)
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-030 | No CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / HSTS on any app; `flowme.one` leaks `x-powered-by`; **claudiaflow.life vault is iframe-able (clickjacking)** | claudia-auto | in-progress | ✅ Built `packages/security` (`@flowbond/security`: `securityHeaders()`, `withSecurity()`, `CSP_PRESETS` incl. webgl); typechecks clean. Per-app wiring is a one-liner (`export default withSecurity(cfg, {csp})` + add to `transpilePackages` + workspace dep) but must land on **each app's own branch** (claudia is deploy-sensitive on `claudia-m1` — wiring reverted on `flowscrow`). Roll out app-by-app, claudia first. |
+| FG-030 | No CSP / X-Frame-Options / X-Content-Type-Options / Referrer-Policy / HSTS on any app; `flowme.one` leaks `x-powered-by`; **claudiaflow.life vault is iframe-able (clickjacking)** | claudia-auto | in-progress | ✅ Built `packages/security` (`@flowbond/security`: `securityHeaders()`, `withSecurity()`, `CSP_PRESETS` incl. webgl); typechecks clean. Zero apps wired as of 2026-08-17 (confirmed: none of the 16 next.config.* files use `withSecurity`). Per-app wiring is a one-liner (`export default withSecurity(cfg, {csp})` + add to `transpilePackages` + workspace dep) but must land on **each app's own branch** (claudia is deploy-sensitive on `claudia-m1`). Roll out app-by-app. |
 
-## 🌐 Availability / deploy-integrity (NEW dimension — added 2026-06-28)
+## 🌐 Availability / deploy-integrity
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
-| FG-050 | **INCIDENT (resolved):** `flowbond.life` + `www` served Vercel platform-level 404. Root cause: domains attached to stale duplicate project `flow-bond-layer0` (`framework:null`, broken prod build) instead of healthy `flowbond-live`. | claudia-auto | done | Detached both domains from `flow-bond-layer0`, reattached to `flowbond-live` via REST API. Verified 200 + real landing. 2026-06-28. |
-| FG-051 | No availability monitoring existed — FloGuard only watched secrets/RLS/headers, not "is the front door up". | claudia-auto | done | Shipped `uptime-sentinel.sh`: auto-discovers every verified custom domain across all team projects, flags Vercel platform `ORPHAN-404` (the FG-050 failure mode), 5xx, unreachable, and app-404 on a front door. Auth-gated apps (401/403/login-302) do NOT false-alarm. First run: 48 domains, 0 failing. |
-| FG-052 | Duplicate/orphan Vercel projects (`flow-bond-layer0`, `flowbond-app`, `flowbond-live`) are landmines — any can silently steal the flowbond.life domain (each served a DIFFERENT page; caused the 404 then the wrong-landing on 2026-06-28/29). | claudia-auto | done | **PAUSED** all 3 via `POST /v1/projects/<id>/pause` (503 DEPLOYMENT_PAUSED, reversible via /unpause) on 2026-06-29 — none held a custom domain. Audited first: all source preserved in git (flowbond-live + flow-bond-layer0 ← FlowBond-HQ/FlowBond-Layer0; flowbond-app = empty CNA boilerplate; keeper flowbond-web ← flowbond-os/apps/web). Keeper carries all important info (positioning, chains, ZK, email-capture + join CTA, twitter, deck/docs links). Keeper = **flowbond-web** = flowbond.life. `flowbond-net`/`flowbond-stack` are DIFFERENT products (Living Network / org-audit), left alone. |
-| FG-053 | Sentinel is on-demand only; drift can recur between runs. | claudia-auto | done | Scheduled via **launchd** (`~/Library/LaunchAgents/life.flowbond.floguard.uptime.plist`, every 1800s, RunAtLoad) → `uptime-runner.sh` → writes `uptime-status.json` + `uptime-failures.log`, fires a macOS notification ("⚠️ FloGuard: front door down") on any FAIL. Free; runs whenever the Mac is awake. 2026-06-28. |
+| FG-050 | **INCIDENT (resolved):** `flowbond.life` + `www` served Vercel platform-level 404. Root cause: domains attached to stale duplicate project `flow-bond-layer0`. | claudia-auto | done | Detached → reattached to healthy `flowbond-live`. 2026-06-28. |
+| FG-051 | No availability monitoring existed. | claudia-auto | done | Shipped `uptime-sentinel.sh`. 2026-06-28. |
+| FG-052 | Duplicate/orphan Vercel projects were landmines. | claudia-auto | done | Paused all 3 orphan projects via REST API. 2026-06-29. |
+| FG-053 | Sentinel was on-demand only. | claudia-auto | done | Scheduled via launchd (every 1800s). 2026-06-28. |
 
 ## 🧹 Hygiene
 
 | ID | Finding | Owner | Status | Action |
 |----|---------|-------|--------|--------|
 | FG-040 | Live secrets sit in plaintext `.env.local` across ~20 dirs (git-clean, but disk/backup/cloud-sync risk) | steph-manual | blocked (steph) | Confirm FileVault on; ensure ~/Projects & ~/Downloads not cloud-synced; prefer Vercel env as prod source of truth. |
-| FG-041 | `.vercel/.env.*.local` (claudia, fbid, flowgarden ×2) + `flowcdmx/.env.vercel-current` | steph-manual | blocked (steph) | ⚠️ Re-triaged: these hold **live** secrets (service_role, anthropic, db pw), not just the expired OIDC token — NOT auto-deleted. `.vercel/*` are regenerable via `vercel env pull`; `flowcdmx/.env.vercel-current` may be the only copy of some values until FG-006..009 rotate. Delete only after rotation, by hand. |
+| FG-041 | `.vercel/.env.*.local` (claudia, fbid, flowgarden ×2) + `flowcdmx/.env.vercel-current` hold live secrets | steph-manual | blocked (steph) | Delete only after rotation, by hand. |
 | FG-042 | No secret-scanning backstop on commit | claudia-auto | open | Add gitleaks pre-commit hook. PR. |
+| FG-058 | **NEW** `apps/admin/middleware.ts:6` hardcoded fallback JWT signing key: `process.env.AUTH_SECRET ?? 'mtt-admin-secret-change-in-production-2026'`. If `AUTH_SECRET` is unset in the deployment env, this known string is used to sign/verify admin session tokens — any attacker knowing the fallback can forge admin cookies. | steph-manual | open | Verify `AUTH_SECRET` is set in production Vercel env for the admin app. Remove the hardcoded fallback — throw at startup if missing. |
 
 ---
 
 ### Notes
 - `.gitignore` correctly covers `.env*` ecosystem-wide — **nothing leaked to git**. All rotations are precautionary (disk/backup vector).
 - Rolling the canonical JWT secret (FG-001) regenerates `anon` too and logs out active sessions — coordinate, or use the new key system.
-- The bulk `*_security_definer_function_executable` advisor warnings are expected for the RPC-only architecture (those fns validate `auth.uid()`); only FG-005 is a real finding.
+- The bulk `*_security_definer_function_executable` advisor warnings are expected for the RPC-only architecture (those fns validate `auth.uid()`); FG-005 covers only the p_key/p_secreto-gated ones.
+- `rls_enabled_no_policy`: 244 tables across 11 schemas have RLS enabled but no explicit policy (implicit deny). The `banoseco_*` ones are covered by FG-023 (explicit deny migration). The rest are RPC-only tables where implicit deny is the intent — no action needed unless a table is found with a direct-client write path.
+- `spatial_ref_sys` (PostGIS system table) shows as `rls_disabled_in_public` — expected noise, ignore.
