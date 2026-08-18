@@ -8,6 +8,14 @@ import { AgentChat } from '@/components/garden/AgentChat'
 // garden intelligence chat.
 export function ChatLauncher({ gardenId }: { gardenId: string }) {
   const [open, setOpen] = useState(false)
+  const [bannerBelow, setBannerBelow] = useState(false)
+
+  // The PWA install banner claims the same bottom corner; yield to it.
+  useEffect(() => {
+    const handler = (e: Event) => setBannerBelow(!!(e as CustomEvent).detail)
+    window.addEventListener('fg-bottom-banner', handler)
+    return () => window.removeEventListener('fg-bottom-banner', handler)
+  }, [])
 
   // Lock body scroll while the drawer is open on mobile.
   useEffect(() => {
@@ -27,12 +35,12 @@ export function ChatLauncher({ gardenId }: { gardenId: string }) {
   return (
     <>
       {/* Floating action button */}
-      {!open && (
+      {!open && !bannerBelow && (
         <button
           type="button"
           data-tour="chat-fab"
           onClick={() => setOpen(true)}
-          className="fixed z-[55] bottom-20 right-4 md:bottom-6 md:right-6 flex items-center gap-2 rounded-full shadow-lg transition-transform active:scale-95"
+          className="fixed z-[55] above-tabbar right-4 md:right-6 flex items-center gap-2 rounded-full shadow-lg transition-transform active:scale-95"
           style={{
             background: 'linear-gradient(135deg, var(--fg-green) 0%, #14502f 100%)',
             color: '#fff',
@@ -88,9 +96,9 @@ export function ChatLauncher({ gardenId }: { gardenId: string }) {
               </button>
             </div>
 
-            {/* Chat body */}
-            <div className="flex-1 overflow-y-auto p-2 safe-area-bottom">
-              <AgentChat gardenId={gardenId} />
+            {/* Chat body — `bare` so we don't draw a card inside a card */}
+            <div className="flex-1 overflow-y-auto safe-area-bottom">
+              <AgentChat gardenId={gardenId} bare />
             </div>
           </div>
         </div>

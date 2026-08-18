@@ -102,11 +102,7 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
               {passwordSet ? 'Sign in with email + password, magic link, or a connected account.' : 'Set one to sign in instantly without waiting for an email.'}
             </p>
           </div>
-          <Link
-            href="/auth/set-password?next=/settings"
-            className="text-xs font-semibold rounded-lg px-4 py-2 transition-colors shrink-0"
-            style={{ backgroundColor: '#1A5C35', color: '#EFE8D8' }}
-          >
+          <Link href="/auth/set-password?next=/settings" className="btn-primary text-xs shrink-0">
             {passwordSet ? 'Change password' : 'Set a password'}
           </Link>
         </div>
@@ -122,12 +118,12 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs text-fg-muted mb-1.5">Garden name</label>
+              <label className="field-label">Garden name</label>
               <input value={name} onChange={e => setName(e.target.value)} className="input-field" placeholder="My garden" />
             </div>
 
             <div>
-              <label className="block text-xs text-fg-muted mb-1.5">Location (city, country)</label>
+              <label className="field-label">Location (city, country)</label>
               <div className="flex gap-2">
                 <input
                   value={location}
@@ -137,8 +133,7 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
                 />
                 <button
                   type="button" onClick={previewLocation} disabled={geoChecking || !location.trim()}
-                  className="text-xs font-medium rounded-lg px-3 shrink-0 transition-colors disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--fg-panel)', color: 'var(--fg-text-secondary)', border: '1px solid var(--fg-border)' }}
+                  className="btn-secondary text-xs px-3 shrink-0 disabled:opacity-50"
                 >
                   {geoChecking ? 'Checking…' : 'Check'}
                 </button>
@@ -149,13 +144,14 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
             </div>
 
             <div>
-              <label className="block text-xs text-fg-muted mb-2">Who can see your garden on the world map?</label>
-              <div className="space-y-2">
+              <span className="field-label" id="map-vis-label">Who can see your garden on the world map?</span>
+              <div className="space-y-2" role="radiogroup" aria-labelledby="map-vis-label">
                 {TIERS.map(t => {
                   const active = visibility === t.value
                   return (
                     <button
                       key={t.value} type="button" onClick={() => setVisibility(t.value)}
+                      role="radio" aria-checked={active}
                       className="w-full text-left rounded-xl px-4 py-3 transition-all flex items-start gap-3"
                       style={{
                         backgroundColor: active ? 'var(--fg-gold-bg)' : 'var(--fg-panel)',
@@ -182,7 +178,7 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
 
             {visibility === 'live' && (
               <div>
-                <label className="block text-xs text-fg-muted mb-1.5">Live broadcast / 3D link</label>
+                <label className="field-label">Live broadcast / 3D link</label>
                 <input
                   value={liveUrl} onChange={e => setLiveUrl(e.target.value)} className="input-field"
                   placeholder="https://… (YouTube live, stream, 3D tour)"
@@ -190,17 +186,15 @@ export function GardenSettingsClient({ ownsGarden, initial, passwordSet }: Props
               </div>
             )}
 
-            {error && <p className="text-red-400 text-xs bg-red-950/40 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
+            {error && <p className="alert-error">{error}</p>}
 
             <div className="flex items-center gap-3 pt-1">
-              <button
-                type="button" onClick={save} disabled={isPending}
-                className="text-sm font-semibold rounded-lg px-5 py-2.5 transition-colors disabled:opacity-60"
-                style={{ backgroundColor: '#1A5C35', color: '#EFE8D8' }}
-              >
+              <button type="button" onClick={save} disabled={isPending} className="btn-primary disabled:opacity-60">
                 {isPending ? 'Saving…' : 'Save changes'}
               </button>
-              {saved && <span className="text-xs" style={{ color: '#C9A961' }}>✓ Saved</span>}
+              <span className="text-xs" style={{ color: 'var(--fg-gold)' }} role="status" aria-live="polite">
+                {saved ? '✓ Saved' : ''}
+              </span>
               <Link href="/world" className="text-xs text-fg-gold hover:underline ml-auto">View on map →</Link>
             </div>
           </div>

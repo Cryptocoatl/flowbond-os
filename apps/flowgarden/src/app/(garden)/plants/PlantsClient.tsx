@@ -4,6 +4,8 @@ import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { EditModal } from '@/components/garden/EditModal'
 import { HealthRing } from '@/components/garden/HealthRing'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { plural } from '@/lib/format'
 
 const statusOptions = [
   'seed', 'germinating', 'seedling', 'transplanted', 'established',
@@ -27,12 +29,12 @@ const statusConfig: Record<string, { label: string; dot: string }> = {
   dead:         { label: 'Dead',         dot: '#ef4444' },
 }
 
-const healthConfig: Record<string, { label: string; text: string; dot: string }> = {
-  excellent: { label: 'Excellent', text: 'text-emerald-600 dark:text-emerald-400', dot: '#10b981' },
-  good:      { label: 'Good',      text: 'text-green-600 dark:text-green-400',     dot: '#22c55e' },
-  stressed:  { label: 'Stressed',  text: 'text-amber-600 dark:text-amber-400',     dot: '#f59e0b' },
-  critical:  { label: 'Critical',  text: 'text-red-600 dark:text-red-400',         dot: '#ef4444' },
-  unknown:   { label: 'Unknown',   text: 'text-fg-muted',                          dot: '#a8a29e' },
+const healthConfig: Record<string, { label: string; color: string; dot: string }> = {
+  excellent: { label: 'Excellent', color: 'var(--fg-success)',      dot: 'var(--fg-success)' },
+  good:      { label: 'Good',      color: 'var(--fg-success)',      dot: 'var(--fg-green)' },
+  stressed:  { label: 'Stressed',  color: 'var(--fg-warn)',         dot: 'var(--fg-warn)' },
+  critical:  { label: 'Critical',  color: 'var(--fg-danger)',       dot: 'var(--fg-danger)' },
+  unknown:   { label: 'Unknown',   color: 'var(--fg-text-muted)',   dot: 'var(--fg-text-dim)' },
 }
 
 // Map a plant to a friendly emoji from its name/species/variety.
@@ -174,42 +176,33 @@ export function PlantsClient({ plants, zones }: Props) {
     setForm(prev => ({ ...prev, [field]: val }))
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-fg">Plants</h1>
-          <p className="text-sm text-fg-muted mt-1">
-            {totalQty} plant{totalQty !== 1 ? 's' : ''} · {plants.length} group{plants.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-        <button onClick={openAdd} className="btn-primary shrink-0">
-          <span className="text-base leading-none">＋</span> Add plant
-        </button>
-      </div>
+    <div className="page space-y-6">
+      <PageHeader
+        title="Plants"
+        subtitle={<>{plural(totalQty, 'plant')} · {plural(plants.length, 'group')}</>}
+        action={
+          <button type="button" onClick={openAdd} className="btn-primary">
+            <span className="text-base leading-none">＋</span> Add plant
+          </button>
+        }
+      />
 
       {plants.length === 0 ? (
-        <div className="card-accent text-center py-16">
-          <p className="text-4xl mb-3">🌱</p>
-          <p className="text-fg font-semibold">No plants yet</p>
-          <p className="text-fg-muted text-sm mt-1 mb-5 max-w-xs mx-auto">
-            Add your first plant — or just tell FlowMe “I planted 6 tomatoes” and it’ll do it for you.
+        <div className="empty-state">
+          <span className="empty-emoji">🌱</span>
+          <p className="empty-title">No plants yet</p>
+          <p className="empty-body">
+            Add your first plant — or just tell FlowMe &ldquo;I planted 6 tomatoes&rdquo; and it&rsquo;ll do it for you.
           </p>
-          <button onClick={openAdd} className="btn-primary">Add first plant</button>
+          <button type="button" onClick={openAdd} className="btn-primary">Add first plant</button>
         </div>
       ) : (
         <>
           {/* Health hero */}
-          <div
-            className="rounded-2xl p-5 md:p-6 flex items-center gap-5 relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg, var(--fg-green-muted) 0%, var(--fg-gold-bg) 100%)',
-              border: '1px solid var(--fg-border-accent)',
-            }}
-          >
+          <div className="hero-band">
             <HealthRing healthy={healthyQty} total={totalQty} />
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] uppercase tracking-widest font-semibold text-fg-gold">Plant health</p>
+              <p className="hero-eyebrow">Plant health</p>
               <p className="text-base md:text-lg font-semibold text-fg mt-1 leading-snug">
                 {careQty === 0
                   ? 'Every plant is doing great 🌿'
@@ -217,11 +210,7 @@ export function PlantsClient({ plants, zones }: Props) {
               </p>
               <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
                 <span className="badge-green">🌿 {healthyQty} thriving</span>
-                {careQty > 0 && (
-                  <span className="badge" style={{ backgroundColor: 'rgba(245,158,11,0.14)', color: '#b45309' }}>
-                    ⚠️ {careQty} need care
-                  </span>
-                )}
+                {careQty > 0 && <span className="urgency-high">⚠️ {careQty} need care</span>}
               </div>
             </div>
           </div>
@@ -237,14 +226,11 @@ export function PlantsClient({ plants, zones }: Props) {
               return (
                 <button
                   key={key}
+                  type="button"
                   onClick={() => setFilter(key)}
                   disabled={key === 'care' && careQty === 0}
-                  className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors disabled:opacity-40"
-                  style={{
-                    backgroundColor: on ? 'var(--fg-green)' : 'var(--fg-panel)',
-                    color: on ? '#fff' : 'var(--fg-text-secondary)',
-                    border: `1px solid ${on ? 'var(--fg-green)' : 'var(--fg-border)'}`,
-                  }}
+                  aria-pressed={on}
+                  className={`chip ${on ? 'chip-on' : ''}`}
                 >
                   {label}
                 </button>
@@ -318,7 +304,7 @@ export function PlantsClient({ plants, zones }: Props) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: health.dot }} />
-                      <span className={`font-semibold ${health.text}`}>{health.label}</span>
+                      <span className="font-semibold" style={{ color: health.color }}>{health.label}</span>
                     </div>
                     {zone && (
                       <div className="flex items-center gap-1 text-fg-muted text-xs min-w-0">
@@ -362,9 +348,9 @@ export function PlantsClient({ plants, zones }: Props) {
         >
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div>
-              <label className="block text-xs text-fg-secondary mb-1">Name *</label>
+              <label className="field-label">Name *</label>
               <input
-                className="input-field-light"
+                className="input-field"
                 value={form.name}
                 onChange={e => f('name', e.target.value)}
                 placeholder="e.g. Tomatoes"
@@ -374,18 +360,18 @@ export function PlantsClient({ plants, zones }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Species</label>
+                <label className="field-label">Species</label>
                 <input
-                  className="input-field-light"
+                  className="input-field"
                   value={form.species}
                   onChange={e => f('species', e.target.value)}
                   placeholder="e.g. Solanum lycopersicum"
                 />
               </div>
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Variety</label>
+                <label className="field-label">Variety</label>
                 <input
-                  className="input-field-light"
+                  className="input-field"
                   value={form.variety}
                   onChange={e => f('variety', e.target.value)}
                   placeholder="e.g. Cherry"
@@ -394,19 +380,19 @@ export function PlantsClient({ plants, zones }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Quantity</label>
+                <label className="field-label">Quantity</label>
                 <input
                   type="number"
                   min={1}
-                  className="input-field-light"
+                  className="input-field"
                   value={form.quantity}
                   onChange={e => f('quantity', parseInt(e.target.value) || 1)}
                 />
               </div>
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Zone</label>
+                <label className="field-label">Zone</label>
                 <select
-                  className="input-field-light"
+                  className="input-field"
                   value={form.zone_id}
                   onChange={e => f('zone_id', e.target.value)}
                 >
@@ -419,9 +405,9 @@ export function PlantsClient({ plants, zones }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Status</label>
+                <label className="field-label">Status</label>
                 <select
-                  className="input-field-light"
+                  className="input-field"
                   value={form.status}
                   onChange={e => f('status', e.target.value)}
                 >
@@ -431,9 +417,9 @@ export function PlantsClient({ plants, zones }: Props) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-fg-secondary mb-1">Health</label>
+                <label className="field-label">Health</label>
                 <select
-                  className="input-field-light"
+                  className="input-field"
                   value={form.health_status}
                   onChange={e => f('health_status', e.target.value)}
                 >
@@ -444,7 +430,7 @@ export function PlantsClient({ plants, zones }: Props) {
               </div>
             </div>
             <div>
-              <label className="block text-xs text-fg-secondary mb-1">Notes</label>
+              <label className="field-label">Notes</label>
               <textarea
                 className="input-field resize-none"
                 rows={3}
@@ -453,11 +439,7 @@ export function PlantsClient({ plants, zones }: Props) {
                 placeholder="Any observations..."
               />
             </div>
-            {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
+            {error && <p className="alert-error">{error}</p>}
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={closeModal} className="flex-1 btn-secondary justify-center">
                 Cancel
@@ -472,18 +454,19 @@ export function PlantsClient({ plants, zones }: Props) {
 
       {/* Delete confirm */}
       {confirmDelete && (
-        <EditModal title="Delete plant?" onClose={() => setConfirmDelete(null)}>
-          <p className="text-sm text-fg-secondary mb-4">
-            This will permanently delete the plant. This can&apos;t be undone.
+        <EditModal size="sm" title="Delete plant?" onClose={() => setConfirmDelete(null)}>
+          <p className="text-sm mb-4" style={{ color: 'var(--fg-text-secondary)' }}>
+            This permanently deletes the plant and its history. It can&rsquo;t be undone.
           </p>
           <div className="flex gap-2">
-            <button onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary justify-center">
+            <button type="button" onClick={() => setConfirmDelete(null)} className="flex-1 btn-secondary justify-center">
               Cancel
             </button>
             <button
+              type="button"
               onClick={() => handleDelete(confirmDelete)}
               disabled={isPending}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-colors"
+              className="flex-1 btn-danger disabled:opacity-60"
             >
               {isPending ? 'Deleting…' : 'Delete'}
             </button>

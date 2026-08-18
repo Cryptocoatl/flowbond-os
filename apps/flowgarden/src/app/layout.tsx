@@ -51,9 +51,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${playfair.variable}`}>
       <head>
         {/* Prevent theme flash before hydration */}
+        {/* Also syncs <meta name="theme-color"> to the RESOLVED theme. The
+            viewport export below can only key off prefers-color-scheme, so a
+            user who picks light on a dark-OS phone got a dark status bar over
+            a cream app. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('fg-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('fg-theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches);if(d){document.documentElement.classList.add('dark')}var m=document.createElement('meta');m.name='theme-color';m.content=d?'#0A1A0C':'#F2EDE3';document.head.appendChild(m)}catch(e){}})()`,
           }}
         />
       </head>

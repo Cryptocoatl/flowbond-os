@@ -1,0 +1,25 @@
+{
+  // FlowGarden — flowgarden.life. Moving off Vercel, where production was
+  // served by a *preview*-target deployment pinned with a manual alias, and
+  // where a lockfile drift in an unrelated app (apps/flowstudio) was enough to
+  // break this app's deploy. On Workers each app ships independently.
+  //
+  // Verified route-for-route on the workers.dev preview before the custom
+  // domains were declared here (18/18 status codes matched Vercel, Supabase
+  // reachable from the Workers runtime, security headers on both the worker
+  // routes and the assets binding). Declaring them makes wrangler own the apex
+  // A record and the www CNAME, which previously pointed at Vercel.
+  "name": "flowgarden",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "flowgarden.life", "custom_domain": true },
+    { "pattern": "www.flowgarden.life", "custom_domain": true }
+  ]
+}

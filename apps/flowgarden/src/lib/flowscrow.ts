@@ -12,11 +12,17 @@
 // deployed and exposes /api/escrow/*) to activate it. Every call is non-fatal and
 // short-timeout so a slow or down escrow service never blocks an order.
 
-const FLOWSCROW_API = process.env.FLOWSCROW_API_URL?.replace(/\/$/, '') || null
+// Read per call, not at module scope: on Cloudflare Workers the module is
+// evaluated when the isolate boots, before the request environment exists, so a
+// module-level read would pin this to `null` and keep the integration dormant
+// even after FLOWSCROW_API_URL is set.
+function flowscrowApi(): string | null {
+  return process.env.FLOWSCROW_API_URL?.replace(/\/$/, '') || null
+}
 
 /** True when an escrow backend is configured. Callers can skip work when false. */
 export function escrowEnabled(): boolean {
-  return FLOWSCROW_API !== null
+  return flowscrowApi() !== null
 }
 
 export interface EscrowParty {
@@ -44,9 +50,10 @@ interface OpenInput {
 }
 
 async function call(path: string, body: unknown, timeoutMs: number): Promise<EscrowHold | null> {
-  if (!FLOWSCROW_API) return null
+  const api = flowscrowApi()
+  if (!api) return null
   try {
-    const res = await fetch(`${FLOWSCROW_API}${path}`, {
+    const res = await fetch(`${api}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ source: 'flowgarden', ...(body as object) }),

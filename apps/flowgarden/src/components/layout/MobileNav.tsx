@@ -26,6 +26,7 @@ const ICONS = {
   world: 'M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z',
   more: 'M3 5a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm2 2a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h8a1 1 0 100-2H6zm0 4a1 1 0 100 2h4a1 1 0 100-2H6z',
   map: 'M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z',
+  survey: 'M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z',
   tianguis: 'M3 3a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 3H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z',
   journal: 'M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z',
   devices: 'M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z',
@@ -43,6 +44,7 @@ const PRIMARY = [
 
 // Destinations that live in the "More" menu sheet.
 const MORE_LINKS = [
+  { href: '/survey', label: 'Survey your garden', icon: ICONS.survey },
   { href: '/tianguis', label: 'Tianguis', icon: ICONS.tianguis },
   { href: '/map', label: 'Garden Map', icon: ICONS.map },
   { href: '/journal', label: 'Journal', icon: ICONS.journal },
@@ -70,7 +72,12 @@ export function MobileNav({
     if (!menuOpen) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      document.removeEventListener('keydown', onKey)
+    }
   }, [menuOpen])
 
   async function handleSignOut() {
@@ -84,7 +91,7 @@ export function MobileNav({
     <>
       {/* Top header — mobile only, safe-area aware */}
       <header
-        className="fixed top-0 inset-x-0 z-40 flex items-center gap-2 px-3 md:hidden"
+        className="fixed top-0 inset-x-0 z-40 flex items-center gap-2 px-3 md:hidden fg-on-dark"
         style={{
           backgroundColor: 'var(--fg-sidebar-bg)',
           borderBottom: '1px solid var(--fg-sidebar-border)',
@@ -102,7 +109,8 @@ export function MobileNav({
 
       {/* Bottom tab bar — mobile only, safe-area aware */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 flex md:hidden"
+        aria-label="Primary"
+        className="fixed bottom-0 inset-x-0 z-40 flex md:hidden fg-on-dark"
         style={{
           backgroundColor: 'var(--fg-sidebar-bg)',
           borderTop: '1px solid var(--fg-sidebar-border)',
@@ -116,6 +124,7 @@ export function MobileNav({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-colors"
               style={{ color: isActive ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)' }}
             >
@@ -128,6 +137,8 @@ export function MobileNav({
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
+          aria-expanded={menuOpen}
+          aria-haspopup="dialog"
           className="relative flex-1 flex flex-col items-center justify-center gap-1 transition-colors"
           style={{ color: moreActive || menuOpen ? 'var(--fg-sidebar-active-text)' : 'var(--fg-sidebar-text)' }}
         >
@@ -146,6 +157,9 @@ export function MobileNav({
         >
           <div
             onClick={e => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="More destinations"
             className="w-full rounded-t-3xl overflow-hidden"
             style={{
               backgroundColor: 'var(--fg-surface)',
@@ -167,6 +181,7 @@ export function MobileNav({
                   <Link
                     key={l.href}
                     href={l.href}
+                    aria-current={isActive ? 'page' : undefined}
                     className="flex items-center gap-3 px-2 py-3.5 text-sm font-medium"
                     style={{ color: isActive ? 'var(--fg-gold)' : 'var(--fg-text)' }}
                   >
@@ -189,8 +204,8 @@ export function MobileNav({
               >
                 <Icon d={ICONS.tour} /> Take a tour
               </button>
-              <div className="flex items-center justify-center px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--fg-panel)' }}>
-                <ThemeToggle />
+              <div className="flex items-center justify-center px-2 rounded-xl" style={{ backgroundColor: 'var(--fg-panel)' }}>
+                <ThemeToggle tone="surface" />
               </div>
             </div>
 

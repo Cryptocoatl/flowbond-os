@@ -22,6 +22,15 @@ const NAV = [
     ),
   },
   {
+    href: '/survey',
+    label: 'Survey',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+        <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
     href: '/map',
     label: 'Garden Map',
     icon: (
@@ -107,7 +116,8 @@ export function Sidebar({
 
   return (
     <aside
-      className="hidden md:flex w-60 flex-col shrink-0"
+      aria-label="Primary"
+      className="hidden md:flex w-60 flex-col shrink-0 fg-on-dark sticky top-0 h-screen"
       style={{ backgroundColor: 'var(--fg-sidebar-bg)', borderRight: '1px solid var(--fg-sidebar-border)' }}
     >
       {/* Logo lockup */}
@@ -153,6 +163,7 @@ export function Sidebar({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? 'page' : undefined}
               data-tour={`nav-${item.href.split('/').pop() || 'dashboard'}`}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group"
               style={{

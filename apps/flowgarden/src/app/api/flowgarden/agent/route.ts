@@ -238,14 +238,70 @@ YOUR CORE BEHAVIOR — READ CAREFULLY:
     },
   ]
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-  const aiResponse = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    system: systemPrompt,
-    tools,
-    messages,
-  })
+  // A missing key used to blow up as an unhandled 500 with no clue in the
+  // response. /debug reports this env var as a boolean, which says "it's set",
+  // never "it works" — so a revoked key looked identical to a healthy one.
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    console.error('[agent] ANTHROPIC_API_KEY is not set')
+    return NextResponse.json(
+      { error: 'FlowMe is not configured yet. The garden intelligence key is missing.' },
+      { status: 503 },
+    )
+  }
+
+  const anthropic = new Anthropic({ apiKey })
+
+  let aiResponse
+  try {
+    aiResponse = await anthropic.beta.messages.create({
+      model: 'claude-opus-5',
+      // Thinking is ON by default on Opus 5, and max_tokens caps thinking +
+      // reply together — the old 2048 would truncate mid-answer. Effort stays
+      // low: this is a short conversational turn, and Opus 5 at low effort
+      // still beats what this endpoint used to run at.
+      max_tokens: 8192,
+      output_config: { effort: 'low' },
+      // Garden talk brushes pesticides and toxic plants, which can trip a
+      // safety classifier. `fallbacks` re-runs a declined request on another
+      // model server-side instead of handing the user a dead end.
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system: systemPrompt,
+      tools,
+      messages,
+    })
+  } catch (err) {
+    // An invalid or revoked key surfaces as a 401 here. Say so plainly rather
+    // than letting it read as "the garden intelligence is broken".
+    if (err instanceof Anthropic.AuthenticationError) {
+      console.error('[agent] ANTHROPIC_API_KEY rejected by Anthropic (401) — key is invalid or revoked')
+      return NextResponse.json(
+        { error: 'FlowMe could not sign in to its own brain. The key needs rotating.' },
+        { status: 503 },
+      )
+    }
+    if (err instanceof Anthropic.RateLimitError) {
+      return NextResponse.json(
+        { error: 'FlowMe is busy right now — try again in a moment.' },
+        { status: 429 },
+      )
+    }
+    console.error('[agent] anthropic call failed:', err)
+    return NextResponse.json(
+      { error: 'FlowMe could not answer just now. Try again.' },
+      { status: 502 },
+    )
+  }
+
+  // Safety classifiers can decline; content is then empty or partial.
+  if (aiResponse.stop_reason === 'refusal') {
+    console.warn('[agent] request refused:', aiResponse.stop_details)
+    return NextResponse.json({
+      reply: "I can't help with that one — try rephrasing, or ask me something about your garden.",
+      created: { events: [], tasks: [], plants: [], updated: [] },
+    })
+  }
 
   const mediaUrls = photoPath ? [photoPath] : []
   const created = { events: [] as string[], tasks: [] as string[], plants: [] as string[], updated: [] as string[] }

@@ -4,7 +4,14 @@
 // over HTTP and store the returned job id on the order. Failures are non-fatal:
 // the order is still placed and delivery is marked "pending" for manual dispatch.
 
-const REFIRIDES_API = (process.env.REFIRIDES_API_URL || 'https://refirides-sigma.vercel.app').replace(/\/$/, '')
+// Read per call, not at module scope: on Cloudflare Workers the module is
+// evaluated when the isolate boots, before the request environment exists, so a
+// module-level read bakes in the fallback forever. The old fallback also pointed
+// at a *.vercel.app host, which this ecosystem no longer uses.
+function refiridesApi(): string | null {
+  const raw = process.env.REFIRIDES_API_URL
+  return raw ? raw.replace(/\/$/, '') : null
+}
 
 export interface GeoPoint {
   lat?: number
@@ -45,8 +52,10 @@ export async function quoteDelivery(input: {
   manifest?: Manifest
   provider?: string
 }): Promise<{ quote: DeliveryQuote; points: { pickup: GeoPoint; dropoff: GeoPoint }; provider: string } | null> {
+  const api = refiridesApi()
+  if (!api) return null
   try {
-    const res = await fetch(`${REFIRIDES_API}/api/delivery/quote`, {
+    const res = await fetch(`${api}/api/delivery/quote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -73,8 +82,10 @@ export async function createDelivery(input: {
   reference?: string
   payment?: { id?: string; provider?: string }
 }): Promise<DeliveryJob | null> {
+  const api = refiridesApi()
+  if (!api) return null
   try {
-    const res = await fetch(`${REFIRIDES_API}/api/delivery/create`, {
+    const res = await fetch(`${api}/api/delivery/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),

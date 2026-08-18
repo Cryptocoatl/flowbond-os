@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getGardenContext } from '@/lib/garden-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { GardenSettingsClient } from '@/components/garden/GardenSettingsClient'
+import { PublishGardenCard } from '@/components/garden/PublishGardenCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export default async function SettingsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: owned } = await (admin as any)
     .from('flowgarden_gardens')
-    .select('name, location_label, map_visibility, live_url, latitude, longitude, city_label')
+    .select('name, location_label, map_visibility, live_url, latitude, longitude, city_label, is_public, public_slug, public_bio')
     .eq('user_id', ctx.user.id)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -31,11 +32,21 @@ export default async function SettingsPage() {
     .maybeSingle()
 
   return (
-    <div className="p-5 md:p-8 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-fg">Settings</h1>
-        <p className="text-sm text-fg-muted mt-1">Your account, garden location, and map privacy</p>
+    <div className="page-narrow space-y-6">
+      <div>
+        <h1 className="page-title">Settings</h1>
+        <p className="page-sub">Your account, your garden&rsquo;s place in the world, and who can see it</p>
       </div>
+
+      <PublishGardenCard
+        ownsGarden={!!owned}
+        gardenName={owned?.name ?? ctx.garden?.name ?? 'My garden'}
+        initial={{
+          is_public: !!owned?.is_public,
+          public_slug: owned?.public_slug ?? '',
+          public_bio: owned?.public_bio ?? '',
+        }}
+      />
 
       <GardenSettingsClient
         ownsGarden={!!owned}
