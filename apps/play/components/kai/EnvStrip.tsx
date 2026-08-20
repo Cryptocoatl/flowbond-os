@@ -22,11 +22,11 @@ function moonPhase(d: Date): string {
 
 function Cell({ icon, label, value }: { icon: 'sun' | 'moon' | 'temp' | 'wind'; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2">
       <Icon name={icon} size={15} className="text-kai-faint" />
-      <div className="leading-tight">
+      <div className="min-w-0 leading-tight">
         <div className="text-[9px] uppercase tracking-wider text-kai-faint">{label}</div>
-        <div className="text-[12px] font-medium text-kai-text">{value}</div>
+        <div className="truncate text-[12px] font-medium text-kai-text">{value}</div>
       </div>
     </div>
   );
@@ -44,7 +44,9 @@ export function EnvStrip() {
   const phase = now ? moonPhase(now) : '—';
 
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl2 border border-white/[0.06] bg-black/25 px-4 py-2.5 backdrop-blur-md">
+    // Four cells wrapping inside a hero that is only 366px wide made a ragged
+    // two-and-a-half-row block; a grid gives them equal columns at every size.
+    <div className="grid w-full grid-cols-2 gap-x-4 gap-y-2 rounded-xl2 border border-white/[0.06] bg-black/25 px-4 py-2.5 backdrop-blur-md sm:w-auto sm:grid-cols-4 sm:gap-x-5">
       <Cell icon="sun" label="Local time" value={time} />
       <Cell icon="moon" label="Moon" value={phase} />
       <Cell icon="temp" label="Weather" value="—" />

@@ -109,6 +109,7 @@ export function PartyLayer({
   worldId,
   missionIdx,
   color,
+  compact = false,
   open,
   onOpenChange,
 }: {
@@ -118,6 +119,8 @@ export function PartyLayer({
   worldId: string;
   missionIdx: number;
   color: string;
+  /** narrow screen: the pill drops the roster and the emotes shrink. */
+  compact?: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -157,7 +160,13 @@ export function PartyLayer({
     <>
       {/* ---- compact party pill (always visible while in a room) ---- */}
       {party.status !== 'off' && (
-        <div className="pointer-events-auto absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 backdrop-blur-md">
+        <div
+          // This used to sit at `top-3, left-1/2` — dead centre of the top bar,
+          // straight through the world name on one side and the buttons on the
+          // other. It now docks on the row below the bar, where nothing else is.
+          className="pointer-events-auto absolute left-1/2 flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 backdrop-blur-md"
+          style={{ top: 'var(--hud-row2)' }}
+        >
           <button onClick={() => onOpenChange(true)} className="flex items-center gap-1.5 text-sm text-kai-text">
             <span>👥</span>
             <span className="font-medium">{party.code}</span>
@@ -165,10 +174,14 @@ export function PartyLayer({
           {live ? (
             party.members.length > 0 ? (
               <>
-                <span className="h-4 w-px bg-white/15" />
-                <span className="max-w-[9rem] truncate text-[12px] text-kai-text">
-                  {party.members.map((m) => m.name).join(', ')}
-                </span>
+                {!compact && (
+                  <>
+                    <span className="h-4 w-px bg-white/15" />
+                    <span className="max-w-[9rem] truncate text-[12px] text-kai-text">
+                      {party.members.map((m) => m.name).join(', ')}
+                    </span>
+                  </>
+                )}
                 <BondMeter lang={lang} color={color} />
               </>
             ) : (
@@ -192,12 +205,19 @@ export function PartyLayer({
 
       {/* ---- emotes: talking without talking ---- */}
       {live && (
-        <div className="pointer-events-auto absolute left-3 top-1/2 flex -translate-y-1/2 flex-col gap-1.5">
+        <div
+          // Left edge, vertically centred: clear of the objective card above
+          // and of the joystick's corner below, on both a phone and a laptop.
+          className="pointer-events-auto absolute flex -translate-y-1/2 flex-col gap-1.5"
+          style={{ left: 'var(--hud-l)', top: '50%' }}
+        >
           {EMOTES.map((e) => (
             <button
               key={e}
               onClick={() => party.sendEmote(e)}
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-black/40 text-lg backdrop-blur-md active:scale-90"
+              className={`grid place-items-center rounded-full border border-white/10 bg-black/45 backdrop-blur-md active:scale-90 ${
+                compact ? 'h-8 w-8 text-base' : 'h-9 w-9 text-lg'
+              }`}
             >
               {e}
             </button>
@@ -216,15 +236,18 @@ export function PartyLayer({
            Sits under the party pill, not at the bottom of the screen: the build
            palette lives down there and was covering it. */}
       {live && party.members.length > 0 && (
-        <div className="pointer-events-none absolute left-1/2 top-14 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/35 px-3 py-1 text-center text-[11px] text-kai-faint backdrop-blur-sm">
+        <div
+          className="pointer-events-none absolute left-1/2 max-w-[calc(100vw-2rem)] -translate-x-1/2 truncate rounded-full bg-black/45 px-3 py-1 text-center text-[11px] text-kai-faint backdrop-blur-sm"
+          style={{ top: 'calc(var(--hud-row2) + 2.75rem)' }}
+        >
           {t.hint} ({BOND_RADIUS} m)
         </div>
       )}
 
       {/* ---- the panel ---- */}
       {open && (
-        <div className="pointer-events-auto absolute inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="glass w-full max-w-md animate-fade-up p-6">
+        <div className="pointer-events-auto absolute inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+          <div className="glass my-auto w-full max-w-md animate-fade-up p-5 sm:p-6">
             <div className="text-center">
               <div className="text-3xl">👥</div>
               <h2 className="mt-1 font-display text-xl font-semibold text-kai-text">{t.title}</h2>

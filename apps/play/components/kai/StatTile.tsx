@@ -30,7 +30,9 @@ export function StatTile({
       </span>
       <div className="min-w-0">
         <div className="font-display text-base font-semibold leading-tight text-kai-text">{fmt(value, unit)}</div>
-        <div className="truncate text-[11px] text-kai-muted">{label}</div>
+        {/* Two lines rather than "Community pul…": these labels are the only
+            thing that says what the number means. */}
+        <div className="text-[11px] leading-tight text-kai-muted">{label}</div>
       </div>
     </div>
   );

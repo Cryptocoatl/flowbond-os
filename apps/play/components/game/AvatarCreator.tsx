@@ -5,8 +5,11 @@ import { AVATARS } from '@/lib/kai/avatars';
 
 export function AvatarCreator({ onCreated, onClose }: { onCreated: (url: string) => void; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[60] grid place-items-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="glass w-full max-w-lg animate-fade-up p-6">
+    <div
+      className="fixed inset-0 z-[60] grid place-items-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+      style={{ paddingTop: 'calc(var(--sa-t) + 1rem)', paddingBottom: 'calc(var(--sa-b) + 1rem)' }}
+    >
+      <div className="glass my-auto w-full max-w-lg animate-fade-up p-5 sm:p-6">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-kai-text">Elige tu Kai</h2>
           <button onClick={onClose} className="rounded-full border border-white/15 px-3 py-1 text-sm text-kai-muted">

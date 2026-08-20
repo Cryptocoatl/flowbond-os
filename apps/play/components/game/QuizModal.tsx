@@ -81,8 +81,11 @@ export function QuizModal({
   };
 
   return (
-    <div className="pointer-events-auto fixed inset-0 z-[70] grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="glass w-full max-w-md animate-fade-up p-6">
+    <div
+      className="pointer-events-auto fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm"
+      style={{ paddingTop: 'calc(var(--sa-t) + 1rem)', paddingBottom: 'calc(var(--sa-b) + 1rem)' }}
+    >
+      <div className="glass my-auto w-full max-w-md animate-fade-up p-5 sm:p-6">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-3xl">{emoji}</span>
           <div className="flex items-center gap-2">

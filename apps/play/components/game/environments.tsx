@@ -8,6 +8,7 @@ import { useFrame } from '@react-three/fiber';
 import { Sparkles, Instances, Instance } from '@react-three/drei';
 import * as THREE from 'three';
 import type { KaiWorld } from '@/lib/kai/worlds';
+import { useQuality, scaled } from './useQuality';
 
 function seeded(seed: number) {
   let s = seed % 2147483647;
@@ -282,6 +283,7 @@ function Lantern({ position, color }: { position: [number, number, number]; colo
 // SELVA — lush jungle with a great ceiba, fireflies, layered canopy
 // ---------------------------------------------------------------------------
 export function SelvaEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const trees = useMemo(() => scatter(2024, 170, 300, 10), []);
   const foliage = world.theme.terrain[2];
   return (
@@ -314,7 +316,7 @@ export function SelvaEnvironment({ world }: { world: KaiWorld }) {
         </mesh>
       </group>
       {/* fireflies */}
-      <Sparkles count={90} scale={[200, 8, 200]} position={[0, 3, 0]} size={2.4} speed={0.35} color="#F4C25A" />
+      <Sparkles count={scaled(90, q)} scale={[200, 8, 200]} position={[0, 3, 0]} size={2.4} speed={0.35} color="#F4C25A" />
     </group>
   );
 }
@@ -323,6 +325,7 @@ export function SelvaEnvironment({ world }: { world: KaiWorld }) {
 // EGIPTO — desert, pyramids, obelisks, palms
 // ---------------------------------------------------------------------------
 export function EgiptoEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const dunes = useMemo(() => scatter(444, 40, 320, 20), []);
   const obelisks = useMemo(() => scatter(445, 26, 300, 24), []);
   const palms = useMemo(() => scatter(446, 22, 240, 14), []);
@@ -368,7 +371,7 @@ export function EgiptoEnvironment({ world }: { world: KaiWorld }) {
           ))}
         </group>
       ))}
-      <Sparkles count={60} scale={[220, 16, 220]} position={[0, 8, 0]} size={2} speed={0.15} opacity={0.4} color="#ffe6a0" />
+      <Sparkles count={scaled(60, q)} scale={[220, 16, 220]} position={[0, 8, 0]} size={2} speed={0.15} opacity={0.4} color="#ffe6a0" />
     </group>
   );
 }
@@ -377,6 +380,7 @@ export function EgiptoEnvironment({ world }: { world: KaiWorld }) {
 // ESCUELA — living school: garden beds, greenhouse, solar, windmills
 // ---------------------------------------------------------------------------
 export function EscuelaEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const trees = useMemo(() => scatter(770, 60, 260, 24), []);
   return (
     <group>
@@ -421,7 +425,7 @@ export function EscuelaEnvironment({ world }: { world: KaiWorld }) {
           <Instance key={i} position={[t.x, 2.2 * t.s, t.z]} scale={t.s} />
         ))}
       </Instances>
-      <Sparkles count={50} scale={[180, 10, 180]} position={[0, 4, 0]} size={2} speed={0.3} color="#d8ffb0" />
+      <Sparkles count={scaled(50, q)} scale={[180, 10, 180]} position={[0, 4, 0]} size={2} speed={0.3} color="#d8ffb0" />
     </group>
   );
 }
@@ -430,6 +434,7 @@ export function EscuelaEnvironment({ world }: { world: KaiWorld }) {
 // ESPÍRITU — misty garden: still pond, floating lanterns, drifting petals, arches
 // ---------------------------------------------------------------------------
 export function EspirituEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const lanterns = useMemo(() => scatter(6060, 16, 200, 8), []);
   const stones = useMemo(() => scatter(6061, 40, 260, 10), []);
   return (
@@ -469,7 +474,7 @@ export function EspirituEnvironment({ world }: { world: KaiWorld }) {
         <Lantern key={i} position={[l.x, 2 + l.s, l.z]} color="#ffd6ec" />
       ))}
       {/* drifting petals */}
-      <Sparkles count={120} scale={[200, 20, 200]} position={[0, 8, 0]} size={3} speed={0.25} opacity={0.6} color="#ffc0dd" />
+      <Sparkles count={scaled(120, q)} scale={[200, 20, 200]} position={[0, 8, 0]} size={3} speed={0.25} opacity={0.6} color="#ffc0dd" />
     </group>
   );
 }
@@ -478,6 +483,7 @@ export function EspirituEnvironment({ world }: { world: KaiWorld }) {
 // NUEVO — solarpunk village: houses, gardens, solar, windmills, rainbow
 // ---------------------------------------------------------------------------
 export function NuevoEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const houseCols = ['#e8896b', '#6bb0e8', '#e8c46b', '#8ad86b', '#c98ae8'];
   const houses = useMemo(() => {
     const rnd = seeded(9090);
@@ -527,12 +533,13 @@ export function NuevoEnvironment({ world }: { world: KaiWorld }) {
           <Instance key={i} position={[t.x, 2.4 * t.s, t.z]} scale={t.s} />
         ))}
       </Instances>
-      <Sparkles count={70} scale={[200, 16, 200]} position={[0, 6, 0]} size={2.4} speed={0.35} color="#fff0b0" />
+      <Sparkles count={scaled(70, q)} scale={[200, 16, 200]} position={[0, 6, 0]} size={2.4} speed={0.35} color="#fff0b0" />
     </group>
   );
 }
 
 export function AtlantisEnvironment({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   const surface = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     if (surface.current) surface.current.position.y = 39 + Math.sin(clock.elapsedTime * 0.6) * 0.6;
@@ -554,10 +561,10 @@ export function AtlantisEnvironment({ world }: { world: KaiWorld }) {
       <Bubbles />
       <GodRays color={world.theme.terrain[2]} />
       <Whale color={world.theme.terrain[0]} />
-      <FishSchool center={[24, 10, -18]} radius={9} count={16} color="#ffd27a" speed={0.5} />
-      <FishSchool center={[-30, 14, 20]} radius={12} count={20} color="#8fe3ff" speed={-0.35} />
-      <FishSchool center={[10, 20, 30]} radius={7} count={12} color="#ff9fc0" speed={0.6} />
-      <Sparkles count={140} scale={[240, 40, 240]} position={[0, 20, 0]} size={2.4} speed={0.5} opacity={0.5} color="#bfefff" />
+      <FishSchool center={[24, 10, -18]} radius={9} count={scaled(16, q)} color="#ffd27a" speed={0.5} />
+      <FishSchool center={[-30, 14, 20]} radius={12} count={scaled(20, q)} color="#8fe3ff" speed={-0.35} />
+      <FishSchool center={[10, 20, 30]} radius={7} count={scaled(12, q)} color="#ff9fc0" speed={0.6} />
+      <Sparkles count={scaled(140, q)} scale={[240, 40, 240]} position={[0, 20, 0]} size={2.4} speed={0.5} opacity={0.5} color="#bfefff" />
       {/* deep-water glow */}
       <pointLight position={[0, 30, 0]} color={world.theme.hemi} intensity={1.6} distance={120} />
     </group>

@@ -29,13 +29,18 @@ export function ExploreDashboard({ region, missions }: { region: RegionSummary; 
         <QuickActions />
         <WorldPreview3D region={region} />
 
-        <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-          <div className="space-y-4">
+        {/* `grid-cols-1` / `minmax(0,…)` are load-bearing, not decoration: an
+            auto-sized grid track grows to its content's max-content width, and
+            the Guardians rail is eight fixed-width cards. Without the explicit
+            minmax the track grew to ~1110px and the ENTIRE dashboard scrolled
+            sideways on a phone — the hero at 390px, every panel below at 1110. */}
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-4">
             <MissionFeed missions={missions} region={region} />
             <GuardianRail />
             <ImpactOverview state={region.state} />
           </div>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <GuardianWidget />
             <LiveFeed regionName={region.name} />
             <DreamRequests />
