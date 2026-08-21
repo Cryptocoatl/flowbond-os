@@ -15,7 +15,18 @@ export interface HudTarget {
 const DEG = 180 / Math.PI;
 const clamp1 = (v: number) => (v < -1 ? -1 : v > 1 ? 1 : v);
 
-export function MiniHud({ targets, color, lang }: { targets: HudTarget[]; color: string; lang: 'es' | 'en' }) {
+export function MiniHud({
+  targets,
+  color,
+  lang,
+  compact = false,
+}: {
+  targets: HudTarget[];
+  color: string;
+  lang: 'es' | 'en';
+  /** phone / landscape: shrink the instruments and drop the caption. */
+  compact?: boolean;
+}) {
   const targetsRef = useRef<HudTarget[]>(targets);
   targetsRef.current = targets;
 
@@ -96,10 +107,17 @@ export function MiniHud({ targets, color, lang }: { targets: HudTarget[]; color:
     return () => cancelAnimationFrame(raf);
   }, [color]);
 
+  // The instruments used to be absolutely positioned at `right-3 top-24` —
+  // exactly where the zoom buttons also sat, so on every screen the compass
+  // and the 🔍 controls drew on top of each other. They are now a plain block
+  // that the HUD's right rail stacks, and the rail owns the position.
+  const dial = compact ? 'h-16 w-16' : 'h-24 w-24';
+  const map = compact ? 'h-16 w-16' : 'h-28 w-28';
+
   return (
-    <div className="pointer-events-none absolute right-3 top-24 flex flex-col items-end gap-2">
+    <div className="pointer-events-none flex flex-col items-end gap-1.5">
       {/* compass */}
-      <svg viewBox="-50 -50 100 100" className="h-24 w-24 drop-shadow">
+      <svg viewBox="-50 -50 100 100" className={`${dial} drop-shadow`}>
         <circle cx="0" cy="0" r="46" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.18)" strokeWidth="1.5" />
         <g ref={roseRef}>
           <line x1="0" y1="-44" x2="0" y2="44" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
@@ -118,7 +136,7 @@ export function MiniHud({ targets, color, lang }: { targets: HudTarget[]; color:
       </svg>
 
       {/* minimap */}
-      <svg viewBox="-30 -30 60 60" className="h-28 w-28 drop-shadow">
+      <svg viewBox="-30 -30 60 60" className={`${map} drop-shadow`}>
         <rect x="-29" y="-29" width="58" height="58" rx="8" fill="rgba(0,0,0,0.42)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
         <circle cx="0" cy="0" r="27" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
         <g ref={dotsWrapRef} />
@@ -126,9 +144,11 @@ export function MiniHud({ targets, color, lang }: { targets: HudTarget[]; color:
           <polygon points="0,-4 3,4 -3,4" fill="#F4C25A" />
         </g>
       </svg>
-      <div className="rounded-full bg-black/40 px-2 py-0.5 text-[9px] text-kai-faint backdrop-blur-md">
-        {lang === 'es' ? 'brújula · mapa' : 'compass · map'}
-      </div>
+      {!compact && (
+        <div className="rounded-full bg-black/40 px-2 py-0.5 text-[9px] text-kai-faint backdrop-blur-md">
+          {lang === 'es' ? 'brújula · mapa' : 'compass · map'}
+        </div>
+      )}
     </div>
   );
 }

@@ -17,13 +17,13 @@
 // =============================================================================
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Sky, Stars, Sparkles, MeshReflectorMaterial, Instances, Instance, Html } from '@react-three/drei';
+import { Sky, Stars, Sparkles, MeshReflectorMaterial, Instances, Instance, Html, PerformanceMonitor } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { XR, createXRStore } from '@react-three/xr';
 import * as THREE from 'three';
 import Link from 'next/link';
 import type { RegionSummary } from '@/lib/kai/types';
-import { WORLDS, worldById, worldIndex, type KaiWorld, type WorldMission } from '@/lib/kai/worlds';
+import { WORLDS, TOTAL_MISSIONS, worldById, worldIndex, type KaiWorld, type WorldMission } from '@/lib/kai/worlds';
 import { MobileJoystick } from './MobileJoystick';
 import { useAvatar } from './useAvatar';
 import { AvatarModel } from './AvatarModel';
@@ -34,6 +34,9 @@ import { useSpeech } from './useSpeech';
 import { QuizModal } from './QuizModal';
 import { WorldMap } from './WorldMap';
 import { MiniHud, type HudTarget } from './MiniHud';
+import { useViewport } from './useViewport';
+import { QualityContext, useQuality, useQualityPref, scaled, QUALITY_LABEL, type QualityPref } from './useQuality';
+import { HudMenu, HudMenuRow, HudMenuAction, HudSegment } from './HudMenu';
 import { AtlantisEnvironment, SelvaEnvironment, EgiptoEnvironment, EscuelaEnvironment, EspirituEnvironment, NuevoEnvironment } from './environments';
 import { useBuild, type Placed } from './useBuild';
 import { BuiltProp, paletteFor, BUILD_KINDS, type BuildKind } from './BuiltProps';
@@ -127,21 +130,29 @@ function Terrain({ world, vitality }: { world: KaiWorld; vitality: number }) {
 }
 
 function Water({ world }: { world: KaiWorld }) {
+  const q = useQuality();
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[36, 0.04, 26]}>
       <planeGeometry args={[64, 48]} />
-      <MeshReflectorMaterial
-        resolution={512}
-        mixBlur={1}
-        mixStrength={6}
-        roughness={0.9}
-        depthScale={1}
-        minDepthThreshold={0.4}
-        maxDepthThreshold={1.2}
-        color={world.theme.water}
-        metalness={0.35}
-        mirror={0.5}
-      />
+      {q.reflections ? (
+        <MeshReflectorMaterial
+          resolution={q.tier === 'alto' ? 512 : 256}
+          mixBlur={1}
+          mixStrength={6}
+          roughness={0.9}
+          depthScale={1}
+          minDepthThreshold={0.4}
+          maxDepthThreshold={1.2}
+          color={world.theme.water}
+          metalness={0.35}
+          mirror={0.5}
+        />
+      ) : (
+        /* A mirror re-renders the whole scene every frame. Below the top tier
+           the water is a glossy, slightly transparent surface instead — same
+           read at a glance, none of the second render pass. */
+        <meshStandardMaterial color={world.theme.water} roughness={0.22} metalness={0.5} transparent opacity={0.9} />
+      )}
     </mesh>
   );
 }
@@ -583,19 +594,71 @@ function Player() {
 
   useEffect(() => {
     const dom = gl.domElement;
-    const down = (e: PointerEvent) => {
-      input.drag = true;
-      input.lastX = e.clientX;
-      input.lastY = e.clientY;
+
+    // Look/zoom is multi-touch aware. It used to be a single global `drag`
+    // flag listening to every pointermove on the window, which meant that on
+    // a phone the thumb working the joystick ALSO swung the camera — the world
+    // spun every time you tried to walk. Now only the pointer that started on
+    // the canvas steers, and a second finger on the canvas pinches to zoom.
+    const touches = new Map<number, { x: number; y: number }>();
+    let lookId: number | null = null;
+    let pinchStart = 0;
+    let pinchDist = 0;
+
+    const spread = () => {
+      const [a, b] = [...touches.values()];
+      return Math.hypot(a.x - b.x, a.y - b.y);
     };
+
+    const down = (e: PointerEvent) => {
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 1) {
+        lookId = e.pointerId;
+        input.drag = true;
+        input.lastX = e.clientX;
+        input.lastY = e.clientY;
+      } else if (touches.size === 2) {
+        // second finger on the world → pinch-zoom, and looking pauses so the
+        // camera does not lurch as the fingers spread.
+        input.drag = false;
+        lookId = null;
+        pinchStart = spread();
+        pinchDist = input.dist;
+      }
+    };
+
     const move = (e: PointerEvent) => {
-      if (!input.drag) return;
+      if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size >= 2 && pinchStart > 0) {
+        const s = spread();
+        if (s > 0) input.dist = THREE.MathUtils.clamp(pinchDist * (pinchStart / s), 3.5, 24);
+        return;
+      }
+      if (!input.drag || e.pointerId !== lookId) return;
       input.yaw -= (e.clientX - input.lastX) * 0.005;
       input.pitch = THREE.MathUtils.clamp(input.pitch - (e.clientY - input.lastY) * 0.005, -1.2, 0.85);
       input.lastX = e.clientX;
       input.lastY = e.clientY;
     };
-    const up = () => (input.drag = false);
+
+    const up = (e: PointerEvent) => {
+      touches.delete(e.pointerId);
+      if (e.pointerId === lookId) {
+        lookId = null;
+        input.drag = false;
+      }
+      if (touches.size < 2) pinchStart = 0;
+      // lifting one finger of a pinch hands the look back to the other one
+      if (touches.size === 1) {
+        const [id] = [...touches.keys()];
+        const t = touches.get(id)!;
+        lookId = id;
+        input.lastX = t.x;
+        input.lastY = t.y;
+        input.drag = true;
+      }
+    };
+
     const wheel = (e: WheelEvent) => {
       input.dist = THREE.MathUtils.clamp(input.dist + e.deltaY * 0.012, 3.5, 24);
     };
@@ -603,6 +666,7 @@ function Player() {
     dom.addEventListener('wheel', wheel, { passive: true });
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
     const kd = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -624,6 +688,7 @@ function Player() {
       dom.removeEventListener('wheel', wheel);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
       window.removeEventListener('keydown', kd);
       window.removeEventListener('keyup', ku);
       unsub();
@@ -808,29 +873,36 @@ function Scene({
   builtProps: Placed[];
   crew: ReturnType<typeof useParty>;
 }) {
+  const q = useQuality();
   const sun = useMemo<[number, number, number]>(() => [60, 26, 30], []);
   const underwater = world.id === 'atlantis';
   const space = world.id === 'astros';
   const fogDensity = underwater ? 0.02 : space ? 0.004 : 0.0095;
+  // A tighter shadow frustum on the lighter tiers: the same 512² map spread
+  // over 160m of world is mush, over 90m it still reads as a shadow.
+  const shadowSpan = q.tier === 'alto' ? 80 : 48;
   return (
     <>
       <fogExp2 attach="fog" args={[new THREE.Color(world.theme.fog).getHex(), fogDensity]} />
       <hemisphereLight args={[new THREE.Color(world.theme.hemi).getHex(), new THREE.Color(world.theme.terrain[0]).getHex(), underwater || space ? 1 : 0.7]} />
       <directionalLight
         position={sun}
-        intensity={underwater ? 1.1 : space ? 0.7 : 2.2}
+        // With shadows off the world flattens out, so the sun picks up a
+        // little of the missing contrast rather than just losing it.
+        intensity={(underwater ? 1.1 : space ? 0.7 : 2.2) * (q.shadows ? 1 : 1.12)}
         color={underwater ? '#9fe8ff' : '#ffe4b0'}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-80}
-        shadow-camera-right={80}
-        shadow-camera-top={80}
-        shadow-camera-bottom={-80}
+        castShadow={q.shadows}
+        shadow-mapSize={[q.shadowMap, q.shadowMap]}
+        shadow-camera-left={-shadowSpan}
+        shadow-camera-right={shadowSpan}
+        shadow-camera-top={shadowSpan}
+        shadow-camera-bottom={-shadowSpan}
         shadow-bias={-0.0004}
+        shadow-normalBias={0.02}
       />
       {!underwater && !space && <Sky sunPosition={sun} turbidity={5} rayleigh={1.4} mieCoefficient={0.005} mieDirectionalG={0.85} />}
-      {space && <Stars radius={200} depth={60} count={4000} factor={5} saturation={0.4} fade speed={0.6} />}
-      <Sparkles count={110} scale={[220, 24, 220]} position={[0, 12, 0]} size={2.2} speed={0.18} opacity={0.5} color={world.color} />
+      {space && <Stars radius={200} depth={60} count={scaled(4000, q)} factor={5} saturation={0.4} fade speed={0.6} />}
+      <Sparkles count={scaled(110, q)} scale={[220, 24, 220]} position={[0, 12, 0]} size={2.2} speed={0.18} opacity={0.5} color={world.color} />
       {underwater ? (
         <AtlantisEnvironment world={world} />
       ) : world.id === 'selva' ? (
@@ -871,8 +943,14 @@ function Scene({
           teamGate={crew.together}
         />
       )}
-      <EffectComposer>
-        <Bloom mipmapBlur intensity={0.9} luminanceThreshold={0.55} luminanceSmoothing={0.2} />
+      {/* Vignette is nearly free and does most of the "cinematic" work, so it
+          survives every tier; bloom and MSAA are what get traded away. */}
+      <EffectComposer multisampling={q.msaa} enableNormalPass={false}>
+        {q.bloom ? (
+          <Bloom mipmapBlur intensity={q.tier === 'alto' ? 0.9 : 0.65} luminanceThreshold={0.55} luminanceSmoothing={0.2} />
+        ) : (
+          <></>
+        )}
         <Vignette eskil={false} offset={0.28} darkness={0.72} />
       </EffectComposer>
     </>
@@ -892,6 +970,19 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   const crew = useParty();
   const [partyOpen, setPartyOpen] = useState(false);
   const inParty = crew.status === 'live' && !!crew.shared;
+
+  // How much screen there is, and how much GPU. Both decide what the HUD and
+  // the scene are allowed to be — see useViewport.ts / useQuality.ts.
+  const vp = useViewport();
+  const { pref: qualityPref, tier: qualityTier, quality, choose: chooseQuality } = useQualityPref();
+  // The live watchdog only ever lowers the ceiling, so it cannot oscillate;
+  // choosing a tier by hand clears whatever it had decided.
+  const [dprCap, setDprCap] = useState<number | null>(null);
+  useEffect(() => setDprCap(null), [qualityTier]);
+  const dpr = useMemo<[number, number]>(
+    () => [quality.dpr[0], Math.max(quality.dpr[0], dprCap ?? quality.dpr[1])],
+    [quality, dprCap],
+  );
 
   const lang = progress.lang;
   const world = worldById(inParty ? crew.shared!.w : progress.world);
@@ -922,7 +1013,11 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   const [toast, setToast] = useState<string | null>(null);
   const [vrOk, setVrOk] = useState(false);
   const [events, setEvents] = useState<string[]>([]);
-  const [showLog, setShowLog] = useState(true);
+  // The event log is a developer instrument. It used to open by default, which
+  // on a phone meant a black panel sitting exactly where the joystick goes.
+  const [showLog, setShowLog] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(true);
   const [buildOpen, setBuildOpen] = useState(false);
   const [buildKind, setBuildKind] = useState<BuildKind>('tree');
   const introSpoken = useRef<string>('');
@@ -1123,6 +1218,15 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   // read any UI text aloud with the current world's voice (hover/click).
   const readAloud = useCallback((text: string) => speak(text, { ...world.voice, lang }), [speak, world.voice, lang]);
 
+  // The party pill and its bond hint dock on the row under the top bar, so
+  // everything else on that row starts below them when a room is open.
+  const rowTop =
+    crew.status === 'live' && crew.members.length > 0
+      ? 'calc(var(--hud-row2) + 5.25rem)'
+      : crew.status !== 'off'
+        ? 'calc(var(--hud-row2) + 3rem)'
+        : 'var(--hud-row2)';
+
   // objective dots for the minimap/compass (recomputed as things get collected)
   const hudTargets: HudTarget[] = useMemo(
     () => (worldDone ? [] : positions.map((p, i) => ({ x: p[0], z: p[2], done: collected.has(i) }))),
@@ -1130,85 +1234,334 @@ export function GameWorld({ region }: { region: RegionSummary }) {
   );
 
   return (
-    <div className="fixed inset-0 bg-[#05070a]">
-      <Canvas shadows dpr={[1, 1.75]} camera={{ position: [0, 3, 8], fov: 70, near: 0.05, far: 900 }} gl={{ antialias: true }}>
-        <color attach="background" args={[world.theme.fog]} />
-        <XR store={store}>
-          <Suspense fallback={null}>
-            <Scene
-              world={world}
-              vitality={region.state.vitality}
-              mission={worldDone ? undefined : mission}
-              positions={positions}
-              collected={collected}
-              onCollect={handleCollect}
-              onQuizNear={() => setQuizOpen(true)}
-              avatarUrl={avatarUrl}
-              builtProps={visibleProps}
-              crew={crew}
-            />
-          </Suspense>
-        </XR>
-      </Canvas>
+    <div className="game-surface fixed inset-0 bg-[#05070a]">
+      <QualityContext.Provider value={quality}>
+        <Canvas
+          // 'soft' is PCFSoft filtering: same shadow map, far less staircase
+          // on the edges, which is most of what made the old render look cheap.
+          shadows={quality.shadows ? 'soft' : false}
+          dpr={dpr}
+          // A phone held in landscape sees a letterbox; widening the lens keeps
+          // the objective and the guide in frame instead of cropping them out.
+          camera={{ position: [0, 3, 8], fov: vp.short ? 78 : 70, near: 0.05, far: quality.far }}
+          // The effect composer draws the final image as a fullscreen quad, so
+          // canvas MSAA would cost memory and change nothing — anti-aliasing is
+          // the composer's `multisampling`, which the tier decides.
+          gl={{ antialias: false, powerPreference: 'high-performance' }}
+        >
+          <color attach="background" args={[world.theme.fog]} />
+          {/* The tier is a guess about the device. This is the measurement: if
+              frames start slipping, shed pixels rather than let it stutter. */}
+          <PerformanceMonitor
+            flipflops={2}
+            onDecline={() => setDprCap((c) => Math.max(quality.dpr[0], Math.round(((c ?? quality.dpr[1]) - 0.25) * 100) / 100))}
+            onFallback={() => setDprCap(quality.dpr[0])}
+          />
+          <XR store={store}>
+            <Suspense fallback={null}>
+              <Scene
+                world={world}
+                vitality={region.state.vitality}
+                mission={worldDone ? undefined : mission}
+                positions={positions}
+                collected={collected}
+                onCollect={handleCollect}
+                onQuizNear={() => setQuizOpen(true)}
+                avatarUrl={avatarUrl}
+                builtProps={visibleProps}
+                crew={crew}
+              />
+            </Suspense>
+          </XR>
+        </Canvas>
+      </QualityContext.Provider>
 
-      {/* ---- HUD ---- */}
+      {/* =====================================================================
+          HUD. Three rails anchored to the physical screen — a top bar that
+          never wraps, a right instrument column, and a bottom control deck —
+          each padded by the notch/home-indicator insets. Anything optional
+          (keyboard hints, the debug log, the zoom buttons a pinch replaces)
+          disappears on a phone rather than stacking on top of the game.
+          ===================================================================== */}
       <div className="pointer-events-none absolute inset-0">
-        {/* top-left: nav + world + xp */}
-        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
-          <Link href="/" className="pointer-events-auto rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-sm text-kai-text backdrop-blur-md">
-            ←
-          </Link>
-          <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-sm backdrop-blur-md">
-            <span>{world.emoji} </span>
-            <span className="text-kai-text">{world.name[lang]}</span>
+        {/* ---- top rail ---------------------------------------------------- */}
+        <div
+          className="pointer-events-none absolute flex items-center gap-1.5"
+          style={{ top: 'var(--hud-t)', left: 'var(--hud-l)', right: 'var(--hud-r)' }}
+        >
+          {/* Left cluster shrinks; the buttons on the right never do. The old
+              bar let both grow and flex-wrap, which is how seven pills ended
+              up stacked three rows deep across the top of a phone. */}
+          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+            <Link href="/" className="hud-icon hud-tap pointer-events-auto" aria-label={lang === 'es' ? 'Salir' : 'Exit'}>
+              ←
+            </Link>
+            <div className="hud-pill min-w-0 [flex-shrink:1]" style={{ maxWidth: vp.compact ? '12rem' : '18rem' }}>
+              <span>{world.emoji}</span>
+              <span className="truncate">{world.name[lang]}</span>
+            </div>
+            {!vp.compact && (
+              <>
+                <div className="hud-pill text-kai-gold">✦ {progress.xp}</div>
+                <div className="hud-pill text-kai-jade">
+                  🌍 {totalDone}/{TOTAL_MISSIONS}
+                </div>
+              </>
+            )}
           </div>
-          <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-kai-gold backdrop-blur-md">
-            ✦ {progress.xp}
-          </div>
-          <div className="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-kai-jade backdrop-blur-md">
-            🌍 {totalDone}
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            {!vp.compact && (
+              <button
+                onClick={toggleMute}
+                className="hud-icon hud-tap pointer-events-auto"
+                aria-label={lang === 'es' ? 'Voz de la guía' : 'Guide voice'}
+                title={lang === 'es' ? 'Voz de la guía' : 'Guide voice'}
+              >
+                {muted ? '🔇' : '🔊'}
+              </button>
+            )}
+            <button
+              onClick={() => setPartyOpen(true)}
+              className={`hud-tap pointer-events-auto ${vp.compact ? 'hud-icon' : 'hud-pill'} ${
+                crew.together ? 'border-kai-jade/50 bg-kai-jade/20 text-kai-jade' : ''
+              }`}
+              aria-label={lang === 'es' ? 'Jugar juntos' : 'Play together'}
+            >
+              {vp.compact ? (
+                <span className="text-[13px]">👥{crew.together ? crew.members.length + 1 : ''}</span>
+              ) : (
+                <>👥 {crew.together ? crew.members.length + 1 : lang === 'es' ? 'Juntos' : 'Together'}</>
+              )}
+            </button>
+            <button
+              onClick={() => setMapOpen(true)}
+              className={`hud-tap pointer-events-auto border-kai-gold/30 bg-kai-gold/10 text-kai-gold ${vp.compact ? 'hud-icon' : 'hud-pill'}`}
+              aria-label={lang === 'es' ? 'Mundos y misiones' : 'Worlds and missions'}
+            >
+              {vp.compact ? '🗺️' : <>🗺️ {lang === 'es' ? 'Mundos' : 'Worlds'}</>}
+            </button>
+            {!vp.compact && (
+              <button
+                onClick={() => setBuildOpen((b) => !b)}
+                className={`hud-pill hud-tap pointer-events-auto ${
+                  buildOpen ? 'border-kai-jade/50 bg-kai-jade/20 text-kai-jade' : ''
+                }`}
+              >
+                🔨 {lang === 'es' ? 'Crear' : 'Build'}
+              </button>
+            )}
+            <button
+              onClick={() => setMenuOpen((m) => !m)}
+              className={`hud-icon hud-tap pointer-events-auto ${menuOpen ? 'border-kai-gold/40 bg-kai-gold/15 text-kai-gold' : ''}`}
+              aria-label={lang === 'es' ? 'Ajustes' : 'Settings'}
+            >
+              ⋯
+            </button>
           </div>
         </div>
 
-        {/* top-right: buttons */}
-        <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-2">
-          <button
-            onClick={() => setPartyOpen(true)}
-            className={`pointer-events-auto rounded-full border px-4 py-1.5 text-sm font-medium backdrop-blur-md ${
-              crew.together ? 'border-kai-jade/50 bg-kai-jade/20 text-kai-jade' : 'border-white/15 bg-black/40 text-kai-text'
-            }`}
+        {/* ---- overflow drawer --------------------------------------------- */}
+        <HudMenu open={menuOpen} onClose={() => setMenuOpen(false)} title={lang === 'es' ? 'Ajustes' : 'Settings'}>
+          {vp.compact && (
+            <HudMenuAction
+              onClick={() => {
+                setBuildOpen((b) => !b);
+                setMenuOpen(false);
+              }}
+            >
+              🔨 {buildOpen ? (lang === 'es' ? 'Cerrar creación' : 'Close build') : lang === 'es' ? 'Crear tu mundo' : 'Build your world'}
+            </HudMenuAction>
+          )}
+          {/* Off by default: the browser's built-in synthesiser is a robot, and
+              every teaching is already on screen as text. Opt in if you want it. */}
+          <HudMenuAction onClick={toggleMute}>
+            {muted ? '🔇' : '🔊'}{' '}
+            {muted
+              ? lang === 'es'
+                ? 'Voz de la guía: apagada'
+                : 'Guide voice: off'
+              : lang === 'es'
+                ? 'Voz de la guía: encendida'
+                : 'Guide voice: on'}
+          </HudMenuAction>
+          <HudMenuAction
+            onClick={() => {
+              setCreatorOpen(true);
+              setMenuOpen(false);
+            }}
           >
-            👥 {crew.together ? crew.members.length + 1 : lang === 'es' ? 'Juntos' : 'Together'}
-          </button>
-          <button onClick={() => setMapOpen(true)} className="pointer-events-auto rounded-full border border-kai-gold/30 bg-kai-gold/10 px-4 py-1.5 text-sm font-medium text-kai-gold backdrop-blur-md">
-            🗺️ {lang === 'es' ? 'Mundos' : 'Worlds'}
-          </button>
-          <button onClick={() => setBuildOpen((b) => !b)} className={`pointer-events-auto rounded-full border px-4 py-1.5 text-sm font-medium backdrop-blur-md ${buildOpen ? 'border-kai-jade/50 bg-kai-jade/20 text-kai-jade' : 'border-white/15 bg-black/40 text-kai-text'}`}>
-            🔨 {lang === 'es' ? 'Crear' : 'Build'}
-          </button>
-          <button onClick={() => setCreatorOpen(true)} className="pointer-events-auto rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-sm text-kai-text backdrop-blur-md">
-            {avatarUrl ? '🧍' : '➕🧍'}
-          </button>
-          <button onClick={toggleMute} className="pointer-events-auto rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-sm text-kai-text backdrop-blur-md">
-            {muted ? '🔇' : '🔊'}
-          </button>
-          <button onClick={() => setLang(lang === 'es' ? 'en' : 'es')} className="pointer-events-auto rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-sm text-kai-text backdrop-blur-md">
-            {lang === 'es' ? 'ES' : 'EN'}
-          </button>
-          <button onClick={() => setShowLog((s) => !s)} className="pointer-events-auto rounded-full border border-white/15 bg-black/40 px-3 py-1.5 text-sm text-kai-text backdrop-blur-md">
-            🐞
-          </button>
-          <button onClick={() => store.enterVR()} disabled={!vrOk} className="pointer-events-auto rounded-full border border-kai-gold/30 bg-kai-gold/10 px-3 py-1.5 text-sm text-kai-gold backdrop-blur-md disabled:opacity-40">
-            {vrOk ? 'VR' : '·'}
-          </button>
+            🧍 {avatarUrl ? (lang === 'es' ? 'Cambiar tu personaje' : 'Change your character') : lang === 'es' ? 'Elegir personaje' : 'Choose a character'}
+          </HudMenuAction>
+
+          <HudMenuRow label={lang === 'es' ? 'Idioma' : 'Language'}>
+            <HudSegment
+              value={lang}
+              onChange={(l) => setLang(l)}
+              options={[
+                { id: 'es' as const, label: 'Español' },
+                { id: 'en' as const, label: 'English' },
+              ]}
+            />
+          </HudMenuRow>
+
+          {/* The world was tuned on a laptop. This is the dial that makes it
+              playable on a phone — and lets a good phone ask for more. */}
+          <HudMenuRow label={lang === 'es' ? 'Calidad gráfica' : 'Graphics'}>
+            <HudSegment
+              value={qualityPref}
+              onChange={(p) => chooseQuality(p as QualityPref)}
+              options={(['auto', 'bajo', 'medio', 'alto'] as const).map((id) => ({ id, label: QUALITY_LABEL[id][lang] }))}
+            />
+            <div className="w-full text-[10px] text-kai-faint">
+              {lang === 'es' ? 'Ahora: ' : 'Now: '}
+              <span className="text-kai-muted">{QUALITY_LABEL[qualityTier][lang]}</span>
+              {qualityPref === 'auto' ? (lang === 'es' ? ' · elegida por tu equipo' : ' · picked for your device') : ''}
+            </div>
+          </HudMenuRow>
+
+          <HudMenuAction onClick={() => store.enterVR()} disabled={!vrOk}>
+            🥽 {vrOk ? (lang === 'es' ? 'Entrar en VR' : 'Enter VR') : lang === 'es' ? 'VR no disponible aquí' : 'VR unavailable here'}
+          </HudMenuAction>
+          <HudMenuAction onClick={() => setShowLog((s) => !s)}>
+            🐞 {showLog ? (lang === 'es' ? 'Ocultar registro' : 'Hide log') : lang === 'es' ? 'Ver registro' : 'Show log'}
+          </HudMenuAction>
+        </HudMenu>
+
+        {/* ---- right rail: instruments + zoom ------------------------------ */}
+        <div
+          className="pointer-events-none absolute flex flex-col items-end gap-2"
+          style={{ top: rowTop, right: 'var(--hud-r)' }}
+        >
+          {!worldDone && !vp.short && <MiniHud targets={hudTargets} color={world.color} lang={lang} compact={vp.compact} />}
+          {/* On touch the two fingers already pinch the camera, so the buttons
+              would only be two more things covering the world. */}
+          {!vp.touch && (
+            <div className="pointer-events-auto flex flex-col gap-1.5">
+              <button
+                onClick={() => (input.dist = Math.min(24, input.dist + 2.5))}
+                className="hud-icon hud-tap"
+                title={lang === 'es' ? 'Alejar' : 'Zoom out'}
+              >
+                ➖
+              </button>
+              <button
+                onClick={() => (input.dist = Math.max(3.5, input.dist - 2.5))}
+                className="hud-icon hud-tap"
+                title={lang === 'es' ? 'Acercar' : 'Zoom in'}
+              >
+                ➕
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* compass + minimap (nav instruments) */}
-        {!worldDone && <MiniHud targets={hudTargets} color={world.color} lang={lang} />}
+        {/* ---- objective card ---------------------------------------------- */}
+        {mission && !worldDone && (
+          <div
+            className="hud-panel pointer-events-auto absolute overflow-hidden"
+            style={{
+              top: rowTop,
+              left: 'var(--hud-l)',
+              // never grows under the instrument column on the right
+              width: vp.compact ? 'min(22rem, calc(100vw - var(--hud-l) - var(--hud-r) - 5rem))' : '20rem',
+            }}
+          >
+            <div className="flex items-center gap-1 px-2 py-2">
+              <button
+                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                onClick={() => setCardOpen((c) => !c)}
+                title={lang === 'es' ? 'Mostrar / ocultar' : 'Show / hide'}
+              >
+                <span className="text-lg leading-none">{mission.emoji}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[9px] uppercase tracking-[0.16em] text-kai-faint">
+                    {lang === 'es' ? 'Misión' : 'Mission'} {missionIdx + 1}/{world.missions.length}
+                    {vp.compact ? ` · ✦${progress.xp}` : ''}
+                  </span>
+                  <span className="block truncate text-[13px] font-semibold text-kai-text">{mission.title[lang]}</span>
+                </span>
+              </button>
+              {/* Read-aloud only exists when the voice is actually on. */}
+              {!muted && (
+                <button
+                  onClick={() => readAloud(`${mission.title[lang]}. ${mission.desc[lang]}`)}
+                  className="shrink-0 px-1 text-[13px] text-kai-faint"
+                  aria-label={lang === 'es' ? 'Escuchar' : 'Listen'}
+                >
+                  🔊
+                </button>
+              )}
+              <button
+                onClick={() => setCardOpen((c) => !c)}
+                className="shrink-0 px-1 text-[11px] text-kai-faint"
+                aria-label={cardOpen ? 'Ocultar' : 'Mostrar'}
+              >
+                {cardOpen ? '▴' : '▾'}
+              </button>
+            </div>
 
-        {/* event log — the guide + mission flow, visible without devtools */}
+            {cardOpen && (
+              <div className="px-3 pb-2.5">
+                <div className="text-[12px] leading-snug text-kai-muted">{mission.desc[lang]}</div>
+                <div className="mt-1.5 rounded-lg bg-kai-gold/10 px-2 py-1 text-[11px] font-medium text-kai-gold">
+                  👉 {actionHint(mission.tipo, lang)}
+                </div>
+                {mission.tipo !== 'quiz' && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${(done / mission.n) * 100}%`, background: world.color }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: world.color }}>
+                      {done}/{mission.n}
+                    </span>
+                  </div>
+                )}
+                {/* who contributed what — the mission is one shared bar, never a race */}
+                {inParty && crew.together && mission.tipo !== 'quiz' && (
+                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-kai-faint">
+                    <span>
+                      {crew.name}: <b className="text-kai-muted">{crew.shared!.by[crew.you] ?? 0}</b>
+                    </span>
+                    {crew.members.map((m) => (
+                      <span key={m.id}>
+                        {m.name}: <b className="text-kai-muted">{crew.shared!.by[m.id] ?? 0}</b>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {worldDone && (
+          <div
+            className="hud-panel pointer-events-auto absolute border-kai-jade/30 px-4 py-3"
+            style={{ top: rowTop, left: 'var(--hud-l)', width: 'min(20rem, calc(100vw - var(--hud-l) - var(--hud-r) - 5rem))' }}
+          >
+            <div className="text-sm font-semibold text-kai-jade">🌟 {lang === 'es' ? '¡Mundo completo!' : 'World complete!'}</div>
+            <div className="mt-1 text-[12px] text-kai-muted">
+              {lang === 'es' ? 'Abre el mapa para viajar al siguiente mundo.' : 'Open the map to travel to the next world.'}
+            </div>
+            <button
+              onClick={() => setMapOpen(true)}
+              className="mt-2.5 w-full rounded-full border border-kai-gold/40 bg-kai-gold/15 px-4 py-2 text-[13px] font-semibold text-kai-gold hud-tap"
+            >
+              🗺️ {lang === 'es' ? 'Ir al mapa' : 'Open the map'}
+            </button>
+          </div>
+        )}
+
+        {/* ---- event log (opt-in, from the ⋯ menu) -------------------------- */}
         {showLog && (
-          <div className="absolute bottom-20 left-3 max-w-[19rem] rounded-xl border border-white/10 bg-black/55 px-3 py-2 font-mono text-[10px] leading-relaxed text-kai-muted backdrop-blur-md">
+          <div
+            className="hud-panel pointer-events-none absolute max-h-[8.5rem] w-[17rem] max-w-[calc(100vw-2rem)] overflow-hidden px-3 py-2 font-mono text-[10px] leading-relaxed text-kai-muted"
+            style={{ left: 'var(--hud-l)', bottom: 'calc(var(--hud-b) + 9.5rem)' }}
+          >
             <div className="mb-1 flex items-center justify-between text-kai-faint">
               <span>· registro ·</span>
               <span>{muted ? '🔇' : '🔊'}</span>
@@ -1225,87 +1578,59 @@ export function GameWorld({ region }: { region: RegionSummary }) {
           </div>
         )}
 
-        {/* objective card */}
-        {mission && !worldDone && (
-          <div className="pointer-events-auto absolute left-3 top-16 max-w-xs cursor-pointer rounded-2xl border border-white/10 bg-black/40 px-4 py-3 backdrop-blur-md transition-colors hover:border-kai-gold/30" onClick={() => readAloud(`${mission.title[lang]}. ${mission.desc[lang]}`)} title={lang === 'es' ? 'Click para escuchar' : 'Click to hear'}>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">{mission.emoji}</span>
-              <div className="text-[10px] uppercase tracking-widest text-kai-faint">
-                {lang === 'es' ? 'Misión' : 'Mission'} {missionIdx + 1}/{world.missions.length}
-              </div>
-              <span className="ml-auto text-[11px] text-kai-faint">🔊</span>
-            </div>
-            <div className="mt-1 text-sm font-semibold text-kai-text">{mission.title[lang]}</div>
-            <div className="mt-0.5 text-[12px] text-kai-muted">{mission.desc[lang]}</div>
-            <div className="mt-1.5 rounded-lg bg-kai-gold/10 px-2 py-1 text-[11px] font-medium text-kai-gold">
-              👉 {actionHint(mission.tipo, lang)}
-            </div>
-            {mission.tipo !== 'quiz' && (
-              <div className="mt-2 flex items-center gap-2">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${(done / mission.n) * 100}%`, background: world.color }} />
-                </div>
-                <span className="text-xs font-medium" style={{ color: world.color }}>
-                  {done}/{mission.n}
-                </span>
-              </div>
-            )}
-            {/* who contributed what — the mission is one shared bar, never a race */}
-            {inParty && crew.together && mission.tipo !== 'quiz' && (
-              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-kai-faint">
-                <span>
-                  {crew.name}: <b className="text-kai-muted">{crew.shared!.by[crew.you] ?? 0}</b>
-                </span>
-                {crew.members.map((m) => (
-                  <span key={m.id}>
-                    {m.name}: <b className="text-kai-muted">{crew.shared!.by[m.id] ?? 0}</b>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {worldDone && (
-          <div className="absolute left-3 top-16 max-w-xs rounded-2xl border border-kai-jade/30 bg-black/40 px-4 py-3 backdrop-blur-md">
-            <div className="text-sm font-semibold text-kai-jade">🌟 {lang === 'es' ? '¡Mundo completo!' : 'World complete!'}</div>
-            <div className="mt-1 text-[12px] text-kai-muted">{lang === 'es' ? 'Abre el mapa para viajar al siguiente mundo.' : 'Open the map to travel to the next world.'}</div>
-          </div>
-        )}
-
-        {/* toast */}
+        {/* ---- toast ------------------------------------------------------- */}
         {toast && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 animate-fade-up rounded-full border border-kai-gold/30 bg-black/60 px-5 py-2 text-center text-sm text-kai-text backdrop-blur-md">
+          <div
+            className="pointer-events-none absolute left-1/2 max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-fade-up rounded-full border border-kai-gold/30 bg-black/70 px-5 py-2 text-center text-sm text-kai-text backdrop-blur-md"
+            style={{ bottom: 'calc(var(--hud-b) + 7.5rem)' }}
+          >
             {toast}
           </div>
         )}
 
-        {/* build palette (co-creation) */}
+        {/* ---- build palette ------------------------------------------------ */}
         {buildOpen && (
-          <div className="pointer-events-auto absolute bottom-24 left-1/2 max-w-[92vw] -translate-x-1/2 rounded-2xl border border-kai-jade/30 bg-black/55 px-3 py-2.5 backdrop-blur-md">
+          <div
+            className="hud-panel pointer-events-auto absolute left-1/2 -translate-x-1/2 border-kai-jade/30 px-3 py-2.5"
+            style={{
+              bottom: `calc(var(--hud-b) + ${vp.touch ? '7.5rem' : '3.5rem'})`,
+              width: 'min(30rem, calc(100vw - 1.5rem))',
+            }}
+          >
             <div className="mb-1.5 flex items-center justify-between gap-4">
               <span className="text-[11px] font-medium text-kai-jade">🔨 {lang === 'es' ? 'Crea tu mundo' : 'Build your world'}</span>
-              <span className="text-[10px] text-kai-faint">{visibleProps.length} {lang === 'es' ? 'creaciones' : 'placed'}{inParty && crew.together ? ` · ${lang === 'es' ? 'juntos' : 'together'}` : ''}</span>
+              <span className="text-[10px] text-kai-faint">
+                {visibleProps.length} {lang === 'es' ? 'creaciones' : 'placed'}
+                {inParty && crew.together ? ` · ${lang === 'es' ? 'juntos' : 'together'}` : ''}
+              </span>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
+            {/* The palette scrolls sideways instead of wrapping into three rows
+                that swallow the bottom half of a phone. */}
+            <div className="-mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {palette.map((k) => (
                 <button
                   key={k}
                   onClick={() => setBuildKind(k)}
                   title={BUILD_KINDS[k][lang]}
-                  className={`grid h-11 w-11 place-items-center rounded-xl border text-xl transition-colors ${buildKind === k ? 'border-kai-jade/60 bg-kai-jade/20' : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.07]'}`}
+                  className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border text-xl transition-colors ${
+                    buildKind === k ? 'border-kai-jade/60 bg-kai-jade/20' : 'border-white/10 bg-white/[0.03]'
+                  }`}
                 >
                   {BUILD_KINDS[k].emoji}
                 </button>
               ))}
-              <div className="mx-1 h-8 w-px bg-white/10" />
-              <button onClick={doPlace} className="rounded-xl border border-kai-jade/50 bg-kai-jade/20 px-4 py-2 text-sm font-semibold text-kai-jade active:scale-95">
+            </div>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <button
+                onClick={doPlace}
+                className="hud-tap flex-1 rounded-xl border border-kai-jade/50 bg-kai-jade/20 px-4 py-2.5 text-sm font-semibold text-kai-jade"
+              >
                 ➕ {lang === 'es' ? 'Colocar' : 'Place'}
               </button>
-              <button onClick={doUndo} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Deshacer' : 'Undo'}>
+              <button onClick={doUndo} className="hud-tap rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-kai-text" title={lang === 'es' ? 'Deshacer' : 'Undo'}>
                 ↩︎
               </button>
-              <button onClick={doClear} className="rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-sm text-kai-text" title={lang === 'es' ? 'Borrar todo' : 'Clear'}>
+              <button onClick={doClear} className="hud-tap rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-kai-text" title={lang === 'es' ? 'Borrar todo' : 'Clear'}>
                 🗑️
               </button>
             </div>
@@ -1315,67 +1640,74 @@ export function GameWorld({ region }: { region: RegionSummary }) {
           </div>
         )}
 
-        {/* controls hint */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/30 px-4 py-1.5 text-[12px] text-kai-muted backdrop-blur-md">
-          <span className="hidden md:inline">
+        {/* ---- keyboard hint (desktop only) --------------------------------- */}
+        {!vp.touch && !vp.short && (
+          <div
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/35 px-4 py-1.5 text-[12px] text-kai-muted backdrop-blur-md"
+            style={{ bottom: 'var(--hud-b)' }}
+          >
             {lang === 'es'
               ? world.theme.swim
-                ? 'WASD nadar · Shift correr · MANTÉN Espacio para subir · doble salto'
-                : 'WASD · Shift correr · Espacio saltar (doble salto) · arrastra para mirar'
+                ? 'WASD nadar · Shift correr · MANTÉN Espacio para subir · rueda para acercar'
+                : 'WASD · Shift correr · Espacio saltar (doble) · arrastra para mirar · rueda para acercar'
               : world.theme.swim
-                ? 'WASD swim · Shift run · HOLD Space to rise'
-                : 'WASD · Shift run · Space jump (double) · drag to look'}
-          </span>
-          <span className="md:hidden">{lang === 'es' ? 'Joystick · Correr · Saltar/Nadar' : 'Joystick · Run · Jump/Swim'}</span>
-        </div>
+                ? 'WASD swim · Shift run · HOLD Space to rise · wheel to zoom'
+                : 'WASD · Shift run · Space jump (double) · drag to look · wheel to zoom'}
+          </div>
+        )}
 
-        {/* zoom */}
-        <div className="pointer-events-auto absolute right-8 top-24 flex flex-col items-center gap-2">
-          <button onClick={() => (input.dist = Math.min(24, input.dist + 2.5))} className="rounded-full border border-white/20 bg-black/40 px-3 py-2 text-sm font-medium text-kai-text backdrop-blur-md" title={lang === 'es' ? 'Alejar' : 'Zoom out'}>
-            🔍➖
-          </button>
-          <button onClick={() => (input.dist = Math.max(3.5, input.dist - 2.5))} className="rounded-full border border-white/20 bg-black/40 px-3 py-2 text-sm font-medium text-kai-text backdrop-blur-md" title={lang === 'es' ? 'Acercar' : 'Zoom in'}>
-            🔍➕
-          </button>
-        </div>
-
-        {/* run + dash + jump/swim (hold) */}
-        <div className="pointer-events-auto absolute bottom-8 right-8 flex items-end gap-3">
-          <button
-            onClick={() => (input.dashReq = true)}
-            className="select-none rounded-full border border-kai-gold/40 bg-kai-gold/15 px-4 py-3 text-sm font-semibold text-kai-gold backdrop-blur-md active:scale-95"
-          >
-            💨 {lang === 'es' ? 'Dash' : 'Dash'}
-          </button>
-          <button
-            onPointerDown={() => (input.run = true)}
-            onPointerUp={() => (input.run = false)}
-            onPointerLeave={() => (input.run = false)}
-            className="select-none rounded-full border border-kai-jade/40 bg-kai-jade/15 px-4 py-3 text-sm font-semibold text-kai-jade backdrop-blur-md active:scale-95"
-          >
-            🏃 {lang === 'es' ? 'Correr' : 'Run'}
-          </button>
+        {/* ---- bottom-right control deck ------------------------------------ */}
+        <div
+          className="pointer-events-auto absolute flex items-end gap-2"
+          style={{ bottom: 'var(--hud-b)', right: 'var(--hud-r)' }}
+        >
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => (input.dashReq = true)}
+              className="hud-tap select-none rounded-full border border-kai-gold/40 bg-kai-gold/15 px-3.5 py-2.5 text-[13px] font-semibold text-kai-gold backdrop-blur-md"
+            >
+              💨{vp.compact ? '' : ' Dash'}
+            </button>
+            <button
+              onPointerDown={() => (input.run = true)}
+              onPointerUp={() => (input.run = false)}
+              onPointerLeave={() => (input.run = false)}
+              onPointerCancel={() => (input.run = false)}
+              className="hud-tap select-none rounded-full border border-kai-jade/40 bg-kai-jade/15 px-3.5 py-2.5 text-[13px] font-semibold text-kai-jade backdrop-blur-md"
+            >
+              🏃{vp.compact ? '' : ` ${lang === 'es' ? 'Correr' : 'Run'}`}
+            </button>
+          </div>
+          {/* The one button a thumb reaches for constantly gets to be big. */}
           <button
             onPointerDown={() => (input.jumpHeld = true)}
             onPointerUp={() => (input.jumpHeld = false)}
             onPointerLeave={() => (input.jumpHeld = false)}
-            className="select-none rounded-full border border-white/20 bg-black/45 px-6 py-3 text-lg font-medium text-kai-text backdrop-blur-md active:scale-95"
+            onPointerCancel={() => (input.jumpHeld = false)}
+            className="hud-tap grid select-none place-items-center rounded-full border border-white/25 bg-black/50 text-2xl text-kai-text backdrop-blur-md"
+            style={{ height: vp.short ? '3.5rem' : '4.25rem', width: vp.short ? '3.5rem' : '4.25rem' }}
+            aria-label={world.theme.swim ? (lang === 'es' ? 'Subir' : 'Rise') : lang === 'es' ? 'Saltar' : 'Jump'}
           >
             {world.theme.swim ? '🫧' : '⤒'}
           </button>
         </div>
 
-        <MobileJoystick
-          onMove={(x, y) => {
-            input.jx = x;
-            input.jy = y;
-          }}
-        />
+        {/* ---- joystick ------------------------------------------------------ */}
+        {vp.touch && (
+          <MobileJoystick
+            compact={vp.short}
+            onMove={(x, y) => {
+              input.jx = x;
+              input.jy = y;
+            }}
+          />
+        )}
 
         {/* co-op: room pill, mic, emotes and the join panel */}
         <PartyLayer
           party={crew}
           lang={lang}
+          compact={vp.compact}
           avatarUrl={avatarUrl ?? DEFAULT_AVATAR.url}
           worldId={world.id}
           missionIdx={missionIdx}
@@ -1386,18 +1718,30 @@ export function GameWorld({ region }: { region: RegionSummary }) {
           onOpenChange={setPartyOpen}
         />
       </div>
-
       {/* intro */}
       {showIntro && (
-        <div className="absolute inset-0 z-40 grid place-items-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="glass max-w-md animate-fade-up p-6 text-center">
+        <div
+          className="absolute inset-0 z-40 grid place-items-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm"
+          style={{ paddingTop: 'calc(var(--sa-t) + 1rem)', paddingBottom: 'calc(var(--sa-b) + 1rem)' }}
+        >
+          <div className="glass my-auto w-full max-w-md animate-fade-up p-5 text-center sm:p-6">
             <div className="mb-2 text-3xl">{world.emoji}{world.guideEmoji}</div>
             <h2 className="font-display text-xl font-semibold text-kai-text">{world.name[lang]}</h2>
             <p className="mt-2 text-[13px] text-kai-muted">{world.intro[lang]}</p>
+            {/* The controls a phone actually has are not the controls a laptop
+                has; telling a kid on an iPad to press WASD is telling them
+                nothing. */}
             <div className="mx-auto mt-4 max-w-sm space-y-1.5 text-left text-[13px] text-kai-muted">
-              <div>🎮 <b className="text-kai-text">WASD</b> / joystick · {lang === 'es' ? 'arrastra para mirar' : 'drag to look'}</div>
+              {vp.touch ? (
+                <>
+                  <div>🕹️ {lang === 'es' ? 'Pulgar izquierdo para caminar · arrastra para mirar' : 'Left thumb to walk · drag to look'}</div>
+                  <div>🤏 {lang === 'es' ? 'Pellizca con dos dedos para acercar o alejar' : 'Pinch with two fingers to zoom'}</div>
+                </>
+              ) : (
+                <div>🎮 <b className="text-kai-text">WASD</b> · {lang === 'es' ? 'arrastra para mirar · rueda para acercar' : 'drag to look · wheel to zoom'}</div>
+              )}
               <div>✨ {lang === 'es' ? 'Completa misiones para sanar el mundo' : 'Complete missions to heal the world'}</div>
-              <div>🗺️ {lang === 'es' ? 'Viaja entre 7 mundos desde el Mapa' : 'Travel between 7 worlds from the Map'}</div>
+              <div>🗺️ {lang === 'es' ? 'Los 7 mundos y sus 92 misiones están en el Atlas' : 'All 7 worlds and their 92 missions live in the Atlas'}</div>
             </div>
             <button onClick={() => setShowIntro(false)} className="mt-5 rounded-full bg-kai-gold px-7 py-2 text-sm font-semibold text-black">
               {lang === 'es' ? 'Comenzar' : 'Begin'}
@@ -1453,6 +1797,7 @@ export function GameWorld({ region }: { region: RegionSummary }) {
           progress={Object.fromEntries(WORLDS.map((w) => [w.id, progress.done[w.id] ?? 0]))}
           activeId={world.id}
           lang={lang}
+          xp={progress.xp}
           onSelect={selectWorld}
           onClose={() => setMapOpen(false)}
         />

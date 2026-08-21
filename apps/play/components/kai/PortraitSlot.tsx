@@ -47,7 +47,10 @@ export function PortraitSlot({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
-          alt={label}
+          // Decorative: the monogram underneath and the card's own label already
+          // carry the name. With alt text, a missing asset flashed the guardian's
+          // name as broken-image text before onError could hide it.
+          alt=""
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
           onError={(e) => {

@@ -3,9 +3,16 @@
 // per-world pitch/rate, language pick, per-utterance start/end callbacks (for
 // karaoke-style highlighting), a global mute, and cancel. Degrades silently
 // where speechSynthesis is unavailable (SSR / iOS locked). No network, no cost.
+//
+// SILENT BY DEFAULT. The browser's built-in synthesiser is a robot, and a robot
+// reading every teaching aloud is worse than no voice at all — so nothing
+// speaks until someone turns it on with the 🔊 button, and that choice sticks.
+// Everything the guide says is on screen as text regardless.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const MUTE_KEY = 'kai.voice.muted';
+// New key on purpose: the old one recorded "did you mute it", and everybody
+// who never touched it was stored as unmuted. This one records the opt-in.
+const VOICE_KEY = 'kai.voice.on';
 
 export interface VoiceCfg {
   pitch: number;
@@ -23,8 +30,8 @@ export interface SpeechItem extends SpeakHandlers {
 }
 
 export function useSpeech() {
-  const [muted, setMuted] = useState(false);
-  const mutedRef = useRef(false);
+  const [muted, setMuted] = useState(true);
+  const mutedRef = useRef(true);
   const supported = useRef(false);
   const voices = useRef<SpeechSynthesisVoice[]>([]);
 
@@ -32,7 +39,7 @@ export function useSpeech() {
     supported.current = typeof window !== 'undefined' && 'speechSynthesis' in window;
     if (!supported.current) return;
     try {
-      const m = localStorage.getItem(MUTE_KEY) === '1';
+      const m = localStorage.getItem(VOICE_KEY) !== '1';
       setMuted(m);
       mutedRef.current = m;
     } catch {
@@ -111,7 +118,7 @@ export function useSpeech() {
       const next = !m;
       mutedRef.current = next;
       try {
-        localStorage.setItem(MUTE_KEY, next ? '1' : '0');
+        localStorage.setItem(VOICE_KEY, next ? '0' : '1');
       } catch {
         /* ignore */
       }
